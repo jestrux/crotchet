@@ -3,6 +3,8 @@ import Loader from "./components/Loader";
 import useFetch from "./hooks/useFetch";
 import Widgets from "./Widgets";
 
+// Test sheet
+// https://docs.google.com/spreadsheets/d/1xkgPzQYmgndKFy1D6j4ZbZSc5wx0Z3lIP0zlp7FC20Q/edit#gid=1776932801
 function App() {
 	const { isLoading, data } = useFetch({
 		model: "Users",
