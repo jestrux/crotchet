@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import Loader from "./components/Loader";
+import Button from "./components/Button";
 import useFetch from "./hooks/useFetch";
 import Widgets from "./Widgets";
 
@@ -12,11 +11,39 @@ function App() {
 	});
 
 	return (
-		<div className="min-h-screen bg-canvas text-content">
-			<div className="pt-5 px-6">
+		<div className="min-h-screen bg-canvas text-content max-w-[1500px] mx-auto">
+			<div className="pt-5 px-6 flex items-center justify-between">
 				<h1 className="text-2xl font-bold font-serif">Crotchet</h1>
+
+				<div className="flex items-center">
+					<Button className="border-content/30 mr-3">
+						<svg
+							className="w-4 mr-2"
+							viewBox="0 0 24 24"
+							fill="currentColor"
+						>
+							<path d="M0 0h24v24H0z" fill="none" />
+							<path d="M22 2l-2.5 1.4L17 2l1.4 2.5L17 7l2.5-1.4L22 7l-1.4-2.5zm-7.63 5.29c-.39-.39-1.02-.39-1.41 0L1.29 18.96c-.39.39-.39 1.02 0 1.41l2.34 2.34c.39.39 1.02.39 1.41 0L16.7 11.05c.39-.39.39-1.02 0-1.41l-2.33-2.35zm-1.03 5.49l-2.12-2.12 2.44-2.44 2.12 2.12-2.44 2.44z" />
+						</svg>
+						Customize Widgets
+					</Button>
+
+					<button
+						type="button"
+						className="flex max-w-xs items-center rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+						aria-expanded="false"
+						aria-haspopup="true"
+					>
+						<span className="sr-only">Open user menu</span>
+						<img
+							className="h-10 w-10 rounded-full"
+							src="https://s3-alpha.figma.com/profile/143ad103-eea4-4a5a-b8db-e64143205d69"
+							alt=""
+						/>
+					</button>
+				</div>
 			</div>
-			{isLoading ? <Loader scrimColor="transparent" /> : <Widgets />}
+			<Widgets />
 		</div>
 	);
 }
