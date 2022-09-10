@@ -51,7 +51,7 @@ const GithubContributionsWidget = () => {
 				/>
 
 				{loading && (
-					<Loader size={30} thickness={6} className="mb-10" />
+					<Loader color="black" size={30} thickness={6} className="mb-10" />
 				)}
 			</div>
 		</div>

@@ -16,7 +16,7 @@ function App() {
 				<h1 className="text-2xl font-bold font-serif">Crotchet</h1>
 
 				<div className="flex items-center">
-					<Button className="border-content/30 mr-3">
+					<Button className="border-content/30 mr-3" rounded="full">
 						<svg
 							className="w-4 mr-2"
 							viewBox="0 0 24 24"
