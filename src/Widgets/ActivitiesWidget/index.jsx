@@ -1,4 +1,5 @@
 import Widget from "../../components/Widget";
+import ListWidget from "../ListWidget";
 
 const ActivitiesWidget = () => {
 	return (
@@ -21,7 +22,23 @@ const ActivitiesWidget = () => {
 					/>
 				</svg>
 			}
-		/>
+		>
+			<div className="h-full pt-1 pl-4 pr-3 overflow-y-auto">
+				<ListWidget
+					widget={{
+						model: "Tasks",
+						props: {
+							title: "task",
+							subtitle: "due|date::type::project",
+							status: "status",
+						},
+					}}
+					filters={[
+						{ status: "in progress|pending" },
+					]}
+				/>
+			</div>
+		</Widget>
 	);
 };
 

@@ -6,6 +6,9 @@ import GithubContributionsWidget from "./GithubContributionsWidget";
 import MusicWidget from "./MusicWidget";
 import StayLiquidWidget from "./StayLiquidWidget";
 import PollWidget from "./PollWidget";
+import ListWidget from "./ListWidget";
+import FoodWidget from "./FoodWidget";
+import PerformanceWidget from "./PerformanceWidget";
 
 const WidgetWrapper = ({
 	children,
@@ -53,53 +56,48 @@ const Widgets = () => {
 							<h2 className="text-xl font-semibold">
 								Hey Walter,
 							</h2>
-							<p className="opacity-60">
+							<p className="opacity-80">
 								Here's how you're looking...
 							</p>
 						</div>
 
-						<div className="mt-4 -mx-5 px-5 space-y-4">
-							<div className="flex items-start">
-								<div className="flex-shrink-0 mr-2 -mt-1">
-									😋
-								</div>
-								<div className="flex-1">
-									<h2 className="text-base leading-none mb-0.5">
-										Lunch order
-									</h2>
-									<p className="text- opacity-50">
-										You ordered Pilau with Matunda
-									</p>
-								</div>
-							</div>
+						<div className="mt-4 pt-3 border-t border-content/10">
+							<h3 className="mb-0.5 text-sm font-semibold opacity-60">
+								Overdue tasks
+							</h3>
 
-							<div className="flex items-start">
-								<div className="flex-shrink-0 mr-2 -mt-1">
-									🗓
-								</div>
-								<div className="flex-1">
-									<h2 className="text-base leading-none mb-0.5">
-										Upcoming meetings
-									</h2>
-									<p className="text- opacity-50">
-										Next meeting is in 5 minutes.
-									</p>
-								</div>
-							</div>
+							<ListWidget
+								widget={{
+									model: "Tasks",
+									props: {
+										title: "task",
+										subtitle: "type::project::due|date",
+										status: "status",
+									},
+								}}
+								orderBy="due"
+								filters={[
+									{ status: "in progress|pending|blocked" },
+									{ due: "<today" },
+								]}
+							/>
+						</div>
 
-							<div className="flex items-start">
-								<div className="flex-shrink-0 mr-2 -mt-1">
-									📋
-								</div>
-								<div className="flex-1">
-									<h2 className="text-base leading-none mb-0.5">
-										Pending tasks
-									</h2>
-									<p className="text- opacity-50">
-										2 pending tasks from yesterday
-									</p>
-								</div>
-							</div>
+						<div className="mt-1 pt-3 border-t border-content/10">
+							<h3 className="mb-0.5 text-sm font-semibold opacity-60">
+								Pings and alerts
+							</h3>
+
+							<ListWidget
+								widget={{
+									model: "Pings",
+									props: {
+										image: "sender.image",
+										title: "content",
+										subtitle: "sender.name",
+									},
+								}}
+							/>
 						</div>
 					</div>
 				</div>
@@ -108,13 +106,13 @@ const Widgets = () => {
 			<div className="flex-1 flex gap-5 items-start">
 				<div className="flex flex-col gap-5" style={{ flex: 1 }}>
 					<WidgetWrapper widget={StayLiquidWidget} />
-					<WidgetWrapper />
+					<WidgetWrapper widget={FoodWidget} />
 					<WidgetWrapper widget={PollWidget} />
 				</div>
 				<div className="flex flex-col gap-5" style={{ flex: 2 }}>
 					<WidgetWrapper
 						aspectRatio={2 / 1}
-						widget={AnnouncementsWidget}
+						widget={PerformanceWidget}
 					/>
 					<WidgetWrapper
 						aspectRatio={1 / 1}
@@ -122,7 +120,10 @@ const Widgets = () => {
 					/>
 				</div>
 				<div className="flex flex-col gap-5" style={{ flex: 2 }}>
-					<WidgetWrapper aspectRatio={2 / 1} />
+					<WidgetWrapper
+						aspectRatio={2 / 1}
+						widget={AnnouncementsWidget}
+					/>
 					<div className="flex gap-5">
 						<WidgetWrapper widget={TimerWidget} flex={1} />
 						<WidgetWrapper

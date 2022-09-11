@@ -96,7 +96,7 @@ const TimerWidget = ({ widget }) => {
 						progress > 0 && "pb-6 h-full"
 					} pt-2 flex items-center justify-center`}
 				>
-					<span className="text-5xl leading-none font-black">
+					<span className="text-5xl leading-none font-black pr-0.5">
 						{progress > 0
 							? toHms((duration * 1000 - value) / 1000)
 							: toHms(duration)}

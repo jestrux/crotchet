@@ -1,4 +1,11 @@
-const Widget = ({ noPadding, title, icon, actions, children }) => {
+const Widget = ({
+	noPadding,
+	title,
+	icon,
+	actions,
+	actionButton,
+	children,
+}) => {
 	return (
 		<div className="h-full flex flex-col relative">
 			{title?.length && (
@@ -38,6 +45,15 @@ const Widget = ({ noPadding, title, icon, actions, children }) => {
 							{icon}
 						</div>
 					)}
+				</div>
+			)}
+
+			{actionButton && (
+				// <div className={`${noPadding && "px-12"}`}>
+				<div className="mb-2.5 px-2">
+					<button className="text-content/70 hover:text-content text-[10px] leading-none uppercase font-semibold py-3.5 w-full text-center border border-content/5 hover:border-content/20 bg-content/5 rounded">
+						{actionButton}
+					</button>
 				</div>
 			)}
 		</div>
