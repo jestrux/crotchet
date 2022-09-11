@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Widget from "../components/Widget";
 import useFetch from "../hooks/useFetch";
-import useInterval from "../hooks/useInterval";
+import { useIntervalWithPercent } from "../hooks/useInterval";
 
 const StayLiquidWidget = () => {
 	const { data } = useFetch({
@@ -54,7 +54,7 @@ const StayLiquidWidget = () => {
 
 	const [curIndex, setCurIndex] = useState(0);
 
-	const completed = useInterval(() => {
+	const { progress: completed } = useIntervalWithPercent(() => {
 		const length = data?.length ? data.length : messages.length;
 		setCurIndex(curIndex === length - 1 ? 0 : curIndex + 1);
 	}, 30 * 1000);

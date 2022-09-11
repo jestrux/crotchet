@@ -1,26 +1,45 @@
 import { useEffect, useRef, useState } from "react";
 
-function useInterval(callback, delay) {
+export const useInterval = (callback, { delay, autoStart = true }) => {
 	const savedCallback = useRef();
+	const savedInterval = useRef();
 
-	// Remember the latest function.
+	function runInterval() {
+		if (savedInterval.current) clearInterval(savedInterval.current);
+
+		function tick() {
+			savedCallback.current();
+		}
+
+		savedInterval.current = setInterval(tick, delay);
+	}
+
+	function cancelInterval() {
+		clearInterval(savedInterval.current);
+	}
+
 	useEffect(() => {
 		savedCallback.current = callback;
 	}, [callback]);
 
-	// Set up the interval.
 	useEffect(() => {
-		function tick() {
-			savedCallback.current();
-		}
-		if (delay !== null) {
-			let id = setInterval(tick, delay);
-			return () => clearInterval(id);
-		}
-	}, [delay]);
-}
+		if (delay == null) return;
 
-const useIntervalWithPercent = (callback, delay) => {
+		if (autoStart) runInterval();
+
+		return () => clearInterval(savedInterval.current);
+	}, [delay]);
+
+	return {
+		runInterval,
+		cancelInterval,
+	};
+};
+
+export const useIntervalWithPercent = (
+	callback,
+	{ delay, autoStart = true }
+) => {
 	const [progress, setProgress] = useState(0);
 	const savedStartTime = useRef(new Date().getTime());
 	const savedCallback = useRef();
@@ -29,21 +48,45 @@ const useIntervalWithPercent = (callback, delay) => {
 		savedCallback.current = callback;
 	}, [callback]);
 
-	useInterval(() => {
+	const ticker = useInterval(
+		() => {
+			const p =
+				((new Date().getTime() - savedStartTime.current) * 100) / delay;
+			setProgress(Math.min(p, 100).toFixed(1));
+		},
+		{ delay: 100, autoStart }
+	);
+
+	const main = useInterval(
+		() => {
+			savedStartTime.current = new Date().getTime();
+			savedCallback.current();
+		},
+		{ delay, autoStart }
+	);
+
+	const runInterval = () => {
+		setProgress(0);
 		savedStartTime.current = new Date().getTime();
-		savedCallback.current();
-	}, delay);
+		main.runInterval();
+		ticker.runInterval();
+	};
 
-	useInterval(() => {
-		setProgress(
-			Math.min(
-				((new Date().getTime() - savedStartTime.current) * 100) / delay,
-				100
-			).toFixed(1)
-		);
-	}, 100);
+	const cancelInterval = () => {
+		main.cancelInterval();
+		ticker.cancelInterval();
+		savedStartTime.current = new Date().getTime();
+		setProgress(100);
+	};
 
-	return progress;
+	return {
+		progress,
+		value: (Number(progress) * delay) / 100,
+		runInterval,
+		cancelInterval,
+		reset() {
+			cancelInterval();
+			setProgress(0);
+		},
+	};
 };
-
-export default useIntervalWithPercent;

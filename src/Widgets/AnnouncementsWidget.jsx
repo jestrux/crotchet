@@ -25,6 +25,7 @@ const AnnouncementsWidget = () => {
 					name: "Announcements",
 					model: "Announcements",
 					props: {
+						image: "owner.image",
 						title: "title",
 						subtitle: "content",
 						action: "link",

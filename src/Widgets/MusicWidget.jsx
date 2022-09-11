@@ -1,9 +1,11 @@
 import { useState } from "react";
+import Loader from "../components/Loader";
 import Widget from "../components/Widget";
 
 const MusicWidget = () => {
+	const [loading, setLoading] = useState(false);
 	const [changingMood, setChangingMood] = useState(false);
-	const [mood, setMood] = useState("Chill");
+	const [mood, setMood] = useState("Jazz");
 	const playlistId = {
 		Chill: "37i9dQZF1EVHGWrwldPRtj",
 		Jazz: "37i9dQZF1EQqA6klNdJvwx",
@@ -14,12 +16,12 @@ const MusicWidget = () => {
 	const handleSetMood = (mood) => {
 		setMood(mood);
 		setChangingMood(false);
+		setLoading(true);
 
-		const spotifyEmbedWindow =
-			document.querySelector("#spotifyPlayer");
+		const spotifyEmbedWindow = document.querySelector("#spotifyPlayer");
 
 		spotifyEmbedWindow.onload = function () {
-			spotifyEmbedWindow.contentWindow.postMessage({ command: "play" }, "*");
+			setLoading(false);
 		};
 	};
 
@@ -115,6 +117,12 @@ const MusicWidget = () => {
 								90s RnB
 							</button>
 						</div>
+					</div>
+				)}
+
+				{loading && (
+					<div className="z-10 absolute inset-0 -mt-4 bg-card flex flex-col items-center justify-center text-center">
+						<Loader scrimColor="transparent" />
 					</div>
 				)}
 			</div>

@@ -23,6 +23,7 @@ const Widget = ({ noPadding, title, icon, actions, children }) => {
 							actions.map((action, index) => {
 								return (
 									<button
+										title={action.label}
 										key={index}
 										className="curo w-6 h-6 border border-content/10 text-content rounded-full flex items-center justify-center"
 										onClick={action.onClick}

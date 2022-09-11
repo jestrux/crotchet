@@ -5,6 +5,7 @@ import TimerWidget from "./TimerWidget";
 import GithubContributionsWidget from "./GithubContributionsWidget";
 import MusicWidget from "./MusicWidget";
 import StayLiquidWidget from "./StayLiquidWidget";
+import PollWidget from "./PollWidget";
 
 const WidgetWrapper = ({
 	children,
@@ -108,7 +109,7 @@ const Widgets = () => {
 				<div className="flex flex-col gap-5" style={{ flex: 1 }}>
 					<WidgetWrapper widget={StayLiquidWidget} />
 					<WidgetWrapper />
-					<WidgetWrapper />
+					<WidgetWrapper widget={PollWidget} />
 				</div>
 				<div className="flex flex-col gap-5" style={{ flex: 2 }}>
 					<WidgetWrapper
