@@ -42,11 +42,18 @@ const PollWidget = () => {
 		},
 	];
 
-	return <Widget title="Polls" icon={icon} actions={actions} actionButton>
-        <p className="opacity-50 text-sm py-2 text-center">
-            No active polls found.
-        </p>
-    </Widget>;
+	return (
+		<Widget
+			title="Polls"
+			icon={icon}
+			// actions={actions}
+			actionButton="Create poll"
+		>
+			<p className="opacity-50 text-sm py-2 text-center">
+				No active polls found.
+			</p>
+		</Widget>
+	);
 };
 
 export default PollWidget;
