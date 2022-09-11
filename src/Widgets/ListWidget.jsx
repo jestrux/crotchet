@@ -22,63 +22,62 @@ const ListWidget = ({ widget }) => {
 	const { isLoading, data } = useFetch({
 		model: widget.model,
 	});
-	const props = JSON.parse(widget.props);
+	let props;
+	try {
+		props = JSON.parse(widget.props);
+	} catch (error) {
+		props = widget.props;
+	}
 
 	// return data && console.log(`${widget.name} data: `, data, props.title, props.subtitle);
 
 	return (
-		<div className="rounded bg-card shadow">
-			<div className="border-b px-4 py-2">
-				<h3 className="font-semibold">{widget.name}</h3>
-			</div>
+		<div>
+			{isLoading ? (
+				<div className="relative h-8">
+					<Loader size={25} />
+				</div>
+			) : (
+				<div className="space-y-3 pb-2">
+					{data.map((entry, index) => {
+						const image = _get(entry, props.image);
+						const title = _get(entry, props.title);
+						const subtitle = _get(entry, props.subtitle);
+						const leading = _get(entry, props.leading);
 
-			<div className="content px-4 py-2 mb-1">
-				{isLoading ? (
-					<div className="relative h-8">
-						<Loader size={25} />
-					</div>
-				) : (
-					<div className="space-y-4 pb-2">
-						{data.map((entry, index) => {
-							const image = _get(entry, props.image);
-							const title = _get(entry, props.title);
-							const subtitle = _get(entry, props.subtitle);
-							const leading = _get(entry, props.leading);
+						return (
+							<div key={index} className="flex items-center">
+								{image?.length && (
+									<img
+										className="mr-2 flex-shrink-0 border rounded-full w-8 h-8 object-cover"
+										src={image}
+										alt=""
+									/>
+								)}
 
-							return (
-								<div key={index} className="flex items-center">
-									{image?.length && (
-										<img
-											className="mr-2 flex-shrink-0 border rounded-full w-8 h-8 object-cover"
-											src={image}
-											alt=""
-										/>
+								<div className="flex-1 mr-3 min-w-0">
+									<h5 className="text-sm font-semibold mb-0.5">
+										{title}
+									</h5>
+									{subtitle?.length && (
+										<p className="text-sm opacity-60">
+											{subtitle}
+										</p>
 									)}
-
-									<div className="flex-1 mr-3 min-w-0">
-										<h5 className="text-sm font-semibold mb-0.5 truncate">
-											{title}
-										</h5>
-										{subtitle?.length && (
-											<p className="leading-none text-sm opacity-60 truncate">
-												{subtitle}
-											</p>
-										)}
-									</div>
-
-									<div className="flex-shrink-0 ml-auto">
-										{leading?.length && (
-											<span className="text-sm opacity-60">
-												{leading}
-											</span>
-										)}
-									</div>
 								</div>
-							);
-						})}
-					</div>
-				)}
-			</div>
+
+								<div className="flex-shrink-0 ml-auto">
+									{leading?.length && (
+										<span className="text-sm opacity-60">
+											{leading}
+										</span>
+									)}
+								</div>
+							</div>
+						);
+					})}
+				</div>
+			)}
 		</div>
 	);
 };

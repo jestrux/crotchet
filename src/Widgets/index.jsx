@@ -1,4 +1,5 @@
 import useFetch from "../hooks/useFetch";
+import AnnouncementsWidget from "./AnnouncementsWidget";
 import GithubContributionsWidget from "./GithubContributionsWidget";
 import MusicWidget from "./MusicWidget";
 import StayLiquidWidget from "./StayLiquidWidget";
@@ -29,7 +30,7 @@ const WidgetWrapper = ({
 			>
 				{children ? children : Widget ? <Widget /> : <span></span>}
 
-				<div className="absolute right-3 top-3 z-20 w-6 h-6">
+				<div className="absolute right-2 top-2 z-20 w-6 h-6">
 					{Widget?.props?.icon}
 				</div>
 			</div>
@@ -119,21 +120,22 @@ const Widgets = () => {
 					<WidgetWrapper />
 				</div>
 				<div className="flex flex-col gap-5" style={{ flex: 2 }}>
-					<WidgetWrapper aspectRatio={2 / 1} />
+					<WidgetWrapper
+						aspectRatio={2 / 1}
+						widget={AnnouncementsWidget}
+					/>
 					<WidgetWrapper aspectRatio={1 / 1} />
 				</div>
 				<div className="flex flex-col gap-5" style={{ flex: 2 }}>
 					<WidgetWrapper aspectRatio={2 / 1} />
 					<div className="flex gap-5">
+						<WidgetWrapper flex={1} />
 						<WidgetWrapper
 							flex={1}
 							widget={GithubContributionsWidget}
 						/>
-						<WidgetWrapper flex={1} />
 					</div>
-					<WidgetWrapper noPadding aspectRatio={2 / 1}>
-						<MusicWidget />
-					</WidgetWrapper>
+					<WidgetWrapper aspectRatio={2 / 1} widget={MusicWidget} />
 				</div>
 			</div>
 		</div>

@@ -30,9 +30,9 @@ const StayLiquidWidget = () => {
 	const message = data?.length ? data[curIndex] : messages[curIndex];
 
 	return (
-		<div className="h-full flex flex-col relative bg-blue-50 text-black">
+		<div className="h-full flex flex-col relative">
 			<svg
-				className="text-blue-900/60 absolute -mr-[1px] -mt-[1px] right-3 top-3 w-[26px] -rotate-90 z-50"
+				className="text-blue-900/60 absolute -mr-[1px] -mt-[1px] right-2 top-2 w-[26px] -rotate-90 z-50"
 				viewBox="0 0 120 120"
 			>
 				<circle
@@ -57,7 +57,7 @@ const StayLiquidWidget = () => {
 					<path
 						fill="currentColor"
 						fillOpacity="1"
-						strokeWidth={22}
+						strokeWidth={10}
 						stroke="#a0c4ff"
 						d="M0,160L30,176C60,192,120,224,180,240C240,256,300,256,360,245.3C420,235,480,213,540,186.7C600,160,660,128,720,117.3C780,107,840,117,900,128C960,139,1020,149,1080,128C1140,107,1200,53,1260,80C1320,107,1380,213,1410,266.7L1440,320L1440,0L1410,0C1380,0,1320,0,1260,0C1200,0,1140,0,1080,0C1020,0,960,0,900,0C840,0,780,0,720,0C660,0,600,0,540,0C480,0,420,0,360,0C300,0,240,0,180,0C120,0,60,0,30,0L0,0Z"
 					/>

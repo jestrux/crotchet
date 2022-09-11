@@ -28,18 +28,17 @@ const MusicWidget = () => {
 			></iframe>
 
 			{(changingMood || !playlistId?.length) && (
-				<div className="z-10 absolute inset-0 min-h-full flex flex-col items-center justify-center text-center bg-lime-50">
+				<div className="z-10 absolute inset-0 min-h-full flex flex-col items-center justify-center text-center bg-card sbg-lime-50">
 					<img
 						className="pointer-events-none absolute inset-0 object-cover opacity-[0.035]"
 						src="https://www.picng.com/upload/music_notes/png_music_notes_90036.png"
 						alt="music pattern"
 					/>
-					<span className="text-2xl">🎶</span>
 					<div className="mt-1">
-						<h5 className="text-xl font-medium text-black">
+						<h5 className="text-xl font-medium stext-black">
 							Nice tunes, fine vibes
 						</h5>
-						<p className="text-lime-900">
+						<p className="text-lime-900s opacity-50">
 							What kind of music are you in the mood for?
 						</p>
 					</div>
@@ -75,22 +74,18 @@ const MusicWidget = () => {
 
 			{playlistId?.length && (
 				<button
-					className="absolute right-2 top-2 z-10 rounded-full w-6 h-6 flex items-center justify-center bg-lime-100 border border-black/20"
-					onClick={() => {setChangingMood(!changingMood); setMood(null)}}
+					className="absolute right-10 top-2 z-10 rounded-full w-6 h-6 flex items-center justify-center bg-lime-100 border border-black/20"
+					onClick={() => {
+						setChangingMood(!changingMood);
+						setMood(null);
+					}}
 				>
 					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						fill="none"
 						viewBox="0 0 24 24"
-						strokeWidth={2.5}
-						stroke="currentColor"
-						className="w-4 h-4 text-lime-900"
+						fill="currentColor"
+						className="w-3.5 h-3.5 text-lime-900"
 					>
-						<path
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							d="M6 18L18 6M6 6l12 12"
-						/>
+						<path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
 					</svg>
 				</button>
 			)}
@@ -98,4 +93,19 @@ const MusicWidget = () => {
 	);
 };
 
+MusicWidget.props = {
+	noPadding: true,
+	icon: (
+		<div className="bg-content text-card w-full h-full rounded-full flex items-center justify-center">
+			<svg className="w-3.5" viewBox="0 0 24 24" fill="currentColor">
+				<g>
+					<rect fill="none" height="24" width="24" />
+				</g>
+				<g>
+					<path d="M12,3c-4.97,0-9,4.03-9,9v7c0,1.1,0.9,2,2,2h4v-8H5v-1c0-3.87,3.13-7,7-7s7,3.13,7,7v1h-4v8h4c1.1,0,2-0.9,2-2v-7 C21,7.03,16.97,3,12,3z" />
+				</g>
+			</svg>
+		</div>
+	),
+};
 export default MusicWidget;
