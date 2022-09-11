@@ -1,5 +1,7 @@
 import useFetch from "../hooks/useFetch";
+import ActivitiesWidget from "./ActivitiesWidget";
 import AnnouncementsWidget from "./AnnouncementsWidget";
+import TimerWidget from "./TimerWidget";
 import GithubContributionsWidget from "./GithubContributionsWidget";
 import MusicWidget from "./MusicWidget";
 import StayLiquidWidget from "./StayLiquidWidget";
@@ -17,22 +19,32 @@ const WidgetWrapper = ({
 
 	return (
 		<div
-			className="rounded-2xl bg-card shadow-md overflow-y-hidden relative"
+			className="flex flex-col rounded-2xl bg-card shadow-md overflow-y-hidden relative"
 			style={{
 				width,
 				flex,
 				aspectRatio,
 			}}
 		>
+			{Widget?.props?.title && (
+				<div className="relative z-30 flex-shrink-0 h-10 flex items-center px-3.5 bg-content/5 text-content/50">
+					<span className="uppercase tracking-wide text-[13px] font-bold">
+						{Widget.props.title}
+					</span>
+				</div>
+			)}
+
 			<div
-				className="h-full"
-				style={{ padding: noPadding ? 0 : "1.25rem" }}
+				className="flex-1 overflow-hidden"
+				style={{ padding: noPadding ? 0 : "0.5rem 0.875rem" }}
 			>
 				{children ? children : Widget ? <Widget /> : <span></span>}
 
-				<div className="absolute right-2 top-2 z-20 w-6 h-6">
-					{Widget?.props?.icon}
-				</div>
+				{Widget?.props?.icon && (
+					<div className="absolute right-2 top-2 z-20 w-6 h-6 bg-content/10 text-content rounded-full flex items-center justify-center">
+						{Widget?.props?.icon}
+					</div>
+				)}
 			</div>
 		</div>
 	);
@@ -116,7 +128,7 @@ const Widgets = () => {
 			<div className="flex-1 flex gap-5 items-start">
 				<div className="flex flex-col gap-5" style={{ flex: 1 }}>
 					<WidgetWrapper widget={StayLiquidWidget} />
-					<WidgetWrapper />
+					<WidgetWrapper widget={TimerWidget} />
 					<WidgetWrapper />
 				</div>
 				<div className="flex flex-col gap-5" style={{ flex: 2 }}>
@@ -124,7 +136,10 @@ const Widgets = () => {
 						aspectRatio={2 / 1}
 						widget={AnnouncementsWidget}
 					/>
-					<WidgetWrapper aspectRatio={1 / 1} />
+					<WidgetWrapper
+						aspectRatio={1 / 1}
+						widget={ActivitiesWidget}
+					/>
 				</div>
 				<div className="flex flex-col gap-5" style={{ flex: 2 }}>
 					<WidgetWrapper aspectRatio={2 / 1} />

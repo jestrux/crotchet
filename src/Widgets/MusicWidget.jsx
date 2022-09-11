@@ -28,30 +28,27 @@ const MusicWidget = () => {
 			></iframe>
 
 			{(changingMood || !playlistId?.length) && (
-				<div className="z-10 absolute inset-0 min-h-full flex flex-col items-center justify-center text-center bg-card sbg-lime-50">
+				<div className="z-10 absolute inset-0 -mt-4 bg-card flex flex-col items-center justify-center text-center">
 					<img
 						className="pointer-events-none absolute inset-0 object-cover opacity-[0.035]"
 						src="https://www.picng.com/upload/music_notes/png_music_notes_90036.png"
 						alt="music pattern"
 					/>
-					<div className="mt-1">
-						<h5 className="text-xl font-medium stext-black">
-							Nice tunes, fine vibes
-						</h5>
-						<p className="text-lime-900s opacity-50">
+					<div className="">
+						<p className="opacity-60 text-xl px-20 font-medium">
 							What kind of music are you in the mood for?
 						</p>
 					</div>
 
-					<div className="mt-5 flex items-center font-semibold gap-1">
+					<div className="mt-4 flex items-center font-semibold gap-1">
 						<button
-							className="uppercase bg-gradient-to-br from-green-300 to-green-400 text-black text-xs py-3 px-5 rounded-full flex items-center justify-center"
+							className="uppercase bg-gradient-to-br from-green-300 to-yellow-300 text-black text-xs py-3 px-5 rounded-full flex items-center justify-center"
 							onClick={() => handleSetMood("Chill")}
 						>
 							Chill
 						</button>
 						<button
-							className="uppercase bg-gradient-to-br from-purple-500 to-indigo-500 text-white text-xs py-3 px-5 rounded-full flex items-center justify-center"
+							className="uppercase bg-gradient-to-br from-purple-500 to-teal-500 text-white text-xs py-3 px-5 rounded-full flex items-center justify-center"
 							onClick={() => handleSetMood("Jazz")}
 						>
 							Jazz
@@ -63,7 +60,7 @@ const MusicWidget = () => {
 							Afropop
 						</button>
 						<button
-							className="bg-gradient-to-br from-red-200 to-green-300 text-xs py-3 px-5 rounded-full flex items-center justify-center"
+							className="bg-gradient-to-br from-red-200 to-green-300 text-black text-xs py-3 px-5 rounded-full flex items-center justify-center"
 							onClick={() => handleSetMood("90s RnB")}
 						>
 							90s RnB
@@ -95,17 +92,11 @@ const MusicWidget = () => {
 
 MusicWidget.props = {
 	noPadding: true,
+	title: "Music suggestions",
 	icon: (
-		<div className="bg-content text-card w-full h-full rounded-full flex items-center justify-center">
-			<svg className="w-3.5" viewBox="0 0 24 24" fill="currentColor">
-				<g>
-					<rect fill="none" height="24" width="24" />
-				</g>
-				<g>
-					<path d="M12,3c-4.97,0-9,4.03-9,9v7c0,1.1,0.9,2,2,2h4v-8H5v-1c0-3.87,3.13-7,7-7s7,3.13,7,7v1h-4v8h4c1.1,0,2-0.9,2-2v-7 C21,7.03,16.97,3,12,3z" />
-				</g>
-			</svg>
-		</div>
+		<svg className="w-3.5" viewBox="0 0 24 24" fill="currentColor">
+			<path d="M12,3c-4.97,0-9,4.03-9,9v7c0,1.1,0.9,2,2,2h4v-8H5v-1c0-3.87,3.13-7,7-7s7,3.13,7,7v1h-4v8h4c1.1,0,2-0.9,2-2v-7 C21,7.03,16.97,3,12,3z" />
+		</svg>
 	),
 };
 export default MusicWidget;
