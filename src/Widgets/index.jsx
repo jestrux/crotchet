@@ -7,44 +7,23 @@ import MusicWidget from "./MusicWidget";
 import StayLiquidWidget from "./StayLiquidWidget";
 
 const WidgetWrapper = ({
-	noPadding,
 	children,
 	widget: Widget,
 	width,
 	aspectRatio = 1 / 1,
 	flex,
 }) => {
-	if (Widget?.props?.noPadding !== undefined)
-		noPadding = Widget?.props?.noPadding;
-
 	return (
 		<div
-			className="flex flex-col rounded-2xl bg-card shadow-md overflow-y-hidden relative"
+			className="rounded-2xl bg-card shadow-md overflow-y-hidden relative"
 			style={{
 				width,
 				flex,
 				aspectRatio,
 			}}
 		>
-			{Widget?.props?.title && (
-				<div className="relative z-30 flex-shrink-0 h-10 flex items-center px-3.5 bg-content/5 text-content/50">
-					<span className="uppercase tracking-wide text-[13px] font-bold">
-						{Widget.props.title}
-					</span>
-				</div>
-			)}
-
-			<div
-				className="flex-1 overflow-hidden"
-				style={{ padding: noPadding ? 0 : "0.5rem 0.875rem" }}
-			>
+			<div className="h-full">
 				{children ? children : Widget ? <Widget /> : <span></span>}
-
-				{Widget?.props?.icon && (
-					<div className="absolute right-2 top-2 z-20 w-6 h-6 bg-content/10 text-content rounded-full flex items-center justify-center">
-						{Widget?.props?.icon}
-					</div>
-				)}
 			</div>
 		</div>
 	);
@@ -128,7 +107,7 @@ const Widgets = () => {
 			<div className="flex-1 flex gap-5 items-start">
 				<div className="flex flex-col gap-5" style={{ flex: 1 }}>
 					<WidgetWrapper widget={StayLiquidWidget} />
-					<WidgetWrapper widget={TimerWidget} />
+					<WidgetWrapper />
 					<WidgetWrapper />
 				</div>
 				<div className="flex flex-col gap-5" style={{ flex: 2 }}>
@@ -144,7 +123,7 @@ const Widgets = () => {
 				<div className="flex flex-col gap-5" style={{ flex: 2 }}>
 					<WidgetWrapper aspectRatio={2 / 1} />
 					<div className="flex gap-5">
-						<WidgetWrapper flex={1} />
+						<WidgetWrapper widget={TimerWidget} flex={1} />
 						<WidgetWrapper
 							flex={1}
 							widget={GithubContributionsWidget}

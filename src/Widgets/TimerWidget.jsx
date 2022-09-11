@@ -1,10 +1,7 @@
-const TimerWidget = ({ widget }) => {
-	return <div className="px-5 pt-3"></div>;
-};
+import Widget from "../components/Widget";
 
-TimerWidget.props = {
-	title: "Timer",
-	icon: (
+const TimerWidget = ({ widget }) => {
+	const icon = (
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
 			fill="none"
@@ -19,7 +16,13 @@ TimerWidget.props = {
 				d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
 			/>
 		</svg>
-	),
+	);
+
+	return (
+		<Widget title="Timer" icon={icon}>
+			<div className="px-5 pt-3"></div>
+		</Widget>
+	);
 };
 
 export default TimerWidget;
