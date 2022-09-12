@@ -132,6 +132,7 @@ const Widgets = () => {
 					<WidgetWrapper widget={StayLiquidWidget} />
 					<WidgetWrapper widget={FoodWidget} />
 					<WidgetWrapper widget={PollWidget} />
+					<WidgetWrapper aspectRatio={3 / 1} flex={1} />
 				</div>
 				<div className="flex flex-col gap-5" style={{ flex: 2 }}>
 					<div className="flex gap-3">
@@ -143,7 +144,7 @@ const Widgets = () => {
 						widget={PerformanceWidget}
 					/>
 					<WidgetWrapper
-						aspectRatio={1 / 1}
+						aspectRatio={1 / 1.05}
 						widget={ActivitiesWidget}
 					/>
 				</div>
@@ -152,6 +153,7 @@ const Widgets = () => {
 						aspectRatio={2 / 1}
 						widget={AnnouncementsWidget}
 					/>
+					<WidgetWrapper aspectRatio={5.5 / 1} flex={1} />
 					<div className="flex gap-5">
 						<WidgetWrapper widget={TimerWidget} flex={1} />
 						<WidgetWrapper

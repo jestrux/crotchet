@@ -11,12 +11,23 @@ function App() {
 	});
 
 	return (
-		<div className="h-screen flex flex-col bg-canvas text-content max-w-[1500px] mx-auto">
-			<div className="bg-canvas py-2 px-6 flex items-center justify-between">
-				<h1 className="text-2xl leading-none font-bold font-serif">Crotchet</h1>
+		<div className="h-screen flex flex-col bg-canvas text-content">
+			<div className="py-1.5 pl-3 pr-2.5 flex items-center justify-between">
+				<div className="flex justify-center items-center pr-16">
+					<h1 className="text-2xl leading-none font-bold font-serif">
+						Crotchet
+					</h1>
 
-				<div className="flex items-center">
-					<Button className="h-8 border-content/30 mr-3" rounded="full">
+					<span className="ml-2 font-sans text-xl leading-none opacity-50">
+						&mdash; <span>iPF Softwares</span>
+					</span>
+				</div>
+
+				<div className="flex items-center space-x-2">
+					<Button
+						className="h-8 border-content/30 mr-3s"
+						rounded="full"
+					>
 						<svg
 							className="w-3.5 mr-2"
 							viewBox="0 0 24 24"
@@ -44,7 +55,7 @@ function App() {
 				</div>
 			</div>
 
-			<div className="flex-1 overflow-y-auto">
+			<div className="flex-1 overflow-y-auto max-w-[1500px] mx-auto">
 				<Widgets />
 			</div>
 		</div>
