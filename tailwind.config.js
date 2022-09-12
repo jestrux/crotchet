@@ -2,7 +2,11 @@
 module.exports = {
 	content: ["public/index.html", "./src/**/*.{js,jsx,ts,tsx}"],
 	theme: {
-		extend: {},
+		extend: {
+			screens: {
+				desktop: "1400px",
+			},
+		},
 	},
 	plugins: [
 		require("tailwindcss-themer")({
