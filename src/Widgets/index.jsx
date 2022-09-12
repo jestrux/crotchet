@@ -41,7 +41,7 @@ const Widgets = () => {
 	return (
 		<div className="items-start flex gap-5 py-2 px-6 relative">
 			<div
-				className="flex-shrink-0"
+				className="hidden xl:block flex-shrink-0"
 				style={{ height: "600px", width: "380px" }}
 			>
 				<div className="rounded-2xl bg-card shadow-md overflow-y-hidden">
