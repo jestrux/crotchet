@@ -1,5 +1,7 @@
 import Widget from "../components/Widget";
 
+// Sample schedule
+// https://docs.google.com/spreadsheets/d/1ZQVgYWOFQ-LEf5oJHX1NXbqrQiPsqsQNOg3w62nT6dU/edit#gid=483378863
 const FoodWidget = () => {
 	const icon = (
 		<svg fill="currentColor" viewBox="0 0 24 24" className="w-3.5 h-3.5">
