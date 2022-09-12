@@ -24,8 +24,8 @@ module.exports = {
 					name: "light",
 					extend: {
 						colors: {
-							canvas: "#E5E5E5",
-							card: "#FFF",
+							canvas: "#E5E5E5", // "#efefef",
+							card: "#FFF", // "#fcfff3"
 							popup: "#FFF",
 							divider: "#d4d4d4",
 							content: "#000",

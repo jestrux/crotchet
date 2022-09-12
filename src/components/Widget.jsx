@@ -9,8 +9,8 @@ const Widget = ({
 	return (
 		<div className="h-full flex flex-col relative">
 			{title?.length && (
-				<div className="relative z-30 flex-shrink-0 h-10 flex items-center px-3.5 bg-content/5 text-content/50">
-					<span className="uppercase tracking-wide text-[13px] font-bold">
+				<div className="relative z-30 flex-shrink-0 h-10 flex items-center px-3.5 bg-content/5 text-content/40">
+					<span className="uppercase tracking-wide text-xs font-bold">
 						{title}
 					</span>
 				</div>
@@ -51,7 +51,9 @@ const Widget = ({
 			{actionButton && (
 				// <div className={`${noPadding && "px-12"}`}>
 				<div className="mb-2.5 px-2">
-					<button className="text-content/70 hover:text-content text-[10px] leading-none uppercase font-semibold py-3.5 w-full text-center border border-content/5 hover:border-content/20 bg-content/5 rounded">
+					<button className="text-content/50 hover:text-content/80 text-[10px] leading-none uppercase tracking-wider font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded"
+						onClick={actionButton.onClick}
+					>
 						{actionButton.label}
 					</button>
 				</div>

@@ -19,7 +19,7 @@ const WidgetWrapper = ({
 }) => {
 	return (
 		<div
-			className="rounded-2xl bg-card shadow-md overflow-y-hidden relative"
+			className="rounded-2xl bg-card shadow-md border border-content/10 overflow-y-hidden relative"
 			style={{
 				width,
 				flex,
@@ -47,7 +47,8 @@ const Widgets = () => {
 				<div className="rounded-2xl bg-card shadow-md overflow-y-hidden">
 					<img
 						className="w-full object-cover"
-						src="https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxNjE2NXwwfDF8c2VhcmNofDR8fHN1bnJpc2V8ZW58MHx8fHwxNjYyNzk1ODM3&ixlib=rb-1.2.1&q=80&w=400"
+						// src="https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxNjE2NXwwfDF8c2VhcmNofDR8fHN1bnJpc2V8ZW58MHx8fHwxNjYyNzk1ODM3&ixlib=rb-1.2.1&q=80&w=400"
+						src="https://images.unsplash.com/photo-1540175951029-16f54532b0eb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxNjE2NXwwfDF8c2VhcmNofDI4Nnx8ZmFsbHxlbnwwfHx8fDE2NjI5NTkxMzY&ixlib=rb-1.2.1&q=80&w=1080"
 						alt=""
 						style={{ height: "120px" }}
 					/>
@@ -63,7 +64,7 @@ const Widgets = () => {
 						</div>
 
 						<div className="mt-3 -mx-5 px-5 pt-3 border-t border-content/10">
-							<h3 className="mb-0.5 text-sm font-semibold opacity-60">
+							<h3 className="mb-0.5 text-xs font-bold uppercase tracking-wide opacity-50">
 								Overdue tasks
 							</h3>
 
@@ -85,7 +86,7 @@ const Widgets = () => {
 						</div>
 
 						<div className="-mx-5 px-5 pt-3 border-t border-content/10">
-							<h3 className="mb-0.5 text-sm font-semibold opacity-60">
+							<h3 className="mb-0.5 text-xs font-bold uppercase tracking-wide opacity-50">
 								Pings and alerts
 							</h3>
 
@@ -103,21 +104,21 @@ const Widgets = () => {
 						</div>
 
 						<div className="-mx-5 px-5 pt-3 border-t border-content/10">
-							<h3 className="mb-2 text-sm font-semibold opacity-60">
+							<h3 className="mb-2 text-xs font-bold uppercase tracking-wide opacity-50">
 								Quick actions
 							</h3>
 
 							<div className="grid grid-cols-2 gap-1.5">
-								<button className="text-content/60 hover:text-content text-sm leading-none py-3 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
+								<button className="text-content/50 hover:text-content/80 text-xs leading-none uppercase tracking-wide font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
 									Open an issue
 								</button>
-								<button className="text-content/60 hover:text-content text-sm leading-none py-3 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
+								<button className="text-content/50 hover:text-content/80 text-xs leading-none uppercase tracking-wide font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
 									Ping someone
 								</button>
-								<button className="text-content/60 hover:text-content text-sm leading-none py-3 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
+								<button className="text-content/50 hover:text-content/80 text-xs leading-none uppercase tracking-wide font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
 									Announcement
 								</button>
-								<button className="text-content/60 hover:text-content text-sm leading-none py-3 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
+								<button className="text-content/50 hover:text-content/80 text-xs leading-none uppercase tracking-wide font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
 									Schedule meeting
 								</button>
 							</div>
