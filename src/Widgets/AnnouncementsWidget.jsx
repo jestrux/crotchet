@@ -21,16 +21,11 @@ const AnnouncementsWidget = () => {
 	return (
 		<Widget title="Announcements" icon={icon}>
 			<ListWidget
-				widget={{
-					name: "Announcements",
-					model: "Announcements",
-					props: {
-						image: "owner.image",
-						title: "title",
-						subtitle: "content",
-						action: "link",
-					},
-				}}
+				model="Announcements"
+				image="owner.image"
+				title="title"
+				subtitle="content"
+				action="link"
 			/>
 		</Widget>
 	);

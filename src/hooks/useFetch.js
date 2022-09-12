@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { _get } from "../utils";
 
 function sheetToJson(sheet = []) {
 	let json = [];
@@ -9,9 +10,9 @@ function sheetToJson(sheet = []) {
 				let columnName = columns[index];
 				let value = entry;
 
-				if(columnName.indexOf(":") !== -1){
+				if (columnName.indexOf(":") !== -1) {
 					const [model, column] = columnName.split(":");
-					value = window.users.find((({name}) => name === entry));
+					value = window.users.find(({ name }) => name === entry);
 					columnName = column;
 				}
 
@@ -24,7 +25,92 @@ function sheetToJson(sheet = []) {
 	return json;
 }
 
-function useFetch({ model = "Users", refetchOnWindowFocus = true }) {
+function isSameDay(d1, d2) {
+	return (
+		d1.getFullYear() === d2.getFullYear() &&
+		d1.getDate() === d2.getDate() &&
+		d1.getMonth() === d2.getMonth()
+	);
+}
+
+function processData({ data = [], filters, orderBy, first }) {
+	let processedData = [...data];
+
+	if (processedData?.length) {
+		processedData = !filters?.length
+			? processedData
+			: processedData.filter((entry) => {
+					return filters.every((f) => {
+						const [filter, value] = Object.entries(f)[0];
+						return value.split("|").some((comparison) => {
+							let value = _get(entry, filter);
+							if (comparison.indexOf("today") !== -1) {
+								const diff =
+									(new Date(value).getTime() - Date.now()) /
+									86400 /
+									1000;
+
+								const sameDay = isSameDay(
+									new Date(),
+									new Date(value)
+								);
+
+								if (comparison.indexOf("=") !== -1 && sameDay) {
+									return true;
+								}
+
+								if (comparison.indexOf("<") !== -1) {
+									if (sameDay) return false;
+
+									return diff < 0;
+								}
+
+								if (comparison.indexOf(">") !== -1) {
+									if (sameDay) return false;
+
+									return diff > 0;
+								}
+
+								return (
+									Math.abs(diff) < 1 &&
+									new Date().getDate() ===
+										new Date(value).getDate()
+								);
+							}
+
+							if (comparison.indexOf("!") !== -1)
+								return `!${value}` !== comparison;
+
+							return value === comparison;
+						});
+					});
+			  });
+
+		if (orderBy?.length) {
+			const [order, dir] = orderBy.split("|").map((s) => s.trim());
+			processedData = processedData.sort((a, b) => {
+				const valueA = _get(a, order);
+				const valueB = _get(b, order);
+
+				return dir === "desc"
+					? valueA.localeCompare(valueB)
+					: valueB.localeCompare(valueA);
+			});
+		}
+	}
+
+	if (first) return processedData.length ? processedData[0] : null;
+
+	return processedData;
+}
+
+function useFetch({
+	model = "Users",
+	refetchOnWindowFocus = false,
+	filters,
+	orderBy,
+	first
+}) {
 	const fetchModel = async () => {
 		const baseUrl =
 			"https://sheets.googleapis.com/v4/spreadsheets/1xkgPzQYmgndKFy1D6j4ZbZSc5wx0Z3lIP0zlp7FC20Q/values";
@@ -43,7 +129,10 @@ function useFetch({ model = "Users", refetchOnWindowFocus = true }) {
 		refetchOnWindowFocus,
 	});
 
-	return { ...query };
+	return {
+		...query,
+		data: processData({ data: query.data, filters, orderBy, first }),
+	};
 }
 
 export default useFetch;

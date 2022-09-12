@@ -17,7 +17,7 @@ const Widget = ({
 			)}
 
 			<div
-				className="flex-1 overflow-hidden"
+				className="flex-1 overflow-hidden overflow-y-auto"
 				style={{ padding: noPadding ? 0 : "0.5rem 0.875rem" }}
 			>
 				{children}

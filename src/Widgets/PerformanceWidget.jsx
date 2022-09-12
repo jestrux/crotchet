@@ -1,6 +1,13 @@
 import Widget from "../components/Widget";
+import useFetch from "../hooks/useFetch";
+import ListWidget from "./ListWidget";
 
 const PerformanceWidget = () => {
+	// const { isLoading, data } = useFetch({
+	// 	model: "Performance",
+	// 	orderBy: "progress",
+	// });
+
 	const icon = (
 		<svg
 			fill="none"
@@ -18,10 +25,21 @@ const PerformanceWidget = () => {
 	);
 
 	return (
-		<Widget title="Live performance" icon={icon}>
-			<p className="opacity-50 text-sm leading-relaxed py-3 px-8 text-center">
+		<Widget noPadding title="Team performance" icon={icon}>
+			{/* <p className="opacity-50 text-sm leading-relaxed py-3 px-8 text-center">
 				Performance widget with live, rich data based on your activities coming soon.
-			</p>
+			</p> */}
+
+			<div className="pt-1 pl-3.5 pr-2">
+				<ListWidget
+					model="Performance"
+					image="user.image"
+					title="user.name"
+					subtitle="user.department::billed"
+					progress="progress"
+					filters={[{"user.name": "!Walter Kimaro"}]}
+				/>
+			</div>
 		</Widget>
 	);
 };

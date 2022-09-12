@@ -9,6 +9,8 @@ import PollWidget from "./PollWidget";
 import ListWidget from "./ListWidget";
 import FoodWidget from "./FoodWidget";
 import PerformanceWidget from "./PerformanceWidget";
+import UserPerformanceWidget from "./UserPerformanceWidget";
+import UtilitiesWidget from "./UtilitiesWidget";
 
 const WidgetWrapper = ({
 	children,
@@ -69,14 +71,10 @@ const Widgets = () => {
 							</h3>
 
 							<ListWidget
-								widget={{
-									model: "Tasks",
-									props: {
-										title: "task",
-										subtitle: "type::project::due|date",
-										status: "status",
-									},
-								}}
+								model="Tasks"
+								title="task"
+								subtitle="type::project::due|date"
+								status="status"
 								orderBy="due"
 								filters={[
 									{ status: "in progress|pending|blocked" },
@@ -91,15 +89,11 @@ const Widgets = () => {
 							</h3>
 
 							<ListWidget
-								widget={{
-									model: "Pings",
-									props: {
-										image: "sender.image",
-										title: "content",
-										subtitle: "sender.name",
-										action: "link"
-									},
-								}}
+								model="Pings"
+								image="sender.image"
+								title="content"
+								subtitle="sender.name"
+								action="link"
 							/>
 						</div>
 
@@ -128,15 +122,25 @@ const Widgets = () => {
 			</div>
 
 			<div className="flex-1 flex gap-5 items-start">
-				<div className="flex flex-col gap-5" style={{ flex: 1 }}>
+				<div
+					className="hidden lg:flex flex-col gap-5"
+					style={{ flex: 1 }}
+				>
 					<WidgetWrapper widget={StayLiquidWidget} />
 					<WidgetWrapper widget={FoodWidget} />
 					<WidgetWrapper widget={PollWidget} />
 					<WidgetWrapper aspectRatio={3.5 / 1} flex={1} />
 				</div>
-				<div className="flex flex-col gap-5" style={{ flex: 2 }}>
+				<div
+					className="hidden md:flex flex-col gap-5"
+					style={{ flex: 2 }}
+				>
 					<div className="flex gap-3">
-						<WidgetWrapper aspectRatio={2.8 / 1} flex={1} />
+						<WidgetWrapper
+							aspectRatio={2.8 / 1}
+							flex={1}
+							widget={UserPerformanceWidget}
+						/>
 						<WidgetWrapper aspectRatio={2.8 / 1} flex={1} />
 					</div>
 					<WidgetWrapper
@@ -153,7 +157,10 @@ const Widgets = () => {
 						aspectRatio={2 / 1}
 						widget={AnnouncementsWidget}
 					/>
-					<WidgetWrapper aspectRatio={5.5 / 1} flex={1} />
+					<WidgetWrapper
+						aspectRatio={5.5 / 1}
+						widget={UtilitiesWidget}
+					/>
 					<div className="flex gap-5">
 						<WidgetWrapper widget={TimerWidget} flex={1} />
 						<WidgetWrapper

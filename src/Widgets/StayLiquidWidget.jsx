@@ -54,10 +54,13 @@ const StayLiquidWidget = () => {
 
 	const [curIndex, setCurIndex] = useState(0);
 
-	const { progress: completed } = useIntervalWithPercent(() => {
-		const length = data?.length ? data.length : messages.length;
-		setCurIndex(curIndex === length - 1 ? 0 : curIndex + 1);
-	}, 30 * 1000);
+	const { progress: completed } = useIntervalWithPercent(
+		() => {
+			const length = data?.length ? data.length : messages.length;
+			setCurIndex(curIndex === length - 1 ? 0 : curIndex + 1);
+		},
+		{ delay: 30 * 1000 }
+	);
 
 	const message = data?.length ? data[curIndex] : messages[curIndex];
 

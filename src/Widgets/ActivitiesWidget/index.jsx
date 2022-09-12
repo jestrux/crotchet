@@ -23,19 +23,13 @@ const ActivitiesWidget = () => {
 				</svg>
 			}
 		>
-			<div className="h-full pt-1 pl-4 pr-3 overflow-y-auto">
+			<div className="pt-1 pl-4 pr-3">
 				<ListWidget
-					widget={{
-						model: "Tasks",
-						props: {
-							title: "task",
-							subtitle: "due|date::type::project",
-							status: "status",
-						},
-					}}
-					filters={[
-						{ status: "in progress|pending" },
-					]}
+					model="Tasks"
+					title="task"
+					subtitle="due|date::type::project"
+					status="status"
+					filters={[{ status: "in progress|pending" }]}
 				/>
 			</div>
 		</Widget>

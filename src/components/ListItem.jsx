@@ -1,3 +1,6 @@
+import { Fragment } from "react";
+import { _get, _parse } from "../utils";
+
 const Status = ({ status }) => {
 	return (
 		<div
@@ -18,7 +21,67 @@ const Status = ({ status }) => {
 	);
 };
 
-const ListItem = ({ image, title, subtitle, status, leading, action }) => {
+const Progress = ({ value }) => {
+	return (
+		<div className="relative">
+			<svg
+				className={`
+					${value < 50 && "text-yellow-300"}
+					${value >= 50 && value <= 85 && "text-purple-500"}
+					${value > 85 && "text-green-400/60"}
+				-rotate-90
+				`}
+				viewBox="0 0 120 120"
+				strokeWidth="6"
+			>
+				<circle
+					cx="60"
+					cy="60"
+					r="54"
+					fill="none"
+					stroke="currentColor"
+					pathLength="100"
+					strokeDasharray="100"
+					strokeDashoffset={100 - value}
+					strokeLinejoin="round"
+					strokeLinecap="round"
+				/>
+
+				<circle
+					className="text-content/10"
+					cx="60"
+					cy="60"
+					r="54"
+					fill="none"
+					stroke="currentColor"
+				/>
+			</svg>
+
+			<div className="absolute inset-0 flex items-center justify-center text-[7px] font-bold">
+				{Number(value).toFixed(0)}%
+			</div>
+		</div>
+	);
+};
+
+const ListItem = ({
+	data,
+	image,
+	title,
+	subtitle,
+	status,
+	leading,
+	action,
+	progress,
+}) => {
+	image = _get(data, image);
+	title = _get(data, title);
+	subtitle = _parse(subtitle, data);
+	leading = _get(data, leading);
+	status = _get(data, status);
+	action = _get(data, action);
+	progress = _get(data, progress);
+
 	return (
 		<a
 			{...(!action?.length ? {} : { href: action })}
@@ -54,7 +117,7 @@ const ListItem = ({ image, title, subtitle, status, leading, action }) => {
 					>
 						{subtitle.map((s, i) => {
 							return (
-								<>
+								<Fragment key={i}>
 									<span>
 										{s.charAt(0).toUpperCase()}
 										{s.substring(1)}
@@ -71,7 +134,7 @@ const ListItem = ({ image, title, subtitle, status, leading, action }) => {
 											)}
 										</span>
 									)}
-								</>
+								</Fragment>
 							);
 						})}
 					</p>
@@ -82,6 +145,12 @@ const ListItem = ({ image, title, subtitle, status, leading, action }) => {
 				{status?.length && (
 					<div className="self-start">
 						<Status status={status} />
+					</div>
+				)}
+
+				{progress?.length && (
+					<div className="self-start w-9">
+						<Progress value={progress} />
 					</div>
 				)}
 
