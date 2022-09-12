@@ -23,7 +23,7 @@ const GithubContributionsWidget = () => {
 	return (
 		<Widget noPadding title="GitHub Activity" icon={icon}>
 			<div className="h-full flex flex-col">
-				<div className="px-3 pt-1 pb-2">
+				<div className="px-3 pt-0.5 pb-1">
 					{Object.keys(dayCountMap).map((key, index) => (
 						<div key={key} className="inline-flex items-center">
 							<button
@@ -31,7 +31,7 @@ const GithubContributionsWidget = () => {
 									dayCountMap[key] === dayCount
 										? "text-blue-500"
 										: "opacity-40"
-								} font-bold`}
+								} text-sm leading-none font-bold`}
 								onClick={() => {
 									setLoading(true);
 									setDayCount(dayCountMap[key]);
@@ -41,7 +41,7 @@ const GithubContributionsWidget = () => {
 							</button>
 
 							{index !== Object.keys(dayCountMap).length - 1 && (
-								<span className="text-xl leading-none font-bold mx-2 opacity-40">
+								<span className="text-xl pb-1 leading-none font-bold mx-2 opacity-40">
 									&middot;
 								</span>
 							)}

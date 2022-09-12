@@ -3,10 +3,14 @@ const Status = ({ status }) => {
 		<div
 			className={`
 			${status == "complete" && "bg-green-500 text-white"}
-			${status == "in progress" && "bg-yellow-500 text-black"}
+			${status == "in progress" && "bg-yellow-300 text-black"}
 			${status == "blocked" && "bg-red-500 text-white"}
-			${!["in progress", "complete", "blocked"].includes(status) && "bg-content/10"}
-			font-bold py-1.5 px-2 rounded-full border border-content/5 text-[8px] leading-none uppercase
+			${
+				!["in progress", "complete", "blocked"].includes(status)
+					? "bg-content/5 dark:bg-content/10 border-content/10"
+					: "border-transparent"
+			}
+			font-bold py-1.5 px-2 rounded-full border text-[8px] leading-none uppercase tracking-wide
 		`}
 		>
 			{status}

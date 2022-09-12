@@ -8,7 +8,12 @@ const FoodWidget = () => {
 	);
 
 	return (
-		<Widget title="Lunch order" icon={icon}>
+		<Widget title="Lunch order" icon={icon} actionButton={{
+			label: "Place your order",
+			onClick() {
+				alert("Place order!");
+			}
+		}}>
 			<p className="opacity-50 text-sm py-2 text-center">
 				You haven't placed your order for today.
 			</p>

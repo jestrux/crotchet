@@ -47,9 +47,14 @@ const PollWidget = () => {
 			title="Polls"
 			icon={icon}
 			// actions={actions}
-			actionButton="Create poll"
+			actionButton={{
+				label: "Start a poll",
+				onClick() {
+					alert("Create poll!");
+				},
+			}}
 		>
-			<p className="opacity-50 text-sm py-2 text-center">
+			<p className="opacity-50 text-sm py-3 text-center">
 				No active polls found.
 			</p>
 		</Widget>

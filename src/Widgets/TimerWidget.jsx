@@ -103,7 +103,7 @@ const TimerWidget = ({ widget }) => {
 					</span>
 				</div>
 
-				<div className="px-5 border-t border-content/20 mt-3 pt-4 grid grid-cols-2 gap-2">
+				<div className="mb-3 px-5 border-t border-content/20 mt-3 pt-4 grid grid-cols-2 gap-2">
 					{[30, 60, 300, 600, 900, 1800].map((dur) => {
 						return (
 							<button

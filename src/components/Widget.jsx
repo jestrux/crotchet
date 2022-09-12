@@ -52,7 +52,7 @@ const Widget = ({
 				// <div className={`${noPadding && "px-12"}`}>
 				<div className="mb-2.5 px-2">
 					<button className="text-content/70 hover:text-content text-[10px] leading-none uppercase font-semibold py-3.5 w-full text-center border border-content/5 hover:border-content/20 bg-content/5 rounded">
-						{actionButton}
+						{actionButton.label}
 					</button>
 				</div>
 			)}
