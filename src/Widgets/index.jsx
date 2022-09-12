@@ -132,7 +132,7 @@ const Widgets = () => {
 					<WidgetWrapper widget={StayLiquidWidget} />
 					<WidgetWrapper widget={FoodWidget} />
 					<WidgetWrapper widget={PollWidget} />
-					<WidgetWrapper aspectRatio={3 / 1} flex={1} />
+					<WidgetWrapper aspectRatio={3.5 / 1} flex={1} />
 				</div>
 				<div className="flex flex-col gap-5" style={{ flex: 2 }}>
 					<div className="flex gap-3">

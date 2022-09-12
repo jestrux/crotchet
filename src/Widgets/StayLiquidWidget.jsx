@@ -81,7 +81,7 @@ const StayLiquidWidget = () => {
 					/>
 				</svg>
 
-				<div className="pt-5 pb-2 px-5 bg-blue-500 text-white -mb-5 z-10 relative">
+				<div className="rounded-t-2xl pt-5 pb-2 px-5 bg-blue-500 text-white -mb-5 z-10 relative">
 					<h3 className="mt-0.5 text-lg font-bold font-serif">
 						Stay Liquid
 					</h3>

@@ -68,6 +68,7 @@ const MusicWidget = () => {
 		>
 			<div className="h-full relative">
 				<iframe
+					className="rounded-b-2xl"
 					id="spotifyPlayer"
 					title="Spotify Album"
 					src={`https://open.spotify.com/embed/playlist/${playlistId}?theme=${theme}&autoplay=true`}

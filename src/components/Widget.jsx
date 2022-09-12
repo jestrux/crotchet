@@ -9,7 +9,7 @@ const Widget = ({
 	return (
 		<div className="h-full flex flex-col relative">
 			{title?.length && (
-				<div className="relative z-30 flex-shrink-0 h-10 flex items-center px-3.5 bg-content/5 text-content/40">
+				<div className="rounded-t-2xl relative z-30 flex-shrink-0 h-10 flex items-center px-3.5 bg-content/5 text-content/40">
 					<span className="uppercase tracking-wide text-xs font-bold">
 						{title}
 					</span>

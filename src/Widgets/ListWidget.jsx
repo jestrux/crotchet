@@ -2,13 +2,24 @@ import ListItem from "../components/ListItem";
 import Loader from "../components/Loader";
 import useFetch from "../hooks/useFetch";
 
+function dateFromString(date) {
+	const parsed = Date.parse(date);
+	if (!isNaN(parsed)) {
+		return parsed;
+	}
+
+	return Date.parse(date.replace(/-/g, "/").replace(/[a-z]+/gi, " "));
+}
+
 const formatDate = (
 	value,
 	formatting = { month: "short", day: "numeric", year: "numeric" }
 ) => {
 	if (!value) return value;
 
-	return new Intl.DateTimeFormat("en-US", formatting).format(new Date(value));
+	return new Intl.DateTimeFormat("en-US", formatting).format(
+		new Date(dateFromString(value))
+	);
 };
 
 const _parse = function (text, data) {
