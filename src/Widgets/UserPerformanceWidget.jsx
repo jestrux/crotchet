@@ -1,29 +1,20 @@
-import ListItem from "../components/ListItem";
 import Widget from "../components/Widget";
-import useFetch from "../hooks/useFetch";
+import ListWidget from "./ListWidget";
 
 const UserPerformanceWidget = () => {
-	const { isLoading, data } = useFetch({
-		model: "Performance",
-		orderBy: "progress",
-		first: true,
-		filters: [
-			{
-				"user.name": "Walter Kimaro",
-			},
-		],
-	});
-
 	return (
-		<Widget>
-			{data && (
-				<ListItem
-					data={data}
-					title="user.name"
-					subtitle="user.department::billed"
-					progress="progress"
-				/>
-			)}
+		<Widget noScroll>
+			<ListWidget 
+				model="Performance"
+				title="user.name"
+				subtitle="user.department::billed"
+				progress="progress"
+				filters={[
+					{
+						"user.name": "Walter Kimaro"
+					}
+				]}
+			/>
 		</Widget>
 	);
 };

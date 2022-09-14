@@ -20,7 +20,7 @@ const UtilitiesWidget = () => {
 						return (
 							<div
 								key={i}
-								className="w-10 h-10 rounded-full border-2 border-double border-content/90 relative"
+								className="w-10 h-10 rounded-full border relative"
 								style={{ zIndex: data.length - i }}
 							>
 								<img

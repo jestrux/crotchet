@@ -12,7 +12,7 @@ function App() {
 
 	return (
 		<div className="h-screen flex flex-col bg-canvas text-content">
-			<div className="py-1.5 pl-3 pr-2.5 flex items-center justify-between">
+			<div className="z-10 py-1.5 pl-3 pr-2.5 flex items-center justify-between">
 				<div className="flex justify-center items-center pr-16">
 					<h1 className="text-2xl leading-none font-bold font-serif">
 						Crotchet

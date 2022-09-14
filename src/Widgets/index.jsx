@@ -11,6 +11,7 @@ import FoodWidget from "./FoodWidget";
 import PerformanceWidget from "./PerformanceWidget";
 import UserPerformanceWidget from "./UserPerformanceWidget";
 import UtilitiesWidget from "./UtilitiesWidget";
+import UserStatusWidget from "./UserStatusWidget";
 
 const WidgetWrapper = ({
 	children,
@@ -40,17 +41,20 @@ const Widgets = () => {
 		model: "Widgets",
 	});
 
+	// const userImage = "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxNjE2NXwwfDF8c2VhcmNofDR8fHN1bnJpc2V8ZW58MHx8fHwxNjYyNzk1ODM3&ixlib=rb-1.2.1&q=80&w=400";
+	const userImage =
+		"https://images.unsplash.com/photo-1540175951029-16f54532b0eb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxNjE2NXwwfDF8c2VhcmNofDI4Nnx8ZmFsbHxlbnwwfHx8fDE2NjI5NTkxMzY&ixlib=rb-1.2.1&q=80&w=1080";
+
 	return (
 		<div className="items-start flex gap-5 py-2 px-6 relative">
 			<div
 				className="hidden desktop:block flex-shrink-0"
 				style={{ height: "600px", width: "380px" }}
 			>
-				<div className="rounded-2xl bg-card shadow-md overflow-y-hidden">
+				<div className="relative z-10 rounded-2xl bg-card shadow-md overflow-y-hidden">
 					<img
 						className="w-full object-cover"
-						// src="https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxNjE2NXwwfDF8c2VhcmNofDR8fHN1bnJpc2V8ZW58MHx8fHwxNjYyNzk1ODM3&ixlib=rb-1.2.1&q=80&w=400"
-						src="https://images.unsplash.com/photo-1540175951029-16f54532b0eb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxNjE2NXwwfDF8c2VhcmNofDI4Nnx8ZmFsbHxlbnwwfHx8fDE2NjI5NTkxMzY&ixlib=rb-1.2.1&q=80&w=1080"
+						src={userImage}
 						alt=""
 						style={{ height: "120px" }}
 					/>
@@ -141,7 +145,11 @@ const Widgets = () => {
 							flex={1}
 							widget={UserPerformanceWidget}
 						/>
-						<WidgetWrapper aspectRatio={2.8 / 1} flex={1} />
+						<WidgetWrapper
+							aspectRatio={2.8 / 1}
+							flex={1}
+							widget={UserStatusWidget}
+						/>
 					</div>
 					<WidgetWrapper
 						aspectRatio={2 / 1}
