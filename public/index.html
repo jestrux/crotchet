@@ -27,6 +27,8 @@
 		<title>React App</title>
 
 		<script>
+			if (navigator.appVersion?.indexOf("Win")!=-1) document.documentElement.classList.add("windows");
+
 			setTimeout(() => {
 				updateColorScheme(
 					window.matchMedia &&
