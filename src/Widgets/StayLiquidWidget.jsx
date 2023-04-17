@@ -8,36 +8,36 @@ const StayLiquidWidget = () => {
 		model: "Stay Liquid",
 	});
 
-	const icon = (
-		<div className="bg-white w-full h-full rounded-full flex items-center justify-center">
-			<svg className="w-10 ml-0.5 mt-1" viewBox="0 0 332 412">
-				<defs>
-					<radialGradient id="rg" r="1" fx="0.25" fy="0.5">
-						<stop offset="0%" stopColor="white"></stop>
-						<stop offset="75%" stopColor="#1B7FE4"></stop>
-					</radialGradient>
-				</defs>
-				<path
-					id="pathX"
-					fill="url(#rg)"
-					d="m 228.82,126.17 c 0,0 -11.21426,-24.27631 -54.17763,-36.049322 -6.26889,-1.717829 -34.05856,-0.314692 -40.44915,0.872881 C 106.06884,96.219957 84.38,126.17 84.38,126.17 c -43.19,59.62 0.65,142 74,141.33 71.09,-1.56 113.12,-82.46 70.47,-141.33"
-				>
-					<animate
-						attributeName="d"
-						begin="0s"
-						dur="4s"
-						repeatCount="indefinite"
-						values="
-	m 228.82,126.17 c 0,0 -11.21426,-24.27631 -54.17763,-36.049322 -6.26889,-1.717829 -34.05856,-0.314692 -40.44915,0.872881 C 106.06884,96.219957 84.38,126.17 84.38,126.17 c -43.19,59.62 0.65,142 74,141.33 71.09,-1.56 113.12,-82.46 70.47,-141.33;
-	
-	m 228.82,126.17 c 0,0 -36.96426,-56.572924 -62.47,-86.24 -4.23749,-4.928853 -15.48617,-5.112646 -19.5,0 -21.57777,27.484873 -62.47,86.24 -62.47,86.24 -43.19,59.62 0.65,142 74,141.33 71.09,-1.56 113.12,-82.46 70.47,-141.33;
-	m 228.82,126.17 c 0,0 -11.21426,-24.27631 -54.17763,-36.049322 -6.26889,-1.717829 -34.05856,-0.314692 -40.44915,0.872881 C 106.06884,96.219957 84.38,126.17 84.38,126.17 c -43.19,59.62 0.65,142 74,141.33 71.09,-1.56 113.12,-82.46 70.47,-141.33;
-	"
-					/>
-				</path>
-			</svg>
-		</div>
-	);
+	// const icon = (
+	// 	<div className="bg-white w-full h-full rounded-full flex items-center justify-center">
+	// 		<svg className="w-10 ml-0.5 mt-1" viewBox="0 0 332 412">
+	// 			<defs>
+	// 				<radialGradient id="rg" r="1" fx="0.25" fy="0.5">
+	// 					<stop offset="0%" stopColor="white"></stop>
+	// 					<stop offset="75%" stopColor="#1B7FE4"></stop>
+	// 				</radialGradient>
+	// 			</defs>
+	// 			<path
+	// 				id="pathX"
+	// 				fill="url(#rg)"
+	// 				d="m 228.82,126.17 c 0,0 -11.21426,-24.27631 -54.17763,-36.049322 -6.26889,-1.717829 -34.05856,-0.314692 -40.44915,0.872881 C 106.06884,96.219957 84.38,126.17 84.38,126.17 c -43.19,59.62 0.65,142 74,141.33 71.09,-1.56 113.12,-82.46 70.47,-141.33"
+	// 			>
+	// 				<animate
+	// 					attributeName="d"
+	// 					begin="0s"
+	// 					dur="4s"
+	// 					repeatCount="indefinite"
+	// 					values="
+	// m 228.82,126.17 c 0,0 -11.21426,-24.27631 -54.17763,-36.049322 -6.26889,-1.717829 -34.05856,-0.314692 -40.44915,0.872881 C 106.06884,96.219957 84.38,126.17 84.38,126.17 c -43.19,59.62 0.65,142 74,141.33 71.09,-1.56 113.12,-82.46 70.47,-141.33;
+
+	// m 228.82,126.17 c 0,0 -36.96426,-56.572924 -62.47,-86.24 -4.23749,-4.928853 -15.48617,-5.112646 -19.5,0 -21.57777,27.484873 -62.47,86.24 -62.47,86.24 -43.19,59.62 0.65,142 74,141.33 71.09,-1.56 113.12,-82.46 70.47,-141.33;
+	// m 228.82,126.17 c 0,0 -11.21426,-24.27631 -54.17763,-36.049322 -6.26889,-1.717829 -34.05856,-0.314692 -40.44915,0.872881 C 106.06884,96.219957 84.38,126.17 84.38,126.17 c -43.19,59.62 0.65,142 74,141.33 71.09,-1.56 113.12,-82.46 70.47,-141.33;
+	// "
+	// 				/>
+	// 			</path>
+	// 		</svg>
+	// 	</div>
+	// );
 
 	const messages = [
 		{
@@ -65,9 +65,9 @@ const StayLiquidWidget = () => {
 	const message = data?.length ? data[curIndex] : messages[curIndex];
 
 	return (
-		<Widget noPadding icon={icon}>
+		<Widget noPadding>
 			<div className="h-full flex flex-col relative">
-				<svg
+				{/* <svg
 					className="text-blue-900/60 absolute -mr-[1px] -mt-[1px] right-2 top-2 w-[26px] -rotate-90 z-50"
 					viewBox="0 0 120 120"
 				>
@@ -82,7 +82,7 @@ const StayLiquidWidget = () => {
 						strokeDasharray="100"
 						strokeDashoffset={100 - completed}
 					/>
-				</svg>
+				</svg> */}
 
 				<div className="rounded-t-2xl pt-5 pb-2 px-5 bg-blue-500 text-white -mb-5 z-10 relative">
 					<h3 className="mt-0.5 text-lg font-bold font-serif">
