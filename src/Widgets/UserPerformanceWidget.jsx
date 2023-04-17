@@ -4,16 +4,14 @@ import ListWidget from "./ListWidget";
 const UserPerformanceWidget = () => {
 	return (
 		<Widget noScroll>
-			<ListWidget 
+			<ListWidget
 				model="Performance"
 				title="user.name"
 				subtitle="user.department::billed"
 				progress="progress"
-				filters={[
-					{
-						"user.name": "Walter Kimaro"
-					}
-				]}
+				filters={{
+					"user.name": "Walter Kimaro",
+				}}
 			/>
 		</Widget>
 	);

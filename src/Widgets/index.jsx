@@ -46,7 +46,7 @@ const Widgets = () => {
 		"https://images.unsplash.com/photo-1540175951029-16f54532b0eb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxNjE2NXwwfDF8c2VhcmNofDI4Nnx8ZmFsbHxlbnwwfHx8fDE2NjI5NTkxMzY&ixlib=rb-1.2.1&q=80&w=1080";
 
 	return (
-		<div className="items-start flex gap-5 py-2 px-6 relative">
+		<div className="items-start flex gap-5 relative">
 			<div
 				className="hidden desktop:block flex-shrink-0"
 				style={{ height: "600px", width: "380px" }}
@@ -80,10 +80,10 @@ const Widgets = () => {
 								subtitle="type::project::due|date"
 								status="status"
 								orderBy="due"
-								filters={[
-									{ status: "in progress|pending|blocked" },
-									{ due: "<today" },
-								]}
+								filters={{
+									status: "in progress|pending|blocked",
+									due: "<today",
+								}}
 							/>
 						</div>
 
@@ -156,7 +156,7 @@ const Widgets = () => {
 						widget={PerformanceWidget}
 					/>
 					<WidgetWrapper
-						aspectRatio={1 / 1.05}
+						aspectRatio={1 / 1.03}
 						widget={ActivitiesWidget}
 					/>
 				</div>

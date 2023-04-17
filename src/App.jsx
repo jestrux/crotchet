@@ -12,15 +12,16 @@ function App() {
 
 	return (
 		<div className="h-screen flex flex-col bg-canvas text-content">
-			<div className="z-10 py-1.5 pl-3 pr-2.5 flex items-center justify-between">
+			<div className="z-10 w-full max-w-[1500px] mx-auto py-1.5 px-4 flex items-center justify-between">
+				
 				<div className="flex justify-center items-center pr-16">
 					<h1 className="text-2xl leading-none font-bold font-serif">
 						Crotchet
 					</h1>
 
-					<span className="ml-2 font-sans text-xl leading-none opacity-50">
+					{/* <span className="ml-2 font-sans text-xl leading-none opacity-50">
 						&mdash; <span>iPF Softwares</span>
-					</span>
+					</span> */}
 				</div>
 
 				<div className="flex items-center space-x-2">
@@ -55,7 +56,7 @@ function App() {
 				</div>
 			</div>
 
-			<div className="flex-1 overflow-y-auto max-w-[1500px] mx-auto">
+			<div className="w-full max-w-[1500px] mx-auto flex-1 overflow-y-auto py-2 px-4">
 				<Widgets />
 			</div>
 		</div>

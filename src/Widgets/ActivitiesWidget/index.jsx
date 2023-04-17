@@ -29,7 +29,7 @@ const ActivitiesWidget = () => {
 					title="task"
 					subtitle="due|date::type::project"
 					status="status"
-					filters={[{ status: "in progress|pending" }]}
+					filters={{ status: "in progress|pending" }}
 				/>
 			</div>
 		</Widget>

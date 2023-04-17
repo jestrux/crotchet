@@ -33,58 +33,81 @@ function isSameDay(d1, d2) {
 	);
 }
 
+function replaceMultiple(str, matches, replacement) {
+	matches.forEach((match) => {
+		str = str.replace(new RegExp(match, "g"), replacement);
+	});
+
+	return str;
+}
+
+function dataFilterer(value, comparison) {
+	if (comparison.indexOf("today") !== -1) {
+		const diff = (new Date(value).getTime() - Date.now()) / 86400 / 1000;
+
+		const sameDay = isSameDay(new Date(), new Date(value));
+
+		if (comparison.indexOf("=") !== -1 && sameDay) {
+			return true;
+		}
+
+		if (comparison.indexOf("<") !== -1) {
+			if (sameDay) return false;
+
+			return diff < 0;
+		}
+
+		if (comparison.indexOf(">") !== -1) {
+			if (sameDay) return false;
+
+			return diff > 0;
+		}
+
+		return (
+			Math.abs(diff) < 1 &&
+			new Date().getDate() === new Date(value).getDate()
+		);
+	}
+
+	if (comparison.indexOf("!") !== -1) return `!${value}` !== comparison;
+
+	const actualComparison = replaceMultiple(
+		comparison,
+		["<", ">", "="],
+		""
+	).trim();
+
+	if (comparison.indexOf("<=") !== -1) return value <= actualComparison;
+
+	if (comparison.indexOf(">=") !== -1) return value >= actualComparison;
+
+	if (comparison.indexOf("<") !== -1) return value < actualComparison;
+
+	if (comparison.indexOf(">") !== -1) return value > actualComparison;
+
+	return value === comparison;
+}
+
 function processData({ data = [], filters, orderBy, first }) {
 	let processedData = [...data];
+	filters = Object.entries(filters || {});
 
 	if (processedData?.length) {
 		processedData = !filters?.length
 			? processedData
-			: processedData.filter((entry) => {
-					return filters.every((f) => {
-						const [filter, value] = Object.entries(f)[0];
-						return value.split("|").some((comparison) => {
-							let value = _get(entry, filter);
-							if (comparison.indexOf("today") !== -1) {
-								const diff =
-									(new Date(value).getTime() - Date.now()) /
-									86400 /
-									1000;
+			: processedData.filter((row) =>
+					filters.every(([field, filter]) => {
+						const value = _get(row, field);
+						const [data, filterMethod] =
+							filter.indexOf("|") !== -1
+								? [filter.split("|"), "some"]
+								: [filter.split("&"), "every"];
 
-								const sameDay = isSameDay(
-									new Date(),
-									new Date(value)
-								);
-
-								if (comparison.indexOf("=") !== -1 && sameDay) {
-									return true;
-								}
-
-								if (comparison.indexOf("<") !== -1) {
-									if (sameDay) return false;
-
-									return diff < 0;
-								}
-
-								if (comparison.indexOf(">") !== -1) {
-									if (sameDay) return false;
-
-									return diff > 0;
-								}
-
-								return (
-									Math.abs(diff) < 1 &&
-									new Date().getDate() ===
-										new Date(value).getDate()
-								);
-							}
-
-							if (comparison.indexOf("!") !== -1)
-								return `!${value}` !== comparison;
-
-							return value === comparison;
-						});
-					});
-			  });
+						return data[filterMethod]((comparison) =>
+							dataFilterer(value, comparison)
+						);
+					})
+			  );
 
 		if (orderBy?.length) {
 			const [order, dir] = orderBy.split("|").map((s) => s.trim());
@@ -109,7 +132,7 @@ function useFetch({
 	refetchOnWindowFocus = false,
 	filters,
 	orderBy,
-	first
+	first,
 }) {
 	const fetchModel = async () => {
 		const baseUrl =

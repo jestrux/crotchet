@@ -4,11 +4,9 @@ import useFetch from "../hooks/useFetch";
 const UtilitiesWidget = () => {
 	const { isLoading, data } = useFetch({
 		model: "Users",
-		filters: [
-			{
-				name: "!Walter Kimaro",
-			},
-		],
+		filters: {
+			name: "!Walter Kimaro",
+		},
 	});
 
 	return (
