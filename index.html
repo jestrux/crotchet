@@ -15,10 +15,7 @@
 			content="#181818"
 			media="(prefers-color-scheme: dark)"
 		/>
-		<meta
-			name="description"
-			content="Widgets to your heart's content"
-		/>
+		<meta name="description" content="Widgets to your heart's content" />
 		<link rel="manifest" href="manifest.json" />
 		<title>Crotchet</title>
 		<script>
@@ -26,23 +23,25 @@
 				document.body.classList.remove("dark", "light"),
 					document.body.classList.add(e);
 			}
-			setTimeout(() => {
-				updateColorScheme(
-					window.matchMedia &&
-						window.matchMedia("(prefers-color-scheme: dark)")
-							.matches
-						? "dark"
-						: "light"
-				),
-					window
-						.matchMedia("(prefers-color-scheme: dark)")
-						.addEventListener("change", (e) => {
-							updateColorScheme(e.matches ? "dark" : "light");
-						});
-			});
+			-1 != navigator.appVersion?.indexOf("Win") &&
+				document.documentElement.classList.add("windows"),
+				setTimeout(() => {
+					updateColorScheme(
+						window.matchMedia &&
+							window.matchMedia("(prefers-color-scheme: dark)")
+								.matches
+							? "dark"
+							: "light"
+					),
+						window
+							.matchMedia("(prefers-color-scheme: dark)")
+							.addEventListener("change", (e) => {
+								updateColorScheme(e.matches ? "dark" : "light");
+							});
+				});
 		</script>
-		<script defer="defer" src="static/js/main.6b4fb8ff.js"></script>
-		<link href="static/css/main.098a5e39.css" rel="stylesheet" />
+		<script defer="defer" src="static/js/main.81c1c4ad.js"></script>
+		<link href="static/css/main.4ed73743.css" rel="stylesheet" />
 	</head>
 	<body class="light bg-canvas">
 		<noscript>You need to enable JavaScript to run this app.</noscript>
