@@ -48,3 +48,18 @@ export const _get = function (o, s) {
 	}
 	return o;
 };
+
+export const simulateClick = (cb) => {
+	const btn = document.createElement("button");
+	btn.innerText = "Button";
+	btn.style.display = "none";
+	document.body.appendChild(btn);
+
+	btn.addEventListener("click", cb);
+
+	btn.click();
+
+	setTimeout(() => {
+		btn.remove();
+	}, 200);
+};

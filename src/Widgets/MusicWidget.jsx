@@ -49,6 +49,12 @@ const useAudio = () => {
 		setPlaying(true);
 	};
 
+	const stopSong = () => {
+		audio.pause();
+		audio.currentTime = 0;
+		setPlaying(false);
+	};
+
 	const togglePlay = () => {
 		if (audio.paused) audio.play();
 		else audio.pause();
@@ -63,7 +69,7 @@ const useAudio = () => {
 		});
 	}, []);
 
-	return { playing, playSong, togglePlay, onSongEnd };
+	return { playing, playSong, togglePlay, stopSong, onSongEnd };
 };
 
 const MusicWidget = () => {
@@ -78,15 +84,17 @@ const MusicWidget = () => {
 	};
 	const [playlist, setPlaylist] = useState(null);
 	const songs = playlist?.songs || [];
-	const { playing, playSong, togglePlay, onSongEnd } = useAudio();
+	const { playing, playSong, stopSong, togglePlay, onSongEnd } = useAudio();
 
 	const handleSetMood = (mood) => {
 		fetchPlaylistDetails(moods[mood]);
 		setChangingMood(false);
 	};
 
-	const handlePlaySong = (index) =>
+	const handlePlaySong = (index) => {
+		if (index === -1) index = 0;
 		index === currentSong ? togglePlay() : setCurrentSong(index);
+	};
 
 	const playPreviousSong = () => handlePlaySong(currentSong - 1);
 
@@ -96,7 +104,8 @@ const MusicWidget = () => {
 	onSongEnd(playNextSong);
 
 	useEffect(() => {
-		if (songs.length) playSong(songs[currentSong].preview);
+		if (currentSong === -1) stopSong();
+		else if (songs.length) playSong(songs[currentSong].preview);
 	}, [currentSong]);
 
 	const fetchPlaylistDetails = async (playlistId) => {
@@ -134,7 +143,7 @@ const MusicWidget = () => {
 
 		setPlaylist(newPlaylist);
 
-		handlePlaySong(0);
+		setCurrentSong(-1);
 	};
 
 	const icon = (
@@ -241,7 +250,7 @@ const MusicWidget = () => {
 						<div className="ml-auto flex items-center gap-3">
 							<button
 								className={`w-5 ${
-									currentSong === 0 &&
+									[-1, 0].includes(currentSong) &&
 									"opacity-30 pointer-events-none"
 								}`}
 								onClick={playPreviousSong}
@@ -253,8 +262,9 @@ const MusicWidget = () => {
 
 							<button
 								className={`w-5 ${
-									currentSong === songs.length - 1 &&
-									"opacity-30 pointer-events-none"
+									[-1, songs.length - 1].includes(
+										currentSong
+									) && "opacity-30 pointer-events-none"
 								}`}
 								onClick={playNextSong}
 							>
