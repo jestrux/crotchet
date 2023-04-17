@@ -301,7 +301,7 @@ const MusicWidget = () => {
 						/>
 						<div className="">
 							<p className="opacity-80 px-20 font-medium">
-								What kind of music are you in the mood for?
+								What type of music are you in the mood for?
 							</p>
 						</div>
 
