@@ -189,7 +189,7 @@ const MusicWidget = () => {
 		<Widget title="Music" icon={icon} actions={actions} noPadding noScroll>
 			<div className="h-full relative -mr-1">
 				<div className="h-full w-full flex flex-col">
-					<div className="h-full overflow-auto pl-3.5 pt-2 flex-1 flex gap-2 items-start justify-between">
+					<div className="h-full overflow-auto px-3.5 pt-2 flex-1 flex gap-2 items-start justify-between">
 						<div className="sticky top-0 flex-shrink-0 rounded bg-content/10">
 							<img
 								className="w-24 aspect-square relative rounded"
@@ -205,7 +205,7 @@ const MusicWidget = () => {
 									<button
 										key={index}
 										className={`text-left h-6 pl-1 w-full rounded overflow-hidden text-[10px] leading-none flex items-center gap-0.5
-											${selected && "bg-black bg-opacity-[0.08]"}
+											${selected && "bg-content bg-opacity-[0.08]"}
 										`}
 										onClick={() => handlePlaySong(index)}
 									>
