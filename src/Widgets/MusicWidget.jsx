@@ -186,11 +186,11 @@ const MusicWidget = () => {
 	];
 
 	return (
-		<Widget title="Music" icon={icon} actions={actions}>
+		<Widget title="Music" icon={icon} actions={actions} noPadding noScroll>
 			<div className="h-full relative -mr-1">
 				<div className="h-full w-full flex flex-col">
-					<div className="h-full overflow-auto flex-1 flex gap-2 items-start justify-between">
-						<div className="sticky top-0 flex-shrink-0 rounded bg-black/5">
+					<div className="h-full overflow-auto pl-3.5 pt-2 flex-1 flex gap-2 items-start justify-between">
+						<div className="sticky top-0 flex-shrink-0 rounded bg-content/10">
 							<img
 								className="w-24 aspect-square relative rounded"
 								src={playlist?.poster}
@@ -209,7 +209,7 @@ const MusicWidget = () => {
 										`}
 										onClick={() => handlePlaySong(index)}
 									>
-										<span className="w-4 h-4 flex-shrink-0 flex items-center justify-center opacity-60">
+										<span className="w-5 h-5 flex-shrink-0 flex items-center justify-center opacity-60">
 											{selected ? (
 												<svg
 													className="w-3.5"
@@ -219,14 +219,14 @@ const MusicWidget = () => {
 													<path d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" />
 												</svg>
 											) : (
-												index + 1 + " ."
+												index + 1 + "."
 											)}
 										</span>
 										<span
 											className={`truncate ${selected}`}
 										>
 											{song.title}
-											<span className="ml-1.5 opacity-50 scale-95">
+											<span className="ml-1 opacity-50">
 												&mdash; {song.artist}
 											</span>
 										</span>
@@ -236,13 +236,13 @@ const MusicWidget = () => {
 						</div>
 					</div>
 
-					<div className="pt-2 -mx-4 px-4 border-t border-content/10 flex-shrink-0 flex items-center gap-1.5">
+					<div className="py-1 pl-4 pr-3 border-t border-content/10 flex-shrink-0 flex items-center gap-1.5">
 						<svg className="w-4" fill="#1CD05D" viewBox="0 0 24 24">
 							<path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
 						</svg>
-						<div className="text-[13px]">
+						<div className="text-xs">
 							{playlist?.name}
-							<span className="ml-1.5 opacity-50 text-xs">
+							<span className="ml-1 opacity-50">
 								&mdash; {playlist?.author}
 							</span>
 						</div>
@@ -274,7 +274,7 @@ const MusicWidget = () => {
 							</button>
 
 							<button
-								className="w-7 -mr-0.5"
+								className="w-7"
 								onClick={() => handlePlaySong(currentSong)}
 							>
 								<svg viewBox="0 0 24 24" fill="currentColor">
@@ -293,7 +293,7 @@ const MusicWidget = () => {
 				</div>
 
 				{(changingMood || !playlist) && (
-					<div className="z-10 absolute inset-0 -mt-4 bg-card flex flex-col items-center justify-center text-center">
+					<div className="z-10 absolute inset-0 -mt-4 -mx-4 bg-card flex flex-col items-center justify-center text-center">
 						<img
 							className="pointer-events-none absolute inset-0 object-cover opacity-[0.035]"
 							src="https://www.picng.com/upload/music_notes/png_music_notes_90036.png"
