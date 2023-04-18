@@ -48,102 +48,107 @@ const Widgets = () => {
 
 	return (
 		<div className="grid md:grid-cols-2 lg:flex items-start gap-5 relative">
-			<div className="lg:self-stretch w-full md:pb-0 lg:w-[380px] flex-shrink-0 relative z-10 rounded-2xl bg-card shadow-md overflow-y-hidden">
-				<div className="relative bg-card" style={{ height: "170px" }}>
-					<img
-						className="absolute inset-0 h-full w-full object-cover"
-						src={coverImage}
-						alt=""
-					/>
+			<div className="md:sticky md:top-0 w-full lg:w-[380px] flex-shrink-0">
+				<div className="relative z-10 rounded-2xl bg-card shadow-md overflow-y-hidden">
+					<div
+						className="relative bg-card"
+						style={{ height: "170px" }}
+					>
+						<img
+							className="absolute inset-0 h-full w-full object-cover"
+							src={coverImage}
+							alt=""
+						/>
 
-					<div className="absolute inset-0 sbg-black/60 bg-gradient-to-b from-transparent via-95% via-card/95 to-card flex items-end">
-						<div className="w-full px-5 flex sflex-col md:flex-row sjustify-center md:justify-start stext-center md:text-left items-center">
-							<img
-								className="flex-shrink-0 h-16 w-16 object-cover object-top rounded-full bg-content/10 border-2 border-content/10"
-								src={user.image}
-								alt=""
-							/>
+						<div className="absolute inset-0 sbg-black/60 bg-gradient-to-b from-transparent via-95% via-card/95 to-card flex items-end">
+							<div className="w-full px-5 flex sflex-col md:flex-row sjustify-center md:justify-start stext-center md:text-left items-center">
+								<img
+									className="flex-shrink-0 h-16 w-16 object-cover object-top rounded-full bg-content/10 border-2 border-content/10"
+									src={user.image}
+									alt=""
+								/>
 
-							<div className="pt-2 ml-4 flex items-end">
-								<div className="w-full">
-									<h2 className="mb-1 text-lg leading-none font-bold font-serif">
-										{user.name}
-									</h2>
-									<p className="text-sm flex items-center">
-										<span className="opacity-70">
-											Entertainment
-											{/* Here's how you're looking... */}
-										</span>
+								<div className="pt-2 ml-4 flex items-end">
+									<div className="w-full">
+										<h2 className="mb-1 text-lg leading-none font-bold font-serif">
+											{user.name}
+										</h2>
+										<p className="text-sm flex items-center">
+											<span className="opacity-70">
+												Entertainment
+												{/* Here's how you're looking... */}
+											</span>
 
-										<span className="mx-1.5 font-bold opacity-70">
-											&middot;
-										</span>
-										<button className="opacity-70 hover:opacity-100 underline h-5 text-xs leading-none flex items-center">
-											Change profile
-										</button>
-									</p>
+											<span className="mx-1.5 font-bold opacity-70">
+												&middot;
+											</span>
+											<button className="opacity-70 hover:opacity-100 underline h-5 text-xs leading-none flex items-center">
+												Change profile
+											</button>
+										</p>
+									</div>
 								</div>
 							</div>
 						</div>
 					</div>
-				</div>
 
-				<div className="p-5 flex flex-col gap-3 sdivide-y divide-content/10">
-					<div className="hidden md:block">
-						<h3 className="mb-0.5 text-xs font-bold uppercase tracking-wide opacity-50">
-							Overdue tasks
-						</h3>
+					<div className="p-5 flex flex-col gap-3 sdivide-y divide-content/10">
+						<div className="hidden md:block">
+							<h3 className="mb-0.5 text-xs font-bold uppercase tracking-wide opacity-50">
+								Overdue tasks
+							</h3>
 
-						<ListWidget
-							model="Tasks"
-							title="task"
-							subtitle="type::project::due|date"
-							status="status"
-							orderBy="due"
-							filters={{
-								status: "in progress|pending|blocked",
-								// due: "<today", // causes bug on Safari
-							}}
-							limit={5}
-						/>
-					</div>
+							<ListWidget
+								model="Tasks"
+								title="task"
+								subtitle="type::project::due|date"
+								status="status"
+								orderBy="due"
+								filters={{
+									status: "in progress|pending|blocked",
+									// due: "<today", // causes bug on Safari
+								}}
+								limit={5}
+							/>
+						</div>
 
-					<div className="hidden md:block">
-						<h3 className="mb-0.5 text-xs font-bold uppercase tracking-wide opacity-50">
-							Pings and alerts
-						</h3>
+						<div className="hidden md:block">
+							<h3 className="mb-0.5 text-xs font-bold uppercase tracking-wide opacity-50">
+								Pings and alerts
+							</h3>
 
-						<ListWidget
-							model="Pings"
-							image="sender.image"
-							title="content"
-							subtitle="sender.name"
-							action="link"
-							filters={{
-								"target.email": user.email,
-							}}
-							limit={3}
-						/>
-					</div>
+							<ListWidget
+								model="Pings"
+								image="sender.image"
+								title="content"
+								subtitle="sender.name"
+								action="link"
+								filters={{
+									"target.email": user.email,
+								}}
+								limit={3}
+							/>
+						</div>
 
-					<div className="">
-						<h3 className="mb-2 text-xs font-bold uppercase tracking-wide opacity-50">
-							Quick actions
-						</h3>
+						<div className="">
+							<h3 className="mb-2 text-xs font-bold uppercase tracking-wide opacity-50">
+								Quick actions
+							</h3>
 
-						<div className="grid grid-cols-2 gap-1.5">
-							<button className="text-content/50 hover:text-content/80 text-xs leading-none uppercase tracking-wide font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
-								Open an issue
-							</button>
-							<button className="text-content/50 hover:text-content/80 text-xs leading-none uppercase tracking-wide font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
-								Ping someone
-							</button>
-							<button className="text-content/50 hover:text-content/80 text-xs leading-none uppercase tracking-wide font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
-								Announcement
-							</button>
-							<button className="text-content/50 hover:text-content/80 text-xs leading-none uppercase tracking-wide font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
-								Schedule meeting
-							</button>
+							<div className="grid grid-cols-2 gap-1.5">
+								<button className="text-content/50 hover:text-content/80 text-xs leading-none uppercase tracking-wide font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
+									Open an issue
+								</button>
+								<button className="text-content/50 hover:text-content/80 text-xs leading-none uppercase tracking-wide font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
+									Ping someone
+								</button>
+								<button className="text-content/50 hover:text-content/80 text-xs leading-none uppercase tracking-wide font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
+									Announcement
+								</button>
+								<button className="text-content/50 hover:text-content/80 text-xs leading-none uppercase tracking-wide font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
+									Schedule meeting
+								</button>
+							</div>
 						</div>
 					</div>
 				</div>
