@@ -97,7 +97,7 @@ const ListItem = ({
 				<img
 					className={`${
 						subtitle?.length && "mt-0.5s"
-					} mr-2 flex-shrink-0 border rounded-full w-8 h-8 object-cover`}
+					} mr-2 flex-shrink-0 bg-content/10 border border-content/10 rounded-full w-8 h-8 object-cover`}
 					src={image}
 					alt=""
 				/>

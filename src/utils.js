@@ -1,3 +1,5 @@
+export const randomId = () => Math.random().toString(36).slice(2);
+
 export const dateFromString = (date) => {
 	const parsed = Date.parse(date);
 	if (!isNaN(parsed)) {

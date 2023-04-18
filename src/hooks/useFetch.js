@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { _get } from "../utils";
+import { useCallback, useRef, useState } from "react";
 
 function sheetToJson(sheet = []) {
 	let json = [];
@@ -88,7 +89,7 @@ function dataFilterer(value, comparison) {
 	return value === comparison;
 }
 
-function processData({ data = [], filters, orderBy, first }) {
+function processData({ data = [], filters, orderBy, limit, first }) {
 	let processedData = [...data];
 	filters = Object.entries(filters || {});
 
@@ -120,6 +121,8 @@ function processData({ data = [], filters, orderBy, first }) {
 					: valueB.localeCompare(valueA);
 			});
 		}
+
+		if (limit) processedData = processedData.slice(0, limit);
 	}
 
 	if (first) return processedData.length ? processedData[0] : null;
@@ -128,33 +131,74 @@ function processData({ data = [], filters, orderBy, first }) {
 }
 
 function useFetch({
+	cacheKey,
 	model = "Users",
 	refetchOnWindowFocus = false,
 	filters,
 	orderBy,
+	limit,
 	first,
+	onSuccess = () => {},
+	onError = () => {},
 }) {
-	const fetchModel = async () => {
+	const [props, setProps] = useState({
+		cacheKey,
+		model,
+		refetchOnWindowFocus,
+		filters,
+		orderBy,
+		limit,
+		first,
+		onSuccess,
+		onError,
+	});
+	const successResolver = useRef(() => {});
+
+	const fetchModel = useCallback(async () => {
 		const baseUrl =
 			"https://sheets.googleapis.com/v4/spreadsheets/1xkgPzQYmgndKFy1D6j4ZbZSc5wx0Z3lIP0zlp7FC20Q/values";
-		const url = `${baseUrl}/${model}?key=AIzaSyDj7idwa2BYKnuwRDH70ztjNNjA4-6fShU`;
+		const url = `${baseUrl}/${props.model}?key=AIzaSyDj7idwa2BYKnuwRDH70ztjNNjA4-6fShU`;
 
 		const res = await fetch(url);
 		const data = await res.json();
 		const response = sheetToJson(data.values);
 
-		if (model === "Users") window.users = response;
+		if (props.model === "Users") window.users = response;
 
 		return response;
-	};
+	}, [props.model]);
 
-	const query = useQuery([model], fetchModel, {
-		refetchOnWindowFocus,
+	const query = useQuery([props.cacheKey || props.model], fetchModel, {
+		refetchOnWindowFocus: props.refetchOnWindowFocus,
+		onSuccess: (data) => {
+			const res = processData({
+				data,
+				...props,
+			});
+
+			props.onSuccess(res);
+			successResolver.current(res);
+		},
+		onError,
 	});
+
+	const data = processData({
+		data: query.data,
+		...props,
+	});
+
+	const refetch = (newProps) => {
+		setProps({ ...props, ...newProps });
+		query.refetch();
+
+		return new Promise((resolve) => (successResolver.current = resolve));
+	};
 
 	return {
 		...query,
-		data: processData({ data: query.data, filters, orderBy, first }),
+		data,
+		processing: query.isLoading || query.isRefetching,
+		refetch,
 	};
 }
 

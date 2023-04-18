@@ -2,11 +2,13 @@ import ListItem from "../components/ListItem";
 import Loader from "../components/Loader";
 import useFetch from "../hooks/useFetch";
 
-const ListWidget = ({ model, filters, orderBy, ...props }) => {
+const ListWidget = ({ model, filters, orderBy, limit, ...props }) => {
 	const { isLoading, data } = useFetch({
 		model,
 		filters,
 		orderBy,
+		limit,
+		refetchOnWindowFocus: true,
 	});
 
 	try {

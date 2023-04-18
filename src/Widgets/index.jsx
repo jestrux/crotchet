@@ -10,8 +10,9 @@ import ListWidget from "./ListWidget";
 import FoodWidget from "./FoodWidget";
 import PerformanceWidget from "./PerformanceWidget";
 import UserPerformanceWidget from "./UserPerformanceWidget";
-import UtilitiesWidget from "./UtilitiesWidget";
+import PingsWidget from "./PingsWidget";
 import UserStatusWidget from "./UserStatusWidget";
+import { useAuth } from "../providers/AuthProvider";
 
 const WidgetWrapper = ({
 	children,
@@ -37,97 +38,120 @@ const WidgetWrapper = ({
 };
 
 const Widgets = () => {
-	const { isLoading, data: widgets } = useFetch({
-		model: "Widgets",
-	});
-
+	const { user } = useAuth();
+	// const { isLoading, data: widgets } = useFetch({
+	// 	model: "Widgets",
+	// });
 	// const userImage = "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxNjE2NXwwfDF8c2VhcmNofDR8fHN1bnJpc2V8ZW58MHx8fHwxNjYyNzk1ODM3&ixlib=rb-1.2.1&q=80&w=400";
-	const userImage =
+	const coverImage =
 		"https://images.unsplash.com/photo-1540175951029-16f54532b0eb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxNjE2NXwwfDF8c2VhcmNofDI4Nnx8ZmFsbHxlbnwwfHx8fDE2NjI5NTkxMzY&ixlib=rb-1.2.1&q=80&w=1080";
 
 	return (
-		<div className="items-start flex gap-5 relative">
-			<div
-				className="hidden desktop:block flex-shrink-0"
-				style={{ height: "600px", width: "380px" }}
-			>
-				<div className="relative z-10 rounded-2xl bg-card shadow-md overflow-y-hidden">
+		<div className="grid md:grid-cols-2 lg:flex items-start gap-5 relative">
+			<div className="lg:self-stretch w-full md:pb-0 lg:w-[380px] flex-shrink-0 relative z-10 rounded-2xl bg-card shadow-md overflow-y-hidden">
+				<div className="relative bg-card" style={{ height: "170px" }}>
 					<img
-						className="w-full object-cover"
-						src={userImage}
+						className="absolute inset-0 h-full w-full object-cover"
+						src={coverImage}
 						alt=""
-						style={{ height: "120px" }}
 					/>
 
-					<div className="py-4 px-5">
-						<div className="">
-							<h2 className="mb-0.5 text-lg leading-none font-semibold">
-								Hey Walter,
-							</h2>
-							<p className="opacity-80 text-sm">
-								Here's how you're looking...
-							</p>
-						</div>
-
-						<div className="mt-3 -mx-5 px-5 pt-3 border-t border-content/10">
-							<h3 className="mb-0.5 text-xs font-bold uppercase tracking-wide opacity-50">
-								Overdue tasks
-							</h3>
-
-							<ListWidget
-								model="Tasks"
-								title="task"
-								subtitle="type::project::due|date"
-								status="status"
-								orderBy="due"
-								filters={{
-									status: "in progress|pending|blocked",
-									due: "<today",
-								}}
+					<div className="absolute inset-0 sbg-black/60 bg-gradient-to-b from-transparent via-95% via-card/95 to-card flex items-end">
+						<div className="w-full px-5 flex sflex-col md:flex-row sjustify-center md:justify-start stext-center md:text-left items-center">
+							<img
+								className="flex-shrink-0 h-16 w-16 object-cover object-top rounded-full bg-content/10 border-2 border-content/10"
+								src={user.image}
+								alt=""
 							/>
-						</div>
 
-						<div className="-mx-5 px-5 pt-3 border-t border-content/10">
-							<h3 className="mb-0.5 text-xs font-bold uppercase tracking-wide opacity-50">
-								Pings and alerts
-							</h3>
+							<div className="pt-2 ml-4 flex items-end">
+								<div className="w-full">
+									<h2 className="mb-1 text-lg leading-none font-bold font-serif">
+										{user.name}
+									</h2>
+									<p className="text-sm flex items-center">
+										<span className="opacity-70">
+											Entertainment
+											{/* Here's how you're looking... */}
+										</span>
 
-							<ListWidget
-								model="Pings"
-								image="sender.image"
-								title="content"
-								subtitle="sender.name"
-								action="link"
-							/>
-						</div>
-
-						<div className="-mx-5 px-5 pt-3 border-t border-content/10">
-							<h3 className="mb-2 text-xs font-bold uppercase tracking-wide opacity-50">
-								Quick actions
-							</h3>
-
-							<div className="grid grid-cols-2 gap-1.5">
-								<button className="text-content/50 hover:text-content/80 text-xs leading-none uppercase tracking-wide font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
-									Open an issue
-								</button>
-								<button className="text-content/50 hover:text-content/80 text-xs leading-none uppercase tracking-wide font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
-									Ping someone
-								</button>
-								<button className="text-content/50 hover:text-content/80 text-xs leading-none uppercase tracking-wide font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
-									Announcement
-								</button>
-								<button className="text-content/50 hover:text-content/80 text-xs leading-none uppercase tracking-wide font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
-									Schedule meeting
-								</button>
+										<span className="mx-1.5 font-bold opacity-70">
+											&middot;
+										</span>
+										<button className="opacity-70 hover:opacity-100 underline h-5 text-xs leading-none flex items-center">
+											Change profile
+										</button>
+									</p>
+								</div>
 							</div>
+						</div>
+					</div>
+				</div>
+
+				<div className="p-5 flex flex-col gap-3 sdivide-y divide-content/10">
+					<div className="hidden md:block">
+						<h3 className="mb-0.5 text-xs font-bold uppercase tracking-wide opacity-50">
+							Overdue tasks
+						</h3>
+
+						<ListWidget
+							model="Tasks"
+							title="task"
+							subtitle="type::project::due|date"
+							status="status"
+							orderBy="due"
+							filters={{
+								status: "in progress|pending|blocked",
+								due: "<today",
+							}}
+							limit={5}
+						/>
+					</div>
+
+					<div className="hidden md:block">
+						<h3 className="mb-0.5 text-xs font-bold uppercase tracking-wide opacity-50">
+							Pings and alerts
+						</h3>
+
+						<ListWidget
+							model="Pings"
+							image="sender.image"
+							title="content"
+							subtitle="sender.name"
+							action="link"
+							filters={{
+								"target.email": user.email,
+							}}
+							limit={3}
+						/>
+					</div>
+
+					<div className="">
+						<h3 className="mb-2 text-xs font-bold uppercase tracking-wide opacity-50">
+							Quick actions
+						</h3>
+
+						<div className="grid grid-cols-2 gap-1.5">
+							<button className="text-content/50 hover:text-content/80 text-xs leading-none uppercase tracking-wide font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
+								Open an issue
+							</button>
+							<button className="text-content/50 hover:text-content/80 text-xs leading-none uppercase tracking-wide font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
+								Ping someone
+							</button>
+							<button className="text-content/50 hover:text-content/80 text-xs leading-none uppercase tracking-wide font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
+								Announcement
+							</button>
+							<button className="text-content/50 hover:text-content/80 text-xs leading-none uppercase tracking-wide font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded">
+								Schedule meeting
+							</button>
 						</div>
 					</div>
 				</div>
 			</div>
 
-			<div className="flex-1 flex gap-5 items-start">
+			<div className="flex-1 flex flex-col xl:grid grid-cols-4 desktop:grid-cols-5 gap-5 items-start">
 				<div
-					className="hidden lg:flex flex-col gap-5"
+					className="col-span-4 desktop:col-span-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 desktop:flex flex-col gap-5"
 					style={{ flex: 1 }}
 				>
 					<WidgetWrapper widget={StayLiquidWidget} />
@@ -135,10 +159,7 @@ const Widgets = () => {
 					<WidgetWrapper widget={PollWidget} />
 					<WidgetWrapper aspectRatio={3.5 / 1} flex={1} />
 				</div>
-				<div
-					className="hidden md:flex flex-col gap-5"
-					style={{ flex: 2 }}
-				>
+				<div className="w-full col-span-2 flex flex-col gap-5">
 					<div className="flex gap-3">
 						<WidgetWrapper
 							aspectRatio={2.8 / 1}
@@ -160,15 +181,12 @@ const Widgets = () => {
 						widget={ActivitiesWidget}
 					/>
 				</div>
-				<div className="flex flex-col gap-5" style={{ flex: 2 }}>
+				<div className="w-full col-span-2 flex flex-col gap-5">
 					<WidgetWrapper
 						aspectRatio={2 / 1}
 						widget={AnnouncementsWidget}
 					/>
-					<WidgetWrapper
-						aspectRatio={5.5 / 1}
-						widget={UtilitiesWidget}
-					/>
+					<WidgetWrapper aspectRatio={5.5 / 1} widget={PingsWidget} />
 					<div className="flex gap-5">
 						<WidgetWrapper widget={TimerWidget} flex={1} />
 						<WidgetWrapper
