@@ -102,7 +102,7 @@ const Widgets = () => {
 							orderBy="due"
 							filters={{
 								status: "in progress|pending|blocked",
-								due: "<today",
+								// due: "<today", // causes bug on Safari
 							}}
 							limit={5}
 						/>
