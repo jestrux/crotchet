@@ -1,8 +1,17 @@
-import ListItem from "../components/ListItem";
-import Loader from "../components/Loader";
+import ListItem from "./ListItem";
+import Loader from "./Loader";
 import { useAirtableFetch } from "../hooks/useAirtable";
+import Widget from "./Widget";
 
-const ListWidget = ({ table, filters, orderBy, limit, ...props }) => {
+const ListWidget = ({
+	table,
+	filters,
+	orderBy,
+	limit,
+	widgetProps = {},
+	children,
+	...props
+}) => {
 	const { isLoading, data } = useAirtableFetch({
 		table,
 		filters,
@@ -11,16 +20,10 @@ const ListWidget = ({ table, filters, orderBy, limit, ...props }) => {
 		refetchOnWindowFocus: true,
 	});
 
-	try {
-		props = JSON.parse(props);
-	} catch (error) {
-		props = props;
-	}
-
 	// console.log("List: ", data);
 
 	return (
-		<div>
+		<Widget {...widgetProps}>
 			{isLoading ? (
 				<div className="relative h-8">
 					<Loader scrimColor="transparent" size={25} />
@@ -28,11 +31,20 @@ const ListWidget = ({ table, filters, orderBy, limit, ...props }) => {
 			) : (
 				<div className="pb-2">
 					{data.map((entry, index) => {
-						return <ListItem key={index} data={entry} {...props} />;
+						return typeof children == "function" ? (
+							children(entry)
+						) : (
+							<ListItem
+								key={index}
+								data={entry}
+								table={table}
+								{...props}
+							/>
+						);
 					})}
 				</div>
 			)}
-		</div>
+		</Widget>
 	);
 };
 

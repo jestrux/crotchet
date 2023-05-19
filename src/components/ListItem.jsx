@@ -1,5 +1,6 @@
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { _get, _parse } from "../utils";
+import { AirtableService } from "../hooks/useAirtable";
 
 const Status = ({ status }) => {
 	return (
@@ -18,6 +19,44 @@ const Status = ({ status }) => {
 		>
 			{status}
 		</div>
+	);
+};
+
+const Checkbox = ({ table, row, field }) => {
+	const [status, setStatus] = useState(row[field]);
+
+	const updateStatus = (status) => {
+		new AirtableService({ table }).update(row._rowId, {
+			[field]: status,
+		});
+	};
+
+	return (
+		<label className="-translate-y-0.5  mr-2 cursor-pointer h-8 w-8 flex items-center justify-center rounded-full transition-colors duration-300 hover:bg-content/10">
+			<input
+				className="hidden"
+				type="checkbox"
+				value={status}
+				checked={status}
+				onChange={(e) => {
+					const newValue = e.target.checked;
+					setStatus(newValue);
+					updateStatus(newValue);
+				}}
+			/>
+
+			<svg
+				className={`w-5 h-5 ${status ? "text-primary" : ""}`}
+				fill="currentColor"
+				viewBox="0 0 24 24"
+			>
+				{status ? (
+					<path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.89-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+				) : (
+					<path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z" />
+				)}
+			</svg>
+		</label>
 	);
 };
 
@@ -65,14 +104,18 @@ const Progress = ({ value }) => {
 };
 
 const ListItem = ({
+	table,
 	data,
-	image,
-	title,
+	image = "image",
+	title = "title",
 	subtitle,
 	status,
+	// status = "status",
 	leading,
 	action,
 	progress,
+	// progress = "progress",
+	checkbox,
 }) => {
 	image = _get(data, image);
 	title = _get(data, title);
@@ -91,6 +134,10 @@ const ListItem = ({
 		>
 			{action?.length > 0 && (
 				<div className="transition opacity-0 group-hover:opacity-100 absolute inset-0 -mx-5 bg-content/5"></div>
+			)}
+
+			{checkbox?.length && (
+				<Checkbox table={table} row={data} field={checkbox} />
 			)}
 
 			{image?.length && (

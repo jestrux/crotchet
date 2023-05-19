@@ -1,4 +1,5 @@
 import Widgets from "../Widgets";
+import IPFWidgets from "../iPFWidgets";
 import { useAuth } from "../providers/AuthProvider";
 
 function App() {
@@ -40,7 +41,7 @@ function App() {
 			</div>
 
 			<div className="w-full max-w-[1500px] mx-auto flex-1 overflow-y-auto pb-8 px-4">
-				<Widgets />
+				<IPFWidgets />
 			</div>
 		</div>
 	);

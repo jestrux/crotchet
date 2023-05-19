@@ -1,6 +1,6 @@
 import Widget from "../components/Widget";
 import { useAuth } from "../providers/AuthProvider";
-import ListWidget from "./ListWidget";
+import ListWidget from "../components/ListWidget";
 
 const PerformanceWidget = () => {
 	const { user } = useAuth();

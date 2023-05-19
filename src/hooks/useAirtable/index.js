@@ -85,7 +85,13 @@ export class AirtableService {
 						}
 
 						records = records
-							.map((record) => record?.fields || record)
+							.map((record) => {
+								const fields = record?.fields || record;
+								return {
+									...fields,
+									_rowId: record.id,
+								};
+							})
 							.map((entry) => {
 								return Object.entries(entry).reduce(
 									(agg, [key, value]) => {
@@ -139,6 +145,25 @@ export class AirtableService {
 			url: `https://api.airtable.com/v0/appnobMFeViOdmZsV/pipelines?api_key=${API_KEY}`,
 			method: "POST",
 			body: JSON.stringify(payload),
+		});
+		const data = await res.json();
+		return data;
+	}
+
+	async update(rowId, payload) {
+		const url = `https://api.airtable.com/v0/appnobMFeViOdmZsV/${this.table}/${rowId}?api_key=${API_KEY}`;
+		const body = JSON.stringify({
+			fields: payload,
+		});
+		console.log(this.table, url, body);
+
+		const res = await fetch(url, {
+			method: "PATCH",
+			headers: {
+				Accept: "application/json",
+				"Content-Type": "application/json",
+			},
+			body,
 		});
 		const data = await res.json();
 		return data;

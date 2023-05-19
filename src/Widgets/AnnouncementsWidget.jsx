@@ -1,5 +1,5 @@
 import Widget from "../components/Widget";
-import ListWidget from "./ListWidget";
+import ListWidget from "../components/ListWidget";
 
 const AnnouncementsWidget = () => {
 	const icon = (

@@ -5,36 +5,14 @@ import GithubContributionsWidget from "./GithubContributionsWidget";
 import MusicWidget from "./MusicWidget";
 import StayLiquidWidget from "./StayLiquidWidget";
 import PollWidget from "./PollWidget";
-import ListWidget from "./ListWidget";
+import ListWidget from "../components/ListWidget";
+import WidgetWrapper from "../components/WidgetWrapper";
 import FoodWidget from "./FoodWidget";
 import PerformanceWidget from "./PerformanceWidget";
 import UserPerformanceWidget from "./UserPerformanceWidget";
 import PingsWidget from "./PingsWidget";
 import UserStatusWidget from "./UserStatusWidget";
 import { useAuth } from "../providers/AuthProvider";
-
-const WidgetWrapper = ({
-	children,
-	widget: Widget,
-	width,
-	aspectRatio = 1 / 1,
-	flex,
-}) => {
-	return (
-		<div
-			className="rounded-2xl bg-card shadow-md border border-content/10 overflow-y-hidden relative"
-			style={{
-				width,
-				flex,
-				aspectRatio,
-			}}
-		>
-			<div className="h-full">
-				{children ? children : Widget ? <Widget /> : <span></span>}
-			</div>
-		</div>
-	);
-};
 
 const Widgets = () => {
 	const { user } = useAuth();
