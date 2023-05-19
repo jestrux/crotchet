@@ -1,10 +1,10 @@
 import ListItem from "../components/ListItem";
 import Loader from "../components/Loader";
-import useFetch from "../hooks/useFetch";
+import { useAirtableFetch } from "../hooks/useAirtable";
 
-const ListWidget = ({ model, filters, orderBy, limit, ...props }) => {
-	const { isLoading, data } = useFetch({
-		model,
+const ListWidget = ({ table, filters, orderBy, limit, ...props }) => {
+	const { isLoading, data } = useAirtableFetch({
+		table,
 		filters,
 		orderBy,
 		limit,
@@ -16,6 +16,8 @@ const ListWidget = ({ model, filters, orderBy, limit, ...props }) => {
 	} catch (error) {
 		props = props;
 	}
+
+	// console.log("List: ", data);
 
 	return (
 		<div>

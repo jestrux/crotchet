@@ -1,18 +1,21 @@
 import Widget from "../components/Widget";
+import { useAuth } from "../providers/AuthProvider";
 import ListWidget from "./ListWidget";
 
 const UserPerformanceWidget = () => {
+	const { user } = useAuth();
+
 	return (
 		<Widget noScroll>
 			<div className="h-full flex items-center">
 				<div className="w-full pt-2 pl-1">
 					<ListWidget
-						model="Performance"
-						title="user.name"
-						subtitle="user.department::billed"
+						table="performance"
+						title="user_name"
+						subtitle="user_department::billed"
 						progress="progress"
 						filters={{
-							"user.name": "Walter Kimaro",
+							user_name: user.name,
 						}}
 					/>
 				</div>

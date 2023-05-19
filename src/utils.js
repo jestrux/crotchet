@@ -21,6 +21,8 @@ export const formatDate = (
 };
 
 export const _parse = function (text, data) {
+	if (!text?.length) return "";
+
 	let parsedText = text.split("::").map((t) => {
 		t = t.trim();
 		let [text, format] = t.split("|").map((t) => t.trim());

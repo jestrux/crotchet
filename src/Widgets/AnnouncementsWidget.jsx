@@ -21,8 +21,8 @@ const AnnouncementsWidget = () => {
 	return (
 		<Widget title="Announcements" icon={icon}>
 			<ListWidget
-				model="Announcements"
-				image="owner.image"
+				table="announcements"
+				image="owner_image"
 				title="title"
 				subtitle="content"
 				action="link"

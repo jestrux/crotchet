@@ -1,7 +1,10 @@
 import Widget from "../components/Widget";
+import { useAuth } from "../providers/AuthProvider";
 import ListWidget from "./ListWidget";
 
 const PerformanceWidget = () => {
+	const { user } = useAuth();
+
 	const icon = (
 		<svg
 			fill="none"
@@ -22,13 +25,13 @@ const PerformanceWidget = () => {
 		<Widget noPadding title="Team performance" icon={icon}>
 			<div className="pt-1 pl-3.5 pr-2">
 				<ListWidget
-					model="Performance"
-					image="user.image"
-					title="user.name"
-					subtitle="user.department::billed"
+					table="performance"
+					image="user_image"
+					title="user_name"
+					subtitle="user_department::billed"
 					progress="progress"
 					filters={{
-						"user.name": "!Walter Kimaro",
+						user_name: "!" + user.name,
 					}}
 				/>
 			</div>

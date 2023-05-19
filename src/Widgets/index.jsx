@@ -1,4 +1,3 @@
-import useFetch from "../hooks/useFetch";
 import ActivitiesWidget from "./ActivitiesWidget";
 import AnnouncementsWidget from "./AnnouncementsWidget";
 import TimerWidget from "./TimerWidget";
@@ -39,9 +38,7 @@ const WidgetWrapper = ({
 
 const Widgets = () => {
 	const { user } = useAuth();
-	// const { isLoading, data: widgets } = useFetch({
-	// 	model: "Widgets",
-	// });
+
 	// const userImage = "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxNjE2NXwwfDF8c2VhcmNofDR8fHN1bnJpc2V8ZW58MHx8fHwxNjYyNzk1ODM3&ixlib=rb-1.2.1&q=80&w=400";
 	const coverImage =
 		"https://images.unsplash.com/photo-1540175951029-16f54532b0eb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxNjE2NXwwfDF8c2VhcmNofDI4Nnx8ZmFsbHxlbnwwfHx8fDE2NjI5NTkxMzY&ixlib=rb-1.2.1&q=80&w=1080";
@@ -99,8 +96,8 @@ const Widgets = () => {
 							</h3>
 
 							<ListWidget
-								model="Tasks"
-								title="task"
+								table="tasks"
+								title="title"
 								subtitle="type::project::due|date"
 								status="status"
 								orderBy="due"
@@ -118,13 +115,13 @@ const Widgets = () => {
 							</h3>
 
 							<ListWidget
-								model="Pings"
-								image="sender.image"
+								table="pings"
+								image="sender_image"
 								title="content"
-								subtitle="sender.name"
+								subtitle="sender_name"
 								action="link"
 								filters={{
-									"target.email": user.email,
+									recepient_name: user.name,
 								}}
 								limit={3}
 							/>

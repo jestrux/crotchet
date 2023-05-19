@@ -25,9 +25,9 @@ const ActivitiesWidget = () => {
 		>
 			<div className="pt-1 pl-4 pr-3">
 				<ListWidget
-					model="Tasks"
-					title="task"
-					subtitle="due|date::type::project"
+					table="tasks"
+					title="title"
+					subtitle="due|date::type::project_name"
 					status="status"
 					filters={{ status: "in progress|pending" }}
 				/>

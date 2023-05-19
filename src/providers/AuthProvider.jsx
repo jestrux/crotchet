@@ -1,9 +1,8 @@
 import { createContext, useContext } from "react";
 import useLocalStorageState from "../hooks/useLocalStorageState";
 import logo from "../images/logo.png";
-import useFetch from "../hooks/useFetch";
 import Loader from "../components/Loader";
-import { randomId } from "../utils";
+import { useAirtableMutation } from "../hooks/useAirtable";
 
 const AuthContext = createContext({
 	user: {},
@@ -12,18 +11,15 @@ const AuthContext = createContext({
 
 export function AuthProvider({ children }) {
 	const [user, setUser] = useLocalStorageState("authUser");
-	const { processing, refetch } = useFetch({
-		model: "Users",
-		refetchOnWindowFocus: false,
+	const { processing, mutate } = useAirtableMutation({
+		table: "users",
+		first: true,
 	});
 
 	const handleLogin = async (e) => {
 		e.preventDefault();
-		const user = await refetch({
-			filters: {
-				email: e.target.email.value,
-			},
-			first: true,
+		const user = await mutate({
+			email: e.target.email.value,
 		});
 
 		if (user) setUser(user);
@@ -38,7 +34,7 @@ export function AuthProvider({ children }) {
 			) : (
 				<form onSubmit={handleLogin}>
 					<div className="h-screen flex items-center max-w-lg mx-auto">
-						<div className="p-10 rounded-lg w-full bg-content/[0.02] border border-content/20 flex flex-col gap-5">
+						<div className="p-10 rounded-lg w-full bg-card dark:bg-content/[0.02] border border-content/20 flex flex-col gap-5">
 							<div className="mb-2 flex flex-col gap-4">
 								<img
 									className="w-10 inline-block"

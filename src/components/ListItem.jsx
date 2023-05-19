@@ -76,7 +76,7 @@ const ListItem = ({
 }) => {
 	image = _get(data, image);
 	title = _get(data, title);
-	subtitle = _parse(subtitle, data);
+	subtitle = (_parse(subtitle, data) || []).filter((s) => s ?? false);
 	leading = _get(data, leading);
 	status = _get(data, status);
 	action = _get(data, action);
@@ -119,8 +119,8 @@ const ListItem = ({
 							return (
 								<Fragment key={i}>
 									<span>
-										{s.charAt(0).toUpperCase()}
-										{s.substring(1)}
+										{s.toString().charAt(0).toUpperCase()}
+										{s.toString().substring(1)}
 									</span>
 									{i !== subtitle.length - 1 && (
 										<span className="mx-2s mr-2 leading-none">
@@ -142,23 +142,23 @@ const ListItem = ({
 			</div>
 
 			<div className="self-stretch flex-shrink-0 ml-auto flex items-center">
-				{status?.length && (
+				{status?.toString().length && (
 					<div className="self-start">
 						<Status status={status} />
 					</div>
 				)}
 
-				{progress?.length && (
+				{progress?.toString().length && (
 					<div className="self-start w-9">
 						<Progress value={progress} />
 					</div>
 				)}
 
-				{leading?.length && (
+				{leading?.toString().length && (
 					<span className="text-sm opacity-60">{leading}</span>
 				)}
 
-				{action?.length > 0 &&
+				{action?.toString().length > 0 &&
 					(action.indexOf("whatsapp") !== -1 ? (
 						<svg
 							fill="currentColor"
