@@ -1,25 +1,20 @@
+import { Children, cloneElement } from "react";
 import Button from "../Button";
 import Modal, { MessageModal } from "../Modal";
 
 export { default as useAlerts } from "./useAlerts";
 
-export default function AlertsWrapper({ alerts, hideAlert }) {
-	function handleClose(alert, action) {
-		const alertId = alert.id;
-
-		alert.callback(action);
-
-		setTimeout(() => hideAlert(alertId), 100);
-	}
-
+export default function AlertsWrapper({ alerts }) {
 	function renderActions(alert) {
+		if (!alert.actions?.length) return;
+
 		return (
 			<div className="w-full flex gap-2">
 				<Button
 					className="flex-1"
 					rounded="md"
 					size="sm"
-					onClick={() => handleClose(alert, alert.actions[0])}
+					onClick={() => alert.close(alert.actions[0])}
 				>
 					<span className="opacity-60">{alert.actions[0]}</span>
 				</Button>
@@ -28,11 +23,11 @@ export default function AlertsWrapper({ alerts, hideAlert }) {
 					className="flex-1"
 					rounded="md"
 					size="sm"
-					onClick={() => handleClose(alert, alert.actions[1])}
+					onClick={() => alert.close(alert.actions[1])}
 				>
 					<span
 						className={
-							alert.actionType == "danger" ? "text-red-500" : ""
+							alert.actionType === "danger" ? "text-red-500" : ""
 						}
 					>
 						{alert.actions[1]}
@@ -49,7 +44,7 @@ export default function AlertsWrapper({ alerts, hideAlert }) {
 					hideCloseButton: alert.hideCloseButton,
 					isOpen: alert.open,
 					size: alert.size,
-					onClose: () => handleClose(alert, alert.actions?.[0]),
+					onClose: () => alert.close(),
 				};
 
 				if (alert.content) {
@@ -59,7 +54,9 @@ export default function AlertsWrapper({ alerts, hideAlert }) {
 							key={alert.id}
 							{...props}
 						>
-							{alert.content}
+							{Children.map(alert.content, (child) =>
+								cloneElement(child, { onClose: alert.close })
+							)}
 						</Modal>
 					);
 				}

@@ -1,6 +1,8 @@
 import { Fragment, useState } from "react";
 import { _get, _parse } from "../utils";
 import { useAirtableMutation } from "../hooks/useAirtable";
+import { XMarkIcon } from "@heroicons/react/24/outline";
+import { useAppContext } from "../providers/AppProvider";
 
 const Status = ({ status }) => {
 	return (
@@ -30,9 +32,7 @@ const Checkbox = ({ table, row, field }) => {
 		setStatus(status);
 		mutate({
 			rowId: row._rowId,
-			payload: {
-				[field]: status,
-			},
+			[field]: status,
 		});
 	};
 
@@ -73,6 +73,26 @@ const Checkbox = ({ table, row, field }) => {
 				)}
 			</svg>
 		</label>
+	);
+};
+
+const Remover = ({ table, row, onSuccess = () => {} }) => {
+	const { confirmAction, withToast } = useAppContext();
+	const { mutateAsync } = useAirtableMutation({ table, action: "delete" });
+	const removeRow = async () => {
+		if (!(await confirmAction())) return;
+
+		await withToast(mutateAsync(row._rowId), "Row removed");
+		onSuccess();
+	};
+
+	return (
+		<button
+			className="focus:outline-none opacity-0 group-hover:opacity-100 absolute -right-1.5 -translate-y-0.5 cursor-pointer h-5 w-5 flex items-center justify-center rounded-full transition-colors duration-300 bg-content/10 hover:bg-content/20"
+			onClick={removeRow}
+		>
+			<XMarkIcon className="w-3.5" strokeWidth={1.8} />
+		</button>
 	);
 };
 
@@ -132,7 +152,10 @@ const ListItem = ({
 	progress,
 	// progress = "progress",
 	checkbox,
+	removable,
 }) => {
+	const [removed, setRemoved] = useState(false);
+
 	image = _get(data, image);
 	title = _get(data, title);
 	subtitle = (_parse(subtitle, data) || []).filter((s) => s ?? false);
@@ -140,6 +163,8 @@ const ListItem = ({
 	status = _get(data, status);
 	action = _get(data, action);
 	progress = _get(data, progress);
+
+	if (removed) return null;
 
 	return (
 		<a
@@ -246,6 +271,14 @@ const ListItem = ({
 						</svg>
 					))}
 			</div>
+
+			{removable && (
+				<Remover
+					table={table}
+					row={data}
+					onSuccess={() => setRemoved(true)}
+				/>
+			)}
 		</a>
 	);
 };

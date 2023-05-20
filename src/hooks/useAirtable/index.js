@@ -53,7 +53,7 @@ export class AirtableService {
 		return this.records.filter(({ Type }) => typeFilter == Type);
 	}
 
-	async fetch({ filters } = {}) {
+	async fetch({ filters, orderBy } = {}) {
 		// console.log(`Fetching data for ${this.table}...`);
 
 		return new Promise((resolve, reject) => {
@@ -69,8 +69,10 @@ export class AirtableService {
 
 				db(this.table)
 					.select({
-						// filterByFormula:
-						// 	"AND(email='wakyj07@gmail.com',password='123')",
+						sort: orderBy.split(",").reduce((agg, entry) => {
+							const [field, direction] = entry.split("|");
+							return [...agg, { field, direction }];
+						}, []),
 						filterByFormula: airtableFilter(filters),
 					})
 					.firstPage((err, records) => {
@@ -124,35 +126,39 @@ export class AirtableService {
 		});
 	}
 
-	async store() {
-		const payload = {
+	async create(payload) {
+		const url = `https://api.airtable.com/v0/appnobMFeViOdmZsV/${this.table}?api_key=${API_KEY}`;
+		const body = JSON.stringify({
 			records: [
 				{
 					fields: {
-						Name: "Freight",
-					},
-				},
-				{
-					fields: {
-						Name: "Elevetor",
+						...payload,
+						created_at: Date.now(),
+						updated_at: Date.now(),
 					},
 				},
 			],
-		};
-
-		const res = await fetch({
-			url: `https://api.airtable.com/v0/appnobMFeViOdmZsV/pipelines?api_key=${API_KEY}`,
-			method: "POST",
-			body: JSON.stringify(payload),
 		});
-		const data = await res.json();
-		return data;
+		// console.log(this.table, url, body);
+
+		const res = await fetch(url, {
+			method: "POST",
+			headers: {
+				Accept: "application/json",
+				"Content-Type": "application/json",
+			},
+			body,
+		});
+		return await res.json();
 	}
 
 	async update(rowId, payload) {
 		const url = `https://api.airtable.com/v0/appnobMFeViOdmZsV/${this.table}/${rowId}?api_key=${API_KEY}`;
 		const body = JSON.stringify({
-			fields: payload,
+			fields: {
+				...payload,
+				updated_at: Date.now(),
+			},
 		});
 		// console.log(this.table, url, body);
 
@@ -164,12 +170,21 @@ export class AirtableService {
 			},
 			body,
 		});
-		const data = await res.json();
-		return data;
+		return await res.json();
+	}
+
+	async delete(rowId) {
+		const url = `https://api.airtable.com/v0/appnobMFeViOdmZsV/${this.table}/${rowId}?api_key=${API_KEY}`;
+		// console.log(this.table, url, body);
+
+		const res = await fetch(url, {
+			method: "DELETE",
+		});
+		return await res.json();
 	}
 }
 
-const processAirtableData = ({ data = [], orderBy, limit = 500, first }) => {
+const processAirtableData = ({ data = [], limit = 500, first }) => {
 	if (first) return data.length ? data[0] : null;
 	return data.slice(0, limit);
 };
@@ -179,7 +194,7 @@ export function useAirtableFetch({
 	cacheKey,
 	refetchOnWindowFocus = false,
 	filters,
-	orderBy,
+	orderBy = "created_at|asc",
 	limit,
 	first,
 	onSuccess = () => {},
@@ -204,7 +219,10 @@ export function useAirtableFetch({
 		async () => {
 			let res;
 			try {
-				res = await instance.current.fetch({ filters });
+				res = await instance.current.fetch({
+					filters,
+					orderBy,
+				});
 			} catch (error) {
 				console.log("Fetch error: ", error);
 			}
@@ -312,6 +330,7 @@ export function useDelayedAirtableFetch({
 
 export function useAirtableMutation({
 	table,
+	action = "update",
 	onSuccess = () => {},
 	onError = () => {},
 }) {
@@ -319,8 +338,16 @@ export function useAirtableMutation({
 	const errorResolver = useRef(() => {});
 	const instance = useRef(new AirtableService({ table }));
 	const query = useMutation({
-		mutationFn: ({ rowId, payload }) =>
-			instance.current.update(rowId, payload),
+		mutationFn: (data) => {
+			const { rowId, ...payload } = data;
+
+			if (action === "update")
+				return instance.current.update(rowId, payload);
+
+			if (action === "delete") return instance.current.delete(data);
+
+			return instance.current.create(payload);
+		},
 		onSuccess: (data) => {
 			onSuccess(data);
 			successResolver.current(data);

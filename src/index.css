@@ -2,6 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+	[type="text"],
+	[type="email"],
+	[type="url"],
+	[type="password"],
+	[type="number"],
+	[type="date"],
+	[type="datetime-local"],
+	[type="month"],
+	[type="search"],
+	[type="tel"],
+	[type="time"],
+	[type="week"],
+	[multiple],
+	textarea,
+	select {
+		@apply w-full bg-transparent border-content/20 rounded-lg shadow-sm focus:border-content/50 focus:ring-transparent;
+	}
+	[type="checkbox"],
+	[type="radio"] {
+		@apply border-content/20 rounded text-primary focus:ring-primary;
+	}
+}
+
 :root {
 	--border-color: #e2e8f0;
 	--shadow-color: rgba(0, 0, 0, 0.26);
@@ -11,6 +35,10 @@
 	:root {
 		--border-color: rgba(255, 255, 255, 0.16);
 		--shadow-color: rgba(0, 0, 0, 1);
+	}
+
+	input[type="date"] {
+		color-scheme: dark;
 	}
 }
 

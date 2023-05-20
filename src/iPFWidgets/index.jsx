@@ -1,20 +1,30 @@
 import ListWidget from "../components/ListWidget";
+import ActionPane from "../components/ModalPanes/ActionPane";
 import WidgetWrapper from "../components/WidgetWrapper";
 import { useAppContext } from "../providers/AppProvider";
 
 export default function IPFWidgets() {
 	const { user, showAlert } = useAppContext();
-
-	const newTaskHandler = async () => {
-		// alert("Add new task");
-		const res = await showAlert({
-			size: "xl",
-			// dismissible: false,
-			// hideCloseButton: true,
-			content: <div>New task form</div>,
-			callback: () => "rueful",
+	const newTaskHandler = () => {
+		return showAlert({
+			content: (
+				<ActionPane
+					pane={{
+						title: "Add new task",
+						type: "form",
+						table: "tasks",
+						fields: {
+							title: "text",
+							assignee: "authUser",
+						},
+						action: "Save task",
+						successMessage: "Task saved",
+					}}
+				>
+					<div>New task form</div>
+				</ActionPane>
+			),
 		});
-		console.log("After confirm: ", res);
 	};
 
 	return (
@@ -40,13 +50,14 @@ export default function IPFWidgets() {
 										/>
 									</svg>
 								),
-								label: "new task",
+								label: "New task",
 								onClick: newTaskHandler,
 							},
 						],
 					}}
 					table="tasks"
 					checkbox="done"
+					removable
 				/>
 			</WidgetWrapper>
 

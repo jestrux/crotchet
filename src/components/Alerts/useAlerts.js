@@ -19,16 +19,21 @@ export default function useAlerts() {
 
 	const showAlert = (alert) => {
 		const promise = new Promise((resolve) => {
-			const oldCallback = alert.callback || (() => {});
-			alert.callback = (...args) => resolve(oldCallback(...args));
+			const oldCallback = alert.callback || ((data) => data);
+			alert.callback = (data) => resolve(oldCallback(data));
 		});
 
+		const alertId = randomId();
 		setAlerts([
 			...(alerts || []),
 			{
 				...alert,
-				id: randomId(),
+				id: alertId,
 				open: true,
+				close(data) {
+					alert.callback(data);
+					hideAlert();
+				},
 			},
 		]);
 

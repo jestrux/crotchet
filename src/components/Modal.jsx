@@ -12,7 +12,7 @@ const Button = ({
 		<button
 			type={type}
 			className={
-				`inline-flex items-center px-4 py-2 bg-gray-900 border border-transparent rounded-md font-semibold text-xs text-white active:bg-gray-900 transition ease-in-out duration-150 hover:opacity-70 ${
+				`inline-flex items-center px-4 py-2 bg-content/5 border border-content/10 rounded-md font-semibold text-xs transition-colors duration-150 hover:opacity-70 ${
 					processing && "opacity-25"
 				} ` + className
 			}
@@ -52,6 +52,7 @@ export const MessageModal = ({
 		<Modal
 			dismissible
 			isOpen={isOpen}
+			hideCloseButton={hideCloseButton}
 			onClose={handleClose}
 			noPadding
 			size={size}
@@ -111,7 +112,7 @@ const Modal = ({
 	label = "Content",
 	size = "xl",
 	dismissible = false,
-	hideCloseButton = false,
+	hideCloseButton = true,
 	showOverlayBg = true,
 	isOpen,
 	onClose,

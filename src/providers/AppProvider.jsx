@@ -1,4 +1,5 @@
 import { createContext, useContext } from "react";
+import toast, { Toaster } from "react-hot-toast";
 import useLocalStorageState from "../hooks/useLocalStorageState";
 import logo from "../images/logo.png";
 import Loader from "../components/Loader";
@@ -22,6 +23,13 @@ const AppContext = createContext({
 		cancelText = "Cancel",
 		okayText = "Yes, Continue",
 	}) => {},
+	toast: {
+		success: () => {},
+		error: () => {},
+		promise: () => {},
+	},
+	withToast: (promise, successMessage) =>
+		console.log(promise, successMessage),
 });
 
 export function AppProvider({ children, value = {} }) {
@@ -50,7 +58,7 @@ export function AppProvider({ children, value = {} }) {
 		const updatedUser = { ...user, ...newProps };
 		mutateUser({
 			rowId: user._rowId,
-			payload: newProps,
+			...newProps,
 		});
 		setUser(updatedUser);
 	};
@@ -66,8 +74,25 @@ export function AppProvider({ children, value = {} }) {
 				logout,
 				currentPage,
 				setCurrentPage,
+				toast,
+				withToast: (promise, successMessage = "Success") => {
+					toast.promise(promise, {
+						loading: "Please wait...",
+						success: successMessage,
+						error: "Unknown error",
+					});
+
+					return promise;
+				},
 			}}
 		>
+			<Toaster
+				toastOptions={{
+					className:
+						"bg-card text-content rounded-full text-sm border",
+				}}
+			/>
+
 			{user ? (
 				children
 			) : (

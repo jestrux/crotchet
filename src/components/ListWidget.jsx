@@ -12,7 +12,7 @@ const ListWidget = ({
 	children,
 	...props
 }) => {
-	const { isLoading, data } = useAirtableFetch({
+	const { isLoading, data, refetch } = useAirtableFetch({
 		table,
 		filters,
 		orderBy,
@@ -23,7 +23,7 @@ const ListWidget = ({
 	// console.log("List: ", data);
 
 	return (
-		<Widget {...widgetProps}>
+		<Widget {...widgetProps} refresh={refetch}>
 			{isLoading ? (
 				<div className="relative h-8">
 					<Loader scrimColor="transparent" size={25} />

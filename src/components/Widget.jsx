@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { randomId } from "../utils";
+
 const Widget = ({
 	noScroll = false,
 	noPadding,
@@ -6,7 +9,13 @@ const Widget = ({
 	actions,
 	actionButton,
 	children,
+	refresh = () => {},
 }) => {
+	const handleClick = async (action) => {
+		const res = await Promise.resolve(action());
+		if (res) refresh();
+	};
+
 	return (
 		<div className="h-full flex flex-col relative">
 			{title?.length && (
@@ -37,7 +46,9 @@ const Widget = ({
 										title={action.label}
 										key={index}
 										className="focus:outline-none w-6 h-6 border border-content/10 hover:bg-content/5 transition-colors text-content rounded-full flex items-center justify-center"
-										onClick={action.onClick}
+										onClick={() =>
+											handleClick(action.onClick)
+										}
 									>
 										{action.icon}
 									</button>
@@ -59,7 +70,7 @@ const Widget = ({
 							actionButton.styling?.text === "primary" &&
 							"text-primary"
 						} focus:outline-none h-[38px] flex items-center justify-center gap-2 text-content/50 hover:text-content/[0.65] transition-colors text-xs leading-none uppercase tracking-wider font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded`}
-						onClick={actionButton.onClick}
+						onClick={() => handleClick(actionButton.onClick)}
 					>
 						{actionButton.icon}
 						{actionButton.label}
