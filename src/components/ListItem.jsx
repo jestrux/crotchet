@@ -1,6 +1,6 @@
 import { Fragment, useState } from "react";
 import { _get, _parse } from "../utils";
-import { AirtableService } from "../hooks/useAirtable";
+import { useAirtableMutation } from "../hooks/useAirtable";
 
 const Status = ({ status }) => {
 	return (
@@ -23,11 +23,16 @@ const Status = ({ status }) => {
 };
 
 const Checkbox = ({ table, row, field }) => {
+	const { mutate } = useAirtableMutation({ table });
 	const [status, setStatus] = useState(row[field]);
 
 	const updateStatus = (status) => {
-		new AirtableService({ table }).update(row._rowId, {
-			[field]: status,
+		setStatus(status);
+		mutate({
+			rowId: row._rowId,
+			payload: {
+				[field]: status,
+			},
 		});
 	};
 
@@ -38,22 +43,33 @@ const Checkbox = ({ table, row, field }) => {
 				type="checkbox"
 				value={status}
 				checked={status}
-				onChange={(e) => {
-					const newValue = e.target.checked;
-					setStatus(newValue);
-					updateStatus(newValue);
-				}}
+				onChange={(e) => updateStatus(e.target.checked)}
 			/>
 
 			<svg
-				className={`w-5 h-5 ${status ? "text-primary" : ""}`}
+				className={`w-5 h-5 ${
+					status ? "text-primary" : "text-content/40"
+				}`}
 				fill="currentColor"
 				viewBox="0 0 24 24"
 			>
-				{status ? (
-					<path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.89-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-				) : (
-					<path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z" />
+				<circle
+					cx="12"
+					cy="12"
+					r="11"
+					stroke="currentColor"
+					fill={status ? "currentColor" : "none"}
+					strokeWidth="2"
+				/>
+
+				{status && (
+					<path
+						transform="translate(3 3) scale(0.7)"
+						d="M4.5 12.75l6 6 9-13.5"
+						stroke="white"
+						fill="none"
+						strokeWidth="3"
+					/>
 				)}
 			</svg>
 		</label>

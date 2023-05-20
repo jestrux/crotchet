@@ -2,16 +2,37 @@ import { createContext, useContext } from "react";
 import useLocalStorageState from "../hooks/useLocalStorageState";
 import logo from "../images/logo.png";
 import Loader from "../components/Loader";
-import { useAirtableMutation } from "../hooks/useAirtable";
+import {
+	useAirtableMutation,
+	useDelayedAirtableFetch,
+} from "../hooks/useAirtable";
 
-const AuthContext = createContext({
+const AppContext = createContext({
+	currentPage: "Home",
+	setCurrentPage: (page) => {},
 	user: {},
 	logout: () => {},
+	updateUser: (newProps = {}) => {},
+	showAlert: () => {},
+	confirmAction: ({
+		type = "confirm",
+		size = "xs",
+		title = "Are you sure?",
+		message = "This action can not be undone",
+		cancelText = "Cancel",
+		okayText = "Yes, Continue",
+	}) => {},
 });
 
-export function AuthProvider({ children }) {
+export function AppProvider({ children, value = {} }) {
+	const { mutate: mutateUser } = useAirtableMutation({ table: "users" });
+
+	const [currentPage, setCurrentPage] = useLocalStorageState(
+		"currentPage",
+		"Home"
+	);
 	const [user, setUser] = useLocalStorageState("authUser");
-	const { processing, mutate } = useAirtableMutation({
+	const { processing, mutate } = useDelayedAirtableFetch({
 		table: "users",
 		first: true,
 	});
@@ -25,10 +46,28 @@ export function AuthProvider({ children }) {
 		if (user) setUser(user);
 	};
 
+	const updateUser = (newProps) => {
+		const updatedUser = { ...user, ...newProps };
+		mutateUser({
+			rowId: user._rowId,
+			payload: newProps,
+		});
+		setUser(updatedUser);
+	};
+
 	const logout = () => setUser(null);
 
 	return (
-		<AuthContext.Provider value={{ user, logout }}>
+		<AppContext.Provider
+			value={{
+				...value,
+				user,
+				updateUser,
+				logout,
+				currentPage,
+				setCurrentPage,
+			}}
+		>
 			{user ? (
 				children
 			) : (
@@ -74,10 +113,10 @@ export function AuthProvider({ children }) {
 					</div>
 				</form>
 			)}
-		</AuthContext.Provider>
+		</AppContext.Provider>
 	);
 }
 
-export function useAuth() {
-	return useContext(AuthContext);
+export function useAppContext() {
+	return useContext(AppContext);
 }

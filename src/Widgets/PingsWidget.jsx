@@ -1,9 +1,9 @@
 import Widget from "../components/Widget";
 import { useAirtableFetch } from "../hooks/useAirtable";
-import { useAuth } from "../providers/AuthProvider";
+import { useAppContext } from "../providers/AppProvider";
 
 const PingsWidget = () => {
-	const { user } = useAuth();
+	const { user } = useAppContext();
 	const { data } = useAirtableFetch({
 		table: "pings",
 		filters: {

@@ -54,8 +54,7 @@ export class AirtableService {
 	}
 
 	async fetch({ filters } = {}) {
-		console.log(`Fetching data for ${this.table}...`);
-		// if (!this.table) return;
+		// console.log(`Fetching data for ${this.table}...`);
 
 		return new Promise((resolve, reject) => {
 			// Basic caching to prevent rate limiting from Airtable
@@ -155,7 +154,7 @@ export class AirtableService {
 		const body = JSON.stringify({
 			fields: payload,
 		});
-		console.log(this.table, url, body);
+		// console.log(this.table, url, body);
 
 		const res = await fetch(url, {
 			method: "PATCH",
@@ -247,7 +246,7 @@ export function useAirtableFetch({
 	};
 }
 
-export function useAirtableMutation({
+export function useDelayedAirtableFetch({
 	table,
 	cacheKey,
 	refetchOnWindowFocus = false,
@@ -283,7 +282,7 @@ export function useAirtableMutation({
 		},
 		onError: (...params) => {
 			onError(...params);
-			successResolver.current(...params);
+			errorResolver.current(...params);
 		},
 	});
 
@@ -308,5 +307,32 @@ export function useAirtableMutation({
 		processing: query.isLoading,
 		data,
 		mutate,
+	};
+}
+
+export function useAirtableMutation({
+	table,
+	onSuccess = () => {},
+	onError = () => {},
+}) {
+	const successResolver = useRef(() => {});
+	const errorResolver = useRef(() => {});
+	const instance = useRef(new AirtableService({ table }));
+	const query = useMutation({
+		mutationFn: ({ rowId, payload }) =>
+			instance.current.update(rowId, payload),
+		onSuccess: (data) => {
+			onSuccess(data);
+			successResolver.current(data);
+		},
+		onError: (...params) => {
+			onError(...params);
+			errorResolver.current(...params);
+		},
+	});
+
+	return {
+		...query,
+		processing: query.isLoading,
 	};
 }

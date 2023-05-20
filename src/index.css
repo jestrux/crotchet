@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+	--border-color: #e2e8f0;
+	--shadow-color: rgba(0, 0, 0, 0.26);
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--border-color: rgba(255, 255, 255, 0.16);
+		--shadow-color: rgba(0, 0, 0, 1);
+	}
+}
+
+* {
+	border-color: var(--border-color);
+}
+
 #svg circle {
 	stroke-dashoffset: 0;
 	transition: stroke-dashoffset 1s linear;

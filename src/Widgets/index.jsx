@@ -12,10 +12,10 @@ import PerformanceWidget from "./PerformanceWidget";
 import UserPerformanceWidget from "./UserPerformanceWidget";
 import PingsWidget from "./PingsWidget";
 import UserStatusWidget from "./UserStatusWidget";
-import { useAuth } from "../providers/AuthProvider";
+import { useAppContext } from "../providers/AppProvider";
 
 const Widgets = () => {
-	const { user } = useAuth();
+	const { user } = useAppContext();
 
 	// const userImage = "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxNjE2NXwwfDF8c2VhcmNofDR8fHN1bnJpc2V8ZW58MHx8fHwxNjYyNzk1ODM3&ixlib=rb-1.2.1&q=80&w=400";
 	const coverImage =
