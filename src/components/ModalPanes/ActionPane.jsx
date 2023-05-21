@@ -129,46 +129,54 @@ export default function ActionPane({ pane, onClose, children }) {
 		onSecondaryAction,
 	};
 
+	const paneContent = () => {
+		if (pane.type === "form" || (!pane.type && actionPaneProps.fields))
+			return <DynamicForm {...actionPaneProps} />;
+
+		if (pane.type === "settings")
+			return <SettingsEditor {...actionPaneProps} />;
+
+		return Children.map(children, (child) =>
+			cloneElement(child, actionPaneProps)
+		);
+	};
+
 	return (
 		<div data-last-update={lastUpdate}>
-			<div className="h-12 pl-4 pr-2 flex items-center justify-between border-b border-content/10 z-10 relative">
-				<span className="w-full text-base font-bold">
-					{pane?.title || "Create Quicklink"}
-				</span>
+			{pane?.title ? (
+				<div className="h-12 -mb-1 pl-4 pr-2 flex items-center justify-between border-b border-content/10 z-10 relative">
+					<span className="w-full text-base font-bold">
+						{pane?.title}
+					</span>
 
-				<button
-					type="button"
-					className="rounded-full hover:bg-content/5 text-content/30 hover:text-content/50 p-1 focus:outline-none border border-transparent focus:border-content/20"
-					onClick={() => onClose()}
-				>
-					<span className="sr-only">Close</span>
-					<svg
-						className="h-4 w-4"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke="currentColor"
-						aria-hidden="true"
+					<button
+						type="button"
+						className="rounded-full hover:bg-content/5 text-content/30 hover:text-content/50 p-1 focus:outline-none border border-transparent focus:border-content/20"
+						onClick={() => onClose()}
 					>
-						<path
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							strokeWidth="2.7"
-							d="M6 18L18 6M6 6l12 12"
-						/>
-					</svg>
-				</button>
-			</div>
+						<span className="sr-only">Close</span>
+						<svg
+							className="h-4 w-4"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+							aria-hidden="true"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth="2.7"
+								d="M6 18L18 6M6 6l12 12"
+							/>
+						</svg>
+					</button>
+				</div>
+			) : (
+				<div className="h-2"></div>
+			)}
 
-			<div className="-mt-0.5 relative overflow-y-auto max-h-[580px] focus:outline-none">
-				{pane.type === "form" ? (
-					<DynamicForm {...actionPaneProps} />
-				) : pane.type === "settings" ? (
-					<SettingsEditor {...actionPaneProps} />
-				) : (
-					Children.map(children, (child) =>
-						cloneElement(child, actionPaneProps)
-					)
-				)}
+			<div className="px-4 py-4 relative overflow-y-auto max-h-[580px] focus:outline-none">
+				{paneContent()}
 			</div>
 
 			{(pane?.secondaryAction ||

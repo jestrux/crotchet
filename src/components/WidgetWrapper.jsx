@@ -2,7 +2,7 @@ export default function WidgetWrapper({
 	children,
 	widget: Widget,
 	width,
-	aspectRatio = 1 / 1,
+	aspectRatio = "auto",
 	flex,
 }) {
 	return (

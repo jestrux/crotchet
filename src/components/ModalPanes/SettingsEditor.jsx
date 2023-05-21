@@ -19,7 +19,7 @@ export default function SettingsEditor({ pane }) {
 	};
 
 	return (
-		<div className="px-4 mt-5 mb-6 flex flex-col gap-5">
+		<div className="flex flex-col gap-5">
 			{Object.keys(settings).map((field, index) => {
 				const value = settings[field];
 

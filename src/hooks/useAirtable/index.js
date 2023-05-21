@@ -3,6 +3,7 @@ import * as Airtable from "airtable";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import airtableFilter from "./airtable-filter";
 import { randomId } from "../../utils";
+import { useAppContext } from "../../providers/AppProvider";
 
 const API_KEY = "key7rYj7BDKm9wwS2";
 const DB_ID = "appnobMFeViOdmZsV";
@@ -13,8 +14,9 @@ window.DEV_MODE = false;
 export class AirtableService {
 	records = [];
 
-	constructor({ table } = {}) {
+	constructor({ table, appContext } = {}) {
 		this.table = table;
+		this.appContext = appContext;
 		this.cacheKey = "CROTCHET_CACHE_" + table;
 	}
 
@@ -69,11 +71,24 @@ export class AirtableService {
 
 				db(this.table)
 					.select({
-						sort: orderBy.split(",").reduce((agg, entry) => {
-							const [field, direction] = entry.split("|");
-							return [...agg, { field, direction }];
-						}, []),
-						filterByFormula: airtableFilter(filters),
+						...(!orderBy.length
+							? {}
+							: {
+									sort: orderBy
+										.split(",")
+										.reduce((agg, entry) => {
+											const [field, direction] =
+												entry.split("|");
+											return [
+												...agg,
+												{ field, direction },
+											];
+										}, []),
+							  }),
+						filterByFormula: airtableFilter({
+							filters,
+							appContext: this.appContext,
+						}),
 					})
 					.firstPage((err, records) => {
 						if (err) {
@@ -211,9 +226,9 @@ export function useAirtableFetch({
 		onError,
 	});
 	const successResolver = useRef(() => {});
-
 	const cacher = useRef(randomId());
-	const instance = useRef(new AirtableService({ table }));
+	const appContext = useAppContext();
+	const instance = useRef(new AirtableService({ table, appContext }));
 	const query = useQuery(
 		[props.cacheKey || cacher.current],
 		async () => {
@@ -286,7 +301,8 @@ export function useDelayedAirtableFetch({
 
 	const successResolver = useRef(() => {});
 	const errorResolver = useRef(() => {});
-	const instance = useRef(new AirtableService({ table }));
+	const appContext = useAppContext();
+	const instance = useRef(new AirtableService({ table, appContext }));
 	const query = useMutation({
 		mutationFn: (filters) => instance.current.fetch({ filters, orderBy }),
 		onSuccess: (data) => {
@@ -334,9 +350,10 @@ export function useAirtableMutation({
 	onSuccess = () => {},
 	onError = () => {},
 }) {
+	const appContext = useAppContext();
 	const successResolver = useRef(() => {});
 	const errorResolver = useRef(() => {});
-	const instance = useRef(new AirtableService({ table }));
+	const instance = useRef(new AirtableService({ table, appContext }));
 	const query = useMutation({
 		mutationFn: (data) => {
 			const { rowId, ...payload } = data;

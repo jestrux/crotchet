@@ -89,7 +89,7 @@ export default function DynamicForm({ pane, onClose, onSubmit }) {
 
 	return (
 		<form ref={formRef} id="theForm" onSubmit={handleSubmit}>
-			<div className="px-4 mt-5 mb-6 flex flex-col gap-5">
+			<div className="flex flex-col gap-5">
 				{fields.map((field, key) => {
 					if (field.show && !field.show(data)) return null;
 

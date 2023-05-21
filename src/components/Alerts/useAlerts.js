@@ -41,34 +41,18 @@ export default function useAlerts() {
 		return promise;
 	};
 
-	function openFormDialog(props) {
+	function openActionDialog(props) {
 		const defaultProps = {
-			title: "Add new task",
+			title: "",
+			type: "form",
 			action: "Submit",
 			successMessage: "Success",
 		};
 
 		return showAlert({
-			content: (
-				<ActionPane
-					pane={{ ...defaultProps, ...props, type: "form" }}
-				/>
-			),
-		});
-	}
-
-	function openSettingsDialog(props) {
-		const defaultProps = {
-			title: "Edit settings",
-			successMessage: "Success",
-		};
-
-		return showAlert({
-			content: (
-				<ActionPane
-					pane={{ ...defaultProps, ...props, type: "settings" }}
-				/>
-			),
+			hideCloseButton: !!props?.title?.length,
+			size: props.dialogSize ?? "md",
+			content: <ActionPane pane={{ ...defaultProps, ...props }} />,
 		});
 	}
 
@@ -94,7 +78,6 @@ export default function useAlerts() {
 		confirmAction,
 		showAlert,
 		hideAlert,
-		openFormDialog,
-		openSettingsDialog,
+		openActionDialog,
 	};
 }

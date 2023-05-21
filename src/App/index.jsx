@@ -47,7 +47,7 @@ const AppNavigation = () => {
 };
 
 function App() {
-	const { user, updateUser, logout, openSettingsDialog } = useAppContext();
+	const { user, updateUser, logout, openActionDialog } = useAppContext();
 	const lightWallpaper =
 		"https://images.unsplash.com/photo-1682687981974-c5ef2111640c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxNjE2NXwxfDF8c2VhcmNofDh8fHdhbGxwYXBlcnxlbnwwfHx8fDE2ODQ1NzU5MDJ8MA&ixlib=rb-4.0.3&q=80&w=1080";
 	// const darkWallpaper =
@@ -58,11 +58,11 @@ function App() {
 	const editUserPreferences = () => {
 		const preferences = user.preferences;
 
-		openSettingsDialog({
+		openActionDialog({
+			type: "settings",
 			title: "Edit preferences",
 			settings: preferences,
 			onSave(updatedProps) {
-				console.log("Settings updatedProps: ", updatedProps);
 				updateUser({
 					preferences: {
 						...preferences,

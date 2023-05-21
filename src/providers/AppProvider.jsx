@@ -15,8 +15,7 @@ const AppContext = createContext({
 	logout: () => {},
 	updateUser: (newProps = {}) => {},
 	showAlert: () => {},
-	openFormDialog: () => {},
-	openSettingsDialog: () => {},
+	openActionDialog: () => {},
 	confirmAction: ({
 		type = "confirm",
 		size = "xs",
@@ -41,6 +40,7 @@ export function AppProvider({ children, value = {} }) {
 		"currentPage",
 		"Home"
 	);
+	const [, setUserWidgets] = useLocalStorageState("authUserWidgets");
 	const [user, setUser] = useLocalStorageState("authUser");
 	const { processing, mutate } = useDelayedAirtableFetch({
 		table: "users",
@@ -68,7 +68,10 @@ export function AppProvider({ children, value = {} }) {
 		setUser(updatedUser);
 	};
 
-	const logout = () => setUser(null);
+	const logout = () => {
+		setUser(null);
+		setUserWidgets(null);
+	};
 
 	let userPreferences = {
 		wallpaper: false,

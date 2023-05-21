@@ -1,69 +1,89 @@
+import { useEffect } from "react";
 import ListWidget from "../components/ListWidget";
-import ActionPane from "../components/ModalPanes/ActionPane";
 import WidgetWrapper from "../components/WidgetWrapper";
+import { useDelayedAirtableFetch } from "../hooks/useAirtable";
 import { useAppContext } from "../providers/AppProvider";
+import useLocalStorageState from "../hooks/useLocalStorageState";
 
 export default function IPFWidgets() {
-	const { user, openFormDialog } = useAppContext();
-	const newTaskHandler = () => {
-		return openFormDialog({
-			title: "Add new task",
-			action: "Save task",
-			successMessage: "Task saved",
-			table: "tasks",
-			fields: {
-				title: "text",
-				assignee: "authUser",
+	const [widgets, setWidgets] = useLocalStorageState("authUserWidgets");
+	const { user } = useAppContext();
+	const { mutateAsync } = useDelayedAirtableFetch({
+		table: "widgets",
+	});
+	const widgetSchema = {
+		type: "list",
+		label: "Projects",
+		table: "projects",
+		title: "name",
+		subtitle: "team_names",
+		status: "status",
+		filters: {
+			team_lead_name: "authUserName",
+		},
+		actions: {
+			"New task": {
+				fields: {
+					title: "text",
+					assignee: "authUser",
+				},
 			},
-		});
+		},
 	};
+
+	const fetchWidgets = async () => {
+		const res = await mutateAsync();
+		const widgets = res
+			.filter(({ properties }) => properties?.length)
+			.map(({ label, properties }) => {
+				return {
+					label,
+					...JSON.parse(properties),
+				};
+			});
+
+		setWidgets(widgets);
+	};
+
+	useEffect(() => {
+		fetchWidgets();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
+	if (!widgets) return null;
 
 	return (
 		<div className="grid items-start sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-5 xl:gap-8 py-2">
-			<WidgetWrapper aspectRatio="auto">
-				<ListWidget
-					widgetProps={{
-						title: "Daily tasks",
-						actions: [
-							{
-								icon: (
-									<svg
-										fill="none"
-										className="w-3.5"
-										viewBox="0 0 24 24"
-										strokeWidth={2}
-										stroke="currentColor"
-									>
-										<path
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											d="M12 4.5v15m7.5-7.5h-15"
-										/>
-									</svg>
-								),
-								label: "New task",
-								onClick: newTaskHandler,
-							},
-						],
-					}}
-					table="tasks"
-					checkbox="done"
-					removable
-				/>
-			</WidgetWrapper>
+			{widgets.map((widget, index) => {
+				const { label, actions, ...props } = widget;
+				let actionArray = Object.entries(actions || {});
+				actionArray = !actionArray.length
+					? null
+					: actionArray.map(([label, action]) => {
+							action.label = label;
 
-			<WidgetWrapper aspectRatio="auto">
-				<ListWidget
-					widgetProps={{ title: "Projects" }}
-					table="projects"
-					title="name"
-					subtitle="team_names"
-					status="status"
-					filters={{
-						team_lead_name: user.name,
-					}}
-				/>
-			</WidgetWrapper>
+							if (!action.table) action.table = props.table;
+							if (!action.icon) action.icon = "add";
+							if (!action.type) action.type = "form";
+
+							return action;
+					  });
+
+				return (
+					<WidgetWrapper
+						key={index}
+						aspectRatio={user.preferences?.simpleGrid ? 1 : "auto"}
+					>
+						<ListWidget
+							widgetProps={{
+								title: label,
+								actions: actionArray,
+							}}
+							{...props}
+						/>
+					</WidgetWrapper>
+				);
+			})}
 		</div>
 	);
 }

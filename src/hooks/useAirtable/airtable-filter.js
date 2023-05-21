@@ -14,11 +14,14 @@ function replaceMultiple(str, matches, replacement) {
 	return str;
 }
 
-function dataFilterer(field, comparison) {
+function dataFilterer({ field, comparison, appContext }) {
 	if (field === undefined || comparison === undefined) return "";
 
 	if (comparison.indexOf("today") !== -1)
 		comparison = comparison.replace("today", Date.now());
+
+	if (comparison.indexOf("authUserName") !== -1)
+		comparison = comparison.replace("authUserName", appContext?.user.name);
 
 	if (comparison.indexOf("!") !== -1)
 		return `NOT(${field} = '${comparison.replace("!", "")}')`;
@@ -38,16 +41,19 @@ function dataFilterer(field, comparison) {
 	return `${field} ${comparison} '${actualComparison}'`;
 }
 
-export default function airtableFilter(filters) {
+export default function airtableFilter({ filters, appContext }) {
 	let _filters = Object.entries(filters || {}).map(([field, filter]) => {
 		const hasAnd = filter.indexOf("&") !== -1;
 		const hasOr = filter.indexOf("|") !== -1;
 		const wrapperCondition = () => {
-			if (!hasAnd && !hasOr) return dataFilterer(field, filter);
+			if (!hasAnd && !hasOr)
+				return dataFilterer({ field, comparison: filter, appContext });
 
 			const chunks = filter
 				.split(hasAnd ? "&" : "|")
-				.map((filter) => dataFilterer(field, filter))
+				.map((filter) =>
+					dataFilterer({ field, comparison: filter, appContext })
+				)
 				.join(",");
 
 			return `${hasAnd ? "AND" : "OR"}(${chunks})`;
