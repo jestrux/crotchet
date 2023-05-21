@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { randomId } from "../../utils";
+import ActionPane from "../ModalPanes/ActionPane";
 
 export default function useAlerts() {
 	const [alerts, setAlerts] = useState([]);
@@ -40,6 +41,37 @@ export default function useAlerts() {
 		return promise;
 	};
 
+	function openFormDialog(props) {
+		const defaultProps = {
+			title: "Add new task",
+			action: "Submit",
+			successMessage: "Success",
+		};
+
+		return showAlert({
+			content: (
+				<ActionPane
+					pane={{ ...defaultProps, ...props, type: "form" }}
+				/>
+			),
+		});
+	}
+
+	function openSettingsDialog(props) {
+		const defaultProps = {
+			title: "Edit settings",
+			successMessage: "Success",
+		};
+
+		return showAlert({
+			content: (
+				<ActionPane
+					pane={{ ...defaultProps, ...props, type: "settings" }}
+				/>
+			),
+		});
+	}
+
 	function confirmAction(userProps = {}) {
 		const alert = {
 			type: "confirm",
@@ -62,5 +94,7 @@ export default function useAlerts() {
 		confirmAction,
 		showAlert,
 		hideAlert,
+		openFormDialog,
+		openSettingsDialog,
 	};
 }

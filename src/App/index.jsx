@@ -47,7 +47,7 @@ const AppNavigation = () => {
 };
 
 function App() {
-	const { user, updateUser, logout } = useAppContext();
+	const { user, updateUser, logout, openSettingsDialog } = useAppContext();
 	const lightWallpaper =
 		"https://images.unsplash.com/photo-1682687981974-c5ef2111640c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxNjE2NXwxfDF8c2VhcmNofDh8fHdhbGxwYXBlcnxlbnwwfHx8fDE2ODQ1NzU5MDJ8MA&ixlib=rb-4.0.3&q=80&w=1080";
 	// const darkWallpaper =
@@ -55,9 +55,28 @@ function App() {
 	const darkWallpaper =
 		"https://images.unsplash.com/photo-1488767136043-c1eb91ca932d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
 
+	const editUserPreferences = () => {
+		const preferences = user.preferences;
+
+		openSettingsDialog({
+			title: "Edit preferences",
+			settings: preferences,
+			onSave(updatedProps) {
+				console.log("Settings updatedProps: ", updatedProps);
+				updateUser({
+					preferences: {
+						...preferences,
+						...updatedProps,
+					},
+				});
+				return updatedProps;
+			},
+		});
+	};
+
 	return (
 		<div className="min-h-screen bg-canvas text-content">
-			{user.wallpaper && (
+			{user.preferences?.wallpaper && (
 				<div className="pointer-events-none">
 					<div
 						className="bg-cover fixed inset-0 dark:hidden"
@@ -85,16 +104,10 @@ function App() {
 
 				<Dropdown
 					className="pointer-events-auto"
-					options={["Customize", "Toggle Wallpaper", "Logout"]}
+					options={["Customize", "Logout"]}
 					onSelect={(_, index) => {
 						if (index === 0) {
-							setTimeout(() => {
-								alert("Customize");
-							}, 300);
-						} else if (index === 1) {
-							updateUser({
-								wallpaper: !user.wallpaper,
-							});
+							editUserPreferences();
 						} else logout();
 					}}
 				>
@@ -131,9 +144,11 @@ function App() {
 
 			<div
 				className="max-w-[1500px] mx-auto mb-8 p-3 lg:p-5 xl:p-8"
-				style={{
-					// minHeight: "1000px",
-				}}
+				style={
+					{
+						// minHeight: "1000px",
+					}
+				}
 			>
 				<IPFWidgets />
 			</div>

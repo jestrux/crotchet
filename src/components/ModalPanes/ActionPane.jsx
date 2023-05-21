@@ -1,9 +1,9 @@
 import { Children, cloneElement, useRef, useState } from "react";
-import { flushSync } from "react-dom";
 import CommandKey from "../CommandKey";
 import useKeyDetector from "../../hooks/useKeyDetector";
 import { useAppContext } from "../../providers/AppProvider";
 import DynamicForm from "../DynamicForm";
+import SettingsEditor from "./SettingsEditor";
 
 const Button = ({
 	type = "button",
@@ -162,6 +162,8 @@ export default function ActionPane({ pane, onClose, children }) {
 			<div className="-mt-0.5 relative overflow-y-auto max-h-[580px] focus:outline-none">
 				{pane.type === "form" ? (
 					<DynamicForm {...actionPaneProps} />
+				) : pane.type === "settings" ? (
+					<SettingsEditor {...actionPaneProps} />
 				) : (
 					Children.map(children, (child) =>
 						cloneElement(child, actionPaneProps)
@@ -169,56 +171,61 @@ export default function ActionPane({ pane, onClose, children }) {
 				)}
 			</div>
 
-			<div className="bg-card sticky bottom-0 h-11 px-3 flex gap-1 items-center justify-between border-t z-10">
-				<div
-					className={
-						typeof submitHandler.current != "function"
-							? "ml-auto -mr-2"
-							: "-ml-2"
-					}
-				>
-					{pane?.secondaryAction && (
+			{(pane?.secondaryAction ||
+				typeof submitHandler.current == "function") && (
+				<div className="bg-card sticky bottom-0 h-11 px-3 flex gap-1 items-center justify-between border-t z-10">
+					<div
+						className={
+							typeof submitHandler.current != "function"
+								? "ml-auto -mr-2"
+								: "-ml-2"
+						}
+					>
+						{pane?.secondaryAction && (
+							<Button
+								ref={secondaryActionButtonRef}
+								className="gap-1"
+								rounded="md"
+								size="sm"
+								variant="ghost"
+								colorScheme={
+									{ danger: "red", warning: "yellow" }[
+										pane.secondaryActionType
+									]
+								}
+								onClick={handleSecondaryAction}
+							>
+								<span className="mr-0.5 capitalize">
+									{pane.secondaryAction}
+								</span>
+								{secondaryActionShortCut
+									.split(" + ")
+									.map((key) => (
+										<CommandKey key={key} label={key} />
+									))}
+							</Button>
+						)}
+					</div>
+
+					{typeof submitHandler.current == "function" && (
 						<Button
-							ref={secondaryActionButtonRef}
-							className="gap-1"
+							className="gap-1 -mr-2"
+							onClick={handleSubmit}
 							rounded="md"
 							size="sm"
 							variant="ghost"
-							colorScheme={
-								{ danger: "red", warning: "yellow" }[
-									pane.secondaryActionType
-								]
-							}
-							onClick={handleSecondaryAction}
 						>
 							<span className="mr-0.5 capitalize">
-								{pane.secondaryAction}
+								{pane?.action || "Submit"}
 							</span>
-							{secondaryActionShortCut.split(" + ").map((key) => (
-								<CommandKey key={key} label={key} />
-							))}
+
+							<CommandKey label="Cmd" />
+
+							<CommandKey label="Enter" />
 						</Button>
 					)}
 				</div>
-
-				{typeof submitHandler.current == "function" && (
-					<Button
-						className="gap-1 -mr-2"
-						onClick={handleSubmit}
-						rounded="md"
-						size="sm"
-						variant="ghost"
-					>
-						<span className="mr-0.5 capitalize">
-							{pane?.action || "Submit"}
-						</span>
-
-						<CommandKey label="Cmd" />
-
-						<CommandKey label="Enter" />
-					</Button>
-				)}
-			</div>
+			)}
 		</div>
 	);
 }

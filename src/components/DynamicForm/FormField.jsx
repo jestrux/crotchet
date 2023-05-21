@@ -14,9 +14,8 @@ const Field = ({ field, value, onChange }) => {
 				<div className="flex items-center gap-2">
 					<Switch
 						id={field.label}
-						colorScheme="primary"
 						size="md"
-						isChecked={value}
+						checked={value}
 						onChange={onChange}
 						name={field.name}
 					/>
@@ -117,7 +116,7 @@ const Field = ({ field, value, onChange }) => {
 
 export default function FormField({ field, onChange = () => {} }) {
 	const { user } = useAppContext();
-	const [value, setValue] = useState(field.defaultValue ?? "");
+	const [value, setValue] = useState(field.value ?? field.defaultValue ?? "");
 	const handleChange = (e) => {
 		let value = e;
 		if (e.target) {

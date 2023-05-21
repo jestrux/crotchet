@@ -4,26 +4,17 @@ import WidgetWrapper from "../components/WidgetWrapper";
 import { useAppContext } from "../providers/AppProvider";
 
 export default function IPFWidgets() {
-	const { user, showAlert } = useAppContext();
+	const { user, openFormDialog } = useAppContext();
 	const newTaskHandler = () => {
-		return showAlert({
-			content: (
-				<ActionPane
-					pane={{
-						title: "Add new task",
-						type: "form",
-						table: "tasks",
-						fields: {
-							title: "text",
-							assignee: "authUser",
-						},
-						action: "Save task",
-						successMessage: "Task saved",
-					}}
-				>
-					<div>New task form</div>
-				</ActionPane>
-			),
+		return openFormDialog({
+			title: "Add new task",
+			action: "Save task",
+			successMessage: "Task saved",
+			table: "tasks",
+			fields: {
+				title: "text",
+				assignee: "authUser",
+			},
 		});
 	};
 

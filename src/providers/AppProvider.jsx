@@ -15,6 +15,8 @@ const AppContext = createContext({
 	logout: () => {},
 	updateUser: (newProps = {}) => {},
 	showAlert: () => {},
+	openFormDialog: () => {},
+	openSettingsDialog: () => {},
 	confirmAction: ({
 		type = "confirm",
 		size = "xs",
@@ -55,6 +57,9 @@ export function AppProvider({ children, value = {} }) {
 	};
 
 	const updateUser = (newProps) => {
+		if (newProps.preferences)
+			newProps.preferences = JSON.stringify(newProps.preferences);
+
 		const updatedUser = { ...user, ...newProps };
 		mutateUser({
 			rowId: user._rowId,
@@ -65,11 +70,23 @@ export function AppProvider({ children, value = {} }) {
 
 	const logout = () => setUser(null);
 
+	let userPreferences = {
+		wallpaper: false,
+		simpleGrid: true,
+	};
+
+	try {
+		userPreferences = JSON.parse(user.preferences);
+	} catch (error) {}
+
 	return (
 		<AppContext.Provider
 			value={{
 				...value,
-				user,
+				user: {
+					...user,
+					preferences: userPreferences,
+				},
 				updateUser,
 				logout,
 				currentPage,

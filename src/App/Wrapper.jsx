@@ -12,6 +12,8 @@ const AppWrapper = () => {
 			value={{
 				showAlert: alertThings.showAlert,
 				confirmAction: alertThings.confirmAction,
+				openFormDialog: alertThings.openFormDialog,
+				openSettingsDialog: alertThings.openSettingsDialog,
 			}}
 		>
 			<App />

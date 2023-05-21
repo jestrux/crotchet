@@ -269,7 +269,7 @@ export function useDelayedAirtableFetch({
 	cacheKey,
 	refetchOnWindowFocus = false,
 	filters,
-	orderBy,
+	orderBy = "created_at|asc",
 	limit,
 	first,
 	onSuccess = () => {},
@@ -288,7 +288,7 @@ export function useDelayedAirtableFetch({
 	const errorResolver = useRef(() => {});
 	const instance = useRef(new AirtableService({ table }));
 	const query = useMutation({
-		mutationFn: (filters) => instance.current.fetch({ filters }),
+		mutationFn: (filters) => instance.current.fetch({ filters, orderBy }),
 		onSuccess: (data) => {
 			const res = processAirtableData({
 				data,
