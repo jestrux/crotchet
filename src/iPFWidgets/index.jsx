@@ -8,7 +8,7 @@ import useLocalStorageState from "../hooks/useLocalStorageState";
 export default function IPFWidgets() {
 	const [widgets, setWidgets] = useLocalStorageState("authUserWidgets");
 	const { user } = useAppContext();
-	const { mutateAsync } = useDelayedAirtableFetch({
+	const { fetch } = useDelayedAirtableFetch({
 		table: "widgets",
 	});
 	const widgetSchema = {
@@ -32,7 +32,11 @@ export default function IPFWidgets() {
 	};
 
 	const fetchWidgets = async () => {
-		const res = await mutateAsync();
+		const res = await fetch({
+			filters: {
+				owner_name: "authUserName|all",
+			},
+		});
 		const widgets = res
 			.filter(({ properties }) => properties?.length)
 			.map(({ label, properties }) => {

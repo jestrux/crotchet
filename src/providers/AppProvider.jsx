@@ -42,14 +42,14 @@ export function AppProvider({ children, value = {} }) {
 	);
 	const [, setUserWidgets] = useLocalStorageState("authUserWidgets");
 	const [user, setUser] = useLocalStorageState("authUser");
-	const { processing, mutate } = useDelayedAirtableFetch({
+	const { processing, fetch } = useDelayedAirtableFetch({
 		table: "users",
 		first: true,
 	});
 
 	const handleLogin = async (e) => {
 		e.preventDefault();
-		const user = await mutate({
+		const user = await fetch({
 			email: e.target.email.value,
 		});
 

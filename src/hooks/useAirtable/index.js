@@ -281,31 +281,26 @@ export function useAirtableFetch({
 
 export function useDelayedAirtableFetch({
 	table,
-	cacheKey,
-	refetchOnWindowFocus = false,
-	filters,
-	orderBy = "created_at|asc",
-	limit,
-	first,
 	onSuccess = () => {},
 	onError = () => {},
 }) {
-	const props = {
-		cacheKey,
-		refetchOnWindowFocus,
-		filters,
-		orderBy,
-		limit,
-		first,
-	};
-
 	const successResolver = useRef(() => {});
 	const errorResolver = useRef(() => {});
 	const appContext = useAppContext();
 	const instance = useRef(new AirtableService({ table, appContext }));
 	const query = useMutation({
-		mutationFn: (filters) => instance.current.fetch({ filters, orderBy }),
-		onSuccess: (data) => {
+		mutationFn: async ({
+			filters,
+			orderBy = "created_at|asc",
+			...props
+		}) => {
+			const data = await instance.current.fetch({ filters, orderBy });
+			return {
+				data,
+				...props,
+			};
+		},
+		onSuccess: ({ data, ...props }) => {
 			const res = processAirtableData({
 				data,
 				...props,
@@ -320,12 +315,7 @@ export function useDelayedAirtableFetch({
 		},
 	});
 
-	const data = processAirtableData({
-		data: query.data,
-		...props,
-	});
-
-	const mutate = (payload) => {
+	const fetch = (payload) => {
 		const promise = new Promise((res, rej) => {
 			successResolver.current = res;
 			errorResolver.current = rej;
@@ -337,10 +327,9 @@ export function useDelayedAirtableFetch({
 	};
 
 	return {
-		...query,
+		// ...query,
 		processing: query.isLoading,
-		data,
-		mutate,
+		fetch,
 	};
 }
 
