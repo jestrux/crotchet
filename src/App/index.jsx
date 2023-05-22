@@ -136,9 +136,7 @@ const PreferencesEditor = (props) => {
 					// replace
 					title={
 						"Add widget " +
-						(currentPage !== "Home"
-							? " to " + currentPage + " page"
-							: "")
+						(currentPage !== "Home" ? " to " + currentPage : "")
 					}
 					fields={{
 						label: {
@@ -169,6 +167,7 @@ const PreferencesEditor = (props) => {
 								subtitle: "",
 								image: "",
 								progress: "",
+								status: "",
 								action: "",
 							},
 							meta: {

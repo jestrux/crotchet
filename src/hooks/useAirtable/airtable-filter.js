@@ -23,6 +23,11 @@ function dataFilterer({ field, comparison, appContext }) {
 	if (comparison.indexOf("authUserName") !== -1)
 		comparison = comparison.replace("authUserName", appContext?.user.name);
 
+	if (comparison.indexOf("contains(") !== -1) {
+		const matches = /\(([^)]+)\)/.exec(comparison); // grab value within brackets
+		return `SEARCH("${matches[1]}", ARRAYJOIN(${field}, " "))`;
+	}
+
 	if (comparison.indexOf("!") !== -1)
 		return `NOT(${field} = '${comparison.replace("!", "")}')`;
 

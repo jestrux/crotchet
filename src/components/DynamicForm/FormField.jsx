@@ -1,12 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { useAppContext } from "../../providers/AppProvider";
 import Switch from "../Switch";
-import { camelCaseToSentenceCase } from "../../utils";
+import { camelCaseToSentenceCase, randomId } from "../../utils";
 import useDebounce from "../../hooks/useDebounce";
 // import ReactTextareaAutosize from "react-textarea-autosize";
 // import TextareaMarkdown from "textarea-markdown-editor";
 
-const KeyValueInput = ({ autoFocus, placeholder, defaultValue, onChange }) => {
+const KeyValueInput = ({
+	autoFocus,
+	onAddRow,
+	onRemoveRow,
+	placeholder,
+	defaultValue,
+	onChange,
+}) => {
 	const [value, setValue] = useState(useRef(defaultValue).current);
 	const debouncedValue = useDebounce(value, 500);
 
@@ -29,14 +36,22 @@ const KeyValueInput = ({ autoFocus, placeholder, defaultValue, onChange }) => {
 			value={value}
 			onChange={(e) => setValue(e.target.value)}
 			onKeyUp={(e) => {
-				if (e.key === "Enter") {
+				if (e.key === "Enter" && !e.metaKey && !e.ctrlKey) {
 					e.preventDefault();
 					e.stopPropagation();
+					onAddRow();
+					return false;
+				}
+
+				if (e.key === "Backspace" && (e.metaKey || e.shiftKey)) {
+					e.preventDefault();
+					e.stopPropagation();
+					onRemoveRow();
 					return false;
 				}
 			}}
 			onKeyDown={(e) => {
-				if (e.key === "Enter") {
+				if (e.key === "Enter" && !e.metaKey && !e.ctrlKey) {
 					e.preventDefault();
 					e.stopPropagation();
 					return false;
@@ -51,9 +66,11 @@ const KeyValueEditor = ({ editable = true, value, onChange, ...props }) => {
 	const [entries, setEntries] = useState(Object.entries(value || { "": "" }));
 
 	const onChangeEntry = ([newKey, newValue], updatedIndex) => {
-		const newEntries = entries.map(([key, value], index) => {
-			if (index === updatedIndex) return [newKey, newValue];
-			return [key, value];
+		const newEntries = entries.map(([key, value, _id], index) => {
+			if (!_id) _id = randomId();
+
+			if (index === updatedIndex) return [newKey, newValue, _id];
+			return [key, value, _id];
 		});
 
 		const newObject = newEntries.reduce((agg, [key, value]) => {
@@ -71,14 +88,25 @@ const KeyValueEditor = ({ editable = true, value, onChange, ...props }) => {
 		} catch (error) {}
 	};
 
+	const addRow = (index) => {
+		if (index === entries.length - 1) {
+			setEntries([...entries, ["", ""]]);
+		}
+	};
+
+	const removeRow = (index) => {
+		if (entries.length > 1)
+			setEntries(entries.filter((_, i) => i !== index));
+	};
+
 	return (
 		<div className="border border-content/20 rounded-md overflow-hidden">
 			<input type="hidden" name={props.name} value={_value} readOnly />
 
-			{entries.map(([key, val], index) => {
+			{entries.map(([key, val, _id], index) => {
 				return (
 					<div
-						key={index}
+						key={index + (_id ?? "")}
 						className={`text-sm ${
 							index < entries.length - 1 &&
 							"border-b border-content/10"
@@ -102,6 +130,8 @@ const KeyValueEditor = ({ editable = true, value, onChange, ...props }) => {
 									onChange={(v) => {
 										onChangeEntry([v, val], index);
 									}}
+									onAddRow={() => addRow(index)}
+									onRemoveRow={() => removeRow(index)}
 								/>
 							) : (
 								<span className="block py-1.5 px-3">{key}</span>
@@ -118,6 +148,8 @@ const KeyValueEditor = ({ editable = true, value, onChange, ...props }) => {
 								onChange={(v) => {
 									onChangeEntry([key, v], index);
 								}}
+								onAddRow={() => addRow(index)}
+								onRemoveRow={() => removeRow(index)}
 							/>
 						</div>
 					</div>
