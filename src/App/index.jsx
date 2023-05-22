@@ -140,10 +140,13 @@ const PreferencesEditor = (props) => {
 					fields={{
 						label: {
 							type: "text",
+							width: "half",
 						},
 						table: {
-							type: "radio",
-							choices: ["tasks", "performance", "pings"],
+							type: "text",
+							width: "half",
+							// type: "radio",
+							// choices: ["tasks", "performance", "pings"],
 						},
 						image: {
 							type: "text",
