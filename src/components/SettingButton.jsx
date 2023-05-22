@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Switch from "./Switch";
 import { camelCaseToSentenceCase } from "../utils";
+import ComboboxItem from "./ComboboxItem";
 
 export default function SettingButton({ label, value, onChange }) {
+	const labelRef = useRef();
 	const [_value, setValue] = useState(value);
 	const handleChange = (newValue) => {
 		setValue(newValue);
@@ -10,20 +12,20 @@ export default function SettingButton({ label, value, onChange }) {
 	};
 
 	return (
-		<label className="cursor-pointer hover:bg-content/5 px-3 py-2.5 rounded flex items-center justify-between gap-2 focus:outline-none">
-			<span
-				className="inline-block first-letter:capitalize"
-				htmlFor={label}
-			>
-				{camelCaseToSentenceCase(label)}
-			</span>
-
-			<Switch
-				checked={_value}
-				value={_value}
-				onChange={(e) => handleChange(e.target.checked)}
-				name={label}
-			/>
-		</label>
+		<ComboboxItem
+			label={camelCaseToSentenceCase(label)}
+			value={label}
+			onSelect={() => labelRef.current.click()}
+			trailing={
+				<label ref={labelRef}>
+					<Switch
+						checked={_value}
+						value={_value}
+						onChange={handleChange}
+						name={label}
+					/>
+				</label>
+			}
+		/>
 	);
 }

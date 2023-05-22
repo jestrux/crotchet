@@ -7,6 +7,7 @@ import ActionPane from "../components/ModalPanes/ActionPane";
 import NavigationButton from "../components/NavigationButton";
 import { useAirtableMutation } from "../hooks/useAirtable";
 import SettingButton from "../components/SettingButton";
+import ComboboxItem from "../components/ComboboxItem";
 
 const MenuItem = ({ active, label, onClick = () => {} }) => {
 	const regex_emoji =
@@ -17,22 +18,20 @@ const MenuItem = ({ active, label, onClick = () => {} }) => {
 		<button
 			className={`${
 				active
-					? "bg-content/5 dark:bg-content/10 border-content/10"
+					? "bg-content/5 border-content/5 dark:bg-content/10 dark:border-content/10"
 					: "border-transparent"
-			} h-8 group flex items-center border rounded-full py-2.5 px-6 text-content/10 dark:text-transparent`}
-			style={{
-				boxShadow: !active ? "" : "inset 1px 1px 5px currentColor",
-			}}
+			} h-8 group flex items-center justify-center gap-1.5 border rounded-full py-2.5 px-4 text-content/10 dark:text-transparent`}
+			style={{ minWidth: "100px" }}
 			onClick={onClick}
 		>
 			{containsEmoji && (
-				<span className="leading-none text-content mr-1">
+				<span className="leading-none text-content -ml-1">
 					{label.toString().substring(0, 2)}
 				</span>
 			)}
 			<span
 				className="text-xs leading-none font-bold text-content"
-				style={{ opacity: active ? 1 : 0.5 }}
+				style={{ opacity: active ? 1 : 0.7 }}
 			>
 				{containsEmoji ? label.toString().substring(2) : label}
 			</span>
@@ -73,7 +72,7 @@ const PreferencesEditor = (props) => {
 
 	return (
 		<ActionPane {...props} hideCloseButton>
-			<div className="-m-3">
+			<div className="-m-4">
 				<SettingButton
 					label="simpleGrid"
 					value={preferences?.simpleGrid}
@@ -95,9 +94,10 @@ const PreferencesEditor = (props) => {
 				/>
 
 				{currentPage !== "Home" && (
-					<button
+					<ComboboxItem
+						value="Delete current page"
 						className="w-full cursor-pointer hover:bg-content/5 px-3 py-2.5 rounded flex items-center justify-between gap-2 focus:outline-none"
-						onClick={async () => {
+						onSelect={async () => {
 							if (
 								!(await confirmAction({
 									message:
@@ -114,15 +114,13 @@ const PreferencesEditor = (props) => {
 							});
 							props.onClose();
 						}}
-					>
-						Delete current page
-						<small className="opacity-30">Click to delete</small>
-					</button>
+						trailing="Click to delete"
+					/>
 				)}
 
 				<NavigationButton
 					inset
-					replace
+					// replace
 					title="Add page"
 					fields={{
 						label: "text",
@@ -135,41 +133,80 @@ const PreferencesEditor = (props) => {
 
 				<NavigationButton
 					inset
-					replace
-					title="Add widget"
+					// replace
+					title={
+						"Add widget " +
+						(currentPage !== "Home"
+							? " to " + currentPage + " page"
+							: "")
+					}
 					fields={{
 						label: {
 							type: "text",
 							width: "half",
+							optional: true,
 						},
 						table: {
 							type: "text",
 							width: "half",
-							// type: "radio",
-							// choices: ["tasks", "performance", "pings"],
 						},
-						image: {
+						filterable: {
+							label: "Filter data",
+							type: "boolean",
+							helper: true,
+						},
+						filters: {
+							hideLabel: true,
+							type: "keyvalue",
+							noMargin: true,
+							show: (data) => data.filterable,
+						},
+						fields: {
+							label: "Field mappings",
+							type: "keyvalue",
+							defaultValue: {
+								title: "",
+								subtitle: "",
+								image: "",
+								progress: "",
+								action: "",
+							},
+							meta: {
+								editable: false,
+							},
+						},
+						checkable: {
+							label: "Is checklist",
+							type: "boolean",
+							width: "half",
+							helper: true,
+						},
+						checkbox: {
+							hideLabel: true,
+							placeholder: "Check field...",
+							width: "half",
+							show: (data) => data.checkable,
+						},
+						removable: "boolean",
+						hasAction: {
+							label: "Widget action",
+							type: "boolean",
+							width: "half",
+							helper: true,
+						},
+						actionLabel: {
+							hideLabel: true,
 							type: "text",
 							width: "half",
-							optional: true,
+							placeholder: "Action label",
+							show: (data) => data.hasAction,
 						},
-						title: {
-							type: "text",
-							width: "half",
-						},
-						subtitle: {
-							type: "text",
-							width: "half",
-							optional: true,
-						},
-						progress: {
-							type: "text",
-							width: "half",
-							optional: true,
-						},
-						action: {
-							type: "text",
-							optional: true,
+						actionFields: {
+							label: "Action fields",
+							type: "keyvalue",
+							// hideLabel: true,
+							// noMargin: true,
+							show: (data) => data.hasAction,
 						},
 						page: {
 							type: "hidden",
@@ -178,13 +215,63 @@ const PreferencesEditor = (props) => {
 						owner: "authUser",
 					}}
 					onSave={(data) => {
-						const { label, page, owner, ...properties } = data;
-						return mutateAsync({
+						let {
 							label,
 							page,
 							owner,
+							filters,
+							fields,
+							actionLabel,
+							actionFields,
+							...properties
+						} = data;
+
+						try {
+							fields = JSON.parse(fields ?? {});
+						} catch (error) {
+							fields = {};
+						}
+
+						try {
+							filters = JSON.parse(filters ?? {});
+						} catch (error) {
+							filters = {};
+						}
+
+						try {
+							actionFields = JSON.parse(actionFields ?? {});
+						} catch (error) {
+							actionFields = null;
+						}
+
+						properties = {
+							...properties,
+							...fields,
+							filters,
+							...(actionLabel &&
+							actionFields &&
+							Object.keys(actionFields).length
+								? {
+										actions: {
+											[actionLabel]: {
+												fields: actionFields,
+											},
+										},
+								  }
+								: {}),
+						};
+
+						const payload = {
+							label,
+							page,
+							owner,
+							// properties,
 							properties: JSON.stringify(properties),
-						});
+						};
+
+						// console.log("Payload: ", payload);
+
+						return mutateAsync(payload);
 					}}
 					onSuccess={() =>
 						document.dispatchEvent(

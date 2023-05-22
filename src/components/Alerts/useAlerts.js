@@ -8,7 +8,7 @@ export default function useAlerts() {
 	const hideAlert = (alertId) => {
 		setAlerts((alerts) =>
 			alerts.map((alert) => {
-				if (alert.id === alertId) return { ...alert, open: false };
+				if (alert.id === alertId) return { ...alert, hidden: true };
 				return alert;
 			})
 		);

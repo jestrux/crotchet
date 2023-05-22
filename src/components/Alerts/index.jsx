@@ -45,6 +45,7 @@ export default function AlertsWrapper({ alerts }) {
 					hideCloseButton: alert.hideCloseButton,
 					isOpen: alert.open,
 					size: alert.size,
+					invisible: alert.hidden,
 					onClose: () => alert.close(),
 				};
 

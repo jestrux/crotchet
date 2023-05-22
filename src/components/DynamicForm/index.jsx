@@ -27,7 +27,7 @@ export default function DynamicForm({ pane, onClose, onSubmit }) {
 		let newData = fields.reduce((agg, field) => {
 			const formField = e.target[field.name];
 
-			if (!formField) return agg;
+			if (!formField || field.helper) return agg;
 
 			let value =
 				field.type === "boolean"
@@ -89,11 +89,11 @@ export default function DynamicForm({ pane, onClose, onSubmit }) {
 
 	return (
 		<form ref={formRef} id="theForm" onSubmit={handleSubmit}>
-			<div className="grid grid-cols-12 gap-5">
+			<div className="grid grid-cols-12 gap-5 items-center">
 				{fields.map((field, key) => {
 					if (field.show && !field.show(data)) return null;
 
-					let widthClas =
+					let widthClass =
 						{
 							full: "col-span-12",
 							half: "col-span-6",
@@ -103,7 +103,9 @@ export default function DynamicForm({ pane, onClose, onSubmit }) {
 					return (
 						<FormField
 							key={key}
-							className={` ${widthClas}`}
+							className={` ${widthClass} ${
+								field.noMargin && "-mt-3"
+							}`}
 							field={field}
 							onChange={(newProps) =>
 								setData({ ...data, ...newProps })

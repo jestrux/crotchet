@@ -13,6 +13,12 @@ import DynamicForm from "../DynamicForm";
 import SettingsEditor from "./SettingsEditor";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { randomId } from "../../utils";
+import {
+	Combobox,
+	ComboboxInput,
+	ComboboxPopover,
+	useComboboxContext,
+} from "../reach-combobox";
 
 const Button = ({
 	type = "button",
@@ -82,6 +88,7 @@ const getFallbackSecondaryActionHandler = ({
 };
 
 function ActionPaneContent({
+	active,
 	pane = {},
 	showBackButton,
 	hideCloseButton,
@@ -91,6 +98,7 @@ function ActionPaneContent({
 	const { confirmAction } = useAppContext();
 	const [lastUpdate, setLastUpdate] = useState(Date.now());
 	const secondaryActionShortCut = pane.secondaryActionShortCut || "Cmd + k";
+	const inputRef = useRef();
 	const secondaryActionButtonRef = useRef();
 	const submitHandler = useRef();
 	const secondaryActionHandler = useRef(
@@ -137,6 +145,10 @@ function ActionPaneContent({
 		},
 	});
 
+	useEffect(() => {
+		inputRef.current.focus();
+	}, [active]);
+
 	const actionPaneProps = {
 		pane,
 		onClose,
@@ -158,118 +170,144 @@ function ActionPaneContent({
 		});
 	};
 
+	const handleSelect = (value) => {
+		const selected = inputRef.current
+			.closest(".combobox-wrapper")
+			.querySelector(
+				`[data-reach-combobox-option][data-value="${value}"]`
+			);
+
+		if (selected) selected.dispatchEvent(new CustomEvent("on-select"));
+	};
+
 	return (
-		<div data-last-update={lastUpdate}>
-			{pane?.title ? (
-				<div className="h-12 -mb-1 pl-4 pr-2 flex items-center border-b border-content/10 z-10 relative">
-					{(showBackButton || pane.showBackButton) && (
-						<button
-							type="button"
-							className="flex-shrink-0 -ml-1.5 mr-2.5 bg-content/5 hover:bg-content/10 rounded flex items-center justify-center w-7 h-7 focus:outline-none border border-transparent focus:border-content/10"
-							onClick={() => onClose()}
-						>
-							<ArrowLeftIcon width={13} strokeWidth={3} />
-						</button>
-					)}
+		<div data-last-update={lastUpdate} className="relative">
+			<Combobox
+				className="combobox-wrapper w-full"
+				openOnFocus
+				onSelect={handleSelect}
+			>
+				<ComboboxInput
+					ref={inputRef}
+					className="absolute opacity-0 pointer-events-none bg-transparent h-full w-full py-3 text-xl focus:outline-none placeholder-content/30"
+				/>
 
-					<span className="w-full text-base font-bold">
-						{pane?.title}
-					</span>
-
-					{!showBackButton &&
-						!pane.showBackButton &&
-						!hideCloseButton &&
-						!pane.dialogProps?.hideCloseButton && (
+				{pane?.title ? (
+					<div className="h-12 pl-4 pr-2 flex items-center border-b border-content/10 z-10 relative">
+						{(showBackButton || pane.showBackButton) && (
 							<button
 								type="button"
-								className="ml-auto rounded-full hover:bg-content/5 text-content/30 hover:text-content/50 p-1 focus:outline-none border border-transparent focus:border-content/20"
+								className="flex-shrink-0 -ml-1.5 mr-2.5 bg-content/5 hover:bg-content/10 rounded flex items-center justify-center w-7 h-7 focus:outline-none border border-transparent focus:border-content/10"
 								onClick={() => onClose()}
 							>
-								<span className="sr-only">Close</span>
-								<svg
-									className="h-4 w-4"
-									fill="none"
-									viewBox="0 0 24 24"
-									stroke="currentColor"
-									aria-hidden="true"
-								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth="2.7"
-										d="M6 18L18 6M6 6l12 12"
-									/>
-								</svg>
+								<ArrowLeftIcon width={13} strokeWidth={3} />
 							</button>
 						)}
-				</div>
-			) : (
-				<>
-					{!hideCloseButton && !pane.dialogProps?.hideCloseButton && (
-						<div className="h-2"></div>
-					)}
-				</>
-			)}
 
-			<div className="px-4 py-4 relative overflow-y-auto max-h-[580px] focus:outline-none">
-				{paneContent()}
-			</div>
+						<span className="w-full text-base font-bold">
+							{pane?.title}
+						</span>
 
-			{(pane?.secondaryAction ||
-				typeof submitHandler.current == "function") && (
-				<div className="bg-card sticky bottom-0 h-11 px-3 flex gap-1 items-center justify-between border-t z-10">
-					<div
-						className={
-							typeof submitHandler.current != "function"
-								? "ml-auto -mr-2"
-								: "-ml-2"
-						}
-					>
-						{pane?.secondaryAction && (
+						{!showBackButton &&
+							!pane.showBackButton &&
+							!hideCloseButton &&
+							!pane.dialogProps?.hideCloseButton && (
+								<button
+									type="button"
+									className="ml-auto rounded-full hover:bg-content/5 text-content/30 hover:text-content/50 p-1 focus:outline-none border border-transparent focus:border-content/20"
+									onClick={() => onClose()}
+								>
+									<span className="sr-only">Close</span>
+									<svg
+										className="h-4 w-4"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+										aria-hidden="true"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth="2.7"
+											d="M6 18L18 6M6 6l12 12"
+										/>
+									</svg>
+								</button>
+							)}
+					</div>
+				) : (
+					<>
+						{!hideCloseButton &&
+							!pane.dialogProps?.hideCloseButton && (
+								<div className="h-2"></div>
+							)}
+					</>
+				)}
+
+				<ComboboxPopover
+					id="popoverContent"
+					portal={false}
+					className="px-4 py-4 relative overflow-y-auto max-h-[580px] focus:outline-none"
+				>
+					{paneContent()}
+				</ComboboxPopover>
+
+				{(pane?.secondaryAction ||
+					typeof submitHandler.current == "function") && (
+					<div className="bg-card sticky bottom-0 h-11 px-3 flex gap-1 items-center justify-between border-t z-10">
+						<div
+							className={
+								typeof submitHandler.current != "function"
+									? "ml-auto -mr-2"
+									: "-ml-2"
+							}
+						>
+							{pane?.secondaryAction && (
+								<Button
+									ref={secondaryActionButtonRef}
+									className="gap-1"
+									rounded="md"
+									size="sm"
+									variant="ghost"
+									colorScheme={
+										{ danger: "red", warning: "yellow" }[
+											pane.secondaryActionType
+										]
+									}
+									onClick={handleSecondaryAction}
+								>
+									<span className="mr-0.5 capitalize">
+										{pane.secondaryAction}
+									</span>
+									{secondaryActionShortCut
+										.split(" + ")
+										.map((key) => (
+											<CommandKey key={key} label={key} />
+										))}
+								</Button>
+							)}
+						</div>
+
+						{typeof submitHandler.current == "function" && (
 							<Button
-								ref={secondaryActionButtonRef}
-								className="gap-1"
+								className="gap-1 -mr-2"
+								onClick={handleSubmit}
 								rounded="md"
 								size="sm"
 								variant="ghost"
-								colorScheme={
-									{ danger: "red", warning: "yellow" }[
-										pane.secondaryActionType
-									]
-								}
-								onClick={handleSecondaryAction}
 							>
 								<span className="mr-0.5 capitalize">
-									{pane.secondaryAction}
+									{pane?.action || "Submit"}
 								</span>
-								{secondaryActionShortCut
-									.split(" + ")
-									.map((key) => (
-										<CommandKey key={key} label={key} />
-									))}
+
+								<CommandKey label="Cmd" />
+
+								<CommandKey label="Enter" />
 							</Button>
 						)}
 					</div>
-
-					{typeof submitHandler.current == "function" && (
-						<Button
-							className="gap-1 -mr-2"
-							onClick={handleSubmit}
-							rounded="md"
-							size="sm"
-							variant="ghost"
-						>
-							<span className="mr-0.5 capitalize">
-								{pane?.action || "Submit"}
-							</span>
-
-							<CommandKey label="Cmd" />
-
-							<CommandKey label="Enter" />
-						</Button>
-					)}
-				</div>
-			)}
+				)}
+			</Combobox>
 		</div>
 	);
 }
@@ -281,6 +319,7 @@ export default function ActionPane({
 	onClose,
 	children,
 }) {
+	const actionPanesWrapper = useRef();
 	const [panes, setPanes] = useState([
 		{
 			id: randomId(),
@@ -330,20 +369,33 @@ export default function ActionPane({
 
 	useKeyDetector({
 		key: "Escape",
-		action: () => closePane(),
+		action: () => {
+			if (actionPanesWrapper.current) {
+				if (!actionPanesWrapper.current.matches(":focus-within"))
+					return;
+			}
+
+			closePane();
+		},
 	});
 
-	return panes.map((p, index) => {
-		const active = p.id === panes.at(-1)?.id;
+	return (
+		<div ref={actionPanesWrapper}>
+			{panes.map((p, index) => {
+				const active = p.id === panes.at(-1)?.id;
 
-		return (
-			<div key={index} className={!active ? "hidden" : ""}>
-				<ActionPaneContent
-					{...p}
-					active={active}
-					onClose={!active ? null : (data) => closePane(p, data)}
-				/>
-			</div>
-		);
-	});
+				return (
+					<div key={index} className={!active ? "hidden" : ""}>
+						<ActionPaneContent
+							{...p}
+							active={active}
+							onClose={
+								!active ? null : (data) => closePane(p, data)
+							}
+						/>
+					</div>
+				);
+			})}
+		</div>
+	);
 }

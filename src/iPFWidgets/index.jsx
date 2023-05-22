@@ -63,7 +63,7 @@ export default function IPFWidgets() {
 			);
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [currentPage]);
+	}, []);
 
 	useEffect(() => {
 		// setWidgets([]);

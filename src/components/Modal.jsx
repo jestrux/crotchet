@@ -36,6 +36,7 @@ export const MessageModal = ({
 	actions,
 	children,
 	hideCloseButton = false,
+	invisible,
 	onOkay,
 	onClose,
 }) => {
@@ -53,6 +54,7 @@ export const MessageModal = ({
 			dismissible
 			isOpen={isOpen}
 			hideCloseButton={hideCloseButton}
+			invisible={invisible}
 			onClose={handleClose}
 			noPadding
 			size={size}
@@ -114,6 +116,7 @@ const Modal = ({
 	dismissible = false,
 	hideCloseButton = true,
 	showOverlayBg = true,
+	invisible = false,
 	isOpen,
 	onClose,
 }) => {
@@ -126,6 +129,7 @@ const Modal = ({
 			leastDestructiveRef={cancelRef}
 			className={`fixed overflow-y-auto inset-0 z-[999] flex items-start justify-center py-16
                 ${showOverlayBg && "bg-black/20 dark:bg-black/70"}
+                ${invisible && "opacity-0 pointer-events-none"}
             `}
 		>
 			<div ref={cancelRef} className="fixed inset-0" onClick={onClose}>
