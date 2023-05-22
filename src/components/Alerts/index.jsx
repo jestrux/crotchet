@@ -41,6 +41,7 @@ export default function AlertsWrapper({ alerts }) {
 		<>
 			{alerts.map((alert) => {
 				const props = {
+					showOverlayBg: alert.showOverlayBg,
 					hideCloseButton: alert.hideCloseButton,
 					isOpen: alert.open,
 					size: alert.size,

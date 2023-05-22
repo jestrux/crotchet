@@ -31,6 +31,9 @@ export default function SettingsEditor({ pane }) {
 							name: field,
 							label: camelCaseToSentenceCase(field),
 							value,
+							meta: {
+								rightAligned: true,
+							},
 						}}
 						onChange={(val) => updateSetting(field, val[field])}
 					/>

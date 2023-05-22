@@ -110,7 +110,7 @@ const Modal = ({
 	children,
 	className = "",
 	label = "Content",
-	size = "xl",
+	size = "md",
 	dismissible = false,
 	hideCloseButton = true,
 	showOverlayBg = true,
@@ -147,12 +147,10 @@ const Modal = ({
 						: "0px 10px 30px -2px var(--shadow-color)",
 				}}
 			>
-				{children}
-
 				{onClose && !hideCloseButton && (
 					<button
 						type="button"
-						className="z-10 absolute right-2 top-2 rounded-full hover:bg-content/5 text-content/30 hover:text-content/50 p-1 focus:outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
+						className="z-10 absolute right-2 top-2 rounded-full hover:bg-content/5 text-content/30 hover:text-content/50 p-1 focus:outline-none border border-transparent focus:border-content/20"
 						onClick={onClose}
 					>
 						<span className="sr-only">Close</span>
@@ -172,6 +170,8 @@ const Modal = ({
 						</svg>
 					</button>
 				)}
+
+				{children}
 			</div>
 		</AlertDialog>
 	);

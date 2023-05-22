@@ -1,8 +1,18 @@
 import IPFWidgets from "../iPFWidgets";
 import { useAppContext } from "../providers/AppProvider";
 import Dropdown from "../components/Dropdown";
+import useKeyDetector from "../hooks/useKeyDetector";
+import { useRef } from "react";
+import ActionPane from "../components/ModalPanes/ActionPane";
+import NavigationButton from "../components/NavigationButton";
+import { useAirtableMutation } from "../hooks/useAirtable";
+import SettingButton from "../components/SettingButton";
 
-const MenuItem = ({ active, children, onClick = () => {} }) => {
+const MenuItem = ({ active, label, onClick = () => {} }) => {
+	const regex_emoji =
+		/[\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}\u{1F9B0}-\u{1F9B3}]/u;
+	const containsEmoji = regex_emoji.test(label);
+
 	return (
 		<button
 			className={`${
@@ -15,11 +25,16 @@ const MenuItem = ({ active, children, onClick = () => {} }) => {
 			}}
 			onClick={onClick}
 		>
+			{containsEmoji && (
+				<span className="leading-none text-content mr-1">
+					{label.toString().substring(0, 2)}
+				</span>
+			)}
 			<span
 				className="text-xs leading-none font-bold text-content"
 				style={{ opacity: active ? 1 : 0.5 }}
 			>
-				{children}
+				{containsEmoji ? label.toString().substring(2) : label}
 			</span>
 		</button>
 	);
@@ -27,27 +42,161 @@ const MenuItem = ({ active, children, onClick = () => {} }) => {
 
 const AppNavigation = () => {
 	const { currentPage, setCurrentPage } = useAppContext();
-	const pages = ["Home", "Reports", "Learning"];
+	const { user } = useAppContext();
+	const pages = [{ label: "Home" }, ...user.pages];
 
-	// return null;
+	if (pages.length < 2) return null;
 
 	return (
 		<div className="pointer-events-auto inline-flex justify-center items-center mr-12 p-1 rounded-full bg-card/80 backdrop-blur dark:border border-content/5 shadow">
 			{pages.map((page, index) => (
 				<MenuItem
 					key={index}
-					active={page === currentPage}
-					onClick={() => setCurrentPage(page)}
-				>
-					{page}
-				</MenuItem>
+					active={page.label === currentPage}
+					onClick={() => setCurrentPage(page.label)}
+					label={page.label}
+				/>
 			))}
 		</div>
 	);
 };
 
+const PreferencesEditor = (props) => {
+	const { user, confirmAction, updateUser, currentPage, setCurrentPage } =
+		useAppContext();
+	const preferences = user.preferences;
+
+	const { mutateAsync } = useAirtableMutation({
+		table: "widgets",
+		action: "create",
+	});
+
+	return (
+		<ActionPane {...props} hideCloseButton>
+			<div className="-m-3">
+				<SettingButton
+					label="simpleGrid"
+					value={preferences?.simpleGrid}
+					onChange={(simpleGrid) =>
+						updateUser({
+							preferences: { ...preferences, simpleGrid },
+						})
+					}
+				/>
+
+				<SettingButton
+					label="wallpaper"
+					value={preferences?.wallpaper}
+					onChange={(wallpaper) =>
+						updateUser({
+							preferences: { ...preferences, wallpaper },
+						})
+					}
+				/>
+
+				{currentPage !== "Home" && (
+					<button
+						className="w-full cursor-pointer hover:bg-content/5 px-3 py-2.5 rounded flex items-center justify-between gap-2 focus:outline-none"
+						onClick={async () => {
+							if (
+								!(await confirmAction({
+									message:
+										"This will also delete your widgets in this page.",
+								}))
+							)
+								return;
+
+							setCurrentPage("Home");
+							updateUser({
+								pages: user.pages.filter(
+									({ label }) => label !== currentPage
+								),
+							});
+							props.onClose();
+						}}
+					>
+						Delete current page
+						<small className="opacity-30">Click to delete</small>
+					</button>
+				)}
+
+				<NavigationButton
+					inset
+					replace
+					title="Add page"
+					fields={{
+						label: "text",
+					}}
+					onSave={(page) => {
+						updateUser({ pages: [...user.pages, page] });
+						setCurrentPage(page.label);
+					}}
+				/>
+
+				<NavigationButton
+					inset
+					replace
+					title="Add widget"
+					fields={{
+						label: {
+							type: "text",
+						},
+						table: {
+							type: "radio",
+							choices: ["tasks", "performance", "pings"],
+						},
+						image: {
+							type: "text",
+							width: "half",
+							optional: true,
+						},
+						title: {
+							type: "text",
+							width: "half",
+						},
+						subtitle: {
+							type: "text",
+							width: "half",
+							optional: true,
+						},
+						progress: {
+							type: "text",
+							width: "half",
+							optional: true,
+						},
+						action: {
+							type: "text",
+							optional: true,
+						},
+						page: {
+							type: "hidden",
+							defaultValue: currentPage,
+						},
+						owner: "authUser",
+					}}
+					onSave={(data) => {
+						const { label, page, owner, ...properties } = data;
+						return mutateAsync({
+							label,
+							page,
+							owner,
+							properties: JSON.stringify(properties),
+						});
+					}}
+					onSuccess={() =>
+						document.dispatchEvent(
+							new CustomEvent("widgets-updated")
+						)
+					}
+				/>
+			</div>
+		</ActionPane>
+	);
+};
+
 function App() {
-	const { user, updateUser, logout, openActionDialog } = useAppContext();
+	const preferencesAlertRef = useRef();
+	const { user, currentPage, logout, showAlert } = useAppContext();
 	const lightWallpaper =
 		"https://images.unsplash.com/photo-1682687981974-c5ef2111640c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxNjE2NXwxfDF8c2VhcmNofDh8fHdhbGxwYXBlcnxlbnwwfHx8fDE2ODQ1NzU5MDJ8MA&ixlib=rb-4.0.3&q=80&w=1080";
 	// const darkWallpaper =
@@ -56,23 +205,33 @@ function App() {
 		"https://images.unsplash.com/photo-1488767136043-c1eb91ca932d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
 
 	const editUserPreferences = () => {
-		const preferences = user.preferences;
+		if (preferencesAlertRef.current) {
+			preferencesAlertRef.current.close();
+			preferencesAlertRef.current = null;
+			return;
+		}
 
-		openActionDialog({
-			type: "settings",
-			title: "Edit preferences",
-			settings: preferences,
-			onSave(updatedProps) {
-				updateUser({
-					preferences: {
-						...preferences,
-						...updatedProps,
-					},
-				});
-				return updatedProps;
+		showAlert({
+			// 	type: "settings",
+			// title: "Edit preferences",
+			// hideCloseButton: true,
+			// showOverlayBg: false,
+			dismissible: false,
+			content: <PreferencesEditor />,
+			onCreate(alert) {
+				preferencesAlertRef.current = alert;
+			},
+			callback(data) {
+				preferencesAlertRef.current = null;
+				return data;
 			},
 		});
 	};
+
+	useKeyDetector({
+		key: "Cmd + /",
+		action: editUserPreferences,
+	});
 
 	return (
 		<div className="min-h-screen bg-canvas text-content">
@@ -150,7 +309,7 @@ function App() {
 					}
 				}
 			>
-				<IPFWidgets />
+				<IPFWidgets key={currentPage} />
 			</div>
 		</div>
 	);

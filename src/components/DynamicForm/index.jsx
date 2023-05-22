@@ -89,13 +89,21 @@ export default function DynamicForm({ pane, onClose, onSubmit }) {
 
 	return (
 		<form ref={formRef} id="theForm" onSubmit={handleSubmit}>
-			<div className="flex flex-col gap-5">
+			<div className="grid grid-cols-12 gap-5">
 				{fields.map((field, key) => {
 					if (field.show && !field.show(data)) return null;
+
+					let widthClas =
+						{
+							full: "col-span-12",
+							half: "col-span-6",
+							third: "col-span-4",
+						}[field.width ?? "full"] || "col-span-12";
 
 					return (
 						<FormField
 							key={key}
+							className={` ${widthClas}`}
 							field={field}
 							onChange={(newProps) =>
 								setData({ ...data, ...newProps })

@@ -6,8 +6,10 @@ import { useAppContext } from "../providers/AppProvider";
 import useLocalStorageState from "../hooks/useLocalStorageState";
 
 export default function IPFWidgets() {
-	const [widgets, setWidgets] = useLocalStorageState("authUserWidgets");
-	const { user } = useAppContext();
+	const { user, currentPage } = useAppContext();
+	const [widgets, setWidgets] = useLocalStorageState(
+		"authUserWidgets" + currentPage ?? "Home"
+	);
 	const { fetch } = useDelayedAirtableFetch({
 		table: "widgets",
 	});
@@ -35,6 +37,7 @@ export default function IPFWidgets() {
 		const res = await fetch({
 			filters: {
 				owner_name: "authUserName|all",
+				page: currentPage ?? "Home",
 			},
 		});
 		const widgets = res
@@ -50,9 +53,23 @@ export default function IPFWidgets() {
 	};
 
 	useEffect(() => {
+		document.addEventListener("widgets-updated", fetchWidgets, false);
+
+		return () => {
+			document.removeEventListener(
+				"widgets-updated",
+				fetchWidgets,
+				false
+			);
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [currentPage]);
+
+	useEffect(() => {
+		// setWidgets([]);
 		fetchWidgets();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	}, [currentPage]);
 
 	if (!widgets) return null;
 

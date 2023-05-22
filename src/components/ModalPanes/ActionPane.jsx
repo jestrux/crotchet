@@ -1,9 +1,18 @@
-import { Children, cloneElement, useRef, useState } from "react";
+import {
+	Children,
+	cloneElement,
+	isValidElement,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import CommandKey from "../CommandKey";
 import useKeyDetector from "../../hooks/useKeyDetector";
 import { useAppContext } from "../../providers/AppProvider";
 import DynamicForm from "../DynamicForm";
 import SettingsEditor from "./SettingsEditor";
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { randomId } from "../../utils";
 
 const Button = ({
 	type = "button",
@@ -72,7 +81,13 @@ const getFallbackSecondaryActionHandler = ({
 	return handler;
 };
 
-export default function ActionPane({ pane, onClose, children }) {
+function ActionPaneContent({
+	pane = {},
+	showBackButton,
+	hideCloseButton,
+	onClose,
+	children,
+}) {
 	const { confirmAction } = useAppContext();
 	const [lastUpdate, setLastUpdate] = useState(Date.now());
 	const secondaryActionShortCut = pane.secondaryActionShortCut || "Cmd + k";
@@ -136,43 +151,64 @@ export default function ActionPane({ pane, onClose, children }) {
 		if (pane.type === "settings")
 			return <SettingsEditor {...actionPaneProps} />;
 
-		return Children.map(children, (child) =>
-			cloneElement(child, actionPaneProps)
-		);
+		return Children.map(children, (child) => {
+			return isValidElement(child) && child.type !== "div"
+				? cloneElement(child, actionPaneProps)
+				: child;
+		});
 	};
 
 	return (
 		<div data-last-update={lastUpdate}>
 			{pane?.title ? (
-				<div className="h-12 -mb-1 pl-4 pr-2 flex items-center justify-between border-b border-content/10 z-10 relative">
+				<div className="h-12 -mb-1 pl-4 pr-2 flex items-center border-b border-content/10 z-10 relative">
+					{(showBackButton || pane.showBackButton) && (
+						<button
+							type="button"
+							className="flex-shrink-0 -ml-1.5 mr-2.5 bg-content/5 hover:bg-content/10 rounded flex items-center justify-center w-7 h-7 focus:outline-none border border-transparent focus:border-content/10"
+							onClick={() => onClose()}
+						>
+							<ArrowLeftIcon width={13} strokeWidth={3} />
+						</button>
+					)}
+
 					<span className="w-full text-base font-bold">
 						{pane?.title}
 					</span>
 
-					<button
-						type="button"
-						className="rounded-full hover:bg-content/5 text-content/30 hover:text-content/50 p-1 focus:outline-none border border-transparent focus:border-content/20"
-						onClick={() => onClose()}
-					>
-						<span className="sr-only">Close</span>
-						<svg
-							className="h-4 w-4"
-							fill="none"
-							viewBox="0 0 24 24"
-							stroke="currentColor"
-							aria-hidden="true"
-						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								strokeWidth="2.7"
-								d="M6 18L18 6M6 6l12 12"
-							/>
-						</svg>
-					</button>
+					{!showBackButton &&
+						!pane.showBackButton &&
+						!hideCloseButton &&
+						!pane.dialogProps?.hideCloseButton && (
+							<button
+								type="button"
+								className="ml-auto rounded-full hover:bg-content/5 text-content/30 hover:text-content/50 p-1 focus:outline-none border border-transparent focus:border-content/20"
+								onClick={() => onClose()}
+							>
+								<span className="sr-only">Close</span>
+								<svg
+									className="h-4 w-4"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+									aria-hidden="true"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth="2.7"
+										d="M6 18L18 6M6 6l12 12"
+									/>
+								</svg>
+							</button>
+						)}
 				</div>
 			) : (
-				<div className="h-2"></div>
+				<>
+					{!hideCloseButton && !pane.dialogProps?.hideCloseButton && (
+						<div className="h-2"></div>
+					)}
+				</>
 			)}
 
 			<div className="px-4 py-4 relative overflow-y-auto max-h-[580px] focus:outline-none">
@@ -236,4 +272,78 @@ export default function ActionPane({ pane, onClose, children }) {
 			)}
 		</div>
 	);
+}
+
+export default function ActionPane({
+	pane = {},
+	showBackButton,
+	hideCloseButton,
+	onClose,
+	children,
+}) {
+	const [panes, setPanes] = useState([
+		{
+			id: randomId(),
+			pane,
+			showBackButton,
+			hideCloseButton,
+			onClose,
+			children,
+		},
+	]);
+
+	const closePane = (pane, data) => {
+		setPanes((panes) => {
+			if (!pane) pane = panes.at(-1);
+
+			if (typeof pane.callback == "function") pane.callback(data);
+
+			if (panes.length === 1) {
+				setTimeout(() => onClose(data));
+				return panes;
+			}
+
+			return panes.filter((p) => p.id !== pane.id);
+		});
+	};
+
+	const pushPane = ({ detail: { replace, callback, ...pane } }) => {
+		pane.type = pane.type ?? "form";
+
+		setPanes([
+			...(!replace ? panes : panes.slice(0, panes.length - 1)),
+			{
+				id: randomId(),
+				callback,
+				showBackButton: !replace,
+				pane,
+			},
+		]);
+	};
+
+	useEffect(() => {
+		document.addEventListener("push-pane", pushPane, false);
+
+		return () => document.removeEventListener("push-pane", pushPane, false);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
+	useKeyDetector({
+		key: "Escape",
+		action: () => closePane(),
+	});
+
+	return panes.map((p, index) => {
+		const active = p.id === panes.at(-1)?.id;
+
+		return (
+			<div key={index} className={!active ? "hidden" : ""}>
+				<ActionPaneContent
+					{...p}
+					active={active}
+					onClose={!active ? null : (data) => closePane(p, data)}
+				/>
+			</div>
+		);
+	});
 }

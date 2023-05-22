@@ -6,7 +6,7 @@ export default function useAlerts() {
 	const [alerts, setAlerts] = useState([]);
 
 	const hideAlert = (alertId) => {
-		setAlerts(
+		setAlerts((alerts) =>
 			alerts.map((alert) => {
 				if (alert.id === alertId) return { ...alert, open: false };
 				return alert;
@@ -14,7 +14,7 @@ export default function useAlerts() {
 		);
 
 		setTimeout(() => {
-			setAlerts(alerts.filter(({ id }) => id !== alertId));
+			setAlerts((alerts) => alerts.filter(({ id }) => id !== alertId));
 		}, 300);
 	};
 
@@ -24,19 +24,27 @@ export default function useAlerts() {
 			alert.callback = (data) => resolve(oldCallback(data));
 		});
 
-		const alertId = randomId();
-		setAlerts([
-			...(alerts || []),
-			{
-				...alert,
-				id: alertId,
-				open: true,
-				close(data) {
-					alert.callback(data);
-					hideAlert();
-				},
+		alert = {
+			...alert,
+			id: randomId(),
+			open: true,
+			close(data) {
+				alert.callback(data);
+				hideAlert(alert.id);
 			},
-		]);
+		};
+
+		if (alert.replace) alerts.at(-1)?.callback();
+
+		setAlerts((alerts) => {
+			const currentValue = !alert.replace
+				? alerts
+				: alerts.filter(({ id }) => id !== alerts.at(-1)?.id);
+
+			return [...currentValue, alert];
+		});
+
+		if (typeof alert.onCreate == "function") alert.onCreate(alert);
 
 		return promise;
 	};
@@ -51,7 +59,7 @@ export default function useAlerts() {
 
 		return showAlert({
 			hideCloseButton: !!props?.title?.length,
-			size: props.dialogSize ?? "md",
+			...(props.dialogProps ?? {}),
 			content: <ActionPane pane={{ ...defaultProps, ...props }} />,
 		});
 	}

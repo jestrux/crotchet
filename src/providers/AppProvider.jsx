@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import useLocalStorageState from "../hooks/useLocalStorageState";
+import useLocalStorageState, { STORE_KEY } from "../hooks/useLocalStorageState";
 import logo from "../images/logo.png";
 import Loader from "../components/Loader";
 import {
@@ -44,13 +44,15 @@ export function AppProvider({ children, value = {} }) {
 	const [user, setUser] = useLocalStorageState("authUser");
 	const { processing, fetch } = useDelayedAirtableFetch({
 		table: "users",
-		first: true,
 	});
 
 	const handleLogin = async (e) => {
 		e.preventDefault();
 		const user = await fetch({
-			email: e.target.email.value,
+			filters: {
+				email: e.target.email.value,
+			},
+			first: true,
 		});
 
 		if (user) setUser(user);
@@ -59,6 +61,7 @@ export function AppProvider({ children, value = {} }) {
 	const updateUser = (newProps) => {
 		if (newProps.preferences)
 			newProps.preferences = JSON.stringify(newProps.preferences);
+		if (newProps.pages) newProps.pages = JSON.stringify(newProps.pages);
 
 		const updatedUser = { ...user, ...newProps };
 		mutateUser({
@@ -69,8 +72,9 @@ export function AppProvider({ children, value = {} }) {
 	};
 
 	const logout = () => {
+		window.localStorage.removeItem(STORE_KEY);
+		setCurrentPage("Home");
 		setUser(null);
-		setUserWidgets(null);
 	};
 
 	let userPreferences = {
@@ -78,8 +82,14 @@ export function AppProvider({ children, value = {} }) {
 		simpleGrid: true,
 	};
 
+	let userPages = [];
+
 	try {
 		userPreferences = JSON.parse(user.preferences);
+	} catch (error) {}
+
+	try {
+		userPages = JSON.parse(user.pages);
 	} catch (error) {}
 
 	return (
@@ -88,6 +98,7 @@ export function AppProvider({ children, value = {} }) {
 				...value,
 				user: {
 					...user,
+					pages: userPages,
 					preferences: userPreferences,
 				},
 				updateUser,

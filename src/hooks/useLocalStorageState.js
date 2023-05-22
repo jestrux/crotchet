@@ -1,5 +1,5 @@
 import { useState } from "react";
-const STORE_KEY = "CROTCHET-APP-DATA";
+export const STORE_KEY = "CROTCHET-APP-DATA";
 
 export function getValueFromLocalStorage(key, defaultValue = null) {
 	let store = window.localStorage.getItem(STORE_KEY);
