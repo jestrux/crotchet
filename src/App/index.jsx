@@ -65,21 +65,48 @@ const PreferencesEditor = (props) => {
 		useAppContext();
 	const preferences = user.preferences;
 
+	const pages = [
+		{ label: "Home", simpleGrid: user.preferences?.simpleGrid },
+		...user.pages,
+	];
+	const pageProps = pages.find((p) => p.label === currentPage);
+	const simpleGrid = pageProps?.simpleGrid ?? true;
+
 	const { mutateAsync } = useAirtableMutation({
 		table: "widgets",
 		action: "create",
 	});
+
+	const refreshWidgets = () =>
+		document.dispatchEvent(new CustomEvent("widgets-updated"));
 
 	return (
 		<ActionPane {...props} hideCloseButton>
 			<div className="-m-4">
 				<SettingButton
 					label="simpleGrid"
-					value={preferences?.simpleGrid}
+					value={simpleGrid}
 					onChange={(simpleGrid) =>
-						updateUser({
-							preferences: { ...preferences, simpleGrid },
-						})
+						updateUser(
+							currentPage === "Home"
+								? {
+										preferences: {
+											...preferences,
+											simpleGrid,
+										},
+								  }
+								: {
+										pages: user.pages.map((p) => {
+											if (p.label === pageProps.label) {
+												return {
+													...pageProps,
+													simpleGrid,
+												};
+											}
+											return p;
+										}),
+								  }
+						)
 					}
 				/>
 
@@ -118,22 +145,18 @@ const PreferencesEditor = (props) => {
 					/>
 				)}
 
-				<NavigationButton
-					inset
-					// replace
-					title="Add page"
-					fields={{
-						label: "text",
+				<ComboboxItem
+					value="Refresh Widgets"
+					className="w-full cursor-pointer hover:bg-content/5 px-3 py-2.5 rounded flex items-center justify-between gap-2 focus:outline-none"
+					onSelect={async () => {
+						refreshWidgets();
+						props.onClose();
 					}}
-					onSave={(page) => {
-						updateUser({ pages: [...user.pages, page] });
-						setCurrentPage(page.label);
-					}}
+					trailing="Click to refresh"
 				/>
 
 				<NavigationButton
 					inset
-					// replace
 					title={
 						"Add widget " +
 						(currentPage !== "Home" ? " to " + currentPage : "")
@@ -272,11 +295,19 @@ const PreferencesEditor = (props) => {
 
 						return mutateAsync(payload);
 					}}
-					onSuccess={() =>
-						document.dispatchEvent(
-							new CustomEvent("widgets-updated")
-						)
-					}
+					onSuccess={refreshWidgets}
+				/>
+
+				<NavigationButton
+					inset
+					title="Add page"
+					fields={{
+						label: "text",
+					}}
+					onSave={(page) => {
+						updateUser({ pages: [...user.pages, page] });
+						setCurrentPage(page.label);
+					}}
 				/>
 			</div>
 		</ActionPane>
