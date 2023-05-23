@@ -82,7 +82,7 @@ const Widget = ({
 			{actionButton && (
 				<>
 					{actionButton.fixed ?? true ? (
-						<div className="-mx-1.5 p-3s sborder-t border-content/10">
+						<div className="-mx-1.5 -mb-0.5 p-3s sborder-t border-content/10">
 							<button
 								className={`${
 									actionButton.styling?.text === "primary" &&
