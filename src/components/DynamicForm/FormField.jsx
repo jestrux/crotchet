@@ -336,7 +336,7 @@ export default function FormField({ className, field, onChange = () => {} }) {
 			<div>
 				{field.type !== "boolean" && !field.hideLabel && (
 					<label
-						className="inline-block first-letter:capitalize mb-1 pl-1"
+						className="inline-block first-letter:capitalize mb-1 pl-0.5"
 						mb={0}
 						htmlFor={field.label}
 					>
