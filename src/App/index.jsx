@@ -57,7 +57,7 @@ const AppNavigation = () => {
 };
 
 function App() {
-	const { user, logout } = useAppContext();
+	const { user, currentPage, logout } = useAppContext();
 	const { editUserPreferences } = usePreferenceEditor();
 	const lightWallpaper =
 		"https://images.unsplash.com/photo-1682687981974-c5ef2111640c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxNjE2NXwxfDF8c2VhcmNofDh8fHdhbGxwYXBlcnxlbnwwfHx8fDE2ODQ1NzU5MDJ8MA&ixlib=rb-4.0.3&q=80&w=1080";
@@ -70,6 +70,11 @@ function App() {
 		key: "Cmd + /",
 		action: editUserPreferences,
 	});
+
+	const pages = [
+		{ label: "Home", simpleGrid: user.preferences?.simpleGrid },
+		...user.pages,
+	];
 
 	return (
 		<div className="min-h-screen bg-canvas text-content">
@@ -123,13 +128,19 @@ function App() {
 			</div>
 
 			<div className="max-w-[1500px] mx-auto mb-8 p-3 lg:p-5 xl:p-8">
-				{
-					<Widgets
-						onCustomize={editUserPreferences}
-						onLogout={logout}
-					/>
-				}
-				{/* <IPFWidgets key={currentPage} /> */}
+				{pages.map((page, index) => {
+					if (currentPage !== page.label) return null;
+
+					return (
+						<div key={index}>
+							{/* <Widgets
+								onCustomize={editUserPreferences}
+								onLogout={logout}
+							/> */}
+							<IPFWidgets page={page} />
+						</div>
+					);
+				})}
 			</div>
 		</div>
 	);

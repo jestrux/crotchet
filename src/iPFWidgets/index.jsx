@@ -2,17 +2,17 @@ import { useEffect } from "react";
 import ListWidget from "../components/ListWidget";
 import WidgetWrapper from "../components/WidgetWrapper";
 import { useDelayedAirtableFetch } from "../hooks/useAirtable";
-import { useAppContext } from "../providers/AppProvider";
 import useLocalStorageState from "../hooks/useLocalStorageState";
 
-export default function IPFWidgets() {
-	const { user, currentPage } = useAppContext();
+export default function IPFWidgets({ page: pageProps }) {
+	const page = pageProps?.label ?? "Home";
 	const [widgets, setWidgets] = useLocalStorageState(
-		"authUserWidgets" + currentPage ?? "Home"
+		"authUserWidgets" + page
 	);
 	const { fetch } = useDelayedAirtableFetch({
 		table: "widgets",
 	});
+
 	const widgetSchema = {
 		type: "list",
 		label: "Projects",
@@ -37,7 +37,7 @@ export default function IPFWidgets() {
 		const res = await fetch({
 			filters: {
 				owner_name: "authUserName|all",
-				page: currentPage ?? "Home",
+				page,
 			},
 		});
 		const widgets = res
@@ -66,18 +66,12 @@ export default function IPFWidgets() {
 	}, []);
 
 	useEffect(() => {
-		// setWidgets([]);
 		fetchWidgets();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [currentPage]);
+	}, [pageProps]);
 
 	if (!widgets) return null;
 
-	const pages = [
-		{ label: "Home", simpleGrid: user.preferences?.simpleGrid },
-		...user.pages,
-	];
-	const pageProps = pages.find((p) => p.label === currentPage);
 	const simpleGrid = pageProps?.simpleGrid ?? true;
 
 	return (
@@ -104,7 +98,7 @@ export default function IPFWidgets() {
 					>
 						<ListWidget
 							cacheData={true}
-							page={currentPage}
+							page={page}
 							widgetProps={{
 								title: label,
 								actions: actionArray,
