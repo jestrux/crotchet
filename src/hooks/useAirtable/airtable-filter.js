@@ -22,6 +22,8 @@ function dataFilterer({ field, comparison, appContext }) {
 
 	if (comparison.indexOf("authUserName") !== -1)
 		comparison = comparison.replace("authUserName", appContext?.user.name);
+	if (comparison.indexOf("authUserEmail") !== -1)
+		comparison = comparison.replace("authUserEmail", appContext?.user.email);
 
 	if (comparison.indexOf("contains(") !== -1) {
 		const matches = /\(([^)]+)\)/.exec(comparison); // grab value within brackets
