@@ -119,8 +119,13 @@ export function AppProvider({ children, value = {} }) {
 		>
 			<Toaster
 				toastOptions={{
-					className:
-						"bg-card text-content rounded-full text-sm border",
+					style: {
+						backgroundColor: "var(--toast-bg)",
+						color: "var(--toast-color)",
+						border: "1.5px solid var(--toast-border-color)",
+						borderRadius: 200,
+						fontSize: "0.875rem",
+					},
 				}}
 			/>
 

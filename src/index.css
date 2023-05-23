@@ -29,12 +29,20 @@
 :root {
 	--border-color: #e2e8f0;
 	--shadow-color: rgba(0, 0, 0, 0.26);
+
+	--toast-bg: #ffffff;
+	--toast-color: #000000;
+	--toast-border-color: #fff;
 }
 
 @media (prefers-color-scheme: dark) {
 	:root {
 		--border-color: rgba(255, 255, 255, 0.16);
 		--shadow-color: rgba(0, 0, 0, 1);
+
+		--toast-bg: #3c3c3b;
+		--toast-color: #ffffff;
+		--toast-border-color: #51504f;
 	}
 
 	input[type="date"] {
