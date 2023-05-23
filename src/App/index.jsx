@@ -8,6 +8,7 @@ import NavigationButton from "../components/NavigationButton";
 import { useAirtableMutation } from "../hooks/useAirtable";
 import SettingButton from "../components/SettingButton";
 import ComboboxItem from "../components/ComboboxItem";
+import { useQueryClient } from "@tanstack/react-query";
 
 const MenuItem = ({ active, label, onClick = () => {} }) => {
 	const regex_emoji =
@@ -61,8 +62,15 @@ const AppNavigation = () => {
 };
 
 const PreferencesEditor = (props) => {
-	const { user, confirmAction, updateUser, currentPage, setCurrentPage } =
-		useAppContext();
+	const queryClient = useQueryClient();
+	const {
+		user,
+		withToast,
+		confirmAction,
+		updateUser,
+		currentPage,
+		setCurrentPage,
+	} = useAppContext();
 	const preferences = user.preferences;
 
 	const pages = [
@@ -77,8 +85,14 @@ const PreferencesEditor = (props) => {
 		action: "create",
 	});
 
-	const refreshWidgets = () =>
+	const refreshWidgets = async ({ invalidate } = {}) => {
 		document.dispatchEvent(new CustomEvent("widgets-updated"));
+
+		if (!invalidate) return;
+
+		await withToast(queryClient.invalidateQueries());
+		document.dispatchEvent(new CustomEvent("widgets-updated"));
+	};
 
 	return (
 		<ActionPane {...props} hideCloseButton>
@@ -149,7 +163,7 @@ const PreferencesEditor = (props) => {
 					value="Refresh Widgets"
 					className="w-full cursor-pointer hover:bg-content/5 px-3 py-2.5 rounded flex items-center justify-between gap-2 focus:outline-none"
 					onSelect={async () => {
-						refreshWidgets();
+						refreshWidgets({ invalidate: true });
 						props.onClose();
 					}}
 					trailing="Click to refresh"

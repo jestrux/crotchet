@@ -230,7 +230,7 @@ export function useAirtableFetch({
 	const appContext = useAppContext();
 	const instance = useRef(new AirtableService({ table, appContext }));
 	const query = useQuery(
-		[props.cacheKey || cacher.current],
+		[cacher.current],
 		async () => {
 			let res;
 			try {

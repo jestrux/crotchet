@@ -73,6 +73,13 @@ export default function IPFWidgets() {
 
 	if (!widgets) return null;
 
+	const pages = [
+		{ label: "Home", simpleGrid: user.preferences?.simpleGrid },
+		...user.pages,
+	];
+	const pageProps = pages.find((p) => p.label === currentPage);
+	const simpleGrid = pageProps?.simpleGrid ?? true;
+
 	return (
 		<div className="grid items-start sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-5 xl:gap-8 py-2">
 			{widgets.map((widget, index) => {
@@ -93,9 +100,10 @@ export default function IPFWidgets() {
 				return (
 					<WidgetWrapper
 						key={index}
-						aspectRatio={user.preferences?.simpleGrid ? 1 : "auto"}
+						aspectRatio={simpleGrid ? 1 : "auto"}
 					>
 						<ListWidget
+							page={currentPage}
 							widgetProps={{
 								title: label,
 								actions: actionArray,
