@@ -80,20 +80,39 @@ const Widget = ({
 			)}
 
 			{actionButton && (
-				<div className="p-3 border-t border-content/10">
-					<button
-						className={`${
-							actionButton.styling?.text === "primary" &&
-							"text-primary"
-						} focus:outline-none h-[38px] flex items-center justify-center gap-2 text-content/50 hover:text-content/[0.65] transition-colors text-xs leading-none uppercase tracking-wider font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded`}
-						onClick={() => handleActionClick(actionButton)}
-					>
-						{typeof actionButton.icon == "string"
-							? WidgetIcons[actionButton.icon]
-							: actionButton.icon}
-						{actionButton.label}
-					</button>
-				</div>
+				<>
+					{actionButton.fixed ?? true ? (
+						<div className="-mx-1.5 p-3s sborder-t border-content/10">
+							<button
+								className={`${
+									actionButton.styling?.text === "primary" &&
+									"text-primary"
+								} focus:outline-none h-[40px] flex items-center justify-center gap-2 text-content/50 hover:text-content/[0.65] transition-colors text-[11px] leading-none uppercase tracking-wider font-bold py-3.5 w-full text-center border border-content/5 hover:border-content/20 bg-content/5 roundeds`}
+								onClick={() => handleActionClick(actionButton)}
+							>
+								{typeof actionButton.icon == "string"
+									? WidgetIcons[actionButton.icon]
+									: actionButton.icon}
+								{actionButton.label}
+							</button>
+						</div>
+					) : (
+						<div className="p-3 border-t border-content/10">
+							<button
+								className={`${
+									actionButton.styling?.text === "primary" &&
+									"text-primary"
+								} focus:outline-none h-[38px] flex items-center justify-center gap-2 text-content/50 hover:text-content/[0.65] transition-colors text-xs leading-none uppercase tracking-wider font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded`}
+								onClick={() => handleActionClick(actionButton)}
+							>
+								{typeof actionButton.icon == "string"
+									? WidgetIcons[actionButton.icon]
+									: actionButton.icon}
+								{actionButton.label}
+							</button>
+						</div>
+					)}
+				</>
 			)}
 		</div>
 	);

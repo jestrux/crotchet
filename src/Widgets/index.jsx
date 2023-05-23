@@ -14,7 +14,7 @@ import PingsWidget from "./PingsWidget";
 import UserStatusWidget from "./UserStatusWidget";
 import { useAppContext } from "../providers/AppProvider";
 
-const Widgets = () => {
+const Widgets = ({ onCustomize = () => {}, onLogout = () => {} }) => {
 	const { user } = useAppContext();
 
 	// const userImage = "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxNjE2NXwwfDF8c2VhcmNofDR8fHN1bnJpc2V8ZW58MHx8fHwxNjYyNzk1ODM3&ixlib=rb-1.2.1&q=80&w=400";
@@ -50,15 +50,27 @@ const Widgets = () => {
 										</h2>
 										<p className="text-sm flex items-center">
 											<span className="opacity-70">
-												Entertainment
-												{/* Here's how you're looking... */}
+												{user.department_name}
 											</span>
 
 											<span className="mx-1.5 font-bold opacity-70">
 												&middot;
 											</span>
-											<button className="opacity-70 hover:opacity-100 underline h-5 text-xs leading-none flex items-center">
-												Change profile
+											<button
+												className="opacity-70 hover:opacity-100 underline h-5 text-xs leading-none flex items-center"
+												onClick={onCustomize}
+											>
+												Settings
+											</button>
+
+											<span className="mx-1.5 font-bold opacity-70">
+												&middot;
+											</span>
+											<button
+												className="opacity-70 hover:opacity-100 underline h-5 text-xs leading-none flex items-center"
+												onClick={onLogout}
+											>
+												Logout
 											</button>
 										</p>
 									</div>
@@ -74,16 +86,17 @@ const Widgets = () => {
 							</h3>
 
 							<ListWidget
+								cacheData={false}
 								table="tasks"
 								title="title"
-								subtitle="type::project::due|date"
+								subtitle="type::project_name::due|date"
 								status="status"
-								orderBy="due"
 								filters={{
+									assignee_name: "authUserName",
 									status: "in progress|pending|blocked",
 									// due: "<today", // causes bug on Safari
 								}}
-								limit={5}
+								limit={4}
 							/>
 						</div>
 
@@ -134,9 +147,9 @@ const Widgets = () => {
 					className="col-span-4 desktop:col-span-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 desktop:flex flex-col gap-5"
 					style={{ flex: 1 }}
 				>
-					<WidgetWrapper widget={StayLiquidWidget} />
-					<WidgetWrapper widget={FoodWidget} />
-					<WidgetWrapper widget={PollWidget} />
+					<WidgetWrapper aspectRatio="1" widget={StayLiquidWidget} />
+					<WidgetWrapper aspectRatio="1" widget={FoodWidget} />
+					<WidgetWrapper aspectRatio="1" widget={PollWidget} />
 					<WidgetWrapper aspectRatio={3.5 / 1} flex={1} />
 				</div>
 				<div className="w-full col-span-2 flex flex-col gap-5">
@@ -168,8 +181,13 @@ const Widgets = () => {
 					/>
 					<WidgetWrapper aspectRatio={5.5 / 1} widget={PingsWidget} />
 					<div className="flex gap-5">
-						<WidgetWrapper widget={TimerWidget} flex={1} />
 						<WidgetWrapper
+							aspectRatio="1"
+							widget={TimerWidget}
+							flex={1}
+						/>
+						<WidgetWrapper
+							aspectRatio="1"
 							flex={1}
 							widget={GithubContributionsWidget}
 						/>

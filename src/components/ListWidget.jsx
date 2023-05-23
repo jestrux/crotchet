@@ -6,17 +6,21 @@ import useLocalStorageState from "../hooks/useLocalStorageState";
 import { useEffect } from "react";
 
 const ListWidget = ({
+	cacheData = false,
 	page,
 	table,
 	filters,
 	orderBy,
 	limit,
-	widgetProps = {},
+	widgetProps,
 	children,
+	noPadding = true,
 	...props
 }) => {
+	if (widgetProps === undefined) widgetProps = { noPadding };
+
 	const [data, setData] = useLocalStorageState(
-		`${page ?? ""} ${widgetProps?.title || table}`
+		!cacheData ? null : `${page ?? ""} ${widgetProps?.title || table}`
 	);
 	const { isLoading, refetch } = useAirtableFetch({
 		table,

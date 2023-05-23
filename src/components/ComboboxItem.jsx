@@ -21,7 +21,7 @@ export default function ComboboxItem({
 	id = "",
 	value,
 	leading = defaultSpotlightSearchItemLeading,
-	trailing = "Pier Command",
+	trailing = "",
 	children,
 	label,
 	className = "",

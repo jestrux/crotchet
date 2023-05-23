@@ -12,6 +12,12 @@ export default function WidgetWrapper({
 				width,
 				flex,
 				aspectRatio,
+				...(aspectRatio !== "auto"
+					? {}
+					: {
+							height: 1000,
+							maxHeight: 350,
+					  }),
 			}}
 		>
 			<div className="h-full">

@@ -103,6 +103,7 @@ export default function IPFWidgets() {
 						aspectRatio={simpleGrid ? 1 : "auto"}
 					>
 						<ListWidget
+							cacheData={true}
 							page={currentPage}
 							widgetProps={{
 								title: label,

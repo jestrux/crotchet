@@ -27,9 +27,13 @@ const ActivitiesWidget = () => {
 				<ListWidget
 					table="tasks"
 					title="title"
-					subtitle="due|date::type::project_name"
+					subtitle="type::project_name::due|date"
 					status="status"
-					filters={{ status: "in progress|pending" }}
+					filters={{
+						assignee_name: "authUserName",
+						status: "in progress|pending|blocked",
+						// due: "<today", // causes bug on Safari
+					}}
 				/>
 			</div>
 		</Widget>
