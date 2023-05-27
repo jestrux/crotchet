@@ -2,7 +2,7 @@ export default function WidgetWrapper({
 	children,
 	widget: Widget,
 	width,
-	aspectRatio = "auto",
+	aspectRatio,
 	flex,
 }) {
 	return (
@@ -12,12 +12,11 @@ export default function WidgetWrapper({
 				width,
 				flex,
 				aspectRatio,
-				...(aspectRatio !== "auto"
-					? {}
-					: {
-							height: 1000,
+				...(aspectRatio === undefined
+					? {
 							maxHeight: 350,
-					  }),
+					  }
+					: { maxHeight: 600 }),
 			}}
 		>
 			<div className="h-full">

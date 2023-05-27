@@ -1,8 +1,17 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import FormField from "./FormField";
 import { parseFields } from "../../utils";
 import { useAppContext } from "../../providers/AppProvider";
 import { useAirtableMutation } from "../../hooks/useAirtable";
+
+const fieldIsVisible = (field, data) => {
+	if (!field) return false;
+
+	const hiddenByData = field.show && !field.show(data);
+	const invisibleField = field.type === "hidden";
+
+	return !hiddenByData && !invisibleField;
+};
 
 export default function DynamicForm({ pane, onClose, onSubmit }) {
 	const { withToast } = useAppContext();
@@ -12,11 +21,13 @@ export default function DynamicForm({ pane, onClose, onSubmit }) {
 	});
 	const fields = parseFields(pane.fields, pane.data);
 	const [data, setData] = useState(
-		"data",
-		Object.entries(pane.fields).reduce((agg, [key, { defaultValue }]) => {
-			if (defaultValue && agg[key] === undefined) agg[key] = defaultValue;
-			return agg;
-		}, pane.data || {})
+		Object.entries(pane.fields).reduce(
+			(agg, [key, { defaultValue, value }]) => ({
+				...agg,
+				[key]: value ?? defaultValue,
+			}),
+			pane.data || {}
+		)
 	);
 
 	const formRef = useRef(null);
@@ -89,9 +100,10 @@ export default function DynamicForm({ pane, onClose, onSubmit }) {
 
 	return (
 		<form ref={formRef} id="theForm" onSubmit={handleSubmit}>
-			<div className="grid grid-cols-12 gap-5 items-center">
-				{fields.map((field, key) => {
-					if (field.show && !field.show(data)) return null;
+			<div className="grid grid-cols-12 gap-3 items-start">
+				{fields.map((field, index) => {
+					if (typeof field.show == "function" && !field.show(data))
+						return null;
 
 					let widthClass =
 						{
@@ -101,16 +113,42 @@ export default function DynamicForm({ pane, onClose, onSubmit }) {
 						}[field.width ?? "full"] || "col-span-12";
 
 					return (
-						<FormField
-							key={key}
-							className={` ${widthClass} ${
-								field.noMargin && "-mt-3"
-							}`}
-							field={field}
-							onChange={(newProps) =>
-								setData({ ...data, ...newProps })
-							}
-						/>
+						<Fragment key={index}>
+							{field?.group &&
+								fields[index - 1]?.group !== field.group && (
+									<div
+										className={`col-span-12 flex items-center gap-3 -mx-5 mt-1 ${
+											!field.noMargin &&
+											!field.hideLabel &&
+											"-mb-1.5"
+										}`}
+									>
+										<span className="w-2 h-2 rounded-full bg-content/50"></span>
+
+										<h5 className="text-content/50 py-1.5 pr-2 text-xs leading-none uppercase tracking-widest font-bold">
+											{field.group}
+										</h5>
+
+										<span className="flex-1 border-t"></span>
+									</div>
+								)}
+							<FormField
+								className={` ${widthClass} ${
+									field.noMargin && "-mt-3"
+								}`}
+								field={field}
+								onChange={(newProps) =>
+									setData({ ...data, ...newProps })
+								}
+							/>
+
+							{field?.group &&
+								!fields[index + 1]?.group &&
+								fields[index + 1] &&
+								fieldIsVisible(fields[index + 1], data) && (
+									<hr className="col-span-12 mt-1 -mx-5" />
+								)}
+						</Fragment>
 					);
 				})}
 			</div>

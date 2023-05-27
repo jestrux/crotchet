@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAppContext } from "../../providers/AppProvider";
 import Switch from "../Switch";
-import { camelCaseToSentenceCase, randomId } from "../../utils";
+import { camelCaseToSentenceCase, objectField, randomId } from "../../utils";
 import useDebounce from "../../hooks/useDebounce";
 // import ReactTextareaAutosize from "react-textarea-autosize";
 // import TextareaMarkdown from "textarea-markdown-editor";
@@ -216,7 +216,8 @@ const Field = ({ field, value, onChange }) => {
 					{field.choices?.map((choice, index) => {
 						if (!choice) return null;
 
-						const choiceValue = choice?.value || choice;
+						const choiceLabel = objectField(choice, "label");
+						const choiceValue = objectField(choice, "value");
 						const selected = choiceValue === value;
 						const hasFocus = choiceValue === focused;
 						const customRenderer =
@@ -226,10 +227,10 @@ const Field = ({ field, value, onChange }) => {
 							<label
 								key={index}
 								className={`
-							cursor-pointer border border-content/20 text-xs leading-none px-2 py-1.5 rounded relative
+								hover:bg-content/10 cursor-pointer border border-content/20 text-xs leading-none px-2 py-1.5 rounded relative
 							${
 								selected
-									? "bg-content/10"
+									? "bg-content/5 pointer-events-none"
 									: hasFocus
 									? "border-content/50 bg-content/10"
 									: "text-content/70"
@@ -247,9 +248,45 @@ const Field = ({ field, value, onChange }) => {
 									onFocus={() => setFocused(choiceValue)}
 								/>
 
-								{typeof field.renderChoice == "function"
-									? field.renderChoice(choiceValue, selected)
-									: camelCaseToSentenceCase(choiceValue)}
+								{customRenderer ? (
+									field.renderChoice(choiceValue, selected)
+								) : (
+									<div className="inline-flex items-center gap-1.5 mr-0.5">
+										<svg
+											className={`w-3.5 h-3.5 ${
+												selected
+													? "text-primary"
+													: "text-content/40"
+											}`}
+											fill="currentColor"
+											viewBox="0 0 24 24"
+										>
+											<circle
+												cx="12"
+												cy="12"
+												r="11"
+												stroke="currentColor"
+												fill={
+													selected
+														? "currentColor"
+														: "none"
+												}
+												strokeWidth="2"
+											/>
+
+											{selected && (
+												<path
+													transform="translate(3 3) scale(0.7)"
+													d="M4.5 12.75l6 6 9-13.5"
+													stroke="white"
+													fill="none"
+													strokeWidth="3"
+												/>
+											)}
+										</svg>
+										{camelCaseToSentenceCase(choiceLabel)}
+									</div>
+								)}
 							</label>
 						);
 					})}
@@ -265,7 +302,14 @@ const Field = ({ field, value, onChange }) => {
 						name={field.name}
 						required={!field.optional}
 					>
-						<option value="">Choose one</option>
+						<option
+							value=""
+							disabled={
+								!field.optional && value?.toString().length
+							}
+						>
+							Choose one
+						</option>
 						{field.choices?.map((choice, index) => {
 							if (!choice) return null;
 							return (
@@ -336,7 +380,7 @@ export default function FormField({ className, field, onChange = () => {} }) {
 			<div>
 				{field.type !== "boolean" && !field.hideLabel && (
 					<label
-						className="inline-block first-letter:capitalize mb-1 pl-0.5"
+						className="inline-block first-letter:capitalize mb-1"
 						mb={0}
 						htmlFor={field.label}
 					>

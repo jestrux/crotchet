@@ -102,12 +102,6 @@ export const parseFields = (fields, data) => {
 			typeof value == "object" ? value : { type: value };
 
 		let dataValue = data?.[name];
-		if (type == "sectionText") {
-			dataValue = {
-				title: data?.title,
-				subtitle: data?.subtitle,
-			};
-		}
 
 		const computedDefaultValue = dataValue ?? defaultValue;
 

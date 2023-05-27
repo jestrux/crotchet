@@ -132,58 +132,115 @@ function PreferencesEditor(props) {
 					}
 					fields={{
 						label: {
+							label: "Widget title",
 							type: "text",
 							width: "half",
 							optional: true,
 						},
+						size: {
+							label: "Widget size",
+							type: "choice",
+							width: "half",
+							choices: [
+								"Auto",
+								"Square",
+								"Wide",
+								"Tall",
+								"Large",
+							],
+							defaultValue: "Auto",
+						},
+						source: {
+							label: "Data Source",
+							type: "radio",
+							choices: [
+								"Airtable",
+								// "Pier",
+								// "Web API"
+							],
+							width: "half",
+							defaultValue: "Airtable",
+							group: "Widget Data",
+						},
 						table: {
+							label: "Data Table",
 							type: "text",
 							width: "half",
+							group: "Widget Data",
+							show: (data) => data.source === "Airtable",
+						},
+						model: {
+							label: "Pier Model",
+							type: "text",
+							width: "half",
+							group: "Widget Data",
+							show: (data) => data.source === "Pier",
+						},
+						apiUrl: {
+							label: "API URL",
+							type: "text",
+							width: "half",
+							group: "Widget Data",
+							show: (data) => data.source === "Web API",
 						},
 						filterable: {
 							label: "Filter data",
 							type: "boolean",
 							helper: true,
+							group: "Widget Data",
 						},
 						filters: {
 							hideLabel: true,
 							type: "keyvalue",
-							noMargin: true,
 							show: (data) => data.filterable,
+							group: "Widget Data",
 						},
 						fields: {
 							label: "Field mappings",
 							type: "keyvalue",
 							defaultValue: {
 								title: "",
-								subtitle: "",
-								image: "",
-								progress: "",
-								status: "",
-								action: "",
+								"": "",
+								// subtitle: "",
+								// image: "",
+								// progress: "",
+								// status: "",
+								// action: "",
 							},
 							meta: {
-								editable: false,
+								// editable: false,
 							},
+							group: "Widget Content",
 						},
 						checkable: {
 							label: "Is checklist",
 							type: "boolean",
 							width: "half",
 							helper: true,
+							group: "Widget Content",
 						},
 						checkbox: {
 							hideLabel: true,
 							placeholder: "Check field...",
 							width: "half",
 							show: (data) => data.checkable,
+							group: "Widget Content",
 						},
-						removable: "boolean",
-						hasAction: {
-							label: "Widget action",
+						removable: {
 							type: "boolean",
+							group: "Widget Content",
+						},
+						hasAction: {
+							hideLabel: true,
+							type: "radio",
+							defaultValue: false,
+							choices: [
+								{ label: "No action", value: false },
+								{ label: "Add action", value: true },
+							],
 							width: "half",
 							helper: true,
+							group: "Widget Action",
 						},
 						actionLabel: {
 							hideLabel: true,
@@ -191,6 +248,7 @@ function PreferencesEditor(props) {
 							width: "half",
 							placeholder: "Action label",
 							show: (data) => data.hasAction,
+							group: "Widget Action",
 						},
 						actionFields: {
 							label: "Action fields",
@@ -198,6 +256,7 @@ function PreferencesEditor(props) {
 							// hideLabel: true,
 							// noMargin: true,
 							show: (data) => data.hasAction,
+							group: "Widget Action",
 						},
 						page: {
 							type: "hidden",
@@ -310,6 +369,7 @@ export default function usePreferenceEditor() {
 			// title: "Edit preferences",
 			// hideCloseButton: true,
 			// showOverlayBg: false,
+			size: "xl",
 			dismissible: false,
 			content: <PreferencesEditor />,
 			onCreate(alert) {
