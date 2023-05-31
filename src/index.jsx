@@ -1,5 +1,6 @@
 // Inspirations
 // Clickup: https://clickup.com/v3
+// Mobile app: https://www.apple.com/v/home-app/d/images/overview/renovated_startframe__csnon7hxcioi_large_2x.jpg
 
 import React from "react";
 import ReactDOM from "react-dom/client";
