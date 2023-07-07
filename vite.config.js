@@ -7,5 +7,9 @@ export default defineConfig({
 	base: "",
 	build: {
 		outDir: "./docs",
+		commonjsOptions: { include: [] },
+	},
+	optimizeDeps: {
+		disabled: false,
 	},
 });
