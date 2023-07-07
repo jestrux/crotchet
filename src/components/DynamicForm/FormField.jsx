@@ -250,8 +250,10 @@ const KeyValueEditor = ({
 
 	const filteredChoices = (choices, usedChoices, value) => {
 		return [
-			...choices.filter((choice) => !usedChoices.includes(choice)),
-			...(!value?.length ? [] : [value]),
+			...new Set([
+				...choices.filter((choice) => !usedChoices.includes(choice)),
+				...(!value?.length || !choices.includes(value) ? [] : [value]),
+			]),
 		].sort();
 	};
 
