@@ -96,7 +96,8 @@ function ActionPaneContent({
 	children,
 }) {
 	const { confirmAction } = useAppContext();
-	const [lastUpdate, setLastUpdate] = useState(Date.now());
+	const [lastUpdate, setLastUpdates] = useState(Date.now());
+	const setLastUpdate = () => {};
 	const secondaryActionShortCut = pane.secondaryActionShortCut || "Cmd + k";
 	const inputRef = useRef();
 	const secondaryActionButtonRef = useRef();

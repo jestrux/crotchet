@@ -1,67 +1,213 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppContext } from "../../providers/AppProvider";
 import Switch from "../Switch";
 import { camelCaseToSentenceCase, objectField, randomId } from "../../utils";
 import useDebounce from "../../hooks/useDebounce";
+import { useQuery } from "@tanstack/react-query";
 // import ReactTextareaAutosize from "react-textarea-autosize";
 // import TextareaMarkdown from "textarea-markdown-editor";
 
+import {
+	Combobox,
+	ComboboxInput,
+	ComboboxPopover,
+	ComboboxList,
+	ComboboxOption,
+} from "@reach/combobox";
+import { useThrottle } from "../../hooks/useThrottle";
+import { matchSorter } from "match-sorter";
+
+function useSearch(data, term) {
+	const throttledTerm = useThrottle(term, 100);
+
+	return useMemo(
+		() => (!data || term.trim() === "" ? data : matchSorter(data, term)),
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[throttledTerm, data]
+	);
+}
+
+const useDefferedValue = (
+	__value,
+	{ defaultValue, dependencies, args } = {}
+) => {
+	const { current: _id } = useRef(randomId());
+	const { data } = useQuery(
+		[
+			_id,
+			__value,
+			JSON.stringify(args),
+			...[dependencies ? dependencies : []],
+		],
+		async () => {
+			if (!__value) return null;
+
+			if (typeof __value == "function") return await __value(args);
+
+			return __value;
+		},
+		{
+			cacheTime: 0,
+			initialData: defaultValue,
+		}
+	);
+
+	return data;
+};
+
+const supportedKeyValueFieldTypes = [
+	"text",
+	"email",
+	"url",
+	// "password",
+	// "number",
+	"date",
+	// "datetime-local",
+	// "month",
+	// "search",
+	// "tel",
+	// "time",
+	// "week",
+	// "checkbox",
+	// "radio",
+];
+
 const KeyValueInput = ({
-	autoFocus,
+	choices: _choices,
+	fieldProps,
+	focused,
 	onAddRow,
 	onRemoveRow,
 	placeholder,
 	defaultValue,
 	onChange,
 }) => {
+	const inputRef = useRef();
+	const [showSuggestions, setShowSuggestions] = useState(false);
+	const [searchQuery, setSearchQuery] = useState("");
 	const [value, setValue] = useState(useRef(defaultValue).current);
 	const debouncedValue = useDebounce(value, 500);
+	const allChoices = useDefferedValue(_choices, {
+		args: value,
+	});
+	const choices = useSearch(allChoices, searchQuery);
 
 	useEffect(() => {
 		onChange(debouncedValue);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [debouncedValue]);
 
-	return (
-		<input
-			autoFocus={autoFocus}
-			className="w-full py-1.5 px-3 placeholder:text-content/20"
-			style={{
-				textAlign: "left",
-				outline: "none",
-				border: "none",
-				background: "transparent",
-			}}
-			placeholder={placeholder}
-			value={value}
-			onChange={(e) => setValue(e.target.value)}
-			onKeyUp={(e) => {
-				if (e.key === "Enter" && !e.metaKey && !e.ctrlKey) {
-					e.preventDefault();
-					e.stopPropagation();
-					onAddRow();
-					return false;
-				}
+	useEffect(() => {
+		if (focused) inputRef.current.focus();
+	}, [focused]);
 
-				if (e.key === "Backspace" && (e.metaKey || e.shiftKey)) {
-					e.preventDefault();
-					e.stopPropagation();
-					onRemoveRow();
-					return false;
-				}
+	const disableKeyAction = (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+		return false;
+	};
+
+	return (
+		<Combobox
+			className="relative"
+			openOnFocus
+			onSelect={(v) => {
+				setValue(v);
+				onChange(v);
+				setTimeout(() => {
+					if (inputRef.current) inputRef.current.blur();
+				}, 20);
 			}}
-			onKeyDown={(e) => {
-				if (e.key === "Enter" && !e.metaKey && !e.ctrlKey) {
-					e.preventDefault();
-					e.stopPropagation();
-					return false;
+		>
+			<ComboboxInput
+				ref={inputRef}
+				className="w-full py-1.5 px-3 placeholder:text-content/20"
+				type={
+					fieldProps?.type &&
+					supportedKeyValueFieldTypes.includes(fieldProps.type)
+						? fieldProps.type
+						: "text"
 				}
-			}}
-		/>
+				style={{
+					textAlign: "left",
+					outline: "none",
+					border: "none",
+					background: "transparent",
+				}}
+				placeholder={placeholder}
+				value={value}
+				onFocus={() => {
+					setShowSuggestions(true);
+					setSearchQuery("");
+				}}
+				onChange={(e) => {
+					setValue(e.target.value);
+					setSearchQuery(e.target.value);
+				}}
+				onKeyUp={(e) => {
+					if (e.key === "Escape") return disableKeyAction(e);
+
+					if (e.key === "Enter" && !e.metaKey && !e.ctrlKey) {
+						onAddRow();
+						return disableKeyAction(e);
+					}
+				}}
+				onKeyDown={(e) => {
+					if (e.key === "Enter" && !e.metaKey && !e.ctrlKey) {
+						const state = e.target.getAttribute("data-state");
+						if (state != "navigating") e.preventDefault();
+						e.stopPropagation();
+						return false;
+					}
+
+					if (e.key === "Backspace" && e.target.value.trim() === "") {
+						onRemoveRow();
+						return disableKeyAction(e);
+					}
+				}}
+			/>
+
+			{choices && showSuggestions && (
+				<ComboboxPopover
+					id="popoverContent"
+					portal={false}
+					className="absolute z-[999] rounded overflow-y-auto bg-popup border border-content/10 shadow w-full min-h-[35px] max-h-[160px] focus:outline-none"
+				>
+					<span className="block text-sm opacity-40 mt-2 mb-0.5 px-3">
+						{choices.length ? "Select one" : "No matches"}
+					</span>
+					<ComboboxList>
+						{choices.map((choice, index) => (
+							<ComboboxOption
+								className="py-1 px-3"
+								key={index}
+								value={choice}
+							/>
+						))}
+					</ComboboxList>
+				</ComboboxPopover>
+			)}
+		</Combobox>
 	);
 };
 
-const KeyValueEditor = ({ editable = true, value, onChange, ...props }) => {
+const KeyValueEditor = ({
+	__data,
+	editable = true,
+	value,
+	schema: _schema,
+	choices: _choices,
+	onChange,
+	...props
+}) => {
+	const choices = useDefferedValue(_choices, {
+		args: { data: __data },
+		label: "Choices",
+	});
+	const schema = useDefferedValue(_schema, {
+		args: __data,
+	});
+	const [focusedRow, setFocusedRow] = useState(-1);
 	const [_value, setValue] = useState("");
 	const [entries, setEntries] = useState(Object.entries(value || { "": "" }));
 
@@ -91,19 +237,41 @@ const KeyValueEditor = ({ editable = true, value, onChange, ...props }) => {
 	const addRow = (index) => {
 		if (index === entries.length - 1) {
 			setEntries([...entries, ["", ""]]);
+			setFocusedRow(entries.length);
 		}
 	};
 
 	const removeRow = (index) => {
-		if (entries.length > 1)
+		if (entries.length > 1) {
 			setEntries(entries.filter((_, i) => i !== index));
+			setFocusedRow(index - 1);
+		}
 	};
 
+	const filteredChoices = (choices, usedChoices, value) => {
+		return [
+			...choices.filter((choice) => !usedChoices.includes(choice)),
+			...(!value?.length ? [] : [value]),
+		].sort();
+	};
+
+	const entryKeys = entries.map(([key]) => key);
+	const entryValues = entries.map(([, value]) => value);
+
 	return (
-		<div className="border border-content/20 rounded-md overflow-hidden">
+		<div className="border border-content/20 rounded-md">
 			<input type="hidden" name={props.name} value={_value} readOnly />
 
 			{entries.map(([key, val, _id], index) => {
+				let fieldProps;
+				if (schema?.[key] != undefined) {
+					fieldProps = schema[key];
+					fieldProps =
+						typeof fieldProps == "object"
+							? fieldProps
+							: { type: fieldProps };
+				}
+
 				return (
 					<div
 						key={index + (_id ?? "")}
@@ -124,11 +292,26 @@ const KeyValueEditor = ({ editable = true, value, onChange, ...props }) => {
 						>
 							{editable ? (
 								<KeyValueInput
-									autoFocus
+									role="key"
+									focused={index == focusedRow}
 									placeholder="key"
 									defaultValue={key}
+									choices={
+										!schema
+											? null
+											: (value) =>
+													filteredChoices(
+														Object.keys(schema),
+														entryKeys,
+														value
+													)
+									}
 									onChange={(v) => {
-										onChangeEntry([v, val], index);
+										const resetValue = schema && choices;
+										onChangeEntry(
+											[v, resetValue ? "" : val],
+											index
+										);
 									}}
 									onAddRow={() => addRow(index)}
 									onRemoveRow={() => removeRow(index)}
@@ -142,7 +325,22 @@ const KeyValueEditor = ({ editable = true, value, onChange, ...props }) => {
 
 						<div className="">
 							<KeyValueInput
-								autoFocus={!editable}
+								role="value"
+								{...(!choices && fieldProps
+									? { fieldProps }
+									: {})}
+								{...(schema && choices ? { key } : {})}
+								choices={
+									!choices
+										? null
+										: (value) =>
+												filteredChoices(
+													choices,
+													entryValues,
+													value
+												)
+								}
+								focused={index == focusedRow && !editable}
 								placeholder="value"
 								defaultValue={val}
 								onChange={(v) => {
@@ -159,7 +357,41 @@ const KeyValueEditor = ({ editable = true, value, onChange, ...props }) => {
 	);
 };
 
-const Field = ({ field, value, onChange }) => {
+const Select = ({ value, name, optional, choices: _choices, onChange }) => {
+	const choices = useDefferedValue(_choices);
+	return (
+		<div>
+			<select
+				onChange={onChange}
+				value={value}
+				name={name}
+				required={!optional}
+			>
+				<option
+					value=""
+					disabled={!optional}
+					// disabled={!optional && value?.toString().length}
+				>
+					Choose one
+				</option>
+				{choices?.map((choice, index) => {
+					if (!choice) return null;
+					return (
+						<option
+							key={index}
+							value={choice.value || choice}
+							required={!optional}
+						>
+							{choice.label || choice}
+						</option>
+					);
+				})}
+			</select>
+		</div>
+	);
+};
+
+const Field = ({ field, value, onChange, __data }) => {
 	const [focused, setFocused] = useState();
 
 	switch (field.type) {
@@ -170,38 +402,41 @@ const Field = ({ field, value, onChange }) => {
 					{...(field.meta || {})}
 					value={value}
 					onChange={onChange}
+					__data={__data}
 				/>
 			);
 
 		case "boolean":
 			return (
-				<label
-					htmlFor={field.label}
-					className="cursor-pointer flex items-center gap-2"
-					style={{
-						...(field.meta?.rightAligned
-							? {
-									flexDirection: "row-reverse",
-									justifyContent: "space-between",
-							  }
-							: {}),
-					}}
-				>
-					<Switch
-						id={field.label}
-						size="md"
-						checked={value}
-						onChange={onChange}
-						name={field.name}
-					/>
-
-					<span
-						className="inline-block first-letter:capitalize"
+				<div>
+					<label
 						htmlFor={field.label}
+						className="cursor-pointer inline-flex items-center gap-2"
+						style={{
+							...(field.meta?.rightAligned
+								? {
+										flexDirection: "row-reverse",
+										justifyContent: "space-between",
+								  }
+								: {}),
+						}}
 					>
-						{field.label}
-					</span>
-				</label>
+						<Switch
+							id={field.label}
+							size="md"
+							checked={value}
+							onChange={onChange}
+							name={field.name}
+						/>
+
+						<span
+							className="inline-block first-letter:capitalize"
+							htmlFor={field.label}
+						>
+							{field.label}
+						</span>
+					</label>
+				</div>
 			);
 
 		case "radio":
@@ -295,35 +530,12 @@ const Field = ({ field, value, onChange }) => {
 
 		case "choice":
 			return (
-				<div>
-					<select
-						onChange={onChange}
-						value={value}
-						name={field.name}
-						required={!field.optional}
-					>
-						<option
-							value=""
-							disabled={
-								!field.optional && value?.toString().length
-							}
-						>
-							Choose one
-						</option>
-						{field.choices?.map((choice, index) => {
-							if (!choice) return null;
-							return (
-								<option
-									key={index}
-									value={choice.value || choice}
-									required={!field.optional}
-								>
-									{choice.label || choice}
-								</option>
-							);
-						})}
-					</select>
-				</div>
+				<Select
+					{...field}
+					{...(field.meta || {})}
+					value={value}
+					onChange={onChange}
+				/>
 			);
 
 		default: {
@@ -348,7 +560,12 @@ const Field = ({ field, value, onChange }) => {
 	}
 };
 
-export default function FormField({ className, field, onChange = () => {} }) {
+export default function FormField({
+	className,
+	__data,
+	field,
+	onChange = () => {},
+}) {
 	const { user } = useAppContext();
 	const [value, setValue] = useState(field.value ?? field.defaultValue ?? "");
 	const handleChange = (e) => {
@@ -381,14 +598,18 @@ export default function FormField({ className, field, onChange = () => {} }) {
 				{field.type !== "boolean" && !field.hideLabel && (
 					<label
 						className="inline-block first-letter:capitalize mb-1"
-						mb={0}
 						htmlFor={field.label}
 					>
 						{field.label}
 					</label>
 				)}
 
-				<Field field={field} value={value} onChange={handleChange} />
+				<Field
+					__data={__data}
+					field={field}
+					value={value}
+					onChange={handleChange}
+				/>
 			</div>
 
 			{field.hint && field.hint.length && (

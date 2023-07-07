@@ -105,7 +105,11 @@ export const parseFields = (fields, data) => {
 
 		const computedDefaultValue = dataValue ?? defaultValue;
 
-		if (choices && !choices.includes(computedDefaultValue))
+		if (
+			choices &&
+			Array.isArray(choices) &&
+			!choices.includes(computedDefaultValue)
+		)
 			choices.push(computedDefaultValue);
 
 		return {

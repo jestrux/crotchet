@@ -6,12 +6,20 @@ import { randomId } from "../../utils";
 import { useAppContext } from "../../providers/AppProvider";
 
 const API_KEY = "key7rYj7BDKm9wwS2";
+const ACCESS_TOKEN =
+	"patgYIKl8q0gsU7Tv.01fa975ca4fab8a6d135ff2c9360acf04c03113e38672bf9c3861006066bcbb7";
 const DB_ID = "appnobMFeViOdmZsV";
 const db = new Airtable({ apiKey: API_KEY }).base(DB_ID);
+const fetchHeaders = {
+	Accept: "application/json",
+	"Content-Type": "application/json",
+	Authorization: `Bearer ${ACCESS_TOKEN}`,
+};
 
 window.DEV_MODE = false;
 
 export class AirtableService {
+	tables = [];
 	records = [];
 
 	constructor({ table, appContext } = {}) {
@@ -19,6 +27,14 @@ export class AirtableService {
 		this.appContext = appContext;
 		this.cacheKey = "CROTCHET_CACHE_" + table;
 	}
+
+	static fetchTables = async () => {
+		return fetch(`https://api.airtable.com/v0/meta/bases/${DB_ID}/tables`, {
+			headers: fetchHeaders,
+		})
+			.then((response) => response.json())
+			.then((res) => res.tables);
+	};
 
 	set __cachedData(value) {
 		if (!window.DEV_MODE) return;
@@ -56,6 +72,7 @@ export class AirtableService {
 	}
 
 	async fetch({ filters, orderBy } = {}) {
+		if(!this.tables.length) this.tables = await AirtableService.fetchTables();
 		// console.log(`Fetching data for ${this.table}...`);
 
 		return new Promise((resolve, reject) => {
@@ -142,7 +159,7 @@ export class AirtableService {
 	}
 
 	async create(payload) {
-		const url = `https://api.airtable.com/v0/appnobMFeViOdmZsV/${this.table}?api_key=${API_KEY}`;
+		const url = `https://api.airtable.com/v0/${DB_ID}/${this.table}?api_key=${API_KEY}`;
 		const body = JSON.stringify({
 			records: [
 				{
@@ -158,17 +175,14 @@ export class AirtableService {
 
 		const res = await fetch(url, {
 			method: "POST",
-			headers: {
-				Accept: "application/json",
-				"Content-Type": "application/json",
-			},
+			headers: fetchHeaders,
 			body,
 		});
 		return await res.json();
 	}
 
 	async update(rowId, payload) {
-		const url = `https://api.airtable.com/v0/appnobMFeViOdmZsV/${this.table}/${rowId}?api_key=${API_KEY}`;
+		const url = `https://api.airtable.com/v0/${DB_ID}/${this.table}/${rowId}?api_key=${API_KEY}`;
 		const body = JSON.stringify({
 			fields: {
 				...payload,
@@ -179,17 +193,14 @@ export class AirtableService {
 
 		const res = await fetch(url, {
 			method: "PATCH",
-			headers: {
-				Accept: "application/json",
-				"Content-Type": "application/json",
-			},
+			headers: fetchHeaders,
 			body,
 		});
 		return await res.json();
 	}
 
 	async delete(rowId) {
-		const url = `https://api.airtable.com/v0/appnobMFeViOdmZsV/${this.table}/${rowId}?api_key=${API_KEY}`;
+		const url = `https://api.airtable.com/v0/${DB_ID}/${this.table}/${rowId}?api_key=${API_KEY}`;
 		// console.log(this.table, url, body);
 
 		const res = await fetch(url, {

@@ -105,6 +105,9 @@ export default function DynamicForm({ pane, onClose, onSubmit }) {
 					if (typeof field.show == "function" && !field.show(data))
 						return null;
 
+					const key =
+						typeof field.key == "function" && field.key(data);
+
 					let widthClass =
 						{
 							full: "col-span-12",
@@ -133,10 +136,12 @@ export default function DynamicForm({ pane, onClose, onSubmit }) {
 									</div>
 								)}
 							<FormField
+								{...(key ? { key } : {})}
 								className={` ${widthClass} ${
 									field.noMargin && "-mt-3"
 								}`}
 								field={field}
+								__data={data}
 								onChange={(newProps) =>
 									setData({ ...data, ...newProps })
 								}

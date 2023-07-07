@@ -1,13 +1,14 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useAppContext } from "../providers/AppProvider";
-import { useAirtableMutation } from "../hooks/useAirtable";
+import { AirtableService, useAirtableMutation } from "../hooks/useAirtable";
 import ActionPane from "./ModalPanes/ActionPane";
 import SettingButton from "./SettingButton";
 import ComboboxItem from "./ComboboxItem";
 import NavigationButton from "./NavigationButton";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 function PreferencesEditor(props) {
+	const [tables, setTables] = useState();
 	const queryClient = useQueryClient();
 	const {
 		user,
@@ -39,6 +40,59 @@ function PreferencesEditor(props) {
 
 		await withToast(queryClient.invalidateQueries());
 		document.dispatchEvent(new CustomEvent("widgets-updated"));
+	};
+
+	const fetchTables = async () => {
+		let _tables = tables;
+		if (!_tables) {
+			_tables = await AirtableService.fetchTables();
+			setTables(_tables);
+		}
+
+		return _tables.map(({ name }) => name);
+	};
+
+	const tableFields = ({ data }) => {
+		if (!data?.table) return [];
+
+		let _tables;
+
+		if (tables?.length) _tables = [...tables];
+		else {
+			setTables((t) => {
+				_tables = [...t];
+				return t;
+			});
+		}
+
+		if (data?.table && _tables?.length) {
+			const table = _tables.find(({ name }) => name == data.table);
+
+			if (table?.fields?.length) {
+				return table.fields.filter(
+					({ type }) => type.indexOf("multiple") == -1
+				);
+			}
+		}
+
+		return [];
+	};
+
+	const selectedTableSchema = (data) => {
+		const res = tableFields({ data });
+
+		if (!res) return null;
+
+		return res.reduce(
+			(agg, { name, type }) => ({ ...agg, [name]: type }),
+			{}
+		);
+	};
+
+	const fieldMappingChoices = ({ data, key }) => {
+		const res = tableFields({ data });
+		// console.log("MApping choices: ", data?.table, res);
+		return res.map(({ name }) => name);
 	};
 
 	return (
@@ -164,10 +218,12 @@ function PreferencesEditor(props) {
 						},
 						table: {
 							label: "Data Table",
-							type: "text",
+							type: "choice",
 							width: "half",
 							group: "Widget Data",
 							show: (data) => data.source === "Airtable",
+							// choices: ["departments", "projects"],
+							choices: fetchTables,
 						},
 						model: {
 							label: "Pier Model",
@@ -192,8 +248,12 @@ function PreferencesEditor(props) {
 						filters: {
 							hideLabel: true,
 							type: "keyvalue",
+							key: (data) => data?.table,
 							show: (data) => data.filterable,
 							group: "Widget Data",
+							meta: {
+								schema: selectedTableSchema,
+							},
 						},
 						fields: {
 							label: "Field mappings",
@@ -201,14 +261,19 @@ function PreferencesEditor(props) {
 							defaultValue: {
 								title: "",
 								"": "",
-								// subtitle: "",
-								// image: "",
-								// progress: "",
-								// status: "",
-								// action: "",
 							},
+							key: (data) => data?.table,
 							meta: {
 								// editable: false,
+								schema: {
+									image: "image",
+									title: "text",
+									subtitle: "text",
+									progress: "number",
+									status: "status",
+									action: "url",
+								},
+								choices: fieldMappingChoices,
 							},
 							group: "Widget Content",
 						},
