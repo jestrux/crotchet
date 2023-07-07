@@ -96,8 +96,7 @@ function ActionPaneContent({
 	children,
 }) {
 	const { confirmAction } = useAppContext();
-	const [lastUpdate, setLastUpdates] = useState(Date.now());
-	const setLastUpdate = () => {};
+	const [lastUpdate, setLastUpdate] = useState(Date.now());
 	const secondaryActionShortCut = pane.secondaryActionShortCut || "Cmd + k";
 	const inputRef = useRef();
 	const secondaryActionButtonRef = useRef();
@@ -111,6 +110,8 @@ function ActionPaneContent({
 	);
 
 	const onSubmit = (callback) => {
+		if (submitHandler.current) return;
+
 		submitHandler.current = callback;
 		setTimeout(() => {
 			setLastUpdate(Date.now());

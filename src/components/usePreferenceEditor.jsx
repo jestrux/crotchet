@@ -5,10 +5,15 @@ import ActionPane from "./ModalPanes/ActionPane";
 import SettingButton from "./SettingButton";
 import ComboboxItem from "./ComboboxItem";
 import NavigationButton from "./NavigationButton";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 
 function PreferencesEditor(props) {
-	const [tables, setTables] = useState();
+	const queryTables = useRef(
+		AirtableService.fetchTables().then((res) => {
+			queryTables.current = res;
+			return res;
+		})
+	);
 	const queryClient = useQueryClient();
 	const {
 		user,
@@ -43,43 +48,32 @@ function PreferencesEditor(props) {
 	};
 
 	const fetchTables = async () => {
-		let _tables = tables;
-		if (!_tables) {
-			_tables = await AirtableService.fetchTables();
-			setTables(_tables);
-		}
-
-		return _tables.map(({ name }) => name);
+		return typeof queryTables.current?.then == "function"
+			? await queryTables.current()
+			: queryTables.current;
 	};
 
-	const tableFields = ({ data }) => {
-		if (!data?.table) return [];
+	const tableNames = async () => {
+		return (await fetchTables()).map(({ name }) => name);
+	};
 
-		let _tables;
+	const tableFields = async ({ data }) => {
+		const _tables = await fetchTables();
 
-		if (tables?.length) _tables = [...tables];
-		else {
-			setTables((t) => {
-				_tables = [...t];
-				return t;
-			});
-		}
+		if (!data?.table || !_tables.length) return [];
 
-		if (data?.table && _tables?.length) {
-			const table = _tables.find(({ name }) => name == data.table);
-
-			if (table?.fields?.length) {
-				return table.fields.filter(
-					({ type }) => type.indexOf("multiple") == -1
-				);
-			}
+		const table = _tables.find(({ name }) => name == data.table);
+		if (table?.fields?.length) {
+			return table.fields.filter(
+				({ type }) => type.indexOf("multiple") == -1
+			);
 		}
 
 		return [];
 	};
 
-	const selectedTableSchema = (data) => {
-		const res = tableFields({ data });
+	const selectedTableSchema = async (data) => {
+		const res = await tableFields({ data });
 
 		if (!res) return null;
 
@@ -89,10 +83,8 @@ function PreferencesEditor(props) {
 		);
 	};
 
-	const fieldMappingChoices = ({ data, key }) => {
-		const res = tableFields({ data });
-		// console.log("MApping choices: ", data?.table, res);
-		return res.map(({ name }) => name);
+	const fieldMappingChoices = async ({ data, key }) => {
+		return (await tableFields({ data })).map(({ name }) => name);
 	};
 
 	return (
@@ -223,7 +215,7 @@ function PreferencesEditor(props) {
 							group: "Widget Data",
 							show: (data) => data.source === "Airtable",
 							// choices: ["departments", "projects"],
-							choices: fetchTables,
+							choices: tableNames,
 						},
 						model: {
 							label: "Pier Model",
