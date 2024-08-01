@@ -1,0 +1,47 @@
+{
+	"name": "crotchet",
+	"productName": "Crotchet",
+	"author": {
+		"name": "Walter Kimaro"
+	},
+	"private": true,
+	"version": "0.0.0",
+	"types": "types/index",
+	"scripts": {
+		"dev": "cross-env NODE_ENV=dev electron .",
+		"package": "npx electron-builder",
+		"cert": "openssl req -x509 -newkey rsa:2048 -keyout cert/key.pem -out cert/cert.pem -days 365",
+		"fix-robot": "npx electron-rebuild -f -t prod,optional,dev -w robotjs"
+	},
+	"devDependencies": {
+		"cross-env": "^7.0.3",
+		"electron": "^31.3.1",
+		"electron-rebuild": "^3.2.9",
+		"electron-reloader": "^1.2.3",
+		"eslint": "^8.56.0"
+	},
+	"dependencies": {
+		"electron-is-dev": "^3.0.1",
+		"express": "^4.18.3",
+		"socket.io": "^4.7.4"
+	},
+	"build": {
+		"appId": "tz.co.akil.crotchet",
+		"mac": {
+			"extendInfo": {
+				"hardenedRuntime": false,
+				"com.apple.security.cs.allow-jit": true,
+				"com.apple.security.cs.allow-unsigned-executable-memory": true,
+				"com.apple.security.cs.allow-dyld-environment-variables": true,
+				"NSMicrophoneUsageDescription": "Please give us access to your microphone",
+				"NSCameraUsageDescription": "Please give us access to your camera",
+				"com.apple.security.device.audio-input": true,
+				"com.apple.security.device.bluetooth": true,
+				"com.apple.security.device.camera": true,
+				"com.apple.security.device.print": true,
+				"com.apple.security.device.usb": true,
+				"com.apple.security.personal-information.location": true
+			}
+		}
+	}
+}

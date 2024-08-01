@@ -1,0 +1,11 @@
+{
+	"name": "crotchet-runner",
+	"private": true,
+	"version": "0.0.0",
+	"scripts": {
+		"config": "node ./generate_capacitor_config.cjs",
+		"dev": "NODE_ENV=dev npm run config && cd app && npm run dev",
+		"ios": "cd mobile && npx cap run ios",
+		"desktop": "cd desktop && npm run dev"
+	}
+}

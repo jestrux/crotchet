@@ -1,0 +1,369 @@
+import { matchSorter } from "match-sorter";
+import { onActionClick } from "./hooks/useActionClick";
+
+export const randomId = () => Math.random().toString(36).slice(2);
+
+export const shuffle = (array) => [...array].sort(() => Math.random() - 0.5);
+
+export const someTime = (t = 200) => new Promise((res) => setTimeout(res, t));
+
+export const onDesktop = () => document.body.classList.contains("on-electron");
+
+export const dispatch = (event, payload) => {
+	window.dispatchEvent(
+		new CustomEvent(event, {
+			detail: payload,
+		})
+	);
+};
+
+export const socketEmit = (event, payload) =>
+	dispatch("socket-emit", {
+		event,
+		payload,
+	});
+
+export const camelCaseToSentenceCase = (text) => {
+	if (!text || !text.length) return "";
+	const result = text.replace(/([A-Z]{1,})/g, " $1");
+	return result.charAt(0).toUpperCase() + result.slice(1);
+};
+
+export const showApp = async () => dispatch("toggle-app", true);
+
+export const hideApp = async () => dispatch("toggle-app", false);
+
+export const getWriteableFile = async (path) => {
+	if (onDesktop()) {
+		const res = path
+			? await window
+					.readFile({ path })
+					.then((contents) =>
+						contents ? { path, contents } : { path }
+					)
+			: await window.getFile({ properties: ["openFile"], read: true });
+
+		if (!res?.path) return;
+
+		const { path: _path, contents } = res;
+
+		return {
+			path: _path,
+			contents,
+			save: (contents, { open = false } = {}) =>
+				saveFile({ path: _path }, contents, { open }),
+		};
+	}
+
+	return;
+
+	// try {
+	// 	var res = await Filesystem.readFile({
+	// 		path: fileName,
+	// 		directory: Directory.Documents,
+	// 		encoding: Encoding.UTF8,
+	// 	});
+
+	// 	if (res) return res?.data;
+	// } catch (error) {
+	// 	//
+	// }
+};
+
+export const saveFile = async (props = {}, contents, { folder, open } = {}) => {
+	contents =
+		typeof contents == "object"
+			? JSON.stringify(contents, null, 4)
+			: contents;
+
+	return window.writeFile({ name: props, path: props.path }, contents, {
+		folder,
+		open,
+	});
+};
+
+export const getToken = async (key) => {
+	let token = await getPreference(`token-${key}`);
+
+	if (!token?.value) {
+		token = await window.openForm({
+			title: "Enter Token",
+			field: {
+				label: key,
+			},
+		});
+
+		if (token) token = await saveToken(key, token);
+	}
+
+	return token;
+};
+
+export const saveToken = async (key, value, expiresAt) => {
+	return await savePreference(`token-${key}`, { value, expiresAt });
+};
+
+export const withCache = async (name, promise, { invalidateAfter } = {}) => {
+	let value = await getFromCache(name);
+	const cacheAndReturn = () =>
+		promise.then((res) => {
+			if (res) cache(name, res);
+			return res;
+		});
+
+	if (!value) value = await cacheAndReturn();
+	else if (invalidateAfter) cacheAndReturn();
+
+	await someTime();
+	return value;
+};
+
+export const getFromCache = async (key) => {
+	return await window.readFile({ name: `__cache/${key}` });
+};
+
+export const cache = async (key, value) => {
+	if (!value) return value;
+	await saveFile({ name: `__cache/${key}` }, value);
+	return value;
+};
+
+const getUserPreferences = async (fromSave) => {
+	let res = await window.readFile({ name: "__crotchetPreferences.json" });
+
+	if (!res) {
+		res = {};
+		if (!fromSave)
+			await saveFile({ name: "__crotchetPreferences.json" }, {});
+	}
+
+	return res;
+};
+
+export const getPreference = async (key, defaultValue = null) => {
+	let res = await getUserPreferences();
+
+	if (key) res = res?.[key] ?? defaultValue;
+
+	return res;
+};
+
+export const savePreference = async (key, value) => {
+	const prefs = await getUserPreferences(true);
+
+	if (key) prefs[key] = value;
+
+	await saveFile({ name: "__crotchetPreferences.json" }, prefs);
+
+	return key ? value : prefs;
+};
+
+export const loadExternalAsset = async (url, { name, type } = {}) => {
+	if (!url?.length) return null;
+
+	type = type || url.split(".").at(-1);
+
+	name = name || url.split("/").at(-1);
+
+	if (!document.querySelector(`[data-external-asset="${name}"]`)) {
+		const contents = await withCache(
+			name,
+			new Promise((resolve) =>
+				fetch(url)
+					.then((res) => res.text())
+					.then(resolve)
+			)
+		);
+
+		const asset = document.createElement(
+			type == "css" ? "style" : "script"
+		);
+		asset.innerHTML = contents;
+		asset.setAttribute("data-external-asset", name);
+		document.querySelector("head").appendChild(asset);
+	}
+
+	return;
+};
+
+export const networkRequest = async (
+	url,
+	{
+		bearerToken,
+		secretToken,
+		responseType = "json",
+		responseField,
+		searchParam = "q",
+		q,
+		filters = {},
+		headers = {},
+		params = {},
+	} = {}
+) => {
+	const fetchHeaders = {
+		Accept: "application/json",
+		"Content-Type": "application/json",
+		Authorization: `Bearer ${bearerToken}`,
+		...headers,
+	};
+
+	const handler = async () => {
+		if (secretToken) {
+			const token = await getToken(secretToken);
+			if (!token?.value?.length) return null;
+
+			fetchHeaders[secretToken] = token.value;
+		}
+
+		let fullUrl = new URL(url);
+
+		Object.entries({ ...params, [searchParam]: q, ...filters }).forEach(
+			([key, value]) => {
+				if (value != undefined) fullUrl.searchParams.append(key, value);
+			}
+		);
+
+		return fetch(fullUrl.href, {
+			headers: fetchHeaders,
+		})
+			.then((response) => response[responseType]())
+			.then((res) => res?.[responseField] || res);
+	};
+
+	return window.withLoader(handler);
+};
+
+export const cleanObject = (obj = {}) => {
+	const isValid = (value) =>
+		(value ?? "").toString().length &&
+		!["undefined", "false", "0", "null"].includes((value ?? "").toString());
+
+	return Object.fromEntries(
+		Object.entries(obj || {}).filter(
+			([key, value]) => isValid(key) && isValid(value)
+		)
+	);
+};
+
+export const objectFieldChoices = (choices) => {
+	if (!choices?.length) return [];
+
+	const objectField = (object, field) =>
+		typeof object == "object" ? object?.[field] : object;
+
+	return choices.map((choice) => {
+		let label =
+			objectField(choice, "label") ||
+			objectField(choice, "title") ||
+			objectField(choice, "subtitle");
+		let value = objectField(choice, "value");
+
+		if (!value && label) value = label;
+		else if (!label && value) label = value;
+
+		return {
+			__id: randomId(),
+			tempId: label,
+			label,
+			value,
+			...(typeof choice == "object" ? choice : {}),
+		};
+	});
+};
+
+export const sectionedChoices = (choices = [], query, { valuesOnly } = {}) => {
+	if (!choices?.length) return [];
+
+	let formattedChoices = objectFieldChoices(choices).map((choice) => {
+		if (choice.section)
+			choice.sectionTag = `${choice.section} ${choice.value}`;
+		return choice;
+	});
+
+	formattedChoices = !query?.length
+		? formattedChoices
+		: matchSorter(formattedChoices, query, {
+				keys: ["label", "sectionTag"],
+		  });
+
+	formattedChoices = Object.entries(
+		_.groupBy(_.orderBy(formattedChoices, "pinned", "desc"), "section")
+	).filter(([, choices]) => choices.length);
+
+	return valuesOnly
+		? formattedChoices.map(([, values]) => values).flat()
+		: formattedChoices;
+};
+
+export const isValidUrl = (urlString) => {
+	const urlPattern = new RegExp(
+		"^(https?:\\/\\/)?" + // validate protocol
+			"((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // validate domain name
+			"((\\d{1,3}\\.){3}\\d{1,3}))" + // validate OR ip (v4) address
+			"(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // validate port and path
+			"(\\?[;&a-z\\d%_.~+=-]*)?" + // validate query string
+			"(\\#[-a-z\\d_]*)?$",
+		"i"
+	); // validate fragment locator
+
+	return !!urlPattern.test(urlString);
+};
+
+export const isValidEmail = (email) =>
+	email && email.length < 256 && /^[^@]+@[^@]{2,}\.[^@]{2,}$/.test(email);
+
+export const isValidAction = (action) => {
+	if (!action) return false;
+
+	if (typeof action.handler == "function") return true;
+	else if (typeof action.onClick == "function") return true;
+	else if (action.url) return true;
+	else if (typeof action == "function") return true;
+
+	return false;
+};
+
+export const withLoader = async (
+	action,
+	{
+		successMessage = "Success!",
+		errorMessage = "Unknown Error!",
+		onChange = () => {},
+	} = {}
+) => {
+	const handleChange = (status, payload) => {
+		let message = { success: successMessage, error: errorMessage }[status];
+
+		if (typeof message == "function") message = message(payload);
+		else if (status == "error" && typeof payload == "string")
+			message = payload;
+
+		dispatch("with-loader-status-change", {
+			status,
+			message,
+		});
+
+		onChange(status, payload);
+	};
+
+	let resolve, reject;
+	const promise = new Promise((res, rej) => {
+		resolve = res;
+		reject = rej;
+	});
+
+	let response;
+
+	try {
+		handleChange("loading");
+		response = await onActionClick(action)();
+		handleChange("success", response);
+		resolve(response);
+	} catch (error) {
+		response = error?.message || error;
+		handleChange("error", response);
+		reject(response);
+	}
+
+	return promise;
+};

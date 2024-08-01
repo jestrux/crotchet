@@ -1,0 +1,19 @@
+{
+    "appId": "tz.co.crotchet",
+    "appName": "Crotchet",
+    "webDir": "build",
+    "server": {
+        "androidScheme": "https",
+        "url": "http://192.168.0.54:5173",
+        "cleartext": true
+    },
+    "electron": {
+        "customUrlScheme": "crotchet",
+        "trayIconAndMenuEnabled": true,
+        "splashScreenEnabled": false,
+        "splashScreenImageName": "splash.png",
+        "hideMainWindowOnLaunch": false,
+        "deepLinkingEnabled": true,
+        "deepLinkingCustomProtocol": "crotchet"
+    }
+}
