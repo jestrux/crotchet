@@ -245,6 +245,10 @@ export const cleanObject = (obj = {}) => {
 	);
 };
 
+export const objectIsEmpty = (obj = {}) => {
+	return !Object.keys(cleanObject(obj ?? {})).length;
+};
+
 export const objectFieldChoices = (choices) => {
 	if (!choices?.length) return [];
 
@@ -293,6 +297,13 @@ export const sectionedChoices = (choices = [], query, { valuesOnly } = {}) => {
 	return valuesOnly
 		? formattedChoices.map(([, values]) => values).flat()
 		: formattedChoices;
+};
+
+export const isReactComponent = (child) => {
+	return (
+		typeof child === "function" &&
+		String(child).includes("return React.createElement")
+	);
 };
 
 export const isValidUrl = (urlString) => {
@@ -366,4 +377,34 @@ export const withLoader = async (
 	}
 
 	return promise;
+};
+
+export const getLinksFromText = (text, first) => {
+	if (!text) return null;
+
+	const links = text.split(/\s+/).filter(isValidUrl);
+
+	if (!links.length) return null;
+
+	if (first) return links?.[0];
+
+	return links;
+};
+
+export const crawlUrl = async (url, name) => {
+	var res = await withCache(
+		name || new URL(url).hostname,
+		fetch(
+			`https://us-central1-letterplace-c103c.cloudfunctions.net/api/crawl/${encodeURIComponent(
+				url
+			)}`
+		).then((res) => res.json())
+	);
+
+	if (res?.meta) {
+		res.meta = cleanObject(res.meta);
+		res.meta.subtitle = res.meta.description;
+	}
+
+	return res;
 };

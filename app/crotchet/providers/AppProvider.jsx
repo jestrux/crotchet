@@ -1,6 +1,7 @@
 import { createContext, useContext, useState } from "react";
 import { camelCaseToSentenceCase, dispatch, randomId } from "@/crotchet/utils";
 import { useEventListener, useKeyDetector, useOnInit } from "@/crotchet/hooks";
+import { AlertsWrapper } from "@/crotchet/hooks/useAlerts";
 
 export const AppContext = createContext({
 	pages: [],
@@ -181,5 +182,11 @@ export default function AppProvider({ children }) {
 		},
 	};
 
-	return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+	return (
+		<AppContext.Provider value={value}>
+			{children}
+
+			<AlertsWrapper />
+		</AppContext.Provider>
+	);
 }

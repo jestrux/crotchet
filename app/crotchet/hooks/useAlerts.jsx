@@ -1,22 +1,16 @@
 import { useState, Children, cloneElement } from "react";
-import { Modal, MessageModal, Button } from "@/crotchet/components";
-import { dispatch, randomId } from "@/crotchet/utils";
+import {
+	Modal,
+	MessageModal,
+	Button,
+	ActionSheet,
+} from "@/crotchet/components";
+import { dispatch, isReactComponent, randomId } from "@/crotchet/utils";
 
 export function AlertsWrapper() {
-	const {
-		alerts,
-		showAlert,
-		confirmAction,
-		confirmDangerousAction,
-		openActionDialog,
-	} = useAlerts();
+	const { alerts, ...alertThings } = useAlerts();
 
-	Object.assign(window, {
-		showAlert,
-		confirmAction,
-		confirmDangerousAction,
-		openActionDialog,
-	});
+	Object.assign(window, alertThings);
 
 	function renderActions(alert) {
 		if (!alert.actions?.length) return;
@@ -56,6 +50,25 @@ export function AlertsWrapper() {
 					onClose: () => alert.close(),
 				};
 
+				if (alert.type == "sheet") {
+					return (
+						<ActionSheet
+							key={alert.id}
+							{...alert}
+							onClose={(data) => alert.close(data)}
+						>
+							{Children.map(alert.content, (child) => {
+								return !isReactComponent(child)
+									? child
+									: cloneElement(child, {
+											dismiss: alert.close,
+											onClose: alert.close,
+									  });
+							})}
+						</ActionSheet>
+					);
+				}
+
 				if (alert.content) {
 					return (
 						<Modal
@@ -88,9 +101,7 @@ export function useAlerts() {
 	const [alerts, setAlerts] = useState([]);
 
 	const notifyParent = (id, status) => {
-		const spotlightParent = document.querySelector(
-			"[data-current-page]"
-		);
+		const spotlightParent = document.querySelector("[data-current-page]");
 
 		if (!spotlightParent) return console.log("No parent found!!");
 
@@ -180,6 +191,12 @@ export function useAlerts() {
 		return confirmAction({ dangerous: true });
 	}
 
+	const openActionSheet = (userProps = {}) =>
+		showAlert({
+			...userProps,
+			type: "sheet",
+		});
+
 	return {
 		alerts,
 		confirmAction,
@@ -187,5 +204,6 @@ export function useAlerts() {
 		showAlert,
 		hideAlert,
 		openActionDialog,
+		openActionSheet,
 	};
 }
