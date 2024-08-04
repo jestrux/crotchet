@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { Clipboard } from "@capacitor/clipboard";
-import { Toast } from "@capacitor/toast";
 import { Share } from "@capacitor/share";
 import { Directory, Encoding, Filesystem } from "@capacitor/filesystem";
 import { App as CapacitorApp } from "@capacitor/app";
@@ -11,18 +10,6 @@ import { SendIntent } from "send-intent";
 import { getLinksFromText, isValidUrl, objectIsEmpty } from "@/crotchet/utils";
 
 registerPlatformUtils({
-	showToast: (...toast) => {
-		const { text } =
-			typeof toast?.[0] == "object"
-				? toast[0]
-				: {
-						text: [...toast].join(" "),
-				  };
-
-		Toast.show({
-			text,
-		});
-	},
 	readClipboard: async () => {
 		try {
 			return await Clipboard.read();
@@ -57,9 +44,19 @@ registerPlatformUtils({
 				encoding: Encoding.UTF8,
 			});
 
-			if (res) return res?.data;
+			let contents = res?.data;
+
+			if (contents?.length) {
+				try {
+					contents = JSON.parse(contents);
+				} catch (_) {
+					//
+				}
+			}
+
+			return contents;
 		} catch (error) {
-			//
+			// window.showToast("Read file failed: " + error);
 		}
 	},
 	writeFile: async (props = {}, contents, { folder, open } = {}) => {
@@ -71,6 +68,7 @@ registerPlatformUtils({
 				data: contents,
 				directory: Directory.Documents,
 				encoding: Encoding.UTF8,
+				recursive: true,
 			});
 		} catch (error) {
 			//

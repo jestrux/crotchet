@@ -8,7 +8,7 @@ export default function registerPlatformUtils({
 	share,
 } = {}) {
 	Object.assign(window, {
-		showToast,
+		...(showToast ? { showToast } : {}),
 		readClipboard,
 		copyToClipboard,
 		getFile,

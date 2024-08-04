@@ -1,4 +1,5 @@
-import MutliGestureButton from "@/crotchet/components/MutliGestureButton";
+import { NavButton, MutliGestureButton } from "@/crotchet/components";
+import { useDataLoader } from "@/crotchet/hooks";
 import useKeyboard from "@/crotchet/hooks/useKeyboard";
 import clsx from "clsx";
 import {
@@ -7,7 +8,7 @@ import {
 	useMotionValue,
 	useTransform,
 } from "framer-motion";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export const BottomNavButton = ({
 	disabled,
@@ -50,6 +51,56 @@ export const BottomNavButton = ({
 				{selected ? activeIcon : icon}
 			</span>
 		</MutliGestureButton>
+	);
+};
+
+const NavActions = ({ expanded, onCollapse }) => {
+	const { data: actions, refetch } = useDataLoader({
+		handler: window.globalActions,
+		listenForUpdates: (callback = () => {}) => {
+			window.addEventListener("extensions-updated", callback, false);
+
+			return () => {
+				window.addEventListener("extensions-updated", callback, false);
+			};
+		},
+	});
+
+	useEffect(() => {
+		refetch();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [expanded]);
+
+	if (!actions?.length) return null;
+
+	return (
+		<div className="mt-3" onClick={onCollapse}>
+			{actions.map((action) => {
+				action.icon = (
+					<svg
+						className="mt-0.5 w-4 h-4 opacity-80"
+						fill="none"
+						viewBox="0 0 24 24"
+						strokeWidth={1.5}
+						stroke="currentColor"
+					>
+						<path
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
+						/>
+					</svg>
+				);
+
+				return (
+					<NavButton
+						className="px-4"
+						key={action._id}
+						action={action}
+					/>
+				);
+			})}
+		</div>
 	);
 };
 
@@ -144,10 +195,10 @@ export default function MobileNav() {
 
 			<motion.div
 				ref={scope}
-				className="fixed inset-x-0 bottom-0 bg-stone-100/85 dark:bg-card/85 overflow-hidden z-50"
+				className="fixed inset-x-0 max-w-xl mx-auto bottom-0 bg-stone-100/85 dark:bg-card/85 backdrop-blur-sm overflow-hidden z-50"
 				style={{
 					bottom: expanded
-						? `calc(-40vh + ${56}px + env(safe-area-inset-bottom) * 0.6)`
+						? `calc(-35vh + ${56}px + env(safe-area-inset-bottom) * 0.6)`
 						: `calc(-100vh + ${56}px + env(safe-area-inset-bottom) * 0.6)`,
 					height: "100vh",
 					y,
@@ -177,9 +228,9 @@ export default function MobileNav() {
 					if (delta >= 0.2) setExpanded(!expanded);
 				}}
 			>
-				<div className="p-3">
+				<div>
 					<motion.div
-						className="relative border dark:border border-stroke shadow-sm rounded-full"
+						className="m-3 relative border dark:border border-stroke shadow-sm rounded-full"
 						style={{
 							opacity: ratio,
 							pointerEvents: "none",
@@ -206,7 +257,10 @@ export default function MobileNav() {
 						/>
 					</motion.div>
 
-					{/* {expanded && <KeyboardPlaceholder />} */}
+					<NavActions
+						expanded={expanded}
+						onCollapse={() => setExpanded(false)}
+					/>
 				</div>
 			</motion.div>
 

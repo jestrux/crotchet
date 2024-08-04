@@ -34,40 +34,22 @@ export const showApp = async () => dispatch("toggle-app", true);
 export const hideApp = async () => dispatch("toggle-app", false);
 
 export const getWriteableFile = async (path) => {
-	if (onDesktop()) {
-		const res = path
-			? await window
-					.readFile({ path })
-					.then((contents) =>
-						contents ? { path, contents } : { path }
-					)
-			: await window.getFile({ properties: ["openFile"], read: true });
+	const res = path
+		? await window
+				.readFile({ path })
+				.then((contents) => (contents ? { path, contents } : { path }))
+		: await window.getFile({ properties: ["openFile"], read: true });
 
-		if (!res?.path) return;
+	if (!res?.path) return;
 
-		const { path: _path, contents } = res;
+	const { path: _path, contents } = res;
 
-		return {
-			path: _path,
-			contents,
-			save: (contents, { open = false } = {}) =>
-				saveFile({ path: _path }, contents, { open }),
-		};
-	}
-
-	return;
-
-	// try {
-	// 	var res = await Filesystem.readFile({
-	// 		path: fileName,
-	// 		directory: Directory.Documents,
-	// 		encoding: Encoding.UTF8,
-	// 	});
-
-	// 	if (res) return res?.data;
-	// } catch (error) {
-	// 	//
-	// }
+	return {
+		path: _path,
+		contents,
+		save: (contents, { open = false } = {}) =>
+			saveFile({ path: _path }, contents, { open }),
+	};
 };
 
 export const saveFile = async (props = {}, contents, { folder, open } = {}) => {
@@ -76,7 +58,7 @@ export const saveFile = async (props = {}, contents, { folder, open } = {}) => {
 			? JSON.stringify(contents, null, 4)
 			: contents;
 
-	return window.writeFile({ name: props, path: props.path }, contents, {
+	return window.writeFile({ name: props.name, path: props.path }, contents, {
 		folder,
 		open,
 	});
@@ -103,7 +85,7 @@ export const saveToken = async (key, value, expiresAt) => {
 	return await savePreference(`token-${key}`, { value, expiresAt });
 };
 
-export const withCache = async (name, promise, { invalidateAfter } = {}) => {
+export const withCache = async (name, promise, { invalidate } = {}) => {
 	let value = await getFromCache(name);
 	const cacheAndReturn = () =>
 		promise.then((res) => {
@@ -112,7 +94,7 @@ export const withCache = async (name, promise, { invalidateAfter } = {}) => {
 		});
 
 	if (!value) value = await cacheAndReturn();
-	else if (invalidateAfter) cacheAndReturn();
+	else if (invalidate) cacheAndReturn();
 
 	await someTime();
 	return value;
@@ -407,4 +389,40 @@ export const crawlUrl = async (url, name) => {
 	}
 
 	return res;
+};
+
+export const processShareData = (value, type = "text", meta = {}) => {
+	if (!value?.trim()?.length) return null;
+
+	let payload = {
+		...meta,
+		text: value,
+	};
+
+	let preview = {
+		image: null,
+		title: null,
+		subtitle: value,
+	};
+
+	if (type.includes("image")) {
+		preview.title = value.split("/").at(-1).split(".").at(0);
+		preview.subtitle = type;
+		preview.type = type;
+
+		payload = {
+			image: value,
+		};
+	}
+
+	if (isValidUrl(value)) {
+		payload = {
+			url: value,
+		};
+	} else payload.url = getLinksFromText(value, true);
+
+	return {
+		payload,
+		preview: !objectIsEmpty(preview) ? preview : null,
+	};
 };

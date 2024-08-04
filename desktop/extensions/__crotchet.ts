@@ -1,4 +1,30 @@
+import "../@types/index";
+
+registerAction("clipboard", {
+	global: true,
+	mobileOnly: true,
+	handler: async () => {
+		try {
+			const { type, value } = await window.readClipboard();
+			const { payload, preview } = window.processShareData(value, type, {
+				fromClipboard: true,
+			});
+
+			if (!payload) return window.showToast("Nothing in clipboard");
+
+			return window.openActionSheet({
+				title: "Select an action",
+				payload,
+				preview,
+			});
+		} catch (error) {
+			window.showToast("Error: " + error);
+		}
+	},
+});
+
 registerAction("sendEmail", {
+	desktopOnly: true,
 	handler: async (payload) => {
 		const handler = async (res) => {
 			if (
@@ -60,10 +86,12 @@ registerAction("sendEmail", {
 });
 
 registerAction("crotchetAppData", {
+	desktopOnly: true,
 	url: `crotchet://socket/run?command=open /Users/waky/Library/Application\\ Support/Electron/Crotchet`,
 });
 
 registerAction("setHero", {
+	desktopOnly: true,
 	handler: () => {
 		const date = moment().startOf("iweek").subtract(7, "days");
 		const iso = (d) => d.toISOString().split("T").shift();
@@ -76,9 +104,21 @@ registerAction("setHero", {
 });
 
 registerAction("raycastTest", {
+	desktopOnly: true,
 	url: `crotchet://socket/run?command=code /Users/waky/Documents/raycast/raycast-test/`,
 });
 
 registerAction("kitTest", {
+	desktopOnly: true,
 	url: `crotchet://socket/run?command=code /Users/waky/.kenv`,
+});
+
+registerAction("remote", {
+	global: true,
+	mobileOnly: true,
+	handler: async () =>
+		window.openActionSheet({
+			title: "Remote",
+			content: "Remote apps will go here...",
+		}),
 });

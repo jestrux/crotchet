@@ -4,6 +4,26 @@ const path = require("path");
 const appDir = (...subPaths) => path.join(__dirname, "../", ...subPaths);
 const buildDir = (...subPaths) => appDir("app", ...subPaths);
 
+const readDir = ({ path: _path, name }) =>
+	new Promise((res, rej) => {
+		const actualPath = _path ? _path : appDir(`/Crotchet/${name}`);
+
+		fs.readdir(actualPath, (err, files) => {
+			if (err) return rej(err);
+
+			Promise.all(
+				files.map((file) =>
+					readFile({ path: path.resolve(actualPath, file) }).then(
+						(contents) => ({
+							name: file.split(".").at(0),
+							contents,
+						})
+					)
+				)
+			).then(res);
+		});
+	});
+
 const readFile = ({ path, folder, name }) =>
 	new Promise((res) => {
 		const actualPath = path
@@ -84,6 +104,7 @@ module.exports = {
 	buildDir,
 	getFile,
 	getWriteableFile,
+	readDir,
 	readFile,
 	writeFile,
 };

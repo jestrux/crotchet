@@ -1,14 +1,29 @@
-/* global window, document */
+/* global document */
 const { ipcRenderer } = require("electron");
 const getIp = require("./utils/getIp");
-const { appDir, readFile } = require("./modules/files");
+const { appDir, readDir } = require("./modules/files");
 
 window.addEventListener("crotchet-ready", () => {
-	readFile({ path: appDir("scripts/index.ts") }).then((contents) => {
-		const asset = document.createElement("script");
-		asset.innerHTML = contents;
-		document.body.appendChild(asset);
+	readDir({ path: appDir("extensions") }).then((res) => {
+		if (res) {
+			res.filter(
+				(res) => res?.name?.length && res?.contents?.length
+			).forEach(({ name, contents }) => {
+				const asset = document.createElement("script");
+				asset.innerHTML = contents.replace(
+					`import "../@types/index";`,
+					`//import "../@types/index";`
+				);
+				asset.setAttribute("data-crotchet-extension", name);
+				document.body.appendChild(asset);
+			});
+		}
 	});
+	// readFile({ path: appDir("extensions/index.ts") }).then((contents) => {
+	// 	const asset = document.createElement("script");
+	// 	asset.innerHTML = contents;
+	// 	document.body.appendChild(asset);
+	// });
 });
 
 window.addEventListener("open-url", (e) => {

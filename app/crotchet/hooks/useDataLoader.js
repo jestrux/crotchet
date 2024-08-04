@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import useSourceGet from "./useSourceGet";
 
-export default function useLoader({
+export default function useDataLoader({
 	handler,
 	delayLoader = false,
 	onSuccess = () => {},

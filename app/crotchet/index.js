@@ -68,14 +68,16 @@ export const registerAction = (name, action) => {
 export const globalActions = ({ share = false, desktopShortcuts } = {}) =>
 	Object.entries(window.actions ?? {})
 		.filter(([, action]) => {
-			const { global, type, mobileOnly, context } = action;
+			const { global, type, mobileOnly, desktopOnly, context } = action;
 
-			if (share) return context == "share";
+			if ((share && context != "share") || (!share && context == "share"))
+				return false;
 
 			if (!global && !(desktopShortcuts && type == "search"))
 				return false;
 
-			if (mobileOnly && onDesktop()) return false;
+			if ((mobileOnly && onDesktop()) || (desktopOnly && !onDesktop()))
+				return false;
 
 			return true;
 		})

@@ -1,6 +1,5 @@
 import { useRef, useState } from "react";
 import { AlertDialog, AlertDialogLabel } from "@reach/alert-dialog";
-import clsx from "clsx";
 
 import {
 	cleanObject,
@@ -11,15 +10,8 @@ import {
 } from "@/crotchet/utils";
 import { NavButton, Loader } from "@/crotchet/components";
 import { useDataLoader } from "@/crotchet/hooks";
-import { globalActions } from "..";
 
-const ActionSheetContent = ({
-	noHeading,
-	onClose,
-	actions: _actions,
-	payload = {},
-	onChange = () => {},
-}) => {
+const ActionSheetContent = ({ onClose, payload = {}, onChange = () => {} }) => {
 	const [groupFilter, setGroupFilter] = useState();
 	const [sheetProps, setSheetProps] = useState({
 		...payload,
@@ -27,7 +19,26 @@ const ActionSheetContent = ({
 	});
 
 	const { loading } = useDataLoader({
-		handler: _actions,
+		handler: () => {
+			return window.globalActions({ share: true }).filter((action) => {
+				let matches = !objectIsEmpty(
+					_.pick(payload, ["image", "url", "file", "text"])
+				);
+
+				const match = action.match;
+
+				if (_.isFunction(match)) {
+					matches = match(payload);
+				} else if (
+					["image", "file", "url", "text", "download"].includes(match)
+				)
+					matches = payload[match]?.length;
+
+				if (!matches) return false;
+
+				return true;
+			});
+		},
 		onSuccess: (actions) =>
 			setSheetProps((oldProps) => {
 				return {
@@ -46,6 +57,8 @@ const ActionSheetContent = ({
 			};
 		});
 	});
+
+	if (!sheetProps.actions) return null;
 
 	const actions = sheetProps.actions.map((action) => {
 		action.__id = randomId();
@@ -67,7 +80,7 @@ const ActionSheetContent = ({
 	if (groups.length && !groupFilter) setGroupFilter(groups[0]);
 
 	return (
-		<div className={clsx(noHeading ? "px-3" : "pt-5 px-5")}>
+		<div className="pt-3">
 			{loading ? (
 				<div className="flex justify-center">
 					<Loader size={40} />
@@ -80,7 +93,7 @@ const ActionSheetContent = ({
 								<NavButton
 									key={action.__id}
 									vertical
-									className="bg-card shadow dark:border border-content/5 p-4 rounded-lg"
+									className="bg-card shadow-sm dark:border border-content/5 p-4 rounded-lg"
 									action={action}
 									inShareSheet
 								/>
@@ -89,7 +102,7 @@ const ActionSheetContent = ({
 					)}
 
 					{otherActions.length > 0 && (
-						<div className="bg-card shadow dark:border border-content/5 rounded-lg overflow-hidden divide-y divide-content/5">
+						<div className="bg-card shadow-sm border border-content/5 rounded-lg overflow-hidden divide-y divide-content/5">
 							{otherActions.map((action) => {
 								if (groupFilter && action.group != groupFilter)
 									return null;
@@ -103,6 +116,12 @@ const ActionSheetContent = ({
 									/>
 								);
 							})}
+						</div>
+					)}
+
+					{!actions?.length && (
+						<div className="pt-4 flex h-full items-center justify-center opacity-50">
+							No actions
 						</div>
 					)}
 				</div>
@@ -132,6 +151,28 @@ export default function ActionSheet({
 }) {
 	const [preview, setPreview] = useState(_preview);
 	const cancelRef = useRef();
+	const { loading: loadingActions, showLoader } = useDataLoader({
+		handler: async () => {
+			try {
+				if (objectIsEmpty(window.actions || {})) {
+					await new Promise((resolve) => {
+						const handler = async () => {
+							window.removeEventListener(
+								"extensions-updated",
+								handler
+							);
+							resolve();
+						};
+
+						window.addEventListener("extensions-updated", handler);
+					});
+				}
+			} catch (error) {
+				window.showToast("Load actions error: ", error);
+			}
+		},
+	});
+
 	useDataLoader({
 		handler: async () => {
 			if (_preview?.image) return _preview;
@@ -243,7 +284,7 @@ export default function ActionSheet({
 			</div>
 
 			<div
-				className="p-5 rounded-t-[32px] relative z-10 w-full max-w-lg mx-auto group bg-card text-content border shadow-2xl overflow-hidden"
+				className="px-5 pt-5 pb-2 rounded-t-[32px] relative z-10 w-full max-w-lg mx-auto group bg-canvas text-content border shadow-2xl overflow-hidden"
 				style={{
 					boxShadow: showOverlayBg
 						? ""
@@ -273,14 +314,21 @@ export default function ActionSheet({
 					</button>
 				</div>
 
-				<div style={{ minHeight: "120px" }}>
-					{children ? (
+				<div
+					style={{
+						marginBottom: "env(safe-area-inset-bottom)",
+						minHeight: "120px",
+					}}
+				>
+					{loadingActions ? (
+						<div className="flex justify-center">
+							{showLoader && <Loader size={40} />}
+						</div>
+					) : children ? (
 						children
 					) : (
 						<ActionSheetContent
 							payload={payload}
-							actions={globalActions()}
-							// actions={globalActions({ share: true })}
 							onClose={onClose}
 						/>
 					)}

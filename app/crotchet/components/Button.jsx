@@ -56,7 +56,7 @@ export default forwardRef(function Button(
 			ref={ref}
 			type={type}
 			className={clsx(
-				"Button font-semibold border w-full flex items-center justify-center px-3.5 leading-none relative",
+				"Button font-semibold border flex items-center justify-center px-3.5 leading-none relative",
 				(disabled || loading) && "pointer-events-none",
 				disabled && "opacity-25",
 				getColor(),

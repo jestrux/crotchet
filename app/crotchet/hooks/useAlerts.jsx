@@ -1,4 +1,4 @@
-import { useState, Children, cloneElement } from "react";
+import { useState, Children, cloneElement, useRef } from "react";
 import {
 	Modal,
 	MessageModal,
@@ -6,6 +6,31 @@ import {
 	ActionSheet,
 } from "@/crotchet/components";
 import { dispatch, isReactComponent, randomId } from "@/crotchet/utils";
+import ErrorBoundary from "../components/ErrorBoundary";
+import { useOnInit } from "@/crotchet/hooks";
+
+const ToastMessage = ({ message, onClose, duration = 2000 }) => {
+	const toastTimerRef = useRef();
+
+	useOnInit(() => {
+		if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+
+		toastTimerRef.current = setTimeout(() => {
+			onClose(null);
+		}, duration);
+	}, []);
+
+	return (
+		<div
+			className="fixed inline-flex items-center top-14 h-7 px-3 z-[999999] bg-content/95 text-on-content text-xs drop-shadow-sm rounded-full -translate-x-1/2 left-1/2"
+			style={{
+				marginTop: "env(safe-area-inset-top)",
+			}}
+		>
+			{message}
+		</div>
+	);
+};
 
 export function AlertsWrapper() {
 	const { alerts, ...alertThings } = useAlerts();
@@ -39,7 +64,7 @@ export function AlertsWrapper() {
 	}
 
 	return (
-		<>
+		<ErrorBoundary className="py-32 z-50">
 			{alerts.map((alert) => {
 				const props = {
 					showOverlayBg: alert.showOverlayBg,
@@ -49,6 +74,16 @@ export function AlertsWrapper() {
 					invisible: alert.hidden,
 					onClose: () => alert.close(),
 				};
+
+				if (alert.type == "toast") {
+					return (
+						<ToastMessage
+							key={alert.id}
+							message={alert.message}
+							onClose={(data) => alert.close(data)}
+						/>
+					);
+				}
 
 				if (alert.type == "sheet") {
 					return (
@@ -93,7 +128,7 @@ export function AlertsWrapper() {
 					/>
 				);
 			})}
-		</>
+		</ErrorBoundary>
 	);
 }
 
@@ -197,6 +232,12 @@ export function useAlerts() {
 			type: "sheet",
 		});
 
+	const showToast = (...message) =>
+		showAlert({
+			message: [...message].join(" "),
+			type: "toast",
+		});
+
 	return {
 		alerts,
 		confirmAction,
@@ -205,5 +246,6 @@ export function useAlerts() {
 		hideAlert,
 		openActionDialog,
 		openActionSheet,
+		showToast,
 	};
 }

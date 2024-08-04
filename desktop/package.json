@@ -6,7 +6,6 @@
 	},
 	"private": true,
 	"version": "0.0.0",
-	"types": "types/index",
 	"scripts": {
 		"dev": "cross-env NODE_ENV=dev electron .",
 		"package": "npx electron-builder",
