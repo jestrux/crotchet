@@ -2,6 +2,7 @@ import Page from "./Page";
 import { hideApp } from "@/crotchet/utils";
 import { useAppContext } from "@/crotchet/providers/AppProvider";
 import { Button } from "@/crotchet/components";
+import MobileNav from "./Nav";
 
 export default function AppContent() {
 	const { pages, popPage } = useAppContext();
@@ -45,6 +46,8 @@ export default function AppContent() {
 					{page.content}
 				</Page>
 			))}
+
+			<MobileNav />
 		</>
 	);
 }
