@@ -10,6 +10,7 @@ lerna-debug.log*
 node_modules
 Crotchet-darwin-x64
 dist
+build
 docs
 dist-ssr
 *.local

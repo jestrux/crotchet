@@ -5,7 +5,11 @@
 	"scripts": {
 		"config": "node ./generate_capacitor_config.cjs",
 		"dev": "NODE_ENV=dev npm run config && cd app && npm run dev",
-		"ios": "cd mobile && npx cap run ios",
-		"desktop": "cd desktop && npm run dev"
+		"preios": "cd app && npm run build && cd ../ && rm -r ./mobile/build && cp -R ./app/docs/. ./mobile/build",
+		"ios": "npm run config && cd mobile && npx cap run ios",
+		"ios:dev": "NODE_ENV=dev npm run config && cd mobile && npx cap run ios",
+		"predesktop": "cd app && npm run build && cd ../ && rm -r ./electron/app && cp -R ./app/docs/. ./electron/app",
+		"desktop": "npm run config && cd mobile && npx cap run ios",
+		"desktop:dev": "cd desktop && npm run dev"
 	}
 }
