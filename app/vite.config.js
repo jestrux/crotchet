@@ -12,7 +12,6 @@ export default defineConfig({
 			maxParallelFileOps: 50,
 		},
 		outDir: "./docs",
-		commonjsOptions: { include: [] },
 	},
 	optimizeDeps: {
 		disabled: false,
