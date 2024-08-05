@@ -5,3 +5,6 @@ export { default as useOnInit } from "./useOnInit";
 export { default as useSourceGet } from "./useSourceGet";
 export { default as usePopper } from "./usePopper";
 export { default as useOnClickOutside } from "./useOnClickOutside";
+export { useActionClick } from "./useActionClick";
+export { default as useLongPress } from "./useLongPress";
+export { default as useDoubleClick } from "./useDoubleClick";

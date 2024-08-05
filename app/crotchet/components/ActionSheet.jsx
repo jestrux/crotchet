@@ -11,7 +11,12 @@ import {
 import { NavButton, Loader } from "@/crotchet/components";
 import { useDataLoader } from "@/crotchet/hooks";
 
-const ActionSheetContent = ({ onClose, payload = {}, onChange = () => {} }) => {
+const ActionSheetContent = ({
+	onClose,
+	payload = {},
+	onChange = () => {},
+	actions: _actions,
+}) => {
 	const [groupFilter, setGroupFilter] = useState();
 	const [sheetProps, setSheetProps] = useState({
 		...payload,
@@ -20,6 +25,8 @@ const ActionSheetContent = ({ onClose, payload = {}, onChange = () => {} }) => {
 
 	const { loading } = useDataLoader({
 		handler: () => {
+			if (!objectIsEmpty(_actions || {})) return _actions;
+
 			return window.globalActions({ share: true }).filter((action) => {
 				let matches = !objectIsEmpty(
 					_.pick(payload, ["image", "url", "file", "text"])
@@ -66,7 +73,7 @@ const ActionSheetContent = ({ onClose, payload = {}, onChange = () => {} }) => {
 
 		if (_.isFunction(handler)) {
 			action.handler = () =>
-				handler(_.omit(sheetProps, ["actions", "preview"]), __crotchet);
+				handler(_.omit(sheetProps, ["actions", "preview"]));
 		}
 
 		return action;
@@ -144,6 +151,7 @@ export default function ActionSheet({
 	preview: _preview,
 	payload,
 	children,
+	actions,
 	label = "Content",
 	dismissible = true,
 	showOverlayBg = true,
@@ -153,6 +161,8 @@ export default function ActionSheet({
 	const cancelRef = useRef();
 	const { loading: loadingActions, showLoader } = useDataLoader({
 		handler: async () => {
+			if (!objectIsEmpty(window.actions || {})) return true;
+
 			try {
 				if (objectIsEmpty(window.actions || {})) {
 					await new Promise((resolve) => {
@@ -211,7 +221,7 @@ export default function ActionSheet({
 			if (image?.length || video?.length) {
 				media = (
 					<div
-						className="border border-content/10 flex-shrink-0 h-10 w-12 rounded-md bg-cover bg-center relative overflow-hidden"
+						className="flex-shrink-0 h-10 w-12 rounded-md bg-cover bg-center relative overflow-hidden"
 						style={{
 							backgroundImage: `url(${video || image})`,
 						}}
@@ -248,10 +258,10 @@ export default function ActionSheet({
 		}
 
 		return (
-			<div className="flex gap-1.5 pr-3">
+			<div className="flex gap-2 pr-3">
 				{media}
 
-				<div className="flex-1 flex flex-col">
+				<div className="flex-1 flex flex-col -mt-px">
 					{(preview?.title || title) && (
 						<h3 className="-mb-1 truncate font-bold first-letter:uppercase">
 							{preview?.title || title}
@@ -273,7 +283,7 @@ export default function ActionSheet({
 			onDismiss={dismissible ? onClose : () => {}}
 			isOpen={true}
 			leastDestructiveRef={cancelRef}
-			className="fixed inset-x-0 bottom-0 z-[999]"
+			className="fixed left-0 right-1 bottom-0 z-[999]"
 		>
 			<div
 				ref={cancelRef}
@@ -284,7 +294,7 @@ export default function ActionSheet({
 			</div>
 
 			<div
-				className="px-5 pt-5 pb-2 rounded-t-[32px] relative z-10 w-full max-w-lg mx-auto group bg-canvas text-content border shadow-2xl overflow-hidden"
+				className="px-5 pt-5 pb-2 rounded-t-[32px] relative z-10 max-w-lg mx-auto group bg-canvas text-content border shadow-2xl overflow-hidden"
 				style={{
 					boxShadow: showOverlayBg
 						? ""
@@ -328,8 +338,8 @@ export default function ActionSheet({
 						children
 					) : (
 						<ActionSheetContent
-							payload={payload}
 							onClose={onClose}
+							actions={actions}
 						/>
 					)}
 				</div>

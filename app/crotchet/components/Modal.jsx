@@ -27,7 +27,7 @@ function Button({
 export const MessageModal = ({
 	isOpen,
 	size,
-	title = "Modal Title",
+	title,
 	message,
 	action = "Okay",
 	actionStyle = "outline", //"primary"
@@ -92,12 +92,14 @@ export const MessageModal = ({
 
 				<div className="mt-4">
 					<div className="text-center md:mt-5">
-						<h3
-							className="text-lg leading-6 font-bold px-4"
-							id="modal-title"
-						>
-							{title}
-						</h3>
+						{title?.length && (
+							<h3
+								className="text-lg leading-6 font-bold px-4"
+								id="modal-title"
+							>
+								{title}
+							</h3>
+						)}
 						<div className="md:mt-2">
 							{(children || message?.length) && (
 								<p className="text-base opacity-70 max-w-md mx-auto px-6">

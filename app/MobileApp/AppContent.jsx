@@ -1,8 +1,44 @@
-import Page from "./Page";
 import { hideApp } from "@/crotchet/utils";
 import { useAppContext } from "@/crotchet/providers/AppProvider";
-import { Button } from "@/crotchet/components";
+import { useDataLoader } from "@/crotchet/hooks";
+import { Widget } from "@/crotchet/components";
 import MobileNav from "./Nav";
+import Page from "./Page";
+
+const HomePage = () => {
+	// useOnInit(() => {
+	// 	queryDb("__crotchetHomeWidgets", {
+	// 		onChange: setWidgets,
+	// 	});
+	// });
+
+	const { data: widgets } = useDataLoader({
+		handler: () => {
+			if (window.widgets) return _.values(window.widgets);
+
+			return [];
+		},
+		listenForUpdates: (callback = () => {}) => {
+			const event = "widgets-updated";
+			window.addEventListener(event, callback, false);
+			return () => window.removeEventListener(event, callback, false);
+		},
+	});
+
+	return (
+		<div className="max-w-4xl mx-auto p-3 grid grid-cols-2 gap-4">
+			{/* <div className="mt-2">
+				Preference: {JSON.stringify(pageData?.preferences)}
+			</div> */}
+
+			{widgets?.map((widget) => (
+				<div key={widget._id} className="col-span-2">
+					<Widget {...widget} />
+				</div>
+			))}
+		</div>
+	);
+};
 
 export default function AppContent() {
 	const { pages, popPage } = useAppContext();
@@ -10,22 +46,7 @@ export default function AppContent() {
 		id: "root",
 		_id: "root",
 		type: "detail",
-		// resolve: () => {
-		// 	return true;
-		// },
-		content: () => (
-			<Button
-				onClick={() =>
-					window.openPage({
-						title: "Second Page",
-						type: "detail",
-						content: <p>Second page!!</p>,
-					})
-				}
-			>
-				Open second page
-			</Button>
-		),
+		content: <HomePage />,
 	};
 
 	return (

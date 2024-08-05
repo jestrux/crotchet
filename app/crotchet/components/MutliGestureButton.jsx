@@ -1,7 +1,6 @@
 import { useRef } from "react";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
-import useDoubleClick from "./useDoubleClick";
-import { useLongPress } from "./useLongPress";
+import { useLongPress, useDoubleClick } from "@/crotchet/hooks";
 
 export default function MutliGestureButton({
 	onClick = () => {},

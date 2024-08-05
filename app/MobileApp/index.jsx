@@ -10,14 +10,7 @@ import { SendIntent } from "send-intent";
 import { getLinksFromText, isValidUrl, objectIsEmpty } from "@/crotchet/utils";
 
 registerPlatformUtils({
-	readClipboard: async () => {
-		try {
-			return await Clipboard.read();
-		} catch (error) {
-			console.log("Error copying text: ", error);
-			// throw "Failed to copy!";
-		}
-	},
+	readClipboard: async () => await Clipboard.read(),
 	copyToClipboard: async (content, message = "Copied") => {
 		if (!content?.length) return console.log("Nothing to copy: ", content);
 
@@ -79,6 +72,10 @@ registerPlatformUtils({
 
 export default function MobileApp() {
 	const handleShareIntent = async (result, fromOpen) => {
+		// window.showAlert(
+		// 	"Handle share: " + JSON.stringify({ result, fromOpen })
+		// );
+
 		if (window.shareTimeout) {
 			clearTimeout(window.shareTimeout);
 			window.shareTimeout = null;
@@ -155,7 +152,8 @@ export default function MobileApp() {
 				});
 			}, 300);
 		} catch (error) {
-			alert("Share error: " + error);
+			window.showAlert("App launch error: " + error);
+			// alert("Share error: " + error);
 		}
 	};
 

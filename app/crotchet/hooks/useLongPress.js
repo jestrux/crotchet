@@ -1,6 +1,6 @@
 import { useCallback, useRef } from "react";
 
-export function useLongPress(callback = () => {}, duration = 500) {
+export default function useLongPress(callback = () => {}, duration = 500) {
 	const timeout = useRef(null);
 
 	const onPressStart = useCallback(

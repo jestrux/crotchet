@@ -81,7 +81,7 @@ export default async function openUrl(path) {
 			"data-source",
 			path
 		);
-		const actualSource = __crotchet.dataSources[name];
+		const actualSource = window.dataSources[name];
 
 		if (typeof actualSource?.[slug] != "function")
 			return window.showToast(`Data source ${name} not found!`);

@@ -1,16 +1,27 @@
 import lodash from "lodash";
 import moment from "moment";
-import { utils, registerAction, globalActions, openUrl } from "./crotchet";
+import {
+	utils,
+	registerAction,
+	globalActions,
+	openUrl,
+	registerWidget,
+} from "./crotchet";
 import * as firebaseUtils from "./crotchet/providers/firebase";
+import * as UI from "./crotchet/providers/ui";
+import { sourceGet } from "./crotchet/hooks/useSourceGet";
 
 const crotchet = {
 	...utils,
 	_: lodash,
 	moment,
+	sourceGet,
 	registerAction,
+	registerWidget,
 	globalActions,
 	openUrl,
 	...firebaseUtils,
+	widgets: {},
 	actions: {},
 	dataSources: {},
 	_promiseResolvers: {},
@@ -21,6 +32,7 @@ const crotchet = {
 			openUrl,
 		};
 	},
+	UI,
 };
 
 Object.assign(window, crotchet);

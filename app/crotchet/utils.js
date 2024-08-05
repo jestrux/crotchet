@@ -1,7 +1,7 @@
 import { matchSorter } from "match-sorter";
 import { onActionClick } from "./hooks/useActionClick";
 
-export const randomId = () => Math.random().toString(36).slice(2);
+export const randomId = () => "id" + Math.random().toString(36).slice(2);
 
 export const shuffle = (array) => [...array].sort(() => Math.random() - 0.5);
 
@@ -85,11 +85,18 @@ export const saveToken = async (key, value, expiresAt) => {
 	return await savePreference(`token-${key}`, { value, expiresAt });
 };
 
-export const withCache = async (name, promise, { invalidate } = {}) => {
+export const withCache = async (
+	name,
+	promise,
+	{ invalidate, onChange = () => {} } = {}
+) => {
 	let value = await getFromCache(name);
 	const cacheAndReturn = () =>
 		promise.then((res) => {
-			if (res) cache(name, res);
+			if (res) {
+				cache(name, res);
+				onChange(res);
+			}
 			return res;
 		});
 
@@ -110,7 +117,7 @@ export const cache = async (key, value) => {
 	return value;
 };
 
-const getUserPreferences = async (fromSave) => {
+export const getUserPreferences = async (fromSave) => {
 	let res = await window.readFile({ name: "__crotchetPreferences.json" });
 
 	if (!res) {
@@ -314,6 +321,19 @@ export const isValidAction = (action) => {
 	else if (typeof action == "function") return true;
 
 	return false;
+};
+
+export const toHms = (number) => {
+	const sec_num = parseInt(number, 10); // don't forget the second param
+	let hrs = Math.floor(sec_num / 3600);
+	let mins = Math.floor((sec_num - hrs * 3600) / 60);
+	let secs = sec_num - hrs * 3600 - mins * 60;
+
+	return [
+		...(hrs > 0 ? [hrs.toString().padStart(2, "0")] : []),
+		mins.toString().padStart(2, "0"),
+		secs.toString().padStart(2, "0"),
+	].join(":");
 };
 
 export const withLoader = async (

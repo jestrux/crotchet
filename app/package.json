@@ -20,6 +20,7 @@
 		"@capacitor/preferences": "^5.0.6",
 		"@capacitor/share": "^5.0.7",
 		"@capacitor/toast": "^5.0.6",
+		"@heroicons/react": "^2.1.5",
 		"@popperjs/core": "^2.11.8",
 		"@reach/alert-dialog": "^0.18.0",
 		"capacitor-widgetsbridge-plugin": "^0.1.1",

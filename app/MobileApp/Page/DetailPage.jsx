@@ -21,7 +21,7 @@ export default function DetailPage() {
 	return (
 		<div>
 			<PageHeader />
-			<div className="p-5">{renderPage()}</div>
+			{renderPage()}
 		</div>
 	);
 }

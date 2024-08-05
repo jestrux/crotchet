@@ -6,6 +6,7 @@ export default function NavButton({
 	action,
 	className,
 	inShareSheet = false,
+	onClick: _onClick,
 }) {
 	const { onClick } = useActionClick(action, {
 		propagate: true,
@@ -13,7 +14,7 @@ export default function NavButton({
 
 	return (
 		<button
-			onClick={onClick}
+			onClick={_onClick ? _onClick : onClick}
 			className={clsx(
 				"relative w-full text-left outline:focus-none flex items-center gap-2 text-base leading-none disabled:opacity-50",
 				vertical

@@ -195,7 +195,7 @@ export default function MobileNav() {
 
 			<motion.div
 				ref={scope}
-				className="fixed inset-x-0 max-w-xl mx-auto bottom-0 bg-stone-100/85 dark:bg-card/85 backdrop-blur-sm overflow-hidden z-50"
+				className="fixed inset-x-0 max-w-xl mx-auto bottom-0 bg-stone-100/95 dark:bg-card/85 backdrop-blur-sm overflow-hidden z-50"
 				style={{
 					bottom: expanded
 						? `calc(-35vh + ${56}px + env(safe-area-inset-bottom) * 0.6)`
@@ -228,14 +228,13 @@ export default function MobileNav() {
 					if (delta >= 0.2) setExpanded(!expanded);
 				}}
 			>
-				<div>
-					<motion.div
-						className="m-3 relative border dark:border border-stroke shadow-sm rounded-full"
-						style={{
-							opacity: ratio,
-							pointerEvents: "none",
-						}}
-					>
+				<motion.div
+					style={{
+						opacity: ratio,
+						pointerEvents: !hidePinnedMenu ? "none" : "",
+					}}
+				>
+					<div className="m-3 relative border dark:border border-stroke shadow-sm rounded-full">
 						<svg
 							className="absolute top-0 left-3 bottom-0 my-auto size-5 opacity-30"
 							viewBox="0 0 24 24"
@@ -255,13 +254,13 @@ export default function MobileNav() {
 							className="h-12 pl-10 w-full text-lg/none bg-card dark:bg-content/5 text-content/50 border-none ring-transparent focus:ring-0 rounded-full placeholder:text-content/40 focus:outline-none"
 							placeholder="Search..."
 						/>
-					</motion.div>
+					</div>
 
 					<NavActions
 						expanded={expanded}
 						onCollapse={() => setExpanded(false)}
 					/>
-				</div>
+				</motion.div>
 			</motion.div>
 
 			<div

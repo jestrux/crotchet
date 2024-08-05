@@ -5,20 +5,22 @@ registerAction("clipboard", {
 	mobileOnly: true,
 	handler: async () => {
 		try {
-			const { type, value } = await window.readClipboard();
-			const { payload, preview } = window.processShareData(value, type, {
-				fromClipboard: true,
-			});
+			const { type, value } = await readClipboard();
+			const { payload, preview } =
+				processShareData(value, type, {
+					fromClipboard: true,
+				}) || {};
 
-			if (!payload) return window.showToast("Nothing in clipboard");
+			if (!payload) return showToast("Nothing in clipboard");
 
-			return window.openActionSheet({
+			return openActionSheet({
 				title: "Select an action",
 				payload,
 				preview,
 			});
 		} catch (error) {
-			window.showToast("Error: " + error);
+			showToast(error);
+			// console.log("Clipboard error: ", error);
 		}
 	},
 });
@@ -117,8 +119,15 @@ registerAction("remote", {
 	global: true,
 	mobileOnly: true,
 	handler: async () =>
-		window.openActionSheet({
+		openActionSheet({
 			title: "Remote",
 			content: "Remote apps will go here...",
 		}),
+});
+
+registerAction("searchHeroIcons", {
+	global: true,
+	shortcut: "Shift+Alt+H",
+	url: `crotchet://search/heroIcons`,
+	tags: ["svg", "icon", "search"],
 });

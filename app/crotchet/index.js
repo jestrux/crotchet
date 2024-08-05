@@ -82,3 +82,33 @@ export const globalActions = ({ share = false, desktopShortcuts } = {}) =>
 			return true;
 		})
 		.map(([, value]) => value);
+
+export const registerWidget = (name, widget) => {
+	const {
+		resolve,
+		supportedSizes = "*",
+		background,
+		color,
+		icon,
+		title,
+		actions,
+		content,
+		actionButton,
+	} = widget;
+
+	window.widgets[name] = {
+		_id: randomId(),
+		resolve,
+		supportedSizes,
+		background,
+		color,
+		icon,
+		name,
+		title,
+		actions,
+		content,
+		actionButton,
+	};
+
+	dispatch("widgets-updated");
+};

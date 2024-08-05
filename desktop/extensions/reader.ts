@@ -1,11 +1,59 @@
 import "../@types/index";
 
+registerWidget("readingList", {
+	title: "Reader",
+	resolve: async () => {
+		const res = await sourceGet(
+			{ handler: () => queryDb("reader") },
+			{ orderBy: "_index,desc" }
+		);
+		return res?.map((item) => {
+			const isVideo =
+				item.url?.toLowerCase().indexOf("videos") != -1 ||
+				item.url?.toLowerCase().indexOf("youtube") != -1 ||
+				item.group?.toLowerCase().indexOf("watch") != -1;
+
+			return {
+				...item,
+				...(isVideo
+					? { video: item.image || "placeholder" }
+					: { image: item.image || "placeholder" }),
+				title: item.title || "Untitled" + (" " + item.group),
+				subtitle: item.description,
+				tags: [item.group],
+			};
+		});
+	},
+	filter: () => {
+		return {
+			field: "group",
+			choices: [
+				{ label: "All", value: "" },
+				"📺 Watch",
+				"🧪 Learn",
+				"🎧 Listen",
+				"🌎 General",
+			],
+			defaultValue: "",
+		};
+	},
+	content: UI.List,
+	actionButton: () => {
+		return { label: "Add Entry", icon: UI.Icon("add"), handler: () => {} };
+	},
+	listenForUpdates: (callback = () => {}) => {
+		const event = "firebase-table-updated:readingList";
+		window.addEventListener(event, callback, false);
+		return () => window.removeEventListener(event, callback, false);
+	},
+});
+
 registerAction("addToReadingList", {
 	label: "Add to reading list",
 	context: "share",
 	match: ({ url }) => url?.toString().length,
 	handler: async (payload) => {
-		alert(`${JSON.stringify(payload)} - reading list!!!`);
+		showAlert(`${JSON.stringify(payload)} - reading list!!!`);
 		// return withLoader(async () => {
 		// 	// successMessage,
 		// 	// errorMessage,

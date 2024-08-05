@@ -213,10 +213,7 @@ export default function PageActionBar() {
 								if (action) {
 									dispatch("action-selected", value);
 
-									onActionClick(action)(
-										{ pageData },
-										window.__crotchet
-									);
+									onActionClick(action)({ pageData });
 								}
 							}}
 							trigger={

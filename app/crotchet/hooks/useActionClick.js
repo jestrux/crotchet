@@ -47,14 +47,14 @@ export const useActionClick = (
 	const loadingRef = useRef();
 	const [loading, setLoading] = useState(false);
 
-	const onClick = async (e) => {
+	const onClick = async (...args) => {
 		if (!action) return null;
 
 		loadingRef.current = setTimeout(() => {
 			setLoading(true);
 		}, 500);
 
-		await onActionClick(action, { propagate, actionTypeMap })(e);
+		await onActionClick(action, { propagate, actionTypeMap })(...args);
 
 		setLoading(false);
 

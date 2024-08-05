@@ -9,7 +9,7 @@ import { dispatch, isReactComponent, randomId } from "@/crotchet/utils";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { useOnInit } from "@/crotchet/hooks";
 
-const ToastMessage = ({ message, onClose, duration = 2000 }) => {
+const ToastMessage = ({ message, onClose, duration = 3000 }) => {
 	const toastTimerRef = useRef();
 
 	useOnInit(() => {
@@ -22,7 +22,7 @@ const ToastMessage = ({ message, onClose, duration = 2000 }) => {
 
 	return (
 		<div
-			className="fixed inline-flex items-center top-14 h-7 px-3 z-[999999] bg-content/95 text-on-content text-xs drop-shadow-sm rounded-full -translate-x-1/2 left-1/2"
+			className="fixed inline-flex items-center top-14 h-7s py-2 px-3 z-[999999] bg-content/95 text-on-content text-xs drop-shadow-sm rounded-full -translate-x-1/2 left-1/2"
 			style={{
 				marginTop: "env(safe-area-inset-top)",
 			}}
@@ -155,6 +155,7 @@ export function useAlerts() {
 	};
 
 	const showAlert = (alert) => {
+		alert = typeof alert == "string" ? { message: alert } : alert;
 		const promise = new Promise((resolve) => {
 			const oldCallback = alert.callback || ((data) => data);
 			alert.callback = (data) => resolve(oldCallback(data));

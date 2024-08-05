@@ -16,9 +16,8 @@ export default function useDataLoader({
 					? await handler({ fromRefetch })
 					: handler;
 
-				if (!fromRefetch) return onSuccess(res);
-
-				onUpdate(res);
+				if (!fromRefetch) onSuccess(res);
+				else onUpdate(res);
 			} catch (error) {
 				throw Error(error || "Unkown error!");
 			}
