@@ -12,7 +12,13 @@ import RegularListItem from "../components/ListItem";
 
 export function List({ data } = {}) {
 	if (!data?.length) return null;
-	return data.map((item) => <RegularListItem key={item._id} {...item} />);
+	return (
+		<div className="px-3 relative size-full">
+			{data.map((item) => (
+				<RegularListItem key={item._id} {...item} />
+			))}
+		</div>
+	);
 }
 
 const IconMap = {

@@ -99,8 +99,8 @@ export default function Widget({
 	const actionButton = evaluate(_actionButton, { data, loading }, []);
 
 	const aspectRatio = {
-		small: "1/1",
-		wide: "2/1",
+		small: "1/0.75",
+		wide: "2/0.8",
 		large: "4/1",
 	}[size || "wide"];
 
@@ -181,7 +181,6 @@ export default function Widget({
 					style={{
 						background: !background?.length ? "" : background,
 						color: color?.length ? color : "",
-						padding: "0.35rem 0.875rem",
 						aspectRatio,
 					}}
 				>
