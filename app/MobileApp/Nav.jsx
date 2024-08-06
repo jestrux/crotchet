@@ -19,7 +19,6 @@ export const BottomNavButton = ({
 	onClick,
 	onHold,
 }) => {
-	// const icon = apps?.[page]?.icon;
 	const activeIcon = _activeIcon || icon;
 	const activeClass =
 		"bg-content/5 dark:bg-content/10 border-content/5 dark:border-content/15 text-content";
@@ -131,7 +130,7 @@ export default function MobileNav() {
 		},
 		{ action: "" },
 	]);
-	const [hidePinnedMenu, setHidePinnedMenu] = useState(false);
+	const [dragging, setDragging] = useState(false);
 	const [currentPage, setCurrentPage] = useState("home");
 	const [expanded, _setExpanded] = useState(false);
 	const y = useMotionValue(0);
@@ -176,7 +175,6 @@ export default function MobileNav() {
 			inputRef.current.style.pointerEvents = "";
 		}
 
-		setHidePinnedMenu(newValue);
 		_setExpanded(newValue);
 	};
 
@@ -214,24 +212,21 @@ export default function MobileNav() {
 					bounceStiffness: 20000,
 					bounceDamping: 20000,
 				}}
-				// dragElastic={{
-				// 	top: !expanded ? 0.1 : false,
-				// 	bottom: !expanded ? false : 0.1,
-				// }}
 				onDrag={() => {
 					var delta = ratio.get();
-					if (expanded && delta >= 0.2) inputRef.current.blur();
-					setHidePinnedMenu(true);
+					if (expanded && delta >= 0.02) inputRef.current.blur();
+					setDragging(delta >= 0.02);
 				}}
 				onDragEnd={() => {
 					var delta = ratio.get();
-					if (delta >= 0.2) setExpanded(!expanded);
+					if (delta >= 0.02) setExpanded(!expanded);
+					setDragging(false);
 				}}
 			>
 				<motion.div
 					style={{
 						opacity: ratio,
-						pointerEvents: !hidePinnedMenu ? "none" : "",
+						pointerEvents: expanded ? "none" : "",
 					}}
 				>
 					<div className="m-3 relative border dark:border border-stroke shadow-sm rounded-full">
@@ -266,7 +261,7 @@ export default function MobileNav() {
 			<div
 				className={clsx(
 					"pointer-events-none z-50 fixed inset-x-8 bottom-0 flex items-center justify-between gap-4 transition",
-					hidePinnedMenu && "opacity-0"
+					(expanded || dragging) && "opacity-0"
 				)}
 				style={{
 					height: "56px",
@@ -279,7 +274,7 @@ export default function MobileNav() {
 						action={item.action}
 						icon={item.icon}
 						activeIcon={item.activeIcon}
-						disabled={hidePinnedMenu}
+						disabled={expanded}
 						selected={currentPage == item.action}
 						// onHold={
 						// 	page == "home" && currentPage == page
