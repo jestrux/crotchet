@@ -38,9 +38,7 @@ registerWidget("readingList", {
 		};
 	},
 	content: UI.List,
-	actionButton: () => {
-		return { label: "Add Entry", icon: UI.Icon("add"), handler: () => {} };
-	},
+	actions: [{ label: "Add Entry", icon: UI.Icon("add"), handler: () => {} }],
 	listenForUpdates: (callback = () => {}) => {
 		const event = "firebase-table-updated:readingList";
 		window.addEventListener(event, callback, false);

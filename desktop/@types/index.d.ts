@@ -84,7 +84,20 @@ declare var registerWidget: (
 		handler?: (payload: any) => PromiseLike<any>;
 		title?: String | undefined;
 		icon?: String | undefined;
-		actions?: [] | undefined;
+		actions?:
+			| {
+					label: string;
+					icon: typeof UI.Icon;
+					handler: (payload: any) => any;
+			  }[]
+			| ((payload: any) =>
+					| {
+							label: string;
+							icon: typeof UI.Icon;
+							handler: (payload: any) => any;
+					  }[]
+					| null)
+			| undefined;
 		supportedSizes?: String | undefined;
 		background?: String | undefined;
 		color?: String | undefined;
@@ -97,8 +110,16 @@ declare var registerWidget: (
 			| string
 			| undefined;
 		actionButton?:
-			| { label: string; handler: (payload: any) => any }
-			| ((payload: any) => {})
+			| {
+					label: string;
+					icon: typeof UI.Icon;
+					handler: (payload: any) => any;
+			  }
+			| ((payload: any) => {
+					label: string;
+					icon: typeof UI.Icon;
+					handler: (payload: any) => any;
+			  })
 			| undefined;
 		onClick?: { [key: string]: any } | undefined;
 	}
