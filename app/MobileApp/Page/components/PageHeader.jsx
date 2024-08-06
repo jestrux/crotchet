@@ -5,52 +5,79 @@ import useStickyObserver from "../useStickyObserver";
 import { usePageContext } from "@/crotchet/providers/PageProvider";
 
 export default function PageHeader() {
-	const { page, onClose } = usePageContext();
+	const { page, title, onClose } = usePageContext();
 	const navRef = useRef(null);
-	const stuck = useStickyObserver(navRef.current);
+	const stuck = useStickyObserver(navRef.current, -50);
+	const isRootPage = page?.id == "root";
+	const pageHasHeader = title() || !isRootPage;
+	const pageCanPop = typeof onClose == "function" && !isRootPage;
+
+	if (!pageHasHeader) {
+		return (
+			<div
+				className={clsx(
+					"sticky top-0 bg-canvas/20 backdrop-blur pt-[env(safe-area-inset-top)] z-[999]"
+				)}
+			></div>
+		);
+	}
 
 	return (
 		<div
 			ref={navRef}
-			className={clsx("sticky top-0 z-50 w-full flex flex-col bg-card", {
-				"bg-stone-100/95 sdark:bg-card/95 dark:text-white backdrop-blur":
-					stuck,
+			className={clsx("sticky w-full flex flex-col z-50", {
+				"bg-card": pageHasHeader && stuck,
 			})}
 		>
-			<div
-				className="relative w-full flex flex-col"
-				style={{
-					marginTop: "env(safe-area-inset-top)",
-				}}
-			>
-				<div className="h-16 px-6 w-full flex items-center gap-1">
-					{typeof onClose == "function" && page?.id != "root" && (
-						<button
-							type="button"
-							className="flex-shrink-0 -ml-1.5 mr-2.5 bg-content/10 rounded flex items-center justify-center w-7 h-7"
-							onClick={onClose}
-						>
-							<svg
-								fill="none"
-								viewBox="0 0 24 24"
-								strokeWidth={1.5}
-								stroke="currentColor"
-								className="size-3.5"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
-								/>
-							</svg>
-						</button>
+			{pageHasHeader && (
+				<div
+					className={clsx(
+						"w-full max-w-4xl mx-auto flex flex-col pt-8 mt-[env(safe-area-inset-top)]",
+						{
+							"-translate-x-1": stuck,
+						}
 					)}
+				>
+					<div className="h-16 w-full flex items-center gap-1">
+						{pageCanPop && (
+							<button
+								type="button"
+								className="flex-shrink-0 -ml-1.5 mr-2.5 rounded flex items-center justify-center size-10"
+								onClick={onClose}
+							>
+								<svg
+									className="size-6 opacity-70"
+									fill="none"
+									viewBox="0 0 24 24"
+									strokeWidth={2}
+									stroke="currentColor"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										d="M15.75 19.5 8.25 12l7.5-7.5"
+									/>
+								</svg>
+							</button>
+						)}
 
-					<div className="text-3xl/none font-bold">
-						{page?.title}
+						{stuck ? (
+							<div
+								className={clsx(
+									"text-lg font-bold flex-1 text-center",
+									pageCanPop ? "pr-12" : "pl-2"
+								)}
+							>
+								{page?.title}
+							</div>
+						) : (
+							<div className="px-6 text-3xl font-bold">
+								{page?.title}
+							</div>
+						)}
 					</div>
 				</div>
-			</div>
+			)}
 		</div>
 	);
 }

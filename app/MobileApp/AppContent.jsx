@@ -1,4 +1,3 @@
-import { hideApp } from "@/crotchet/utils";
 import { useAppContext } from "@/crotchet/providers/AppProvider";
 import { useDataLoader } from "@/crotchet/hooks";
 import { Widget } from "@/crotchet/components";
@@ -26,16 +25,19 @@ const HomePage = () => {
 	});
 
 	return (
-		<div className="max-w-4xl mx-auto p-3 grid grid-cols-2 lg:grid-cols-4 gap-3">
-			{/* <div className="mt-2">
-				Preference: {JSON.stringify(pageData?.preferences)}
-			</div> */}
+		<div>
+			<div className="mt-8 mb-6">
+				<h2 className="text-3xl font-bold">Hey Walter,</h2>
+				<p>Here's how things are looking</p>
+			</div>
 
-			{widgets?.map((widget) => (
-				<div key={widget._id} className="col-span-2">
-					<Widget {...widget} />
-				</div>
-			))}
+			<div className="-mx-0.5 grid grid-cols-2 lg:grid-cols-4 gap-3">
+				{widgets?.map((widget) => (
+					<div key={widget._id} className="col-span-2">
+						<Widget {...widget} />
+					</div>
+				))}
+			</div>
 		</div>
 	);
 };
@@ -51,11 +53,7 @@ export default function AppContent() {
 
 	return (
 		<>
-			<Page
-				page={rootPage}
-				isOpen={!pages.length}
-				onClose={() => hideApp()}
-			/>
+			<Page page={rootPage} isOpen={!pages.length} />
 
 			{pages.map((page) => (
 				<Page

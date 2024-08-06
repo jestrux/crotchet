@@ -13,6 +13,7 @@ module.exports = {
 	plugins: ["react-refresh"],
 	rules: {
 		"no-mixed-spaces-and-tabs": "off",
+		"react/no-unescaped-entities": "off",
 		"react/prop-types": "off",
 		"react-refresh/only-export-components": [
 			"warn",

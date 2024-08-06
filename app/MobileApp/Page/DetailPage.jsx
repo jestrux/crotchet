@@ -15,7 +15,7 @@ export default function DetailPage() {
 		// if (pageHasFields) content = <FormPage page={page} />;
 		// return <ActionPage page={page}>{content}</ActionPage>;
 
-		return <div>{content}</div>;
+		return <div className="px-6 py-4 max-w-4xl mx-auto">{content}</div>;
 	};
 
 	return (

@@ -8,3 +8,4 @@ export { default as useOnClickOutside } from "./useOnClickOutside";
 export { useActionClick } from "./useActionClick";
 export { default as useLongPress } from "./useLongPress";
 export { default as useDoubleClick } from "./useDoubleClick";
+export { default as useDebounce } from "./useDebounce";

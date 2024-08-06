@@ -1,6 +1,7 @@
-import { NavButton, MutliGestureButton } from "@/crotchet/components";
+import { NavButton, MutliGestureButton, Input } from "@/crotchet/components";
 import { useDataLoader } from "@/crotchet/hooks";
 import useKeyboard from "@/crotchet/hooks/useKeyboard";
+import { getPreference, sectionedChoices } from "@/crotchet/utils";
 import clsx from "clsx";
 import {
 	motion,
@@ -14,15 +15,16 @@ export const BottomNavButton = ({
 	disabled,
 	icon,
 	action,
+	label,
 	activeIcon: _activeIcon,
 	selected,
 	onClick,
 	onHold,
 }) => {
 	const activeIcon = _activeIcon || icon;
-	const activeClass =
-		"bg-content/5 dark:bg-content/10 border-content/5 dark:border-content/15 text-content";
-	const inActiveClass = "opacity-70 border-transparent";
+	const activeClass = "bg-content/5 border-content/10 text-content/70";
+	const inActiveClass =
+		"bg-content/5 lg:bg-transparent border-transparent text-content/70";
 	const handleClick = () => {
 		if (typeof onClick == "function") onClick();
 	};
@@ -30,12 +32,16 @@ export const BottomNavButton = ({
 	return (
 		<MutliGestureButton
 			className={clsx(
-				"flex-shrink-0 focus:outline-none rounded-full border inline-flex items-center justify-center h-9 w-16 px-2.5 text-center text-xs uppercase font-bold",
+				"flex-shrink-0 focus:outline-none rounded-full border inline-flex items-center justify-center text-center text-sm font-bold",
+				selected
+					? "h-[42px] px-8 gap-2"
+					: "gap-1.5 h-11 w-11 lg:w-auto lg:px-3.5",
+				{ "flex-1": selected && action == "Search" },
 				selected ? activeClass : inActiveClass,
 				disabled ? "" : "pointer-events-auto"
 			)}
 			style={
-				action == "home" && selected
+				action == "Home"
 					? {
 							background:
 								"linear-gradient(45deg, #d3ffff, #f2ddb0)",
@@ -46,15 +52,34 @@ export const BottomNavButton = ({
 			onHold={onHold}
 			onClick={handleClick}
 		>
-			<span className={clsx("size-5", !selected && "opacity-70")}>
+			<span
+				className={clsx(
+					"-ml-0.5",
+					selected ? "size-5" : "size-6 slg:size-5 opacity-70"
+				)}
+			>
 				{selected ? activeIcon : icon}
 			</span>
+
+			{label && (
+				<span
+					className={clsx({
+						"hidden lg:inline": !selected,
+					})}
+				>
+					{label}
+				</span>
+			)}
 		</MutliGestureButton>
 	);
 };
 
-const NavActions = ({ expanded, onCollapse }) => {
-	const { data: actions, refetch } = useDataLoader({
+const NavActions = ({ searchQuery, expanded, onCollapse }) => {
+	const [scrollArea, animate] = useAnimate();
+	const y = useMotionValue(0);
+	const wrapper = useRef(null);
+	const sizeRef = useRef(null);
+	const { data: _actions, refetch } = useDataLoader({
 		handler: window.globalActions,
 		listenForUpdates: (callback = () => {}) => {
 			window.addEventListener("extensions-updated", callback, false);
@@ -67,38 +92,297 @@ const NavActions = ({ expanded, onCollapse }) => {
 
 	useEffect(() => {
 		refetch();
+
+		if (wrapper.current) {
+			sizeRef.current = wrapper.current.getBoundingClientRect();
+
+			if (!expanded) animate([[scrollArea.current, { y: 0 }]]);
+		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [expanded]);
 
-	if (!actions?.length) return null;
+	if (!_actions?.length) return null;
+
+	const actionSections = sectionedChoices(
+		[
+			...[
+				{
+					label: "Add Widgets",
+					handler: () => {},
+					pinned: 1,
+					section: "Home Page",
+				},
+				{
+					label: "Manage Widgets",
+					handler: () => {},
+					pinned: 1,
+					section: "Home Page",
+				},
+				{
+					label: "Customize Navigation",
+					handler: () => {},
+					pinned: 1,
+					section: "Home Page",
+				},
+				{
+					label: "Create Page",
+					handler: () => {},
+					pinned: 1,
+					section: "All Actions",
+				},
+				{
+					label: "Manage Pages",
+					handler: () => {},
+					pinned: 1,
+					section: "All Actions",
+				},
+			],
+			..._actions.map((a) => {
+				return {
+					...a,
+					pinned: 0,
+					section: "All Actions",
+				};
+			}),
+		],
+		searchQuery
+	);
 
 	return (
-		<div className="mt-3" onClick={onCollapse}>
-			{actions.map((action) => {
-				action.icon = (
-					<svg
-						className="mt-0.5 w-4 h-4 opacity-80"
-						fill="none"
-						viewBox="0 0 24 24"
-						strokeWidth={1.5}
-						stroke="currentColor"
-					>
-						<path
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
-						/>
-					</svg>
-				);
+		<div ref={wrapper} className="overflow-hidden">
+			<motion.div
+				ref={scrollArea}
+				drag="y"
+				dragConstraints={
+					sizeRef.current
+						? {
+								top: -sizeRef.current.height + 120,
+								bottom: 0,
+						  }
+						: wrapper
+				}
+				dragElastic={0}
+				onClick={onCollapse}
+				style={{
+					y,
+				}}
+			>
+				{!actionSections?.length && searchQuery?.length > 0 && (
+					<div className="rounded relative cursor-default select-none py-8 truncate text-content/30 text-center font-medium">
+						No results
+					</div>
+				)}
+				{actionSections.map(([section, actions], index) => {
+					return (
+						<div
+							key={section + "" + index}
+							className={clsx({
+								"mb-4": index != actionSections.length - 1,
+							})}
+						>
+							{section && section != "undefined" && (
+								<span className="mt-5 mb-1 uppercase tracking-wide text-xs font-semibold opacity-50 px-7 flex items-center">
+									{section}
+								</span>
+							)}
 
-				return (
-					<NavButton
-						className="px-4"
-						key={action._id}
-						action={action}
+							{actions.map((action) => {
+								action.icon = (
+									<svg
+										className="mt-0.5 size-[18px] opacity-80"
+										fill="none"
+										viewBox="0 0 24 24"
+										strokeWidth={1.5}
+										stroke="currentColor"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
+										/>
+									</svg>
+								);
+
+								return (
+									<NavButton
+										className="px-6 gap-[11px]"
+										key={action._id}
+										action={action}
+									/>
+								);
+							})}
+						</div>
+					);
+				})}
+				{/* <KeyboardPlaceholder /> */}
+			</motion.div>
+		</div>
+	);
+};
+
+const getNavItems = async () => {
+	const pinnedItems = await getPreference("pinnedNavItems", [
+		"Pages",
+		// "Home",
+		"Search",
+		"Profile",
+	]);
+	const navItems = [
+		{
+			icon: (
+				<svg
+					fill="none"
+					viewBox="0 0 24 24"
+					strokeWidth={1.8}
+					stroke="currentColor"
+				>
+					<path
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.121a6.75 6.75 0 0 1 0-9.546m9.546 0a6.75 6.75 0 0 1 0 9.546M5.106 18.894c-3.808-3.807-3.808-9.98 0-13.788m13.788 0c3.808 3.807 3.808 9.98 0 13.788M12 12h.008v.008H12V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
 					/>
-				);
-			})}
+				</svg>
+			),
+			action: "Remote",
+			label: "Remote",
+		},
+		{
+			icon: (
+				<svg
+					fill="none"
+					viewBox="0 0 24 24"
+					strokeWidth={1.5}
+					stroke="currentColor"
+				>
+					<path
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						d="M6 6.878V6a2.25 2.25 0 0 1 2.25-2.25h7.5A2.25 2.25 0 0 1 18 6v.878m-12 0c.235-.083.487-.128.75-.128h10.5c.263 0 .515.045.75.128m-12 0A2.25 2.25 0 0 0 4.5 9v.878m13.5-3A2.25 2.25 0 0 1 19.5 9v.878m0 0a2.246 2.246 0 0 0-.75-.128H5.25c-.263 0-.515.045-.75.128m15 0A2.25 2.25 0 0 1 21 12v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6c0-.98.626-1.813 1.5-2.122"
+					/>
+				</svg>
+			),
+			label: "Pages",
+			action: "Pages",
+		},
+		{
+			icon: (
+				<svg
+					fill="none"
+					viewBox="0 0 24 24"
+					strokeWidth={1.8}
+					stroke="currentColor"
+				>
+					<path
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5-3.9 19.5m-2.1-19.5-3.9 19.5"
+					/>
+				</svg>
+			),
+			action: "Home",
+		},
+		{
+			icon: (
+				<svg
+					fill="none"
+					viewBox="0 0 24 24"
+					strokeWidth={1.8}
+					stroke="currentColor"
+				>
+					<path
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+					/>
+				</svg>
+			),
+			label: "Search",
+			action: "Search",
+		},
+		{
+			icon: (
+				<svg
+					fill="none"
+					viewBox="0 0 24 24"
+					strokeWidth={1.8}
+					stroke="currentColor"
+				>
+					<path
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"
+					/>
+				</svg>
+			),
+			action: "Customize",
+			label: "Customize",
+		},
+		{
+			icon: (
+				<svg viewBox="0 0 24 24" fill="currentColor">
+					<path
+						fillRule="evenodd"
+						d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"
+						clipRule="evenodd"
+					/>
+				</svg>
+			),
+			action: "Profile",
+			label: "Profile",
+		},
+	];
+
+	return navItems.filter((item) => pinnedItems.includes(item.action));
+};
+
+const NavItems = ({ expanded, dragging, onExpand }) => {
+	const { data: items } = useDataLoader({
+		handler: getNavItems,
+	});
+
+	if (!items) return null;
+
+	return (
+		<div
+			className={clsx(
+				"border dark:border border-content/5 shadow-sm bg-stone-100/95 dark:bg-card/85 backdrop-blur-sm pointer-events-none z-50 fixed left-0 lg:left-1/2 lg:-translate-x-1/2 right-0 lg:right-auto min-w-96 px-2 bottom-0 lg:bottom-8 lg:mb-[env(safe-area-inset-bottom)] mx-auto lg:rounded-full overflow-hidden",
+				(expanded || dragging) && "opacity-0"
+			)}
+		>
+			<div className="h-10 lg:h-14 px-3 lg:px-0 pt-3.5 lg:pt-0 mb-[env(safe-area-inset-bottom)] lg:mb-0 flex items-center justify-between gap-4 lg:gap-2 max-w-sm mx-auto">
+				{items.map((item, index) => {
+					const isMainAction = ["home", "search"].includes(
+						item.action?.toLowerCase()
+					);
+					return (
+						<BottomNavButton
+							key={item.action + index}
+							{...item}
+							disabled={expanded}
+							selected={isMainAction}
+							// onHold={
+							// 	page == "home" && currentPage == page
+							// 		? () =>
+							// 				openUrl(
+							// 					"crotchet://action/remote"
+							// 				)
+							// 		: null
+							// }
+							onClick={() => {
+								if (isMainAction) onExpand();
+								else {
+									window.openActionSheet({
+										title: item.action,
+										content:
+											item.action +
+											" details will go here...",
+									});
+								}
+							}}
+						/>
+					);
+				})}
+			</div>
 		</div>
 	);
 };
@@ -108,30 +392,8 @@ export default function MobileNav() {
 
 	const [scope, animate] = useAnimate();
 	const inputRef = useRef(null);
-	const [navItems] = useState([
-		{ action: "" },
-		{
-			icon: (
-				<svg
-					fill="none"
-					viewBox="0 0 24 24"
-					strokeWidth={1.8}
-					stroke="currentColor"
-					className="h-5"
-				>
-					<path
-						strokeLinecap="round"
-						strokeLinejoin="round"
-						d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5-3.9 19.5m-2.1-19.5-3.9 19.5"
-					/>
-				</svg>
-			),
-			action: "home",
-		},
-		{ action: "" },
-	]);
+	const [searchQuery, setSearchQuery] = useState("");
 	const [dragging, setDragging] = useState(false);
-	const [currentPage, setCurrentPage] = useState("home");
 	const [expanded, _setExpanded] = useState(false);
 	const y = useMotionValue(0);
 	const ratio = useTransform(
@@ -154,8 +416,17 @@ export default function MobileNav() {
 		}, 100);
 	};
 
+	const handleClear = () => {
+		setSearchQuery("");
+
+		const input = inputRef.current;
+
+		if (input?.getAttribute("is-focused")) inputRef.current?.focus();
+	};
+
 	const handleCollapse = () => {
 		inputRef.current.blur();
+		setSearchQuery("");
 
 		setTimeout(() => {
 			const res = animate([[scope.current, { y: 300, dur: 0.5 }]]);
@@ -191,13 +462,36 @@ export default function MobileNav() {
 				onClick={handleCollapse}
 			/>
 
+			<style>
+				{
+					/*css*/ `
+					.bottom-nav {
+						--inset-bottom: calc(56px + env(safe-area-inset-bottom) * 0.6);
+						bottom: calc(-100vh + var(--inset-bottom));
+					}
+					.bottom-nav.expanded {
+						bottom: calc(-35vh + var(--inset-bottom));
+					}
+
+					@media (min-width: 1024px) {
+						.bottom-nav:not(.expanded) {
+							--inset-bottom: calc(100px + env(safe-area-inset-bottom) * 0.6);
+						}
+					}
+				`
+				}
+			</style>
+
 			<motion.div
 				ref={scope}
-				className="fixed inset-x-0 max-w-xl mx-auto bottom-0 bg-stone-100/95 dark:bg-card/85 backdrop-blur-sm overflow-hidden z-50"
+				className={clsx(
+					"bottom-nav fixed inset-x-0 mx-auto z-50",
+					{ expanded: expanded },
+					dragging || expanded
+						? "bg-stone-100/95 dark:bg-card/85 backdrop-blur-sm max-w-xl"
+						: "max-w-96"
+				)}
 				style={{
-					bottom: expanded
-						? `calc(-35vh + ${56}px + env(safe-area-inset-bottom) * 0.6)`
-						: `calc(-100vh + ${56}px + env(safe-area-inset-bottom) * 0.6)`,
 					height: "100vh",
 					y,
 					borderTopLeftRadius: borderRadius,
@@ -226,10 +520,10 @@ export default function MobileNav() {
 				<motion.div
 					style={{
 						opacity: ratio,
-						pointerEvents: expanded ? "none" : "",
+						pointerEvents: !expanded ? "none" : "",
 					}}
 				>
-					<div className="m-3 relative border dark:border border-stroke shadow-sm rounded-full">
+					<div className="mt-3 mx-3 relative border dark:border border-stroke shadow-sm rounded-full">
 						<svg
 							className="absolute top-0 left-3 bottom-0 my-auto size-5 opacity-30"
 							viewBox="0 0 24 24"
@@ -244,54 +538,44 @@ export default function MobileNav() {
 							/>
 						</svg>
 
-						<input
+						<Input
 							ref={inputRef}
 							className="h-12 pl-10 w-full text-lg/none bg-card dark:bg-content/5 text-content/50 border-none ring-transparent focus:ring-0 rounded-full placeholder:text-content/40 focus:outline-none"
 							placeholder="Search..."
+							value={searchQuery}
+							onChange={setSearchQuery}
 						/>
+
+						{searchQuery && (
+							<button
+								className="absolute -inset-y-0.5 right-0 aspect-[1/1] flex items-center justify-center"
+								onClick={handleClear}
+							>
+								<svg
+									className="w-4 opacity-50"
+									fill="none"
+									viewBox="0 0 24 24"
+									strokeWidth={2}
+									stroke="currentColor"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										d="M6 18 18 6M6 6l12 12"
+									></path>
+								</svg>
+							</button>
+						)}
 					</div>
 
 					<NavActions
-						expanded={expanded}
+						{...{ expanded, searchQuery }}
 						onCollapse={() => setExpanded(false)}
 					/>
 				</motion.div>
 			</motion.div>
 
-			<div
-				className={clsx(
-					"pointer-events-none z-50 fixed inset-x-8 bottom-0 flex items-center justify-between gap-4 transition",
-					(expanded || dragging) && "opacity-0"
-				)}
-				style={{
-					height: "56px",
-					paddingBottom: "env(safe-area-inset-bottom)",
-				}}
-			>
-				{navItems.map((item, index) => (
-					<BottomNavButton
-						key={item.action + index}
-						action={item.action}
-						icon={item.icon}
-						activeIcon={item.activeIcon}
-						disabled={expanded}
-						selected={currentPage == item.action}
-						// onHold={
-						// 	page == "home" && currentPage == page
-						// 		? () =>
-						// 				openUrl(
-						// 					"crotchet://action/remote"
-						// 				)
-						// 		: null
-						// }
-						onClick={() => {
-							if (currentPage != item.action)
-								setCurrentPage(item.action);
-							else if (item.action == "home") handleExpand();
-						}}
-					/>
-				))}
-			</div>
+			<NavItems onExpand={handleExpand} {...{ expanded, dragging }} />
 		</>
 	);
 }

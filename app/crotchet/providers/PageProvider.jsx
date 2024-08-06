@@ -283,6 +283,12 @@ export default function PageProvider({
 					onReady,
 					onDataUpdated,
 					onEscape,
+					title: () => {
+						const title = page?.title;
+						return typeof title == "function"
+							? title(contextInfo)
+							: title;
+					},
 					content: () => {
 						const content = page?.content;
 						return typeof content == "function"

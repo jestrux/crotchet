@@ -35,6 +35,5 @@ const IconMap = {
 
 export function Icon(icon, size = 3.5) {
 	const Icon = IconMap[icon] || IconMap.list;
-
-	return <Icon className={`size-${size}`} />;
+	return <Icon className={`size-${size}`} strokeWidth={2.5} />;
 }
