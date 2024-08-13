@@ -27,11 +27,33 @@ export default function useDataLoader({
 		{ delayLoader }
 	);
 
+	const listenForEvents = (events) => {
+		if (!events?.length) return;
+
+		events.forEach((event) =>
+			window.addEventListener(event, refetch, false)
+		);
+
+		return () =>
+			events.forEach((event) =>
+				window.removeEventListener(event, refetch, false)
+			);
+	};
+
 	useEffect(() => {
 		let clearUpdateWatcher;
 
 		if (typeof listenForUpdates == "function")
 			clearUpdateWatcher = listenForUpdates(() => refetch());
+		else if (
+			typeof listenForUpdates == "string" ||
+			_.isArray(listenForUpdates)
+		)
+			clearUpdateWatcher = listenForEvents(
+				_.isArray(listenForUpdates)
+					? listenForUpdates
+					: [listenForUpdates]
+			);
 
 		return () => {
 			if (typeof clearUpdateWatcher == "function") clearUpdateWatcher();
