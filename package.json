@@ -8,10 +8,11 @@
 		"build": "npm run config && cd app && npm run build && cd ../",
 		"postbuild": "rm -r ./mobile/build && cp -R ./app/docs/. ./mobile/build && rm -r ./desktop/app && cp -R ./app/docs/. ./desktop/app",
 		"preios": "cd app && npm run build && cd ../ && rm -r ./mobile/build && cp -R ./app/docs/. ./mobile/build",
+		"ios:open": "cd mobile && npx cap open ios",
+		"sync": "cd mobile && npx cap sync",
 		"ios": "npm run config && cd mobile && npx cap run ios",
 		"ios:dev": "NODE_ENV=dev npm run config && cd mobile && npx cap run ios",
 		"predesktop": "cd app && npm run build && cd ../ && rm -r ./desktop/app && cp -R ./app/docs/. ./desktop/app",
-		"desktop": "npm run config && cd mobile && npx cap run ios",
-		"desktop:dev": "cd desktop && npm run dev"
+		"desktop": "cd desktop && npm run dev"
 	}
 }
