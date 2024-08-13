@@ -395,13 +395,19 @@ export const getLinksFromText = (text, first) => {
 
 export const crawlUrl = async (url, name) => {
 	var res = await withCache(
-		name || new URL(url).hostname,
+		name || url.substring(0, 50),
 		fetch(
 			`https://us-central1-letterplace-c103c.cloudfunctions.net/api/crawl/${encodeURIComponent(
 				url
 			)}`
 		).then((res) => res.json())
 	);
+
+	try {
+		res = JSON.parse(res);
+	} catch (error) {
+		//
+	}
 
 	if (res?.meta) {
 		res.meta = cleanObject(res.meta);
@@ -430,16 +436,11 @@ export const processShareData = (value, type = "text", meta = {}) => {
 		preview.subtitle = type;
 		preview.type = type;
 
-		payload = {
-			image: value,
-		};
+		payload.image = value;
 	}
 
-	if (isValidUrl(value)) {
-		payload = {
-			url: value,
-		};
-	} else payload.url = getLinksFromText(value, true);
+	if (isValidUrl(value)) payload.url = value;
+	else payload.url = getLinksFromText(value, true);
 
 	return {
 		payload,
