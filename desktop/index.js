@@ -48,7 +48,7 @@ const createMainWindow = () => {
 	);
 
 	if (isDev) {
-		const openDevTools = false;
+		const openDevTools = true;
 		if (openDevTools) {
 			mainWindow.webContents.openDevTools({ mode: "detach" });
 			setTimeout(() => crotchetApp.toggleWindow(true), 500);

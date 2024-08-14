@@ -17,11 +17,7 @@ const HomePage = () => {
 
 			return [];
 		},
-		listenForUpdates: (callback = () => {}) => {
-			const event = "widgets-updated";
-			window.addEventListener(event, callback, false);
-			return () => window.removeEventListener(event, callback, false);
-		},
+		listenForUpdates: "widgets-updated",
 	});
 
 	return (

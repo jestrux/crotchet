@@ -81,13 +81,7 @@ const NavActions = ({ searchQuery, expanded, onCollapse }) => {
 	const sizeRef = useRef(null);
 	const { data: _actions, refetch } = useDataLoader({
 		handler: window.globalActions,
-		listenForUpdates: (callback = () => {}) => {
-			window.addEventListener("extensions-updated", callback, false);
-
-			return () => {
-				window.addEventListener("extensions-updated", callback, false);
-			};
-		},
+		listenForUpdates: "extensions-updated",
 	});
 
 	useEffect(() => {
@@ -175,7 +169,7 @@ const NavActions = ({ searchQuery, expanded, onCollapse }) => {
 				{actionSections.map(([section, actions], index) => {
 					return (
 						<div
-							key={section + "" + index}
+							key={"section" + index}
 							className={clsx({
 								"mb-4": index != actionSections.length - 1,
 							})}
@@ -206,7 +200,10 @@ const NavActions = ({ searchQuery, expanded, onCollapse }) => {
 								return (
 									<NavButton
 										className="px-6 gap-[11px]"
-										key={action._id}
+										key={
+											action._id ||
+											action.__id + "action-" + index
+										}
 										action={action}
 									/>
 								);
@@ -340,50 +337,58 @@ const NavItems = ({ expanded, dragging, onExpand }) => {
 		handler: getNavItems,
 	});
 
+	const { data: bottomSheetVisible } = useDataLoader({
+		handler: () => _.filter(window.alerts || [], ["type", "sheet"]).length,
+		listenForUpdates: "alerts-changed",
+	});
+
 	if (!items) return null;
 
 	return (
-		<div
-			className={clsx(
-				"border dark:border border-content/5 shadow-sm bg-stone-100/95 dark:bg-card/85 backdrop-blur-sm pointer-events-none z-50 fixed left-0 lg:left-1/2 lg:-translate-x-1/2 right-0 lg:right-auto min-w-96 px-2 bottom-0 lg:bottom-8 lg:mb-[env(safe-area-inset-bottom)] mx-auto lg:rounded-full overflow-hidden",
-				(expanded || dragging) && "opacity-0"
-			)}
+		<motion.div
+			className="pointer-events-none z-50 fixed inset-x-0 bottom-0 lg:bottom-8 lg:mb-[env(safe-area-inset-bottom)] flex items-center justify-center"
+			animate={{
+				opacity: expanded || dragging || bottomSheetVisible ? 0 : 1,
+				y: expanded || dragging || bottomSheetVisible ? "10%" : 0,
+			}}
 		>
-			<div className="h-10 lg:h-14 px-3 lg:px-0 pt-3.5 lg:pt-0 mb-[env(safe-area-inset-bottom)] lg:mb-0 flex items-center justify-between gap-4 lg:gap-2 max-w-sm mx-auto">
-				{items.map((item, index) => {
-					const isMainAction = ["home", "search"].includes(
-						item.action?.toLowerCase()
-					);
-					return (
-						<BottomNavButton
-							key={item.action + index}
-							{...item}
-							disabled={expanded}
-							selected={isMainAction}
-							// onHold={
-							// 	page == "home" && currentPage == page
-							// 		? () =>
-							// 				openUrl(
-							// 					"crotchet://action/remote"
-							// 				)
-							// 		: null
-							// }
-							onClick={() => {
-								if (isMainAction) onExpand();
-								else {
-									window.openActionSheet({
-										title: item.action,
-										content:
-											item.action +
-											" details will go here...",
-									});
-								}
-							}}
-						/>
-					);
-				})}
+			<div className="border dark:border border-content/5 shadow-sm bg-stone-100/95 dark:bg-card/85 backdrop-blur-sm w-full lg:w-auto min-w-96 px-2 lg:rounded-full overflow-hidden">
+				<div className="h-10 lg:h-14 px-3 lg:px-0 pt-3.5 lg:pt-0 mb-[env(safe-area-inset-bottom)] lg:mb-0 flex items-center justify-between gap-4 lg:gap-2 max-w-sm mx-auto">
+					{items.map((item, index) => {
+						const isMainAction = ["home", "search"].includes(
+							item.action?.toLowerCase()
+						);
+						return (
+							<BottomNavButton
+								key={item.action + "" + index}
+								{...item}
+								disabled={expanded}
+								selected={isMainAction}
+								// onHold={
+								// 	page == "home" && currentPage == page
+								// 		? () =>
+								// 				openUrl(
+								// 					"crotchet://action/remote"
+								// 				)
+								// 		: null
+								// }
+								onClick={() => {
+									if (isMainAction) onExpand();
+									else {
+										window.openActionSheet({
+											title: item.action,
+											content:
+												item.action +
+												" details will go here...",
+										});
+									}
+								}}
+							/>
+						);
+					})}
+				</div>
 			</div>
-		</div>
+		</motion.div>
 	);
 };
 

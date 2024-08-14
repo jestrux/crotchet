@@ -1,5 +1,10 @@
 import { useRef } from "react";
-import { AlertDialog, AlertDialogLabel } from "@reach/alert-dialog";
+import {
+	AlertDialog,
+	AlertDialogDescription,
+	AlertDialogLabel,
+} from "@reach/alert-dialog";
+import useKeyboard from "@/crotchet/hooks/useKeyboard";
 
 function Button({
 	type = "button",
@@ -27,7 +32,7 @@ function Button({
 export const MessageModal = ({
 	isOpen,
 	size,
-	title,
+	title = "Modal Title",
 	message,
 	action = "Okay",
 	actionStyle = "outline", //"primary"
@@ -55,6 +60,8 @@ export const MessageModal = ({
 			onClose={handleClose}
 			noPadding
 			size={size}
+			centered={true}
+			noHeading
 		>
 			<div
 				className={`pier-message-modal flex-grow-1 relative border-t-4 pb-2 ${
@@ -92,14 +99,12 @@ export const MessageModal = ({
 
 				<div className="mt-4">
 					<div className="text-center md:mt-5">
-						{title?.length && (
-							<h3
-								className="text-lg leading-6 font-bold px-4"
-								id="modal-title"
-							>
-								{title}
-							</h3>
-						)}
+						<h3
+							className="text-lg leading-6 font-bold px-4"
+							id="modal-title"
+						>
+							{title}
+						</h3>
 						<div className="md:mt-2">
 							{(children || message?.length) && (
 								<p className="text-base opacity-70 max-w-md mx-auto px-6">
@@ -134,12 +139,15 @@ export const MessageModal = ({
 const Modal = ({
 	children,
 	className = "",
-	label = "Content",
+	title,
 	size = "xl",
 	dismissible = false,
 	showOverlayBg = true,
+	centered = false,
 	onClose,
+	noHeading,
 }) => {
+	// useKeyboard({ mode: "native" });
 	const cancelRef = useRef();
 
 	return (
@@ -147,16 +155,19 @@ const Modal = ({
 			onDismiss={dismissible ? onClose : () => {}}
 			isOpen={true}
 			leastDestructiveRef={cancelRef}
-			className={`fixed overflow-y-auto inset-0 z-10 flex items-center justify-center py-16
+			className={`fixed overflow-hidden inset-0 z-50 flex justify-center py-16 px-3
+				${centered ? "items-center" : "items-start"}
                 ${showOverlayBg && "bg-black/20 dark:bg-black/70"}
             `}
 		>
 			<div ref={cancelRef} className="fixed inset-0" onClick={onClose}>
-				<AlertDialogLabel className="hidden">{label}</AlertDialogLabel>
+				<AlertDialogLabel className="hidden">
+					{title || "Some title"}
+				</AlertDialogLabel>
 			</div>
 
 			<div
-				className={`group bg-card text-content border shadow-2xl rounded-lg overflow-hidden w-full relative
+				className={`max-h-full group bg-card text-content border shadow-2xl rounded-lg overflow-hidden overflow-y-auto w-full relative
                     ${className}
                     ${size == "xs" && "max-w-xs"}
                     ${size == "sm" && "max-w-sm"}
@@ -170,7 +181,44 @@ const Modal = ({
 						: "0px 10px 30px -2px var(--shadow-color)",
 				}}
 			>
-				{children}
+				{!noHeading && (onClose || title?.length) && (
+					<div className="sticky bg-card z-10 top-0 h-12 pl-4 pr-2 border-b flex items-center justify-between">
+						<div>
+							<h3
+								className="text-base leading-6 font-bold"
+								id="modal-title"
+							>
+								{title}
+							</h3>
+						</div>
+
+						{onClose && (
+							<button
+								type="button"
+								className="bg-content/[0.08] size-7 flex items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+								onClick={onClose}
+							>
+								<span className="sr-only">Close</span>
+								<svg
+									className="size-4"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+									aria-hidden="true"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth="2"
+										d="M6 18L18 6M6 6l12 12"
+									/>
+								</svg>
+							</button>
+						)}
+					</div>
+				)}
+
+				<AlertDialogDescription>{children}</AlertDialogDescription>
 			</div>
 		</AlertDialog>
 	);

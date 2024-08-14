@@ -4,7 +4,7 @@ const Loader = ({
 	thickness = 7,
 	size = 30,
 	fillParent = false,
-	scrim = false,
+	showScrim = false,
 	scrimColor = "rgba(255, 255, 255, 0.7)",
 }) => {
 	const loader = (
@@ -45,7 +45,7 @@ const Loader = ({
 		return (
 			<span
 				className="absolute inset-0 flex items-center justify-center"
-				style={!scrim ? {} : { background: scrimColor }}
+				style={!showScrim ? {} : { background: scrimColor }}
 			>
 				{loader}
 			</span>

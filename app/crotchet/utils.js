@@ -112,9 +112,13 @@ export const getFromCache = async (key) => {
 };
 
 export const cache = async (key, value) => {
-	if (!value) return value;
-	await saveFile({ name: `__cache/${key}` }, value);
-	return value;
+	try {
+		if (!value) return value;
+		await saveFile({ name: `__cache/${key}` }, value);
+		return value;
+	} catch (error) {
+		//
+	}
 };
 
 export const getUserPreferences = async (fromSave) => {
@@ -238,13 +242,8 @@ export const objectIsEmpty = (obj = {}) => {
 	return !Object.keys(cleanObject(obj ?? {})).length;
 };
 
-export const objectFieldChoices = (choices) => {
-	if (!choices?.length) return [];
-
-	const objectField = (object, field) =>
-		typeof object == "object" ? object?.[field] : object;
-
-	return choices.map((choice) => {
+export const objectFieldChoices = (choices) =>
+	choices.map((choice) => {
 		let label =
 			objectField(choice, "label") ||
 			objectField(choice, "title") ||
@@ -262,7 +261,9 @@ export const objectFieldChoices = (choices) => {
 			...(typeof choice == "object" ? choice : {}),
 		};
 	});
-};
+
+export const objectField = (object, field) =>
+	typeof object == "object" ? object?.[field] : object;
 
 export const sectionedChoices = (choices = [], query, { valuesOnly } = {}) => {
 	if (!choices?.length) return [];
@@ -288,11 +289,40 @@ export const sectionedChoices = (choices = [], query, { valuesOnly } = {}) => {
 		: formattedChoices;
 };
 
+export const dateFromString = (date) => {
+	const parsed = Date.parse(date);
+	if (!isNaN(parsed)) {
+		return parsed;
+	}
+
+	return Date.parse(date.replace(/-/g, "/").replace(/[a-z]+/gi, " "));
+};
+
+export const formatDate = (
+	value,
+	formatting = { month: "short", day: "numeric", year: "numeric" }
+) => {
+	if (!value) return value;
+
+	try {
+		var date =
+			typeof value == "string"
+				? new Date(dateFromString(value))
+				: value?.seconds
+				? value.seconds * 1000
+				: "";
+
+		value = new Intl.DateTimeFormat("en-US", formatting).format(date);
+	} catch (error) {
+		console.log("Date error: ", error, value, typeof value);
+		value = "";
+	}
+
+	return value;
+};
+
 export const isReactComponent = (child) => {
-	return (
-		typeof child === "function" &&
-		String(child).includes("return React.createElement")
-	);
+	return !!child?.$$typeof;
 };
 
 export const isValidUrl = (urlString) => {
@@ -391,30 +421,6 @@ export const getLinksFromText = (text, first) => {
 	if (first) return links?.[0];
 
 	return links;
-};
-
-export const crawlUrl = async (url, name) => {
-	var res = await withCache(
-		name || url.substring(0, 50),
-		fetch(
-			`https://us-central1-letterplace-c103c.cloudfunctions.net/api/crawl/${encodeURIComponent(
-				url
-			)}`
-		).then((res) => res.json())
-	);
-
-	try {
-		res = JSON.parse(res);
-	} catch (error) {
-		//
-	}
-
-	if (res?.meta) {
-		res.meta = cleanObject(res.meta);
-		res.meta.subtitle = res.meta.description;
-	}
-
-	return res;
 };
 
 export const processShareData = (value, type = "text", meta = {}) => {

@@ -1,12 +1,18 @@
 import { useState, Children, cloneElement, useRef } from "react";
 import {
+	dispatch,
+	randomId,
+	isReactComponent,
+	objectFieldChoices,
+} from "@/crotchet/utils";
+import {
 	Modal,
 	MessageModal,
 	Button,
+	ErrorBoundary,
 	ActionSheet,
+	Form,
 } from "@/crotchet/components";
-import { dispatch, isReactComponent, randomId } from "@/crotchet/utils";
-import ErrorBoundary from "../components/ErrorBoundary";
 import { useOnInit } from "@/crotchet/hooks";
 
 const ToastMessage = ({ message, onClose, duration = 3000 }) => {
@@ -22,7 +28,7 @@ const ToastMessage = ({ message, onClose, duration = 3000 }) => {
 
 	return (
 		<div
-			className="fixed inline-flex items-center top-14 h-7s py-2 px-3 z-[999999] bg-content/95 text-on-content text-xs drop-shadow-sm rounded-full -translate-x-1/2 left-1/2"
+			className="fixed inline-flex items-center top-14 py-2 px-3.5 z-[999999] bg-content/95 text-on-content text-sm drop-shadow-sm rounded-full -translate-x-1/2 left-1/2"
 			style={{
 				marginTop: "env(safe-area-inset-top)",
 			}}
@@ -104,11 +110,64 @@ export function AlertsWrapper() {
 					);
 				}
 
+				if (alert.type == "choice-picker") {
+					return (
+						<ActionSheet
+							key={alert.id}
+							inset
+							noHeading={!alert?.title?.length}
+							onClose={alert.close}
+							actions={objectFieldChoices(alert.choices)}
+						/>
+					);
+				}
+
+				if (alert.type == "form") {
+					alert.content = (
+						<div className="mx-px px-4 pt-3 pb-6">
+							<Form
+								data={alert.data}
+								fields={alert.fields}
+								field={alert.field}
+								action={alert.action}
+								onSubmit={async (values) => {
+									values = _.keys(values).includes(
+										"formField"
+									)
+										? values.formField
+										: values;
+
+									if (alert.action?.handler) {
+										try {
+											const res =
+												await alert.action?.handler(
+													values
+												);
+											if (!res)
+												return console.log(
+													"No return..."
+												);
+
+											alert.close(res);
+										} catch (error) {
+											window.showAlert(error);
+											return;
+										}
+									}
+
+									alert.close(values);
+								}}
+							/>
+						</div>
+					);
+				}
+
 				if (alert.content) {
 					return (
 						<Modal
 							dismissible={alert.dismissible ?? true}
 							key={alert.id}
+							title={alert.title}
 							{...props}
 						>
 							{Children.map(alert.content, (child) =>
@@ -132,10 +191,15 @@ export function AlertsWrapper() {
 	);
 }
 
-export function useAlerts() {
+export default function useAlerts() {
 	const [alerts, setAlerts] = useState([]);
 
-	const notifyParent = (id, status) => {
+	const notifyParent = (newValue, id, status) => {
+		window.alerts = newValue;
+		setTimeout(() => {
+			dispatch("alerts-changed");
+		}, 10);
+
 		const spotlightParent = document.querySelector("[data-current-page]");
 
 		if (!spotlightParent) return console.log("No parent found!!");
@@ -150,8 +214,11 @@ export function useAlerts() {
 	};
 
 	const hideAlert = (alertId) => {
-		setAlerts((alerts) => alerts.filter(({ id }) => id !== alertId));
-		notifyParent(alertId, false);
+		setAlerts((alerts) => {
+			const newValue = alerts.filter(({ id }) => id !== alertId);
+			notifyParent(newValue, alertId, false);
+			return newValue;
+		});
 	};
 
 	const showAlert = (alert) => {
@@ -180,9 +247,9 @@ export function useAlerts() {
 				? alerts
 				: alerts.filter(({ id }) => id !== alerts.at(-1)?.id);
 
-			notifyParent(id, true);
-
-			return [...currentValue, alert];
+			const newValue = [...currentValue, alert];
+			notifyParent(newValue, id, false);
+			return newValue;
 		});
 
 		if (typeof alert.onCreate == "function") alert.onCreate(alert);
@@ -233,6 +300,18 @@ export function useAlerts() {
 			type: "sheet",
 		});
 
+	const openChoicePicker = (props) =>
+		showAlert({
+			...(_.isArray(props) ? { choices: props } : props),
+			type: "choice-picker",
+		});
+
+	const openAlertForm = (props) =>
+		showAlert({
+			...props,
+			type: "form",
+		});
+
 	const showToast = (...message) =>
 		showAlert({
 			message: [...message].join(" "),
@@ -247,6 +326,8 @@ export function useAlerts() {
 		hideAlert,
 		openActionDialog,
 		openActionSheet,
+		openChoicePicker,
+		openAlertForm,
 		showToast,
 	};
 }

@@ -14,7 +14,6 @@ export const getterFields = [
 	"searchable",
 	"searchFields",
 	"searchQuery",
-	"filters",
 ];
 
 import useOnInit from "./useOnInit";
@@ -34,7 +33,6 @@ export const sourceGet = async (source, props = {}) => {
 		searchable,
 		searchFields = ["title", "subtitle", "tags"],
 		searchQuery,
-		filters,
 	} = _.pick({ ...source, ...props }, getterFields);
 
 	let handler;
@@ -55,7 +53,7 @@ export const sourceGet = async (source, props = {}) => {
 
 	if (!Array.isArray(res)) return res;
 
-	const validFilters = cleanObject(filters);
+	const validFilters = cleanObject(props.filters || {});
 	if (
 		Object.values(validFilters).length > 0
 		// && ![true, false].includes(source.filterable)
@@ -82,7 +80,7 @@ export const sourceGet = async (source, props = {}) => {
 
 	if (orderBy) res = _.orderBy(res, ...orderBy.split(","));
 
-	if (random || shuffleResults) res = shuffle(shuffle(res));
+	if (random == true || shuffleResults) res = shuffle(shuffle(res));
 
 	if (single || first) return res[0];
 

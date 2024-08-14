@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { openUrl, Loader } from "@/crotchet";
-import { useLongPress } from "@/hooks/useLongPress";
+import { Loader } from "@/crotchet/components";
+import { useLongPress } from "@/crotchet/hooks";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 
 export default function CardListItem({
@@ -23,7 +23,7 @@ export default function CardListItem({
 
 		if (_.isFunction(onHold)) return onHold();
 
-		openUrl(share);
+		window.openUrl(share);
 	});
 
 	const [actionLoading, setActionLoading] = useState(false);
@@ -34,7 +34,7 @@ export default function CardListItem({
 
 		try {
 			if (clickHandlerSet) await Promise.resolve(onClick());
-			else if (url) await Promise.resolve(openUrl(url));
+			else if (url) await Promise.resolve(window.openUrl(url));
 		} catch (error) {
 			//
 		}

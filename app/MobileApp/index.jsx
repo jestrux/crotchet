@@ -4,10 +4,13 @@ import { Share } from "@capacitor/share";
 import { Directory, Encoding, Filesystem } from "@capacitor/filesystem";
 import { App as CapacitorApp } from "@capacitor/app";
 import registerPlatformUtils from "@/crotchet/registerUtils";
-import AppContent from "./AppContent";
 import { openUrl } from "@/crotchet";
 import { SendIntent } from "send-intent";
 import { getLinksFromText, isValidUrl, objectIsEmpty } from "@/crotchet/utils";
+import CrotchetHomePage from "./CrotchetHomePage";
+import AppScaffold from "@/crotchet/providers/AppScaffold";
+import { useCrotchetApp } from "@/crotchet/providers/AppProvider";
+import { Loader } from "@/crotchet/components";
 
 registerPlatformUtils({
 	readClipboard: async () => await Clipboard.read(),
@@ -71,6 +74,7 @@ registerPlatformUtils({
 });
 
 export default function MobileApp() {
+	const { data: app, loading } = useCrotchetApp();
 	const handleShareIntent = async (result, fromOpen) => {
 		// window.showAlert(
 		// 	"Handle share: " + JSON.stringify({ result, fromOpen })
@@ -201,29 +205,15 @@ export default function MobileApp() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	return (
-		<>
-			<div className="pointer-events-none">
-				<div
-					className="dark:hidden bg-cover fixed inset-x-0 bottom-0 bg-top h-1/2 blur"
-					style={{
-						"--tw-blur": "blur(380px)",
-						backgroundImage: `url(img/light-wallpaper.jpg)`,
-					}}
-				></div>
-
-				<div
-					className="hidden dark:block bg-cover bg-center fixed inset-0 blur"
-					style={{
-						"--tw-blur": "blur(150px)",
-						backgroundImage: `url(img/dark-wallpaper.jpg)`,
-					}}
-				></div>
+	if (loading) {
+		return (
+			<div className="py-12">
+				<Loader fillParent />
 			</div>
+		);
+	}
 
-			<div className="relative">
-				<AppContent />
-			</div>
-		</>
-	);
+	if (app?.homePage) return <AppScaffold rootPage={app?.homePage} />;
+
+	return <CrotchetHomePage />;
 }

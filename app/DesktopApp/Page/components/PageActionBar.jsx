@@ -4,7 +4,6 @@ import clsx from "clsx";
 import { dispatch, isValidAction } from "@/crotchet/utils";
 import { Loader } from "@/crotchet/components";
 import { usePageContext } from "@/crotchet/providers/PageProvider";
-import { useAlerts } from "@/crotchet/hooks/useAlerts";
 import { onActionClick } from "@/crotchet/hooks/useActionClick";
 
 import CommandKey from "./CommandKey";
@@ -24,20 +23,16 @@ export default function PageActionBar() {
 		secondaryAction: _secondaryAction,
 		actions: _actions,
 	} = usePageContext();
-	const { confirm } = useAlerts();
 	const actionsButtonRef = useRef();
 
 	const secondaryAction = _secondaryAction();
 	const mainAction = _mainAction();
 	const actions = _actions();
 
-	const handleSecondaryAction = (payload) => {
-		return onActionClick(secondaryAction, { confirm })(payload);
-	};
+	const handleSecondaryAction = (payload) =>
+		onActionClick(secondaryAction)(payload);
 
-	const handleMainAction = (payload) => {
-		return onActionClick(mainAction, { confirm })(payload);
-	};
+	const handleMainAction = (payload) => onActionClick(mainAction)(payload);
 
 	onOpenActionMenu(() => {
 		if (actionsButtonRef.current) actionsButtonRef.current.click();

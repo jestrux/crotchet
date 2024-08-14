@@ -1,0 +1,234 @@
+import { shuffle } from "lodash";
+import { getterFields, sourceGet } from "../hooks/useSourceGet";
+import {
+	camelCaseToSentenceCase,
+	cleanObject,
+	onDesktop,
+	randomId,
+} from "@/crotchet/utils";
+import dataSourceProviders, {
+	getCrotchetDataSourceProvider,
+} from "./dataSourceProviders";
+
+const updateDataSourceWidget = async (name, key, value) => {
+	if (onDesktop()) return;
+
+	const { WidgetsBridgePlugin } = await import(
+		"capacitor-widgetsbridge-plugin"
+	);
+
+	const dataSources = window.dataSources;
+	const validDataSources = Object.keys(dataSources)
+		.filter((key) => ["db"].includes(dataSources[key]?.provider))
+		.join(", ");
+
+	if (!validDataSources.includes(name)) return;
+
+	if (key && value) {
+		try {
+			await WidgetsBridgePlugin.setItem({
+				key: name + key,
+				value: JSON.stringify(
+					_.pick(value, [
+						"video",
+						"image",
+						"title",
+						"subtitle",
+						"url",
+					])
+				),
+				group: "group.tz.co.crotchety",
+			});
+
+			await WidgetsBridgePlugin.reloadTimelines({
+				ofKind: "CrotchetWidget",
+			});
+		} catch (error) {
+			// alert(error);
+		}
+
+		return;
+	}
+
+	try {
+		await WidgetsBridgePlugin.setItem({
+			key: "dataSources",
+			value: validDataSources,
+			group: "group.tz.co.crotchety",
+		});
+	} catch (error) {
+		//
+	}
+
+	const source = dataSources[name];
+
+	if (!_.isFunction(source.get)) return;
+
+	const data = await source.get();
+
+	if (!data.length) return;
+
+	try {
+		await WidgetsBridgePlugin.setItem({
+			key: name + "Stat",
+			value: JSON.stringify({
+				title: source.label,
+				subtitle: data.length + " records",
+			}),
+			group: "group.tz.co.crotchety",
+		});
+	} catch (error) {
+		// console.log("Update widget: error: ", error);
+	}
+
+	const latest = data[0];
+	if (latest?.title) {
+		const latestData = {
+			video: latest.video,
+			image: latest.image,
+			title: latest.title,
+			subtitle: latest.subtitle,
+			url: latest.url,
+		};
+
+		try {
+			await WidgetsBridgePlugin.setItem({
+				key: name + "Latest",
+				value: JSON.stringify(latestData),
+				group: "group.tz.co.crotchety",
+			});
+		} catch (error) {
+			//
+		}
+	}
+
+	const random = shuffle(shuffle(data))[0];
+
+	if (random?.title) {
+		const randomData = {
+			video: random.video,
+			image: random.image,
+			title: random.title,
+			subtitle: random.subtitle,
+			url: random.url,
+		};
+
+		try {
+			await WidgetsBridgePlugin.setItem({
+				key: name + "Random",
+				value: JSON.stringify(randomData),
+				group: "group.tz.co.crotchety",
+			});
+
+			// await await WidgetsBridgePlugin.reloadAllTimelines();
+			await WidgetsBridgePlugin.reloadTimelines({
+				ofKind: "CrotchetWidget",
+			});
+		} catch (error) {
+			//
+		}
+	}
+
+	return;
+};
+
+export default function registerDataSource(provider, name, props = {}) {
+	if (!window.dataSources) window.dataSources = {};
+
+	if (provider.startsWith("crotchet://")) {
+		const _source = getCrotchetDataSourceProvider(
+			provider.replace("crotchet://", ""),
+			name,
+			_.omit(props, getterFields)
+		);
+
+		if (!_source) return;
+
+		props = {
+			...props,
+			..._source,
+			..._.pick(props, getterFields),
+		};
+	}
+
+	const label = camelCaseToSentenceCase(
+		name.replace("-", " ").replace("_", " ")
+	);
+
+	let getter, insertRow, updateRow, deleteRow, listenForUpdates;
+	const sourceProvider = dataSourceProviders(provider, { name, ...props });
+
+	if (typeof sourceProvider == "function") getter = sourceProvider;
+	else {
+		if (typeof props.handler == "function") getter = props.handler;
+		else if (typeof sourceProvider.fetch == "function") {
+			getter = sourceProvider.fetch;
+			insertRow = sourceProvider.insertRow;
+			updateRow = sourceProvider.updateRow;
+			deleteRow = sourceProvider.deleteRow;
+			listenForUpdates = sourceProvider.listenForUpdates;
+		} else return console.error(`Unkown data provider: ${provider}`);
+	}
+
+	const handler = async (payload) => getter(payload);
+
+	const get = ({ shuffle, limit, first, single, ...payload } = {}) =>
+		sourceGet(
+			{
+				handler,
+			},
+			{
+				..._.pick(props, getterFields),
+				shuffle,
+				limit,
+				first,
+				single,
+				...payload,
+			}
+		);
+
+	const latest = async (payload = {}) =>
+		await get({ single: true, ...payload });
+
+	const random = async (payload = {}) => {
+		const res = await get({ random: true, single: true, ...payload });
+		setTimeout(() => {
+			updateDataSourceWidget(name, "Random", res);
+		}, 300);
+		return res;
+	};
+
+	const source = {
+		..._.omit(props, getterFields),
+		_id: randomId(),
+		provider,
+		name,
+		label,
+		..._.pick(props, getterFields),
+		handler,
+		get,
+		random,
+		latest,
+		insertRow,
+		updateRow,
+		deleteRow,
+		listenForUpdates,
+	};
+
+	window.dataSources[name] = source;
+
+	setTimeout(() => {
+		updateDataSourceWidget(name);
+	}, 10);
+
+	const pendingDataSources = window.pendingDataSources?.[name];
+
+	if (pendingDataSources) {
+		pendingDataSources.forEach(([provider, childName, props], index) => {
+			registerDataSource(provider, childName, props);
+			delete window.pendingDataSources[name][index];
+		});
+
+		window.pendingDataSources = cleanObject(window.pendingDataSources);
+	}
+}

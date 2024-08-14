@@ -4,7 +4,8 @@
 	"version": "0.0.0",
 	"type": "module",
 	"scripts": {
-		"ios": "npx cap run ios"
+		"ios": "npx cap run ios",
+		"assets": "npx @capacitor/assets generate"
 	},
 	"dependencies": {
 		"@capacitor/assets": "^3.0.4",

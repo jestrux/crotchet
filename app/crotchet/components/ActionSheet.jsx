@@ -1,167 +1,62 @@
+import { motion } from "framer-motion";
 import { useRef, useState } from "react";
 import { AlertDialog, AlertDialogLabel } from "@reach/alert-dialog";
-
+import { useDataLoader } from "@/crotchet/hooks";
 import {
 	cleanObject,
-	crawlUrl,
 	isValidUrl,
+	objectFieldChoices,
 	objectIsEmpty,
-	randomId,
 } from "@/crotchet/utils";
-import { NavButton, Loader } from "@/crotchet/components";
-import { useDataLoader } from "@/crotchet/hooks";
+import Loader from "@/crotchet/components/Loader";
+import ActionGrid from "@/crotchet/components/ActionGrid";
 
-const ActionSheetContent = ({
-	onClose,
-	payload = {},
-	onChange = () => {},
-	actions: _actions,
-}) => {
-	const [groupFilter, setGroupFilter] = useState();
-	const [sheetProps, setSheetProps] = useState({
-		...payload,
-		actions: [],
-	});
+import clsx from "clsx";
+import { getWebsiteInfo } from "../providers/crawler";
 
-	const { loading } = useDataLoader({
-		handler: () => {
-			if (!objectIsEmpty(_actions || {})) return _actions;
-
-			return window.globalActions({ share: true }).filter((action) => {
-				let matches = !objectIsEmpty(
-					_.pick(payload, ["image", "url", "file", "text"])
-				);
-
-				const match = action.match;
-
-				if (_.isFunction(match)) {
-					matches = match(payload);
-				} else if (
-					["image", "file", "url", "text", "download"].includes(match)
-				)
-					matches = payload[match]?.length;
-
-				if (!matches) return false;
-
-				return true;
-			});
-		},
-		onSuccess: (actions) =>
-			setSheetProps((oldProps) => {
-				return {
-					...oldProps,
-					actions,
-				};
-			}),
-		dismiss: () => onClose(),
-	});
-
-	onChange((props) => {
-		setSheetProps((oldProps) => {
-			return {
-				...oldProps,
-				...props,
-			};
-		});
-	});
-
-	if (!sheetProps.actions) return null;
-
-	const actions = sheetProps.actions.map((action) => {
-		action.__id = randomId();
-		let handler = action.handler;
-
-		if (_.isFunction(handler)) {
-			action.handler = () =>
-				handler(_.omit(sheetProps, ["actions", "preview"]));
-		}
-
-		return action;
-	});
-	const mainActions = _.filter(actions, { main: true });
-	const otherActions = actions.filter(({ main }) => !main);
-	const groups = _.keys(_.groupBy(otherActions, "group")).filter(
-		(group) => group && group != "undefined"
-	);
-
-	if (groups.length && !groupFilter) setGroupFilter(groups[0]);
-
-	return (
-		<div className="pt-3">
-			{loading ? (
-				<div className="flex justify-center">
-					<Loader size={40} />
-				</div>
-			) : (
-				<div className="mt-3 space-y-3" onClick={() => onClose()}>
-					{mainActions?.length > 0 && (
-						<div className="grid grid-cols-3 gap-3">
-							{mainActions.map((action) => (
-								<NavButton
-									key={action.__id}
-									vertical
-									className="bg-card shadow-sm dark:border border-content/5 p-4 rounded-lg"
-									action={action}
-									inShareSheet
-								/>
-							))}
-						</div>
-					)}
-
-					{otherActions.length > 0 && (
-						<div className="bg-card shadow-sm border border-content/5 rounded-lg overflow-hidden divide-y divide-content/5">
-							{otherActions.map((action) => {
-								if (groupFilter && action.group != groupFilter)
-									return null;
-
-								return (
-									<NavButton
-										className="px-4"
-										key={action.__id}
-										action={action}
-										inShareSheet
-									/>
-								);
-							})}
-						</div>
-					)}
-
-					{!actions?.length && (
-						<div className="pt-4 flex h-full items-center justify-center opacity-50">
-							No actions
-						</div>
-					)}
-				</div>
-			)}
-		</div>
-	);
-};
-
-const getYoutubeVideoId = (url) => {
-	if (!url?.length) return null;
-
-	return url.match(
-		// eslint-disable-next-line no-useless-escape
-		/^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/|shorts\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/
-	)?.[1];
-};
-
-export default function ActionSheet({
+export default function Sheet({
 	title,
-	preview: _preview,
 	payload,
+	preview: _preview,
+	actions: _actions,
 	children,
-	actions,
-	label = "Content",
 	dismissible = true,
 	showOverlayBg = true,
-	onClose,
+	noHeading = false,
+	inset = true,
+	onClose = () => {},
 }) {
 	const [preview, setPreview] = useState(_preview);
 	const cancelRef = useRef();
-	const { loading: loadingActions, showLoader } = useDataLoader({
+	const getShareActions = () => {
+		return window.globalActions({ share: true }).filter((action) => {
+			let matches = !objectIsEmpty(
+				_.pick(payload, ["image", "url", "file", "text"])
+			);
+
+			const match = action.match;
+
+			if (_.isFunction(match)) {
+				matches = match(payload);
+			} else if (
+				["image", "file", "url", "text", "download"].includes(match)
+			)
+				matches = payload[match]?.length;
+
+			if (!matches) return false;
+
+			return true;
+		});
+	};
+	const {
+		data: actions,
+		loading: loadingShareActions,
+		showLoader,
+	} = useDataLoader({
 		handler: async () => {
-			if (!objectIsEmpty(window.actions || {})) return true;
+			if (_actions) return objectFieldChoices(_actions);
+
+			if (!objectIsEmpty(window.actions || {})) return getShareActions();
 
 			try {
 				if (objectIsEmpty(window.actions || {})) {
@@ -171,7 +66,7 @@ export default function ActionSheet({
 								"extensions-updated",
 								handler
 							);
-							resolve();
+							resolve(getShareActions());
 						};
 
 						window.addEventListener("extensions-updated", handler);
@@ -188,18 +83,26 @@ export default function ActionSheet({
 			if (_preview?.image) return _preview;
 
 			if (isValidUrl(payload?.url)) {
-				return await crawlUrl(payload.url)
+				return await getWebsiteInfo(payload.url)
 					.then((res) => {
-						const { image, title, description } = res.meta || {};
+						const { image, video, title, description, subtitle } = {
+							...(_preview || {}),
+							...(res.meta || {}),
+						};
+						const isYoutubeVideo =
+							!payload?.url?.length &&
+							payload?.url.match(
+								// eslint-disable-next-line no-useless-escape
+								/^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/|shorts\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/
+							)?.[1];
 
 						return cleanObject({
-							video: getYoutubeVideoId(payload?.url)
-								? image
-								: _preview?.video,
-							image: image || _preview?.image,
-							title: title || _preview?.title,
-							subtitle: description || _preview?.subtitle,
+							video: isYoutubeVideo ? image : video,
+							image,
+							title,
+							subtitle: description || subtitle,
 							data: res.data,
+							url: payload.url,
 						});
 					})
 					.catch(() => {
@@ -283,67 +186,103 @@ export default function ActionSheet({
 			onDismiss={dismissible ? onClose : () => {}}
 			isOpen={true}
 			leastDestructiveRef={cancelRef}
-			className="fixed left-0 right-1 bottom-0 z-[999]"
+			className={clsx(
+				"fixed z-[999]",
+				inset
+					? "inset-x-3 mb-[env(safe-area-inset-bottom)]"
+					: "inset-x-0"
+			)}
+			style={{
+				bottom: inset ? "calc(32px - env(safe-area-inset-bottom))" : 0,
+			}}
 		>
 			<div
 				ref={cancelRef}
 				className="fixed inset-0 bg-black/20 dark:bg-black/70"
-				onClick={onClose}
+				onClick={() => onClose()}
 			>
-				<AlertDialogLabel className="hidden">{label}</AlertDialogLabel>
+				<AlertDialogLabel className="hidden">Label</AlertDialogLabel>
 			</div>
 
-			<div
-				className="px-5 pt-5 pb-2 rounded-t-[32px] relative z-10 max-w-lg mx-auto group bg-canvas text-content border shadow-2xl overflow-hidden"
+			<motion.div
+				className={clsx(
+					"bg-stone-100/95 dark:bg-card/95 backdrop-blur-sm rounded-3xl relative z-10 max-w-lg mx-auto group text-content border shadow-2xl overflow-hidden",
+					{ "p-3": !noHeading }
+				)}
 				style={{
+					paddingBottom: inset
+						? noHeading
+							? 0
+							: 12
+						: "calc(8px + env(safe-area-inset-bottom))",
 					boxShadow: showOverlayBg
 						? ""
 						: "0px 10px 30px -2px var(--shadow-color)",
 				}}
+				animate={{
+					y: 0,
+					opacity: 1,
+				}}
+				initial={{
+					y: "10%",
+					opacity: 0,
+				}}
+				transition={{
+					duration: 0.2,
+				}}
 			>
-				<div className="flex items-center justify-between gap-2 px-1">
-					{contentPreview(preview, title)}
+				{!noHeading && (
+					<div className="mb-3 pl-1 flex items-center justify-between gap-2">
+						{contentPreview(preview, title)}
 
-					<button
-						className="flex-shrink-0 ml-auto bg-content/5 border border-content/5 size-7 flex items-center justify-center rounded-full"
-						onClick={onClose}
-					>
-						<svg
-							className="w-3.5"
-							fill="none"
-							viewBox="0 0 24 24"
-							strokeWidth="1.5"
-							stroke="currentColor"
+						<button
+							className="flex-shrink-0 ml-auto bg-content/5 border border-content/5 size-7 flex items-center justify-center rounded-full"
+							onClick={() => onClose()}
 						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								d="M6 18 18 6M6 6l12 12"
-							></path>
-						</svg>
-					</button>
-				</div>
+							<svg
+								className="w-5"
+								fill="none"
+								viewBox="0 0 24 24"
+								strokeWidth="1.5"
+								stroke="currentColor"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									d="M6 18 18 6M6 6l12 12"
+								></path>
+							</svg>
+						</button>
+					</div>
+				)}
 
-				<div
-					style={{
-						marginBottom: "env(safe-area-inset-bottom)",
-						minHeight: "120px",
-					}}
-				>
-					{loadingActions ? (
-						<div className="flex justify-center">
-							{showLoader && <Loader size={40} />}
-						</div>
-					) : children ? (
-						children
-					) : (
-						<ActionSheetContent
-							onClose={onClose}
-							actions={actions}
-						/>
-					)}
-				</div>
-			</div>
+				{loadingShareActions ? (
+					<div className="flex justify-center">
+						{showLoader && <Loader size={40} />}
+					</div>
+				) : children ? (
+					children
+				) : (
+					<>
+						{!actions?.length && (
+							<div className="pb-4 flex h-full items-center justify-center opacity-50">
+								No matching actions
+							</div>
+						)}
+
+						{actions && (
+							<ActionGrid
+								key={"preview" + preview?.image}
+								type="inline"
+								data={actions}
+								hideTrailing
+								onClose={onClose}
+								payload={{ ...payload, preview }}
+							/>
+						)}
+					</>
+				)}
+			</motion.div>
 		</AlertDialog>
 	);
 }

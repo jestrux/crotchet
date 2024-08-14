@@ -1,4 +1,4 @@
-import { formatDate, toHms } from "@/utils";
+import { formatDate, toHms } from "@/crotchet/utils";
 
 export const _format = function (data, t) {
 	try {

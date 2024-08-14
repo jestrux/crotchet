@@ -2,7 +2,6 @@ import clsx from "clsx";
 import { useActionClick, useDataLoader } from "@/crotchet/hooks";
 import Loader from "./Loader";
 import { onActionClick } from "@/crotchet/hooks/useActionClick";
-import { getFromCache, cache } from "@/crotchet/utils";
 
 function ActionButton({ button, propagate = true }) {
 	const { loading, onClick } = useActionClick(button, {
@@ -31,7 +30,14 @@ function ActionButton({ button, propagate = true }) {
 						{label}
 					</button>
 
-					{loading && <Loader fillParent size={26} thickness={8} />}
+					{loading && (
+						<Loader
+							showScrim={false}
+							fillParent
+							size={26}
+							thickness={8}
+						/>
+					)}
 				</div>
 			) : (
 				<div className="p-3 border-t border-content/10 relative">
@@ -54,7 +60,6 @@ function ActionButton({ button, propagate = true }) {
 
 export default function Widget({
 	size,
-	name,
 	title,
 	icon,
 	background,
@@ -66,25 +71,15 @@ export default function Widget({
 	actionButton: _actionButton,
 	onClick,
 }) {
-	const { loading: loadingCache, data: cachedData } = useDataLoader({
-		handler: !name ? null : getFromCache(name),
-	});
-
-	const { data: actualData, loading: loadingData } = useDataLoader({
+	const { data, loading } = useDataLoader({
 		handler: async () => {
 			const res = await (typeof resolve == "function"
 				? resolve({})
 				: Promise.resolve(true));
 
-			if (name?.length && res) cache(name, res);
-
 			return res;
 		},
-		listenForUpdates: (callback = () => {}) => {
-			const event = "firebase-table-updated:readingList";
-			window.addEventListener(event, callback, false);
-			return () => window.removeEventListener(event, callback, false);
-		},
+		listenForUpdates: "firebase-table-updated:readingList",
 	});
 
 	const evaluate = (item, payload, defaultValue) => {
@@ -92,8 +87,6 @@ export default function Widget({
 		return typeof item == "function" ? item(payload) ?? defaultValue : item;
 	};
 
-	const data = actualData || cachedData;
-	const loading = loadingCache || loadingData;
 	const content = evaluate(_content, { data, loading });
 	const actions = evaluate(_actions, { data, loading }, []);
 	const actionButton = evaluate(_actionButton, { data, loading }, []);

@@ -5,7 +5,7 @@ registerWidget("readerWatchList", {
 	resolve: async () => {
 		const res = await sourceGet(
 			{ handler: () => queryDb("reader") },
-			{ orderBy: "_index,desc", filters: { group: "📺 Watch" }, limit: 3 }
+			{ orderBy: "_index,desc", filters: { group: "📺 Watch" }, limit: 5 }
 		);
 		return res?.map((item) => {
 			const isVideo =
@@ -37,30 +37,26 @@ registerWidget("readerWatchList", {
 			defaultValue: "",
 		};
 	},
-	content: UI.List,
-	// actions: [{ label: "Add Entry", icon: UI.Icon("add"), handler: () => {} }],
+	content: UI.list,
+	// actions: [{ label: "Add Entry", icon: UI.icon("add"), handler: () => {} }],
 	actionButton({ data }) {
 		if (!data?.length) return;
 		return {
-			icon: UI.Icon("add-circle"),
+			icon: UI.icon("add-circle"),
 			label: "Preview First",
 			handler: () => openUrl(data[0].url),
 		};
 	},
 
-	listenForUpdates: (callback = () => {}) => {
-		const event = "firebase-table-updated:readingList";
-		window.addEventListener(event, callback, false);
-		return () => window.removeEventListener(event, callback, false);
-	},
+	listenForUpdates: "firebase-table-updated:readingList",
 });
 
 registerWidget("readingList", {
-	title: "Reader",
+	title: "Learning List",
 	resolve: async () => {
 		const res = await sourceGet(
 			{ handler: () => queryDb("reader") },
-			{ orderBy: "_index,desc" }
+			{ orderBy: "_index,desc", filters: { group: "🧪 Learn" }, limit: 5 }
 		);
 		return res?.map((item) => {
 			const isVideo =
@@ -92,13 +88,9 @@ registerWidget("readingList", {
 			defaultValue: "",
 		};
 	},
-	content: UI.List,
-	actions: [{ label: "Add Entry", icon: UI.Icon("add"), handler: () => {} }],
-	listenForUpdates: (callback = () => {}) => {
-		const event = "firebase-table-updated:readingList";
-		window.addEventListener(event, callback, false);
-		return () => window.removeEventListener(event, callback, false);
-	},
+	content: UI.list,
+	actions: [{ label: "Add Entry", icon: UI.icon("add"), handler: () => {} }],
+	listenForUpdates: "firebase-table-updated:readingList",
 });
 
 registerAction("addToReadingList", {

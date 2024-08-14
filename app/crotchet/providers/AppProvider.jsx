@@ -1,7 +1,18 @@
 import { createContext, useContext, useState } from "react";
-import { camelCaseToSentenceCase, dispatch, randomId } from "@/crotchet/utils";
-import { useEventListener, useKeyDetector, useOnInit } from "@/crotchet/hooks";
+import {
+	camelCaseToSentenceCase,
+	dispatch,
+	getPreference,
+	randomId,
+} from "@/crotchet/utils";
+import {
+	useDataLoader,
+	useEventListener,
+	useKeyDetector,
+	useOnInit,
+} from "@/crotchet/hooks";
 import { AlertsWrapper } from "@/crotchet/hooks/useAlerts";
+import { tinyColor } from "./color";
 
 export const AppContext = createContext({
 	pages: [],
@@ -16,7 +27,41 @@ export function useAppContext() {
 	return useContext(AppContext);
 }
 
+export function useCrotchetApp() {
+	return useDataLoader({
+		handler: async () => {
+			const app = await getPreference("__crotchetApp", {
+				name: "Crotchet",
+				colors: {
+					primary: "#84cc16",
+					primaryDark: "#a3e635",
+				},
+			});
+
+			if (app.homePage) {
+				if (!window.pages?.[app.homePage]) {
+					const event = "page-registered-" + app.homePage;
+					await new Promise((resolve) => {
+						const handler = async () => {
+							window.removeEventListener(event, handler);
+							resolve();
+						};
+
+						window.addEventListener(event, handler);
+					});
+				}
+
+				app.homePage = window.pages?.[app.homePage];
+			}
+
+			return app;
+		},
+		listenForUpdates: "crotchet-app-updated",
+	});
+}
+
 export default function AppProvider({ children }) {
+	const { data: crotchetApp, loading } = useCrotchetApp();
 	const [pages, setPages] = useState([]);
 	const getCurrentPageId = () => window.currentPageId ?? "root";
 	const getNewPage = (page) => {
@@ -184,6 +229,36 @@ export default function AppProvider({ children }) {
 
 	return (
 		<AppContext.Provider value={value}>
+			<style>
+				{loading || !crotchetApp
+					? ""
+					: /*css*/ `
+					:root {
+						--primary-color: ${Object.values(tinyColor(crotchetApp.colors.primary).toRgb())
+							.slice(0, 3)
+							.join(" ")};
+						--primary-dark-color: ${Object.values(
+							tinyColor(
+								crotchetApp.colors.primaryDark ||
+									crotchetApp.colors.primary
+							).toRgb()
+						)
+							.slice(0, 3)
+							.join(" ")};
+						--on-primary-color: ${
+							tinyColor(crotchetApp.colors.primary).isLight()
+								? "0 0 0"
+								: "255 255 255"
+						};
+						--on-primary-inverted-color: ${
+							tinyColor(crotchetApp.colors.primary).isLight()
+								? "255 255 255"
+								: "0 0 0"
+						};
+					}
+				`}
+			</style>
+
 			{children}
 
 			<AlertsWrapper />

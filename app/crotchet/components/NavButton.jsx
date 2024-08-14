@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { useActionClick } from "../hooks/useActionClick";
+import { useActionClick } from "@/crotchet/hooks";
 
 export default function NavButton({
 	vertical,

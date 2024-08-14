@@ -32,7 +32,7 @@ export default forwardRef(function Button(
 				"bg-transparent text-green-500 hover:bg-green-500/5",
 			],
 			primary: [
-				"bg-primary border-primary text-white hover:opacity-90",
+				"bg-primary border-primary text-white dark:bg-white dark:text-black hover:opacity-90",
 				"bg-transparent text-primary border-current hover:bg-primary/5",
 			],
 			secondary: [
@@ -56,15 +56,15 @@ export default forwardRef(function Button(
 			ref={ref}
 			type={type}
 			className={clsx(
-				"Button font-semibold border flex items-center justify-center px-3.5 leading-none relative",
-				(disabled || loading) && "pointer-events-none",
+				"Button font-semibold border w-full flex items-center justify-center px-3.5 leading-none relative overflow-hidden",
+				(disabled || loading) && "pointer-events-none border-none",
 				disabled && "opacity-25",
 				getColor(),
 				size == "xs"
 					? "text-[0.6rem] h-6 px-[0.6rem]"
 					: size == "sm"
 					? "text-xs h-8 px-[0.8rem]"
-					: "h-12 px-6",
+					: "h-[42px] px-6",
 				rounded == "full" ? "rounded-full" : "rounded",
 				className
 			)}
@@ -73,7 +73,7 @@ export default forwardRef(function Button(
 		>
 			{children}
 
-			{loading && <Loader size={26} thickness={8} color="#888" />}
+			{loading && <Loader showScrim fillParent size={26} thickness={8} />}
 		</button>
 	);
 });

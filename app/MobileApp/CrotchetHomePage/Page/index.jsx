@@ -2,11 +2,13 @@ import PageProvider from "@/crotchet/providers/PageProvider";
 import DetailPage from "./DetailPage";
 import ErrorBoundary from "@/crotchet/components/ErrorBoundary";
 import { useAppContext } from "@/crotchet/providers/AppProvider";
+import { BottomNavPlaceholder } from "@/crotchet/providers/AppScaffold/Page/PageNav";
 
 function PageContent() {
 	return (
 		<div className="fixed inset-0 overflow-auto overscroll-none">
 			<DetailPage />
+			<BottomNavPlaceholder />
 		</div>
 	);
 }

@@ -1,18 +1,36 @@
-import openUrl from "./open-url";
-
-export { openUrl };
-
 import {
 	camelCaseToSentenceCase,
 	dispatch,
 	hideApp,
 	onDesktop,
 	randomId,
+	savePreference,
 } from "./utils";
 
-export * as utils from "./utils";
+import openUrl from "./open-url";
+
+Object.assign(window, {
+	__crotchetApp: {
+		name: "Crotchet",
+		colors: {
+			primary: "#84cc16",
+			primaryDark: "#a3e635",
+		},
+	},
+	_promiseResolvers: {},
+	desktop: {},
+	refs: {},
+});
+
+export { openUrl };
+
+export { sourceGet } from "./hooks/useSourceGet";
+
+export { default as registerDataSource } from "./registerDataSource";
 
 export const registerAction = (name, action) => {
+	if (!window.actions) window.actions = {};
+
 	const {
 		label,
 		handler,
@@ -36,8 +54,7 @@ export const registerAction = (name, action) => {
 	const _handler = (payload) => {
 		if (actionHidesApp) hideApp();
 
-		if (typeof handler == "function")
-			return handler(payload ?? {}, window.getActionPayload());
+		if (typeof handler == "function") return handler(payload ?? {});
 
 		return openUrl(action?.url);
 	};
@@ -63,6 +80,39 @@ export const registerAction = (name, action) => {
 	dispatch("app-actions-updated");
 
 	window.addEventListener(`menu-item-click:${name}`, _handler);
+};
+
+export const registerPage = (name, page) => {
+	if (!window.pages) window.pages = {};
+
+	const { resolve, title, content, action, actions, nav } = page;
+
+	dispatch("page-registered-" + name);
+
+	window.pages[name] = {
+		_id: randomId(),
+		resolve,
+		title,
+		content,
+		nav,
+		action,
+		actions,
+	};
+};
+
+export const setCrotchetApp = (newProps = {}) => {
+	const newApp = {
+		...window.__crotchetApp,
+		...newProps,
+	};
+
+	savePreference("__crotchetApp", newApp);
+
+	window.__crotchetApp = newApp;
+
+	setTimeout(() => {
+		dispatch("crotchet-app-updated");
+	}, 400);
 };
 
 export const globalActions = ({ share = false, desktopShortcuts } = {}) =>
@@ -95,6 +145,8 @@ export const registerWidget = (name, widget) => {
 		content,
 		actionButton,
 	} = widget;
+
+	if (!window.widgets) window.widgets = {};
 
 	window.widgets[name] = {
 		_id: randomId(),

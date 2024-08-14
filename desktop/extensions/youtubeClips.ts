@@ -32,13 +32,9 @@ registerWidget("youtubeClips", {
 			url: getYoutubeUrl(entry),
 		}));
 	},
-	content: UI.List,
-	actions: [{ label: "Add Clip", icon: UI.Icon("add"), handler: () => {} }],
-	listenForUpdates: (callback = () => {}) => {
-		const event = "firebase-table-updated:youtubeClips";
-		window.addEventListener(event, callback, false);
-		return () => window.removeEventListener(event, callback, false);
-	},
+	content: UI.list,
+	actions: [{ label: "Add Clip", icon: UI.icon("add"), handler: () => {} }],
+	listenForUpdates: "firebase-table-updated:youtubeClips",
 });
 
 registerAction("addToYoutubeClips", {

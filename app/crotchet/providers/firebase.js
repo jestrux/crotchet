@@ -53,7 +53,7 @@ export const getDbTables = async () => {
 };
 export const queryDb = async (
 	table,
-	{ rowId, orderBy: _orderBy, filter } = {}
+	{ rowId, orderBy: _orderBy = "updatedAt,desc", filter } = {}
 ) => {
 	if (filter && _.isObject(filter)) filter = _.first(Object.entries(filter));
 
@@ -68,10 +68,14 @@ export const queryDb = async (
 	const res = await getDocs(query(...params));
 
 	const docs = res.docs.map((doc) => {
+		const data = doc.data();
+		data.createdAt = data.createdAt?.toDate?.()?.getTime();
+		data.updatedAt = data.updatedAt?.toDate?.()?.getTime();
+
 		return {
 			_rowId: doc.ref.id,
 			_id: doc.ref.id,
-			...doc.data(),
+			...data,
 		};
 	});
 
@@ -148,7 +152,7 @@ export const dbUpdate = async (table, rowId, data, { merge = true } = {}) => {
 
 	const rowRef = doc(db, ...dbTablePath(table), rowId);
 
-	await setDoc(rowRef, data, { merge });
+	await setDoc(rowRef, _.omit(data, "createdAt"), { merge });
 
 	notifyListeners(table);
 

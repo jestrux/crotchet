@@ -1,4 +1,4 @@
-// import DraggableElement from "@/components/DraggableElement";
+// import DraggableElement from "@/crotchet/components/DraggableElement";
 import Page from "./Page";
 import {
 	hideApp,
@@ -137,19 +137,7 @@ export default function AppContent() {
 		_id: "root",
 		type: "search",
 		resolve: getCommands,
-		listenForUpdates: (callback = () => {}) => {
-			window.addEventListener("app-commands-updated", callback, false);
-			window.addEventListener("app-actions-updated", callback, false);
-
-			return () => {
-				window.addEventListener("app-actions-updated", callback, false);
-				window.removeEventListener(
-					"app-commands-updated",
-					callback,
-					false
-				);
-			};
-		},
+		listenForUpdates: ["app-commands-updated", "app-actions-updated"],
 	};
 
 	return (
