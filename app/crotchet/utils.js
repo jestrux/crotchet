@@ -68,7 +68,7 @@ export const getToken = async (key) => {
 	let token = await getPreference(`token-${key}`);
 
 	if (!token?.value) {
-		token = await window.openForm({
+		token = await window.openAlertForm({
 			title: "Enter Token",
 			field: {
 				label: key,

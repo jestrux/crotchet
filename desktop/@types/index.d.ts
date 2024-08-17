@@ -15,6 +15,16 @@ declare var toHms: (number: Number) => string | null;
 
 declare var queryDb: (name: String) => Promise<any>;
 
+declare var getToken: (name: String) => Promise<{ value?: string }>;
+
+declare var networkRequest: (
+	url: String,
+	props: {
+		bearerToken?: string;
+		secretToken?: string;
+	}
+) => Promise<{ value?: string }>;
+
 declare var showAlert: (
 	message: String | { title: string; message: string }
 ) => Promise<any>;
@@ -168,6 +178,8 @@ declare var registerWidget: (
 declare var openRootPage: (page: string) => PromiseLike<any>;
 
 declare var openPage: (props: string | typeof Page) => PromiseLike<any>;
+
+declare var pushPage: (props: string | typeof Page) => PromiseLike<any>;
 
 declare var openForm: (props: typeof Page) => PromiseLike<any>;
 

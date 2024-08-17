@@ -1,5 +1,36 @@
 import "../@types/index";
 
+const querySetHero = async (endpoint) => {
+	let baseUrl, companyId, bearerToken;
+
+	try {
+		baseUrl = (await getToken("SETHERO-BASE-URL"))?.value;
+		if (!baseUrl) return null;
+
+		companyId = (await getToken("SETHERO-COMPANY-ID"))?.value;
+		if (!companyId) return null;
+
+		bearerToken = (await getToken("SETHERO-PROD-API-TOKEN"))?.value;
+		if (!bearerToken) return null;
+
+		const url = `${baseUrl}/companies/${companyId}${endpoint}`.replace(
+			"//companies",
+			"/companies"
+		);
+		return await networkRequest(url, {
+			bearerToken,
+		});
+	} catch (error) {
+		showAlert(
+			"SH Error: " +
+				JSON.stringify({
+					error,
+				}) +
+				`${baseUrl}companies/${companyId}${endpoint}`
+		);
+	}
+};
+
 const projectColors = [
 	"#3b82f6", // blue
 	"#22c55e", // green
@@ -12,7 +43,20 @@ const projectColors = [
 	"#92400e", // brown
 ];
 
-registerDataSource("db", "setHeroProjects", {
+registerDataSource("custom", "setHeroProjects", {
+	fetch: () => querySetHero("/projects"),
+	entryAction: (item) =>
+		openPage({
+			title: "Edit Project",
+			resolve: () => {
+				console.log("Edit project: ", item);
+				return item._id;
+			},
+			content: (payload) => {
+				console.log("Project detail: ", payload);
+				return [];
+			},
+		}),
 	formFields: {
 		title: "text",
 		plan_type: {
@@ -39,13 +83,22 @@ registerDataSource("db", "setHeroProjects", {
 	},
 	mapEntry(item) {
 		return {
-			...item,
+			..._.pick(item, [
+				"id",
+				"title",
+				"company_id",
+				"update_date",
+				"use_24hour_time",
+			]),
+			_id: item.id,
+			image: item.logo_url,
 			subtitle: item.plan_type,
+			color: item.color_primary,
 		};
 	},
 	layoutProps: {
 		layout: "grid",
-		aspectRatio: "2/0.8",
+		aspectRatio: "1/0.8",
 		meta: {
 			inset: true,
 			imagePlaceholder: UI.svg(
@@ -119,7 +172,20 @@ registerAction("editSetHeroProject", async (project) =>
 	})
 );
 
-registerDataSource("db", "setHeroCallsheets", {
+registerDataSource("custom", "setHeroCallsheets", {
+	fetch: () =>
+		querySetHero("/callsheets").then((res) => {
+			return _.flatten(
+				(res || []).map((item) => {
+					return (item.callsheets || []).map((cs) => {
+						return {
+							...cs,
+							project_title: item.title,
+						};
+					});
+				})
+			);
+		}),
 	formFields: {
 		date: "date",
 		project: {
@@ -136,11 +202,13 @@ registerDataSource("db", "setHeroCallsheets", {
 				),
 		},
 	},
+	orderBy: "date,desc",
 	mapEntry(item) {
 		return {
 			...item,
+			_id: item.id,
 			title: window.formatDate(item.date),
-			subtitle: item.project,
+			subtitle: [item.project_title, item.schedule_name].join(" - "),
 		};
 	},
 	layoutProps: {
@@ -181,6 +249,18 @@ registerDataSource("db", "setHeroCallsheets", {
 			...(!onDesktop() ? [] : [window.actions.addSetHeroCallsheet]),
 		];
 	},
+	entryAction: (item) =>
+		openPage({
+			title: "Edit Callsheet",
+			resolve: () => {
+				console.log("Edit Callsheet: ", item);
+				return item._id;
+			},
+			content: (payload) => {
+				console.log("Callsheet detail: ", payload);
+				return [];
+			},
+		}),
 });
 
 registerAction("addSetHeroCallsheet", () =>
@@ -285,7 +365,7 @@ registerPage("setHeroHome", {
 									"M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"
 								),
 								label: "Callsheets",
-								handler: () => openPage("setHeroCallsheets"),
+								handler: () => pushPage("setHeroCallsheets"),
 							},
 							{
 								icon: window.UI.svg(
@@ -352,6 +432,33 @@ registerPage("setHeroHome", {
 								window.actions[choice]?.handler?.()
 							),
 				},
+			},
+		},
+		{
+			icon: window.UI.svg(
+				"M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"
+			),
+			label: "Callsheets",
+			page: {
+				title: "Callsheets",
+				content: () => [
+					{
+						type: "grid",
+						source: window.dataSources.setHeroCallsheets,
+						meta: {
+							fallbackIcon: window.UI.svg(
+								"m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"
+							),
+						},
+					},
+				],
+				action: () => ({
+					label: "Callsheet",
+					icon: window.UI.svg("M12 4.5v15m7.5-7.5h-15", {
+						strokeWidth: 3.5,
+					}),
+					handler: window.actions.addSetHeroCallsheet,
+				}),
 			},
 		},
 		{

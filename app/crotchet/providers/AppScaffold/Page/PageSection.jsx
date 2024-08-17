@@ -22,7 +22,11 @@ export default function PageSection({
 		},
 		onSuccess: onSectionLoaded,
 	});
-	const sourceProps = _.pick(source, ["entryActions", "layoutProps"]);
+	const sourceProps = _.pick(source, [
+		"entryAction",
+		"entryActions",
+		"layoutProps",
+	]);
 
 	if (!data?.length) return null;
 

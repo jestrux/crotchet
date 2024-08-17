@@ -156,19 +156,22 @@ export default function registerDataSource(provider, name, props = {}) {
 	);
 
 	let getter, insertRow, updateRow, deleteRow, listenForUpdates;
-	const sourceProvider = dataSourceProviders(provider, { name, ...props });
+	const sourceProvider =
+		provider == "custom"
+			? props
+			: dataSourceProviders(provider, { name, ...props });
 
 	if (typeof sourceProvider == "function") getter = sourceProvider;
-	else {
-		if (typeof props.handler == "function") getter = props.handler;
-		else if (typeof sourceProvider.fetch == "function") {
-			getter = sourceProvider.fetch;
-			insertRow = sourceProvider.insertRow;
-			updateRow = sourceProvider.updateRow;
-			deleteRow = sourceProvider.deleteRow;
-			listenForUpdates = sourceProvider.listenForUpdates;
-		} else return console.error(`Unkown data provider: ${provider}`);
+	else if (typeof props.handler == "function") getter = props.handler;
+	else if (typeof sourceProvider.fetch == "function") {
+		getter = sourceProvider.fetch;
+		insertRow = sourceProvider.insertRow;
+		updateRow = sourceProvider.updateRow;
+		deleteRow = sourceProvider.deleteRow;
+		listenForUpdates = sourceProvider.listenForUpdates;
 	}
+
+	if (!getter) return console.error(`Unkown data provider: ${provider}`);
 
 	const handler = async (payload) => getter(payload);
 
@@ -213,6 +216,8 @@ export default function registerDataSource(provider, name, props = {}) {
 		updateRow,
 		deleteRow,
 		listenForUpdates,
+		entryActions: props.entryActions,
+		entryAction: props.entryAction,
 	};
 
 	window.dataSources[name] = source;

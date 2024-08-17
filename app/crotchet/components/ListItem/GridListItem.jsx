@@ -1,6 +1,4 @@
 import clsx from "clsx";
-import { useState } from "react";
-import { Loader } from "@/crotchet/components";
 import { useLongPress } from "@/crotchet/hooks";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 
@@ -30,20 +28,9 @@ export default function GridListItem({
 		if (_.isFunction(onHold)) return onHold();
 	});
 
-	const [actionLoading, setActionLoading] = useState(false);
-	const handleClick = async () => {
-		const clickHandlerSet = typeof onClick == "function";
-
-		setActionLoading(true);
-
-		try {
-			if (clickHandlerSet) await Promise.resolve(onClick());
-			else if (url) await Promise.resolve(window.openUrl(url));
-		} catch (error) {
-			//
-		}
-
-		setActionLoading(false);
+	const handleClick = () => {
+		if (typeof onClick == "function") onClick();
+		else if (url) window.openUrl(url);
 	};
 
 	const content = () => {
@@ -206,12 +193,6 @@ export default function GridListItem({
 			)}
 		>
 			{content()}
-
-			{actionLoading && (
-				<div className="absolute inset-0 p-1 backdrop-blur-sm">
-					<Loader className="opacity-50" size={20} />
-				</div>
-			)}
 		</a>
 	);
 }

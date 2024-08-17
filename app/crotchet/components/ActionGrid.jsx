@@ -40,6 +40,7 @@ export default function ActionGrid({
 	color: _color,
 	maxLines,
 	colorDark: _colorDark,
+	entryAction,
 	entryActions,
 	hideTrailing = false,
 	payload,
@@ -48,6 +49,15 @@ export default function ActionGrid({
 	const { loading, data: actions } = useDataLoader({ handler: data });
 
 	const handleClick = (action) => {
+		const onClick =
+			typeof action.onClick == "function"
+				? action.onClick
+				: typeof entryAction == "function"
+				? () => entryAction(action)
+				: null;
+
+		if (onClick) return onClick();
+
 		onClose(action?.handler ? null : action?.value || action);
 		action?.handler?.(payload);
 	};
@@ -126,7 +136,8 @@ export default function ActionGrid({
 				<ActionButton
 					action={action}
 					onHold={onHold}
-					className="bg-card dark:bg-content/5 shadow border-x border-t dark:border-b border-content/5 rounded-lg py-2 px-3 flex flex-col gap-1.5 items-start"
+					onClick={() => handleClick(action)}
+					className="bg-card shadow border-content/10 border-x border-t dark:border-b rounded-lg py-2 px-3 flex flex-col gap-1.5 items-start"
 				>
 					{action.icon && (
 						<div

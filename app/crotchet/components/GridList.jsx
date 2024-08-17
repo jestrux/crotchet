@@ -14,7 +14,7 @@ export default function GridList({ source, data, isLoading, ...props }) {
 		...props,
 	};
 
-	const { entryActions } = {
+	const { entryActions, entryAction } = {
 		...(source || {}),
 		...props,
 	};
@@ -31,12 +31,17 @@ export default function GridList({ source, data, isLoading, ...props }) {
 			const entryProps = {
 				_id,
 				...entry,
+				onClick:
+					typeof entry.onClick == "function"
+						? entry.onClick
+						: typeof entryAction == "function"
+						? () => entryAction(entry)
+						: null,
 				onHold:
 					typeof entry.onHold == "function"
 						? entry.onHold
-						: typeof entryActions != "function"
-						? null
-						: () =>
+						: typeof entryActions == "function"
+						? () =>
 								window.openActionSheet({
 									actions: entryActions(entry),
 									preview: _.pick(entry, [
@@ -46,14 +51,14 @@ export default function GridList({ source, data, isLoading, ...props }) {
 										"title",
 										"subtitle",
 									]),
-								}),
+								})
+						: null,
 			};
 
 			return (
 				<GridListItem
 					key={_id}
 					{...entryProps}
-					color={entry.color}
 					aspectRatio={aspectRatio}
 					meta={meta}
 				/>
