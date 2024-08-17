@@ -50,6 +50,7 @@ declare var UI: {
 	list: (payload: { data?: []; loading?: boolean }) => [];
 	icon: (
 		icon:
+			| "home"
 			| "share"
 			| "play"
 			| "user"
@@ -102,7 +103,7 @@ declare var Page: {
 	resolve?: Function;
 	title?: typeof PageTitle;
 	content?: typeof PageContent;
-	nav?: (typeof ActionButton)[];
+	nav?: (typeof ActionButton & { page: typeof Page })[];
 	action?: typeof ActionButton;
 	actions?: (typeof ActionButton)[];
 
@@ -164,7 +165,9 @@ declare var registerWidget: (
 	}
 ) => void;
 
-declare var openPage: (props: typeof Page) => PromiseLike<any>;
+declare var openRootPage: (page: string) => PromiseLike<any>;
+
+declare var openPage: (props: string | typeof Page) => PromiseLike<any>;
 
 declare var openForm: (props: typeof Page) => PromiseLike<any>;
 

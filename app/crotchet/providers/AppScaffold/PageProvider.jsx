@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { useDataLoader, useEventListener } from "@/crotchet/hooks";
 import { someTime, randomId } from "@/crotchet/utils";
-import Page from "./Page";
+import IonicPage from "./IonicPage";
 
 const PageContext = createContext({
 	scaffold: {
@@ -395,7 +395,7 @@ export default function PageProvider({
 					onNavigateUp,
 				}}
 			>
-				<Page />
+				<IonicPage />
 			</PageContext.Provider>
 		</div>
 	);

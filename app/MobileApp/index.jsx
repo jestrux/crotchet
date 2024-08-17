@@ -7,10 +7,11 @@ import registerPlatformUtils from "@/crotchet/registerUtils";
 import { openUrl } from "@/crotchet";
 import { SendIntent } from "send-intent";
 import { getLinksFromText, isValidUrl, objectIsEmpty } from "@/crotchet/utils";
-import CrotchetHomePage from "./CrotchetHomePage";
-import AppScaffold from "@/crotchet/providers/AppScaffold";
 import { useCrotchetApp } from "@/crotchet/providers/AppProvider";
 import { Loader } from "@/crotchet/components";
+
+import CrotchetHomePage from "./CrotchetHomePage";
+import AppScaffold from "@/crotchet/providers/AppScaffold";
 
 registerPlatformUtils({
 	readClipboard: async () => await Clipboard.read(),
@@ -191,17 +192,15 @@ export default function MobileApp() {
 	};
 
 	useEffect(() => {
-		listenForOpen();
-
-		return () => {
-			window.removeEventListener(
-				"sendIntentReceived",
-				handleShareIntent,
-				false
-			);
-
-			CapacitorApp.removeAllListeners();
-		};
+		// listenForOpen();
+		// return () => {
+		// 	window.removeEventListener(
+		// 		"sendIntentReceived",
+		// 		handleShareIntent,
+		// 		false
+		// 	);
+		// 	CapacitorApp.removeAllListeners();
+		// };
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 

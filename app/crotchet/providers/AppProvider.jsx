@@ -128,9 +128,9 @@ export default function AppProvider({ children }) {
 		popPage(pages.at(-1)?._id, data)
 	);
 
-	window.openPage = (page) => pushPage(page);
+	// window.openPage = (page) => pushPage(page);
 
-	window.openForm = (page) => pushPage({ ...page, type: "form" });
+	// window.openForm = (page) => pushPage({ ...page, type: "form" });
 
 	const popPage = (pageId, data) => {
 		const page = pages.filter(({ _id }) => _id == pageId);

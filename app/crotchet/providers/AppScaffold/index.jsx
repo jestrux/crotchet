@@ -1,56 +1,77 @@
-import { useState } from "react";
+import { IonReactRouter } from "@ionic/react-router";
+import { Route, Redirect } from "react-router-dom";
+import {
+	IonLabel,
+	IonRouterOutlet,
+	IonTabBar,
+	IonTabButton,
+	IonTabs,
+	IonApp,
+} from "@ionic/react";
 
-import { useDataLoader } from "@/crotchet/hooks";
-import { randomId } from "@/crotchet/utils";
+import BaseNavPage from "./BaseNavPage";
 
-import NavRootProvider from "./NavRootProvider";
-import PageNav from "./Page/PageNav";
+import "./ionic-styles";
 
 export default function AppScaffold({ rootPage: _rootPage } = {}) {
-	const [activePage, setActivePage] = useState(0);
-	const { nav, pages: _pages = [], ...rootPage } = _rootPage;
-	const { data: pages } = useDataLoader(() => {
-		return (_pages || []).map((page) => {
-			const id = randomId();
-
-			return {
-				...page,
-				id,
-				_id: id,
-			};
-		});
-	});
+	const { nav } = _rootPage;
 
 	return (
-		<div
-			data-app-scaffold="true"
-			className="fixed inset-0 overflow-hidden flex @container"
-		>
-			<div className="w-24 hidden @md:flex flex-col items-center border-r border-content/10">
-				<div className="h-48"></div>
+		<IonApp>
+			<IonReactRouter>
+				<IonTabs>
+					<IonRouterOutlet>
+						{nav.map((item, index) => {
+							const slug = item.slug || item.label?.toLowerCase();
 
-				<div className="flex-1"></div>
+							return (
+								<Route
+									key={["main", item.slug, index].join(" ")}
+									path={`/:tab(${slug})`}
+									exact
+								>
+									<BaseNavPage
+										page={item.page}
+										slug={`/${slug}`}
+									/>
+								</Route>
+							);
+						})}
 
-				<div className="h-64"></div>
-			</div>
+						{nav.map((item, index) => {
+							const slug = item.slug || item.label?.toLowerCase();
+							return (
+								<Route
+									key={["main", slug, index].join(" ")}
+									path={`/:tab(${slug})/page`}
+									component={BaseNavPage}
+								/>
+							);
+						})}
 
-			<div className="flex-1 h-screen overflow-y-auto">
-				<NavRootProvider
-					isOpen={activePage == 0}
-					scaffold={{ nav }}
-					rootPage={rootPage}
-				/>
-
-				{pages?.map((page, index) => {
-					<NavRootProvider
-						isOpen={activePage == index}
-						scaffold={{ nav }}
-						rootPage={page}
-					/>;
-				})}
-
-				<PageNav {...{ nav, activePage, setActivePage }} />
-			</div>
-		</div>
+						<Redirect
+							path="/"
+							exact
+							to={nav[0].slug || nav[0].label?.toLowerCase()}
+						/>
+					</IonRouterOutlet>
+					<IonTabBar slot="bottom">
+						{nav.map((item, index) => {
+							const slug = item.slug || item.label?.toLowerCase();
+							return (
+								<IonTabButton
+									key={[slug, index].join(" ")}
+									tab={slug}
+									href={`/${slug}`}
+								>
+									<div className="size-6">{item.icon}</div>
+									<IonLabel>{item.label}</IonLabel>
+								</IonTabButton>
+							);
+						})}
+					</IonTabBar>
+				</IonTabs>
+			</IonReactRouter>
+		</IonApp>
 	);
 }

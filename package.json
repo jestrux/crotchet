@@ -16,5 +16,6 @@
 		"predesktop": "cd app && npm run build && cd ../ && rm -r ./desktop/app && cp -R ./app/docs/. ./desktop/app",
 		"desktop": "cd desktop && npm run package",
 		"desktop:dev": "cd desktop && npm run dev"
-	}
+	},
+	"dependencies": {}
 }

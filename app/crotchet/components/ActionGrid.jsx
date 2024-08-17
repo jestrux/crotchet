@@ -126,7 +126,7 @@ export default function ActionGrid({
 				<ActionButton
 					action={action}
 					onHold={onHold}
-					className="bg-card dark:bg-content/5 shadow dark:border border-content/5 rounded-lg py-2 px-3 flex flex-col gap-1.5 items-start"
+					className="bg-card dark:bg-content/5 shadow border-x border-t dark:border-b border-content/5 rounded-lg py-2 px-3 flex flex-col gap-1.5 items-start"
 				>
 					{action.icon && (
 						<div
