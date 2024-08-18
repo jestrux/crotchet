@@ -15,7 +15,7 @@ declare var toHms: (number: Number) => string | null;
 
 declare var queryDb: (name: String) => Promise<any>;
 
-declare var getToken: (name: String) => Promise<{ value?: string }>;
+declare var getToken: (name: String) => Promise<string | null | undefined>;
 
 declare var networkRequest: (
 	url: String,
@@ -23,7 +23,7 @@ declare var networkRequest: (
 		bearerToken?: string;
 		secretToken?: string;
 	}
-) => Promise<{ value?: string }>;
+) => PromiseLike<any>;
 
 declare var showAlert: (
 	message: String | { title: string; message: string }
@@ -60,6 +60,11 @@ declare var UI: {
 	list: (payload: { data?: []; loading?: boolean }) => [];
 	icon: (
 		icon:
+			| "clear"
+			| "close"
+			| "copy"
+			| "delete"
+			| "more"
 			| "home"
 			| "share"
 			| "play"
@@ -115,7 +120,9 @@ declare var Page: {
 	content?: typeof PageContent;
 	nav?: (typeof ActionButton & { page: typeof Page })[];
 	action?: typeof ActionButton;
-	actions?: (typeof ActionButton)[];
+	actions?:
+		| (typeof ActionButton)[]
+		| ((payload: any) => (typeof ActionButton)[] | null | undefined);
 
 	// form details
 	data?: { [key: string]: any };

@@ -367,9 +367,18 @@ export default function PageProvider({
 					setSecondaryAction,
 					actions: () => {
 						const pageActions = actions || page?.actions;
-						return typeof pageActions == "function"
-							? pageActions({ pageData })
-							: pageActions;
+						const appActions = page?.appActions;
+
+						console.log("Page: ", page);
+
+						return [
+							...((typeof pageActions == "function"
+								? pageActions(contextInfo)
+								: pageActions) || []),
+							...((typeof appActions == "function"
+								? appActions(contextInfo)
+								: appActions) || []),
+						];
 					},
 					setActions,
 					onClick,

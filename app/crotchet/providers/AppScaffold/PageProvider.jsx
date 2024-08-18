@@ -57,6 +57,7 @@ export default function PageProvider({
 	isOpen,
 	page,
 	scaffold = {},
+	children,
 	onClose = () => {},
 }) {
 	const pageStatusResetTimeoutRef = useRef(null);
@@ -262,6 +263,7 @@ export default function PageProvider({
 		pageDataVersion,
 		formData,
 		pageFilter,
+		onClose,
 	};
 
 	return (
@@ -380,9 +382,16 @@ export default function PageProvider({
 					setSecondaryAction,
 					actions: () => {
 						const pageActions = actions || page?.actions;
-						return typeof pageActions == "function"
-							? pageActions({ pageData })
-							: pageActions;
+						const appActions = page?.appActions;
+
+						return [
+							...((typeof pageActions == "function"
+								? pageActions(contextInfo)
+								: pageActions) || []),
+							...((typeof appActions == "function"
+								? appActions(contextInfo)
+								: appActions) || []),
+						];
 					},
 					setActions,
 					onClick,
@@ -395,7 +404,13 @@ export default function PageProvider({
 					onNavigateUp,
 				}}
 			>
-				<IonicPage />
+				{!children ? (
+					<IonicPage />
+				) : typeof children == "function" ? (
+					children({ ...contextInfo })
+				) : (
+					children
+				)}
 			</PageContext.Provider>
 		</div>
 	);

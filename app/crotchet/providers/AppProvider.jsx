@@ -227,37 +227,51 @@ export default function AppProvider({ children }) {
 		},
 	};
 
+	const setColors = (loading, crotchetApp) => {
+		if (loading || !crotchetApp) return null;
+
+		const primaryColor = tinyColor(crotchetApp.colors.primary);
+		const primaryDarkColor = tinyColor(
+			crotchetApp.colors.primaryDark || crotchetApp.colors.primary
+		);
+		const rgb = Object.values(primaryColor.toRgb()).slice(0, 3);
+		const isLight = primaryColor.isLight();
+
+		return (
+			<style>
+				{
+					/*css*/ `
+						:root {
+							--primary-color: ${rgb.join(" ")};
+							--on-primary-color: ${isLight ? "0 0 0" : "255 255 255"};
+							--on-primary-inverted-color: ${isLight ? "255 255 255" : "0 0 0"};
+							--primary-dark-color: ${Object.values(primaryDarkColor.toRgb())
+								.slice(0, 3)
+								.join(" ")};
+							--on-primary-dark-color: ${
+								primaryDarkColor.isLight()
+									? "0 0 0"
+									: "255 255 255"
+							};
+							--ion-color-primary: rgb(var(--primary-color));
+							--ion-color-primary-contrast: rgb(var(--on-primary-color));
+						}
+
+						@media (prefers-color-scheme: dark) {
+							:root {
+								--ion-color-primary: rgb(var(--primary-dark-color));
+								--ion-color-primary-contrast: rgb(var(--on-primary-dark-color));
+							}
+						}
+					`
+				}
+			</style>
+		);
+	};
+
 	return (
 		<AppContext.Provider value={value}>
-			<style>
-				{loading || !crotchetApp
-					? ""
-					: /*css*/ `
-					:root {
-						--primary-color: ${Object.values(tinyColor(crotchetApp.colors.primary).toRgb())
-							.slice(0, 3)
-							.join(" ")};
-						--primary-dark-color: ${Object.values(
-							tinyColor(
-								crotchetApp.colors.primaryDark ||
-									crotchetApp.colors.primary
-							).toRgb()
-						)
-							.slice(0, 3)
-							.join(" ")};
-						--on-primary-color: ${
-							tinyColor(crotchetApp.colors.primary).isLight()
-								? "0 0 0"
-								: "255 255 255"
-						};
-						--on-primary-inverted-color: ${
-							tinyColor(crotchetApp.colors.primary).isLight()
-								? "255 255 255"
-								: "0 0 0"
-						};
-					}
-				`}
-			</style>
+			{setColors(loading, crotchetApp)}
 
 			{children}
 

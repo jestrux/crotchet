@@ -13,7 +13,6 @@ export const onActionClick = (
 		if (action?.destructive) {
 			const res = await window.confirmDangerousAction({
 				title: action.label + "?",
-				actionType: "danger",
 				okayText: action.confirmText || "Yes, Continue",
 			});
 

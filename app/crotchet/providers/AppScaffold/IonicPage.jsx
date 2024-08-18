@@ -6,79 +6,57 @@ import {
 	IonToolbar,
 	IonTitle,
 	IonPage,
+	IonButton,
+	IonProgressBar,
 } from "@ionic/react";
-import PageSection from "./Page/PageSection";
-import { useDataLoader } from "@/crotchet/hooks";
 import { usePageContext } from "./PageProvider";
-import { Loader } from "@/crotchet/components";
+import DropdownMenu from "@/crotchet/components/DropdownMenu";
+import IonicPageContent from "./IonicPageContent";
 
-const PageAction = () => {
-	const { mainAction } = usePageContext();
-	const action = mainAction();
-
-	if (!action) return null;
-
-	return (
-		<div className="@container-normal fixed inset-x-0 pointer-events-none">
-			<div className="hidden @md:flex items-center justify-center fixed top-14 mt-1 left-0 w-24 px-2">
-				<button
-					className="pointer-events-auto bg-primary text-on-primary shadow dark:border-content/20 size-14 flex items-center justify-center gap-2 rounded-full focus:outline-none"
-					onClick={action.handler}
-				>
-					<span className="size-7">{action.icon}</span>
-				</button>
-			</div>
-
-			<button
-				className="@md:hidden pointer-events-auto bg-primary text-on-primary dark:bg-content dark:text-inverted shadow border border-content/5 dark:border-content/20 fixed bottom-4 right-5 mx-auto z-50 h-11 flex items-center justify-center gap-2 rounded-full px-3.5 focus:outline-none"
-				onClick={action.handler}
-			>
-				<span className="size-5">{action.icon}</span>
-				<span className="mr-1 text-base/none tracking-wide font-semibold">
-					{action.label}
-				</span>
-			</button>
-		</div>
-	);
-};
-
-const PageContent = ({ onSectionLoaded }) => {
-	const { content: _content, pageData } = usePageContext();
-	const { data: content } = useDataLoader({
-		handler: _content,
-		pageData,
-	});
-
-	if (!content) return null;
-
-	const pageContent = _.isArray(content) ? content : [content];
-
-	return pageContent.map((section, index) => (
-		<PageSection
-			key={index}
-			{...section}
-			onSectionLoaded={onSectionLoaded}
-		/>
-	));
-};
-
-export default function IonicPage() {
-	const { title: _title, pageResolving } = usePageContext();
+export default function IonicPage({ inModal, dismiss }) {
+	const {
+		title: _title,
+		pageResolving,
+		actions: _actions,
+	} = usePageContext();
 	const title = _title();
+	const actions = _actions();
 
 	return (
 		<IonPage>
-			<IonHeader>
-				<IonToolbar>
+			<IonHeader translucent>
+				<IonToolbar {...(inModal ? { mode: "ios" } : {})}>
 					<IonButtons slot="start">
-						<IonBackButton></IonBackButton>
+						{inModal ? (
+							<IonButton
+								color="medium"
+								onClick={() => dismiss(null, "cancel")}
+							>
+								Cancel
+							</IonButton>
+						) : (
+							<IonBackButton></IonBackButton>
+						)}
 					</IonButtons>
-					{title && <IonTitle>{title}</IonTitle>}
+					{title && <IonTitle ce>{title}</IonTitle>}
+					<IonButtons slot="end">
+						{actions?.length > 0 && (
+							<DropdownMenu choices={actions}>
+								<IonButton size="small" fill="clear">
+									<div className="size-7">
+										{window.UI.icon("more", { size: 28 })}
+									</div>
+								</IonButton>
+							</DropdownMenu>
+						)}
+					</IonButtons>
+
+					{pageResolving && <IonProgressBar type="indeterminate" />}
 				</IonToolbar>
 			</IonHeader>
 
 			<IonContent fullscreen>
-				{title && (
+				{title && !inModal && (
 					<IonHeader collapse="condense">
 						<IonToolbar>
 							<IonTitle size="large">{title}</IonTitle>
@@ -86,19 +64,7 @@ export default function IonicPage() {
 					</IonHeader>
 				)}
 
-				<div className="max-w-4xl mx-auto px-5 space-y-8">
-					{pageResolving ? (
-						<div className="py-12 flex justify-center">
-							<Loader />
-						</div>
-					) : (
-						<div className="space-y-8">
-							<PageContent />
-						</div>
-					)}
-				</div>
-
-				<PageAction />
+				<IonicPageContent />
 			</IonContent>
 		</IonPage>
 	);

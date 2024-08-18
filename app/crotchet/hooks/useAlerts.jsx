@@ -14,6 +14,9 @@ import {
 	Form,
 } from "@/crotchet/components";
 import { useOnInit } from "@/crotchet/hooks";
+import { useIonToast } from "@ionic/react";
+import PageProvider from "@/crotchet/providers/AppScaffold/PageProvider";
+import IonicModal from "../components/IonicModal";
 
 const ToastMessage = ({ message, onClose, duration = 3000 }) => {
 	const toastTimerRef = useRef();
@@ -123,57 +126,77 @@ export function AlertsWrapper() {
 				}
 
 				if (alert.type == "form") {
-					alert.content = (
-						<div className="mx-px px-4 pt-3 pb-6">
-							<Form
-								data={alert.data}
-								fields={alert.fields}
-								field={alert.field}
-								action={alert.action}
-								onSubmit={async (values) => {
-									values = _.keys(values).includes(
-										"formField"
-									)
-										? values.formField
-										: values;
+					alert.onSubmit = async (values) => {
+						values = _.keys(values).includes("formField")
+							? values.formField
+							: values;
 
-									if (alert.action?.handler) {
-										try {
-											const res =
-												await alert.action?.handler(
-													values
-												);
-											if (!res)
-												return console.log(
-													"No return..."
-												);
+						if (alert.action?.handler) {
+							try {
+								const res = await alert.action?.handler(values);
+								if (res == null)
+									return console.log("No return...");
 
-											alert.close(res);
-										} catch (error) {
-											window.showAlert(error);
-											return;
-										}
-									}
+								alert.close(res);
+							} catch (error) {
+								window.showAlert(error);
+								return;
+							}
+						}
 
-									alert.close(values);
-								}}
-							/>
-						</div>
+						alert.close(values);
+					};
+
+					return (
+						<PageProvider
+							key={alert.id}
+							page={alert}
+							onClose={alert.close}
+						>
+							<IonicModal>
+								{({ updateState, dismiss }) => (
+									<div className="mx-px px-4 pt-3 pb-6">
+										<Form
+											data={alert.data}
+											fields={alert.fields}
+											field={alert.field}
+											action={alert.action}
+											onChange={updateState}
+											onSubmit={dismiss}
+										/>
+									</div>
+								)}
+							</IonicModal>
+						</PageProvider>
 					);
 				}
 
 				if (alert.content) {
+					if (window.onDesktop()) {
+						return (
+							<Modal
+								dismissible={alert.dismissible ?? true}
+								key={alert.id}
+								title={alert.title}
+								{...props}
+							>
+								{Children.map(alert.content, (child) =>
+									cloneElement(child, {
+										onClose: alert.close,
+									})
+								)}
+							</Modal>
+						);
+					}
+
 					return (
-						<Modal
-							dismissible={alert.dismissible ?? true}
+						<PageProvider
 							key={alert.id}
-							title={alert.title}
-							{...props}
+							page={alert}
+							onClose={alert.close}
 						>
-							{Children.map(alert.content, (child) =>
-								cloneElement(child, { onClose: alert.close })
-							)}
-						</Modal>
+							<IonicModal />
+						</PageProvider>
 					);
 				}
 
@@ -193,6 +216,7 @@ export function AlertsWrapper() {
 
 export default function useAlerts() {
 	const [alerts, setAlerts] = useState([]);
+	const [presentToast] = useIonToast();
 
 	const notifyParent = (newValue, id, status) => {
 		window.alerts = newValue;
@@ -312,11 +336,22 @@ export default function useAlerts() {
 			type: "form",
 		});
 
-	const showToast = (...message) =>
-		showAlert({
+	const showToast = (...message) => {
+		if (window.onDesktop()) {
+			return showAlert({
+				message: [...message].join(" "),
+				type: "toast",
+			});
+		}
+
+		presentToast({
 			message: [...message].join(" "),
-			type: "toast",
+			duration: 2000,
+			position: "top",
+			color: "dark",
+			translucent: true,
 		});
+	};
 
 	return {
 		alerts,
@@ -329,5 +364,6 @@ export default function useAlerts() {
 		openChoicePicker,
 		openAlertForm,
 		showToast,
+		openModal: showAlert,
 	};
 }

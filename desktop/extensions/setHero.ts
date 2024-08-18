@@ -1,33 +1,24 @@
 import "../@types/index";
 
 const querySetHero = async (endpoint) => {
-	let baseUrl, companyId, bearerToken;
+	let baseUrl, companyId, bearerToken, url;
 
 	try {
-		baseUrl = (await getToken("SETHERO-BASE-URL"))?.value;
+		baseUrl = await getToken("SETHERO-BASE-URL");
 		if (!baseUrl) return null;
 
-		companyId = (await getToken("SETHERO-COMPANY-ID"))?.value;
+		companyId = await getToken("SETHERO-COMPANY-ID");
 		if (!companyId) return null;
 
-		bearerToken = (await getToken("SETHERO-PROD-API-TOKEN"))?.value;
+		bearerToken = await getToken("SETHERO-API-TOKEN");
 		if (!bearerToken) return null;
 
-		const url = `${baseUrl}/companies/${companyId}${endpoint}`.replace(
-			"//companies",
-			"/companies"
-		);
+		url = `${baseUrl}/companies/${companyId}${endpoint}`;
 		return await networkRequest(url, {
 			bearerToken,
 		});
 	} catch (error) {
-		showAlert(
-			"SH Error: " +
-				JSON.stringify({
-					error,
-				}) +
-				`${baseUrl}companies/${companyId}${endpoint}`
-		);
+		showAlert(url + "\n" + bearerToken);
 	}
 };
 
@@ -44,6 +35,7 @@ const projectColors = [
 ];
 
 registerDataSource("custom", "setHeroProjects", {
+	listenForUpdates: "tokens-updated",
 	fetch: () => querySetHero("/projects"),
 	entryAction: (item) =>
 		openPage({
@@ -173,6 +165,7 @@ registerAction("editSetHeroProject", async (project) =>
 );
 
 registerDataSource("custom", "setHeroCallsheets", {
+	listenForUpdates: "tokens-updated",
 	fetch: () =>
 		querySetHero("/callsheets").then((res) => {
 			return _.flatten(
@@ -517,6 +510,7 @@ setCrotchetApp({
 	name: "SetHero",
 	colors: {
 		primary: "#003376",
+		primaryDark: "#4680d5",
 	},
 	homePage: "setHeroHome",
 });

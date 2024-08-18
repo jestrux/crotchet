@@ -82,10 +82,11 @@ export const registerAction = (name, action) => {
 	window.addEventListener(`menu-item-click:${name}`, _handler);
 };
 
-export const registerPage = (name, page) => {
+export const registerPage = (
+	name,
+	{ resolve, title, noPadding, content, action, actions, nav, ...props }
+) => {
 	if (!window.pages) window.pages = {};
-
-	const { resolve, title, content, action, actions, nav } = page;
 
 	dispatch("page-registered-" + name);
 
@@ -93,10 +94,12 @@ export const registerPage = (name, page) => {
 		_id: randomId(),
 		resolve,
 		title,
+		noPadding,
 		content,
 		nav,
 		action,
 		actions,
+		...props,
 	};
 };
 

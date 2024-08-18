@@ -64,26 +64,28 @@ export const saveFile = async (props = {}, contents, { folder, open } = {}) => {
 	});
 };
 
-export const getToken = async (key) => {
-	let token = await getPreference(`token-${key}`);
+export const getToken = async (key, { prompt } = {}) => {
+	let token = (await getPreference(`token-${key}`))?.value;
 
-	if (!token?.value) {
-		token = await window.openAlertForm({
+	if (!token && prompt) {
+		const newToken = await window.openAlertForm({
 			title: "Enter Token",
 			field: {
 				label: key,
 			},
 		});
 
-		if (token) token = await saveToken(key, token);
+		if (newToken) token = (await saveToken(key, newToken))?.value;
 	}
 
 	return token;
 };
 
-export const saveToken = async (key, value, expiresAt) => {
-	return await savePreference(`token-${key}`, { value, expiresAt });
-};
+export const saveToken = async (key, value, expiresAt) =>
+	savePreference(`token-${key}`, { value, expiresAt });
+
+export const removeToken = async (key) =>
+	savePreference(`token-${key}`, undefined);
 
 export const withCache = async (
 	name,
@@ -144,7 +146,11 @@ export const getPreference = async (key, defaultValue = null) => {
 export const savePreference = async (key, value) => {
 	const prefs = await getUserPreferences(true);
 
-	if (key) prefs[key] = value;
+	if (key) {
+		const noValue = value == undefined;
+		if (noValue) delete prefs[key];
+		else prefs[key] = value;
+	}
 
 	await saveFile({ name: "__crotchetPreferences.json" }, prefs);
 
@@ -202,7 +208,8 @@ export const networkRequest = async (
 
 	const handler = async () => {
 		if (secretToken) {
-			const token = await getToken(secretToken);
+			const token = await getToken(secretToken, { prompt: true });
+
 			if (!token?.value?.length) return null;
 
 			fetchHeaders[secretToken] = token.value;
@@ -223,7 +230,7 @@ export const networkRequest = async (
 			.then((res) => res?.[responseField] || res);
 	};
 
-	return window.withLoader(handler);
+	return withLoader(handler, { quiet: true });
 };
 
 export const cleanObject = (obj = {}) => {
@@ -345,6 +352,7 @@ export const isValidEmail = (email) =>
 export const isValidAction = (action) => {
 	if (!action) return false;
 
+	if (action.handler instanceof Promise) return true;
 	if (typeof action.handler == "function") return true;
 	else if (typeof action.onClick == "function") return true;
 	else if (action.url) return true;
@@ -366,27 +374,36 @@ export const toHms = (number) => {
 	].join(":");
 };
 
-export const withLoader = async (
-	action,
-	{
+export const withLoader = async (action, props) => {
+	const {
 		successMessage = "Success!",
 		errorMessage = "Unknown Error!",
 		onChange = () => {},
-	} = {}
-) => {
-	const handleChange = (status, payload) => {
+	} = typeof props == "string" ? { successMessage: props } : props || {};
+	const handleChange = async (status, payload) => {
 		let message = { success: successMessage, error: errorMessage }[status];
 
 		if (typeof message == "function") message = message(payload);
 		else if (status == "error" && typeof payload == "string")
 			message = payload;
 
-		dispatch("with-loader-status-change", {
-			status,
-			message,
-		});
+		const isMessageStatus = !["idle", "loading"].includes(status);
 
-		onChange(status, payload);
+		if (onDesktop()) {
+			if (isMessageStatus) {
+				await window.__crotchet.someTime(20);
+				if (!document.body.getAttribute("data-visible"))
+					window.__crotchet.backgroundToast(message);
+			}
+
+			dispatch("with-loader-status-change", {
+				status,
+				message,
+			});
+
+			onChange(status, payload);
+		} else if (isMessageStatus && (!props.quiet || !message?.length))
+			window.showToast(message);
 	};
 
 	let resolve, reject;

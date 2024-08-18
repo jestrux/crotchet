@@ -5,7 +5,7 @@ import { objectFieldChoices, randomId } from "@/crotchet/utils";
 
 import FormField from "./FormField";
 
-const parseFields = (fields, data) => {
+export const parseFields = (fields, data) => {
 	if (!fields) return;
 
 	return Object.entries(fields).map(([name, value]) => {
@@ -28,8 +28,11 @@ const parseFields = (fields, data) => {
 		)
 			choices.push(computedDefaultValue);
 
+		if (["true", "false", true, false].includes(computedDefaultValue))
+			type = "boolean";
+
 		return {
-			__id: "id" + randomId(),
+			__id: randomId(),
 			name,
 			label: label ?? name,
 			type,

@@ -32,7 +32,7 @@ function BaseNavPageContent(props) {
 
 	if (!page) return null;
 
-	return <PageProvider page={page} />;
+	return <PageProvider page={page} scaffold={{ nav: props.nav }} />;
 }
 
 const getPage = (page) => {
@@ -45,7 +45,7 @@ const getPage = (page) => {
 	return pageName;
 };
 
-export default function BaseNavPage({ page, slug }) {
+export default function BaseNavPage({ nav, page, slug }) {
 	const matches = useRouteMatch(slug);
 	const { push, replace } = useHistory();
 
@@ -67,5 +67,5 @@ export default function BaseNavPage({ page, slug }) {
 			});
 	}, [matches]);
 
-	return <BaseNavPageContent page={page} />;
+	return <BaseNavPageContent page={page} nav={nav} />;
 }

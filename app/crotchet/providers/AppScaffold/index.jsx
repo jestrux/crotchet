@@ -12,61 +12,61 @@ import {
 import BaseNavPage from "./BaseNavPage";
 
 import "./ionic-styles";
+import homePageActions from "./homePageActions";
 
 const AppTabs = ({ app }) => {
-	const { nav } = app;
+	const { nav: _nav } = app;
+	let nav = [];
+
+	if (_nav) {
+		nav = _nav.map((item, index) => {
+			item.slug = item.slug || item.label?.toLowerCase();
+			item.page = item.page || {};
+
+			if (index == 0) item.page.appActions = homePageActions;
+
+			return item;
+		});
+	}
 
 	return (
 		<IonTabs>
 			<IonRouterOutlet>
-				{nav.map((item, index) => {
-					const slug = item.slug || item.label?.toLowerCase();
-
-					return (
-						<Route
-							key={["main", item.slug, index].join(" ")}
-							path={`/app/:tab(${slug})`}
-							exact
-						>
-							<BaseNavPage
-								page={item.page}
-								slug={`/app/${slug}`}
-							/>
-						</Route>
-					);
-				})}
-
-				{nav.map((item, index) => {
-					const slug = item.slug || item.label?.toLowerCase();
-					return (
-						<Route
-							key={["main", slug, index].join(" ")}
-							path={`/app/:tab(${slug})/page`}
-							component={BaseNavPage}
+				{nav.map((item, index) => (
+					<Route
+						key={["main", item.slug, index].join(" ")}
+						path={`/app/:tab(${item.slug})`}
+						exact
+					>
+						<BaseNavPage
+							page={item.page}
+							nav
+							slug={`/app/${item.slug}`}
 						/>
-					);
-				})}
+					</Route>
+				))}
 
-				<Redirect
-					path="/app"
-					exact
-					to={"/app/" + (nav[0].slug || nav[0].label?.toLowerCase())}
-				/>
+				{nav.map((item, index) => (
+					<Route
+						key={["main", item.slug, index].join(" ")}
+						path={`/app/:tab(${item.slug})/page`}
+						component={BaseNavPage}
+					/>
+				))}
+
+				<Redirect path="/app" exact to={"/app/" + nav[0].slug} />
 			</IonRouterOutlet>
 			<IonTabBar slot="bottom">
-				{nav.map((item, index) => {
-					const slug = item.slug || item.label?.toLowerCase();
-					return (
-						<IonTabButton
-							key={[slug, index].join(" ")}
-							tab={slug}
-							href={`/app/${slug}`}
-						>
-							<div className="size-6">{item.icon}</div>
-							<IonLabel>{item.label}</IonLabel>
-						</IonTabButton>
-					);
-				})}
+				{nav.map((item, index) => (
+					<IonTabButton
+						key={[item.slug, index].join(" ")}
+						tab={item.slug}
+						href={`/app/${item.slug}`}
+					>
+						<div className="size-6">{item.icon}</div>
+						<IonLabel>{item.label}</IonLabel>
+					</IonTabButton>
+				))}
 			</IonTabBar>
 		</IonTabs>
 	);

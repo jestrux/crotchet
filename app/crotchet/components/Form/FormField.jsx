@@ -794,7 +794,7 @@ const Field = ({ field, value, onChange, __data }) => {
 			let fieldType = field.type || "text";
 			if (["image"].includes(fieldType)) fieldType = "text";
 
-			if (fieldType == "text") {
+			if (fieldType == "long text") {
 				return (
 					<ReactTextareaAutosize
 						className="placeholder:text-content/20"

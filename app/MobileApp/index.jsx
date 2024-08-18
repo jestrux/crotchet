@@ -57,8 +57,6 @@ registerPlatformUtils({
 		}
 	},
 	writeFile: async (props = {}, contents, { folder, open } = {}) => {
-		console.log("Write file: ", folder, open);
-
 		try {
 			return await Filesystem.writeFile({
 				path: props.path || props.name,
@@ -69,6 +67,7 @@ registerPlatformUtils({
 			});
 		} catch (error) {
 			//
+			console.log("Write file error: ", error);
 		}
 	},
 	share: (payload) => Share.share(payload),
