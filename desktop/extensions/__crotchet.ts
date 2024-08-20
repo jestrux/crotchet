@@ -26,6 +26,7 @@ registerAction("clipboard", {
 });
 
 registerAction("sendEmail", {
+	global: true,
 	desktopOnly: true,
 	handler: async (payload) => {
 		const handler = async (res) => {
@@ -88,11 +89,13 @@ registerAction("sendEmail", {
 });
 
 registerAction("crotchetAppData", {
+	global: true,
 	desktopOnly: true,
 	url: `crotchet://socket/run?command=open /Users/waky/Library/Application\\ Support/Electron/Crotchet`,
 });
 
 registerAction("setHero", {
+	global: true,
 	desktopOnly: true,
 	handler: () => {
 		const date = moment().startOf("iweek").subtract(7, "days");
@@ -106,11 +109,13 @@ registerAction("setHero", {
 });
 
 registerAction("raycastTest", {
+	global: true,
 	desktopOnly: true,
 	url: `crotchet://socket/run?command=code /Users/waky/Documents/raycast/raycast-test/`,
 });
 
 registerAction("kitTest", {
+	global: true,
 	desktopOnly: true,
 	url: `crotchet://socket/run?command=code /Users/waky/.kenv`,
 });
