@@ -59,7 +59,9 @@ declare var sourceGet: (
 declare var UI: {
 	list: (payload: { data?: []; loading?: boolean }) => [];
 	icon: (
-		icon:
+		icon?:
+			| "default"
+			| "bolt"
 			| "clear"
 			| "close"
 			| "copy"
