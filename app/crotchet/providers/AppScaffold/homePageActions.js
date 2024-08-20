@@ -99,13 +99,14 @@ const manageTokens = () => {
 					},
 				}),
 		}),
-		content: {
+		content: ({ pageData }) => ({
 			type: "preferences",
+			data: pageData,
 			meta: {
 				onChange: saveToken,
 				onRemove: removeToken,
 			},
-		},
+		}),
 	});
 };
 

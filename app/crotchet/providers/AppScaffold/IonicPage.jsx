@@ -8,6 +8,9 @@ import {
 	IonPage,
 	IonButton,
 	IonProgressBar,
+	IonSegment,
+	IonSegmentButton,
+	IonLabel,
 } from "@ionic/react";
 import { usePageContext } from "./PageProvider";
 import DropdownMenu from "@/crotchet/components/DropdownMenu";
@@ -15,16 +18,20 @@ import IonicPageContent from "./IonicPageContent";
 
 export default function IonicPage({ inModal, dismiss }) {
 	const {
+		pageTab,
+		tabs: _tabs,
+		condensingTitle,
 		title: _title,
 		pageResolving,
 		actions: _actions,
 	} = usePageContext();
+	const tabs = _tabs();
 	const title = _title();
 	const actions = _actions();
 
 	return (
 		<IonPage>
-			<IonHeader translucent>
+			<IonHeader translucent mode="ios">
 				<IonToolbar {...(inModal ? { mode: "ios" } : {})}>
 					<IonButtons slot="start">
 						{inModal ? (
@@ -51,20 +58,33 @@ export default function IonicPage({ inModal, dismiss }) {
 						)}
 					</IonButtons>
 
+					{tabs?.length && (
+						<IonSegment value={pageTab}>
+							{tabs.map((tab) => (
+								<IonSegmentButton
+									key={tab.__id}
+									value={tab.value}
+								>
+									<IonLabel>{tab.label}</IonLabel>
+								</IonSegmentButton>
+							))}
+						</IonSegment>
+					)}
+
 					{pageResolving && <IonProgressBar type="indeterminate" />}
 				</IonToolbar>
 			</IonHeader>
 
 			<IonContent fullscreen>
-				{title && !inModal && (
-					<IonHeader collapse="condense">
+				{title && condensingTitle() && !inModal && (
+					<IonHeader collapse="condense" mode="ios">
 						<IonToolbar>
 							<IonTitle size="large">{title}</IonTitle>
 						</IonToolbar>
 					</IonHeader>
 				)}
 
-				<IonicPageContent />
+				{!pageResolving && <IonicPageContent />}
 			</IonContent>
 		</IonPage>
 	);

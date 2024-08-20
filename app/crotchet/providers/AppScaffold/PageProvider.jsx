@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { useDataLoader, useEventListener } from "@/crotchet/hooks";
-import { someTime, randomId } from "@/crotchet/utils";
+import { someTime, randomId, objectFieldChoices } from "@/crotchet/utils";
 import IonicPage from "./IonicPage";
 
 const PageContext = createContext({
@@ -20,6 +20,7 @@ const PageContext = createContext({
 	formData: null,
 	setFormData: () => {},
 	title: () => {},
+	condensingTitle: () => {},
 	nav: () => {},
 	content: () => {},
 	preview: () => {},
@@ -27,6 +28,9 @@ const PageContext = createContext({
 	pageFilter: null,
 	setPageFilter: () => {},
 	filters: () => {},
+	pageTab: null,
+	setPageTab: () => {},
+	tabs: () => {},
 	formFields: () => {},
 	mainAction: () => {},
 	setMainAction: () => {},
@@ -69,6 +73,8 @@ export default function PageProvider({
 	const [formData, setFormData] = useState(null);
 	const filterRef = useRef(page?.filter?.defaultValue);
 	const [pageFilter, _setPageFilter] = useState(filterRef.current);
+	const tabRef = useRef(page?.tab || page?.tabs?.[0]);
+	const [pageTab, _setPageTab] = useState(tabRef.current);
 
 	const [pageData, setPageData] = useState();
 	const [pageStatus, _setPageStatus] = useState({ status: "idle" });
@@ -292,6 +298,12 @@ export default function PageProvider({
 					onReady,
 					onDataUpdated,
 					onEscape,
+					condensingTitle: () => {
+						const condensingTitle = page?.condensingTitle ?? true;
+						return typeof condensingTitle == "function"
+							? condensingTitle(contextInfo)
+							: condensingTitle;
+					},
 					title: () => {
 						const title = page?.title;
 						return typeof title == "function"
@@ -328,6 +340,18 @@ export default function PageProvider({
 						return typeof filters == "function"
 							? filters(contextInfo)
 							: filters;
+					},
+					pageTab,
+					setPageTab: (tab) => {
+						tabRef.current = tab;
+						_setPageTab(tab);
+						refetch();
+					},
+					tabs: () => {
+						const tabs = page?.tabs;
+						return objectFieldChoices(
+							typeof tabs == "function" ? tabs(contextInfo) : tabs
+						);
 					},
 					formFields: () => {
 						let fields = page?.fields;

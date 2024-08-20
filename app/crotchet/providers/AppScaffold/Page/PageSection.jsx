@@ -9,7 +9,6 @@ import PreferenceEditor from "@/crotchet/components/PreferenceEditor";
 export default function PageSection({
 	title,
 	type,
-	pageData,
 	data: _data,
 	source,
 	meta = {},
@@ -17,7 +16,7 @@ export default function PageSection({
 }) {
 	const [dataRef, setDataRef] = useState();
 	const { data } = useDataLoader({
-		handler: source ? () => sourceGet(source, meta) : _data || pageData,
+		handler: source ? () => sourceGet(source, meta) : _data,
 		listenForUpdates: source?.listenForUpdates,
 		onUpdate: () => {
 			setDataRef(randomId());
@@ -44,6 +43,19 @@ export default function PageSection({
 				{...meta}
 				title={title}
 				type={meta?.inline ? "inline" : "grid"}
+				data={data}
+				key={dataRef}
+			/>
+		);
+	}
+
+	if (type == "list") {
+		return (
+			<ActionGrid
+				{...sourceProps}
+				{...meta}
+				title={title}
+				type="inline"
 				data={data}
 				key={dataRef}
 			/>

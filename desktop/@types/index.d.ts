@@ -100,10 +100,11 @@ declare var ListenForUpdates:
 	| string
 	| string[];
 declare var ChoiceItem: string | { label?: string; value: any };
-declare var PageTitle: string | ((payload: { [key: string]: any }) => string);
+declare var PageContext: { pageData: { [key: string]: any } };
+declare var PageTitle: string | ((payload: typeof PageContext) => string);
 declare var PageContent:
 	| { [key: string]: any }
-	| ((payload: { data: any; loading: boolean }) => {} | [])
+	| ((payload: typeof PageContext) => {} | [])
 	| string;
 declare var ActionButton:
 	| {
@@ -117,12 +118,29 @@ declare var Page: {
 	type?: String;
 	resolve?: Function;
 	title?: typeof PageTitle;
+	condensingTitle?: boolean | ((payload: typeof PageContext) => boolean);
 	content?: typeof PageContent;
-	nav?: (typeof ActionButton & { page: typeof Page })[];
-	action?: typeof ActionButton;
+	tabs?:
+		| (typeof ChoiceItem)[]
+		| ((payload: typeof PageContext) => (typeof ChoiceItem)[]);
+	nav?:
+		| (typeof ActionButton & { page: typeof Page })[]
+		| ((
+				payload: typeof PageContext
+		  ) => (typeof ActionButton & { page: typeof Page })[]);
+	action?:
+		| typeof ActionButton
+		| ((payload: typeof PageContext) => typeof ActionButton);
 	actions?:
 		| (typeof ActionButton)[]
-		| ((payload: any) => (typeof ActionButton)[] | null | undefined);
+		| ((
+				payload: typeof PageContext
+		  ) => (typeof ActionButton)[] | null | undefined);
+	toolbar?:
+		| (typeof ActionButton & { flex: boolean })[]
+		| ((
+				payload: typeof PageContext
+		  ) => (typeof ActionButton & { flex: boolean })[]);
 
 	// form details
 	data?: { [key: string]: any };

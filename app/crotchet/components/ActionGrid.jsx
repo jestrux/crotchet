@@ -252,7 +252,7 @@ export default function ActionGrid({
 						typeWrap
 							? "flex gap-x-1.5 gap-y-2 flex-wrap justify-start"
 							: typeInline
-							? "bg-card dark:bg-content/5 shadow dark:border border-content/5 rounded-lg overflow-hidden divide-y divide-content/5"
+							? "bg-card dark:bg-content/5 shadow border-t dark:border border-content/5 rounded-lg overflow-hidden divide-y divide-content/5"
 							: "grid grid-cols-3 gap-2"
 					}
 				>

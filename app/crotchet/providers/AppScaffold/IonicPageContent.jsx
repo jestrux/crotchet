@@ -64,7 +64,7 @@ export default function IonicPageContent({ onSectionLoaded }) {
 			<div
 				key={pageDataRef}
 				className={clsx("max-w-4xl mx-auto space-y-8", {
-					"px-5": !page?.noPadding,
+					"p-5": !page?.noPadding,
 				})}
 			>
 				{/* <div className="py-12 flex justify-center">
@@ -75,7 +75,6 @@ export default function IonicPageContent({ onSectionLoaded }) {
 						<PageSection
 							key={index}
 							{...section}
-							pageData={pageData}
 							onSectionLoaded={onSectionLoaded}
 						/>
 					))}
