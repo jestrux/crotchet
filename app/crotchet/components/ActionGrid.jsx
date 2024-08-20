@@ -103,15 +103,34 @@ export default function ActionGrid({
 					action={action}
 					onClick={() => handleClick(action)}
 					onHold={onHold}
-					className="w-full h-12 flex items-center gap-3 pl-4 pr-2.5"
+					className="w-full h-12 text-left flex items-center gap-3 pl-4 pr-2.5"
 				>
 					{action.icon && (
-						<div className="size-5">
+						<div
+							className="-ml-2 size-8 rounded-full p-1.5 bg-content/10 text-content/60"
+							style={
+								action.color
+									? {
+											backgroundColor: action.color,
+											color: "white",
+									  }
+									: {}
+							}
+						>
 							<Icon icon={action.icon} />
 						</div>
 					)}
 
-					<div className="first-letter:capitalize">{action.label || action.title}</div>
+					<div className="flex flex-col flex-1">
+						<div className="first-letter:capitalize">
+							{action.label || action.title}
+						</div>
+						{action.subtitle && (
+							<div className="first-letter:capitalize text-xs/none opacity-50 mb-1.5">
+								{action.subtitle}
+							</div>
+						)}
+					</div>
 
 					{!hideTrailing && (
 						<svg
@@ -141,7 +160,7 @@ export default function ActionGrid({
 				>
 					{action.icon && (
 						<div
-							className="size-8 rounded-full p-1.5 bg-content/5"
+							className="size-8 rounded-full p-1.5 bg-content/10 text-content/60"
 							style={
 								action.color
 									? {
@@ -252,7 +271,7 @@ export default function ActionGrid({
 						typeWrap
 							? "flex gap-x-1.5 gap-y-2 flex-wrap justify-start"
 							: typeInline
-							? "bg-card dark:bg-content/5 shadow border-t dark:border border-content/5 rounded-lg overflow-hidden divide-y divide-content/5"
+							? "bg-card shadow border-t dark:border border-content/5 rounded-lg overflow-hidden divide-y divide-content/5"
 							: "grid grid-cols-3 gap-2"
 					}
 				>
