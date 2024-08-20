@@ -13,6 +13,7 @@ export default function PageSection({
 	source,
 	meta = {},
 	onSectionLoaded = () => {},
+	...props
 }) {
 	const [dataRef, setDataRef] = useState();
 	const { data } = useDataLoader({
@@ -23,7 +24,7 @@ export default function PageSection({
 		},
 		onSuccess: onSectionLoaded,
 	});
-	const sourceProps = _.pick(source, [
+	const sourceProps = _.pick({ ...source, ...props }, [
 		"entryAction",
 		"entryActions",
 		"layoutProps",
