@@ -100,7 +100,10 @@ declare var ListenForUpdates:
 	| string
 	| string[];
 declare var ChoiceItem: string | { label?: string; value: any };
-declare var PageContext: { pageData: { [key: string]: any } };
+declare var PageContext: {
+	pageData?: { [key: string]: any };
+	pageTab?: string;
+};
 declare var PageTitle: string | ((payload: typeof PageContext) => string);
 declare var PageContent:
 	| { [key: string]: any }

@@ -9,10 +9,12 @@ import {
 	IonApp,
 } from "@ionic/react";
 
+import { useHistory } from "react-router";
 import BaseNavPage from "./BaseNavPage";
 
 import "./ionic-styles";
 import homePageActions from "./homePageActions";
+import { getPage } from "@/crotchet";
 
 const AppTabs = ({ app }) => {
 	const { nav: _nav } = app;
@@ -72,15 +74,41 @@ const AppTabs = ({ app }) => {
 	);
 };
 
+function AppScaffoldContent({ app } = {}) {
+	const { push, replace } = useHistory();
+
+	window.openRootPage = (page) => replace(page);
+
+	window.openPage = (page) => {
+		const pageName = getPage(page);
+		return push({
+			pathname: "/page/" + pageName,
+			state: { page: pageName },
+		});
+	};
+
+	window.pushPage = (page) => {
+		const pageName = getPage(page);
+		return push({
+			pathname: "page/" + pageName,
+			state: { page: pageName },
+		});
+	};
+
+	return (
+		<IonRouterOutlet>
+			<Route path="/page/:id" component={BaseNavPage} />
+			<Route path="/app" render={() => <AppTabs app={app} />} />
+			<Redirect path="/" exact to="/app" />
+		</IonRouterOutlet>
+	);
+}
+
 export default function AppScaffold({ rootPage: app } = {}) {
 	return (
 		<IonApp>
 			<IonReactRouter>
-				<IonRouterOutlet>
-					<Route exact path="/page" component={BaseNavPage} />
-					<Route path="/app" render={() => <AppTabs app={app} />} />
-					<Redirect path="/" exact to="/app" />
-				</IonRouterOutlet>
+				<AppScaffoldContent app={app} />
 			</IonReactRouter>
 		</IonApp>
 	);

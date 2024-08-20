@@ -1,6 +1,6 @@
 import "../@types/index";
 
-const querySetHero = async (endpoint) => {
+const querySetHero = async (endpoint, { prefixCompany = false } = {}) => {
 	let baseUrl, companyId, bearerToken, url;
 
 	try {
@@ -13,7 +13,10 @@ const querySetHero = async (endpoint) => {
 		bearerToken = await getToken("SETHERO-API-TOKEN");
 		if (!bearerToken) return null;
 
-		url = `${baseUrl}/companies/${companyId}${endpoint}`;
+		url = prefixCompany
+			? `${baseUrl}/companies/${companyId}${endpoint}`
+			: `${baseUrl}${endpoint}`;
+
 		return await networkRequest(url, {
 			bearerToken,
 		});
@@ -36,7 +39,7 @@ const projectColors = [
 
 registerDataSource("custom", "setHeroProjects", {
 	listenForUpdates: "tokens-updated",
-	fetch: () => querySetHero("/projects"),
+	fetch: () => querySetHero("/projects", { prefixCompany: true }),
 	entryAction: (item) =>
 		openPage({
 			title: "Edit Project",
@@ -167,12 +170,13 @@ registerAction("editSetHeroProject", async (project) =>
 registerDataSource("custom", "setHeroCallsheets", {
 	listenForUpdates: "tokens-updated",
 	fetch: () =>
-		querySetHero("/callsheets").then((res) => {
+		querySetHero("/callsheets", { prefixCompany: true }).then((res) => {
 			return _.flatten(
 				(res || []).map((item) => {
 					return (item.callsheets || []).map((cs) => {
 						return {
 							...cs,
+							update_date: item.last_modified,
 							project_title: item.title,
 						};
 					});
@@ -195,7 +199,7 @@ registerDataSource("custom", "setHeroCallsheets", {
 				),
 		},
 	},
-	orderBy: "date,desc",
+	orderBy: "update_date,desc",
 	mapEntry(item) {
 		return {
 			...item,
@@ -242,18 +246,7 @@ registerDataSource("custom", "setHeroCallsheets", {
 			...(!onDesktop() ? [] : [window.actions.addSetHeroCallsheet]),
 		];
 	},
-	entryAction: (item) =>
-		openPage({
-			title: "Edit Callsheet",
-			resolve: () => {
-				console.log("Edit Callsheet: ", item);
-				return item._id;
-			},
-			content: (payload) => {
-				console.log("Callsheet detail: ", payload);
-				return [];
-			},
-		}),
+	entryAction: (item) => window.actions.editSetHeroCallsheet.handler(item),
 });
 
 registerAction("addSetHeroCallsheet", () =>
@@ -271,7 +264,106 @@ registerAction("addSetHeroCallsheet", () =>
 	})
 );
 
-registerAction("editSetHeroCallsheet", (callsheet) =>
+registerAction("editSetHeroCallsheet", (callsheet) => {
+	return openPage({
+		title: callsheet.title,
+		condensingTitle: false,
+		resolve: async () => {
+			const baseUrl = `/projects/${callsheet.project_id}/callsheets/${callsheet.id}`;
+			let [sections, fields] = await Promise.all([
+				querySetHero(`${baseUrl}/sections`),
+				querySetHero(`${baseUrl}/section_fields`),
+			]);
+
+			sections = _.orderBy(
+				sections,
+				["order_num", "order_time"],
+				["asc", "asc"]
+			).map((section) => {
+				const type = section.section_slug;
+				try {
+					if (section.settings)
+						section.settings = JSON.parse(section.settings);
+				} catch (error) {}
+
+				return {
+					...section,
+					type,
+					title: section.section_title,
+					subtitle: section.section_slug,
+					fields: fields.reduce((agg, field) => {
+						if (field.cs_section_id == section.id) {
+							try {
+								if (field.settings)
+									field.settings = JSON.parse(field.settings);
+							} catch (error) {}
+
+							agg.push(field);
+						}
+
+						return agg;
+					}, []),
+				};
+			});
+
+			return {
+				header: _.find(sections, ["type", "header"]),
+				sections: _.filter(sections, ({ type }) => type != "header"),
+			};
+		},
+		content: ({ pageData }) => {
+			if (!pageData) return;
+
+			return [
+				{
+					type: "list",
+					title: "Callsheet Header",
+					data: [pageData.header],
+					meta: {
+						entryAction: (header) => {
+							openPage({
+								tabs: ["Left", "Center", "Right"],
+								content: ({ pageTab }) => {
+									const fields = _.filter(header?.fields, [
+										"group_slug",
+										pageTab,
+									]);
+
+									console.log(
+										"Edit header...",
+										fields,
+										pageTab
+									);
+
+									return [];
+								},
+							});
+						},
+					},
+				},
+				{
+					type: "list",
+					title: "Callsheet Sections",
+					data: pageData.sections,
+					meta: {
+						entryAction: (entry) => {
+							console.log("Section clicked: ", entry);
+						},
+					},
+				},
+			];
+		},
+		toolbar: () => {
+			return [
+				{
+					icon: UI.icon("add"),
+					label: "Add section",
+					flex: true,
+				},
+			];
+		},
+	});
+
 	window.openAlertForm({
 		title: "Edit Callsheet",
 		data: callsheet,
@@ -287,8 +379,8 @@ registerAction("editSetHeroCallsheet", (callsheet) =>
 					"Callsheet updated"
 				),
 		},
-	})
-);
+	});
+});
 
 registerWidget("setHeroProjects", {
 	title: "SetHero Projects",

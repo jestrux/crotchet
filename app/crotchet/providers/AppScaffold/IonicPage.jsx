@@ -18,7 +18,9 @@ import IonicPageContent from "./IonicPageContent";
 
 export default function IonicPage({ inModal, dismiss }) {
 	const {
+		pageFilter,
 		pageTab,
+		setPageTab,
 		tabs: _tabs,
 		condensingTitle,
 		title: _title,
@@ -42,7 +44,7 @@ export default function IonicPage({ inModal, dismiss }) {
 								Cancel
 							</IonButton>
 						) : (
-							<IonBackButton></IonBackButton>
+							<IonBackButton text="" />
 						)}
 					</IonButtons>
 					{title && <IonTitle ce>{title}</IonTitle>}
@@ -59,7 +61,10 @@ export default function IonicPage({ inModal, dismiss }) {
 					</IonButtons>
 
 					{tabs?.length && (
-						<IonSegment value={pageTab}>
+						<IonSegment
+							value={pageTab}
+							onIonChange={(e) => setPageTab(e.detail.value)}
+						>
 							{tabs.map((tab) => (
 								<IonSegmentButton
 									key={tab.__id}
@@ -84,7 +89,9 @@ export default function IonicPage({ inModal, dismiss }) {
 					</IonHeader>
 				)}
 
-				{!pageResolving && <IonicPageContent />}
+				{!pageResolving && (
+					<IonicPageContent key={[pageFilter, pageTab].join(" ")} />
+				)}
 			</IonContent>
 		</IonPage>
 	);

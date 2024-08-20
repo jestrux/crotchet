@@ -250,7 +250,7 @@ export const objectIsEmpty = (obj = {}) => {
 };
 
 export const objectFieldChoices = (choices) =>
-	choices.map((choice) => {
+	choices?.map((choice) => {
 		let label =
 			objectField(choice, "label") ||
 			objectField(choice, "title") ||

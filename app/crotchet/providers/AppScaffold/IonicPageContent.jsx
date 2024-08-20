@@ -42,15 +42,9 @@ const PageAction = () => {
 
 export default function IonicPageContent({ onSectionLoaded }) {
 	const [pageDataRef, setPageDataRef] = useState(randomId());
-	const {
-		page,
-		content: _content,
-		pageData,
-		onDataUpdated,
-	} = usePageContext();
+	const { page, content: _content, onDataUpdated } = usePageContext();
 	const { data: content } = useDataLoader({
 		handler: _content,
-		pageData,
 	});
 
 	onDataUpdated(() => setPageDataRef(randomId()));

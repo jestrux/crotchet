@@ -2,8 +2,7 @@ import { useEffect } from "react";
 import { useHistory, useRouteMatch, useLocation } from "react-router";
 import PageProvider from "./PageProvider";
 import { useDataLoader } from "@/crotchet/hooks";
-import { randomId } from "@/crotchet/utils";
-import { registerPage } from "@/crotchet";
+import { getPage } from "@/crotchet";
 
 function BaseNavPageContent(props) {
 	const { state = {} } = useLocation();
@@ -35,36 +34,20 @@ function BaseNavPageContent(props) {
 	return <PageProvider page={page} scaffold={{ nav: props.nav }} />;
 }
 
-const getPage = (page) => {
-	let pageName = page;
-	if (typeof page != "string") {
-		pageName = randomId();
-		registerPage(pageName, page);
-	}
-
-	return pageName;
-};
-
 export default function BaseNavPage({ nav, page, slug }) {
 	const matches = useRouteMatch(slug);
-	const { push, replace } = useHistory();
-
-	window.openRootPage = (page) => replace(page);
-
-	window.openPage = (page) =>
-		push({
-			pathname: "/page",
-			state: { page: getPage(page) },
-		});
+	const { push } = useHistory();
 
 	useEffect(() => {
-		if (!matches || !slug) return console.log("No match: ", slug);
+		if (page && (!matches || !slug)) return console.log("No match: ", slug);
 
-		window.pushPage = (page) =>
+		window.pushPage = (page) => {
+			const pageName = getPage(page);
 			push({
-				pathname: slug + "/page",
-				state: { page: getPage(page) },
+				pathname: slug + "/page/" + pageName,
+				state: { page: pageName },
 			});
+		};
 	}, [matches]);
 
 	return <BaseNavPageContent page={page} nav={nav} />;

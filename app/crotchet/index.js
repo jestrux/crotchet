@@ -103,6 +103,16 @@ export const registerPage = (
 	};
 };
 
+export const getPage = (page) => {
+	let pageName = page?.name || page;
+	if (typeof pageName != "string") {
+		pageName = randomId();
+		registerPage(pageName, page);
+	}
+
+	return pageName;
+};
+
 export const setCrotchetApp = (newProps = {}) => {
 	const newApp = {
 		...window.__crotchetApp,

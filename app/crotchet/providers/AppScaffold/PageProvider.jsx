@@ -15,6 +15,7 @@ const PageContext = createContext({
 		status: "idle",
 		message: null,
 	},
+	pageDataVersion: null,
 	pageData: null,
 	setPageData: () => {},
 	formData: null,
@@ -269,6 +270,7 @@ export default function PageProvider({
 		pageDataVersion,
 		formData,
 		pageFilter,
+		pageTab,
 		onClose,
 	};
 
