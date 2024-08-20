@@ -111,7 +111,7 @@ export default function ActionGrid({
 						</div>
 					)}
 
-					<div className="">{action.label || action.title}</div>
+					<div className="first-letter:capitalize">{action.label || action.title}</div>
 
 					{!hideTrailing && (
 						<svg

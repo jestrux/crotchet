@@ -337,6 +337,70 @@ registerAction("editSetHeroCallsheet", (callsheet) => {
 
 									return [];
 								},
+								toolbar: ({ pageTab }) => {
+									return [
+										{
+											icon: UI.icon("add"),
+											label: "Add header section",
+											flex: true,
+											handler: async () => {
+												console.log(
+													"Add header section to: ",
+													pageTab
+												);
+
+												let type =
+													await openChoicePicker([
+														{
+															icon: UI.icon(
+																"image"
+															),
+															value: "image",
+														},
+														{
+															icon: UI.svg(
+																"M3.75 6.75h16.5M3.75 12H12m-8.25 5.25h16.5"
+															),
+															value: "text",
+														},
+													]);
+
+												if (!type) return null;
+
+												if (type == "image") {
+													type =
+														await openChoicePicker([
+															{
+																icon: UI.svg(
+																	"M4.745 3A23.933 23.933 0 0 0 3 12c0 3.183.62 6.22 1.745 9M19.5 3c.967 2.78 1.5 5.817 1.5 9s-.533 6.22-1.5 9M8.25 8.885l1.444-.89a.75.75 0 0 1 1.105.402l2.402 7.206a.75.75 0 0 0 1.104.401l1.445-.889m-8.25.75.213.09a1.687 1.687 0 0 0 2.062-.617l4.45-6.676a1.688 1.688 0 0 1 2.062-.618l.213.09"
+																),
+																label: "Project Logo",
+																value: "@projectLogo",
+															},
+															{
+																icon: UI.svg(
+																	"M4.745 3A23.933 23.933 0 0 0 3 12c0 3.183.62 6.22 1.745 9M19.5 3c.967 2.78 1.5 5.817 1.5 9s-.533 6.22-1.5 9M8.25 8.885l1.444-.89a.75.75 0 0 1 1.105.402l2.402 7.206a.75.75 0 0 0 1.104.401l1.445-.889m-8.25.75.213.09a1.687 1.687 0 0 0 2.062-.617l4.45-6.676a1.688 1.688 0 0 1 2.062-.618l.213.09"
+																),
+																label: "Company Logo",
+																value: "@companyLogo",
+															},
+															{
+																icon: UI.svg(
+																	"M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"
+																),
+																label: "Upload",
+																value: "upload",
+															},
+														]);
+												}
+
+												showToast(
+													`Add ${type} to ${pageTab}`
+												);
+											},
+										},
+									];
+								},
 							});
 						},
 					},
@@ -357,8 +421,29 @@ registerAction("editSetHeroCallsheet", (callsheet) => {
 			return [
 				{
 					icon: UI.icon("add"),
-					label: "Add section",
+					label: "Add page section",
 					flex: true,
+					handler: async () => {
+						console.log("Add page section");
+						const type = await openChoicePicker([
+							{
+								icon: UI.svg(
+									"M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"
+								),
+								label: "Custom Banner",
+								value: "custom-note",
+							},
+							{
+								icon: UI.icon("minus"),
+								label: "Page Break",
+								value: "page-break",
+							},
+						]);
+
+						if (!type) return null;
+
+						showToast(`Add ${type} page section`);
+					},
 				},
 			];
 		},
@@ -426,9 +511,13 @@ registerPage("setHeroHome", {
 			),
 			label: "Home",
 			page: {
-				resolve: () => {
+				resolve: async () => {
+					const company = await querySetHero("", {
+						prefixCompany: true,
+					});
+
 					return {
-						company: "Red Line Studios",
+						company: company?.name,
 					};
 				},
 				title: ({ pageData }) => {

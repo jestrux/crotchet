@@ -257,8 +257,8 @@ export const objectFieldChoices = (choices) =>
 			objectField(choice, "subtitle");
 		let value = objectField(choice, "value");
 
-		if (!_.isUndefined(value) && label) value = label;
-		else if (!_.isUndefined(label) && value) label = value;
+		if (_.isUndefined(value) && label) value = label;
+		else if (_.isUndefined(label) && value) label = value;
 
 		return {
 			__id: randomId(),

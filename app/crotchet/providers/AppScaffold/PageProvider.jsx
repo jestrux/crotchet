@@ -32,6 +32,7 @@ const PageContext = createContext({
 	pageTab: null,
 	setPageTab: () => {},
 	tabs: () => {},
+	toolbar: () => {},
 	formFields: () => {},
 	mainAction: () => {},
 	setMainAction: () => {},
@@ -354,6 +355,12 @@ export default function PageProvider({
 						return objectFieldChoices(
 							typeof tabs == "function" ? tabs(contextInfo) : tabs
 						);
+					},
+					toolbar: () => {
+						const toolbar = page?.toolbar;
+						return typeof toolbar == "function"
+							? toolbar(contextInfo)
+							: toolbar;
 					},
 					formFields: () => {
 						let fields = page?.fields;

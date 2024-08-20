@@ -71,6 +71,8 @@ declare var UI: {
 			| "user"
 			| "shuffle"
 			| "image"
+			| "minus"
+			| "substract"
 			| "add"
 			| "add-circle"
 			| "search"
@@ -99,7 +101,9 @@ declare var ListenForUpdates:
 	| ((callback: () => {}) => Function)
 	| string
 	| string[];
-declare var ChoiceItem: string | { label?: string; value: any };
+declare var ChoiceItem:
+	| string
+	| { icon?: string | typeof UI.icon; label?: string; value: any };
 declare var PageContext: {
 	pageData?: { [key: string]: any };
 	pageTab?: string;

@@ -11,6 +11,7 @@ import {
 	IonSegment,
 	IonSegmentButton,
 	IonLabel,
+	IonFooter,
 } from "@ionic/react";
 import { usePageContext } from "./PageProvider";
 import DropdownMenu from "@/crotchet/components/DropdownMenu";
@@ -21,15 +22,18 @@ export default function IonicPage({ inModal, dismiss }) {
 		pageFilter,
 		pageTab,
 		setPageTab,
+		toolbar: _toolbar,
 		tabs: _tabs,
 		condensingTitle,
 		title: _title,
 		pageResolving,
 		actions: _actions,
 	} = usePageContext();
+
 	const tabs = _tabs();
 	const title = _title();
 	const actions = _actions();
+	const toolbar = _toolbar();
 
 	return (
 		<IonPage>
@@ -93,6 +97,27 @@ export default function IonicPage({ inModal, dismiss }) {
 					<IonicPageContent key={[pageFilter, pageTab].join(" ")} />
 				)}
 			</IonContent>
+
+			{toolbar && (
+				<IonFooter mode="ios" translucent>
+					<IonToolbar className="flex items-center justify-center gap-4 px-2">
+						{toolbar.map((action, index) => {
+							return (
+								<div
+									key={index}
+									className={`${
+										action.flex && "flex-1"
+									} h-8 flex items-center justify-center gap-2 bg-content/5 rounded-md`}
+									onClick={action.handler}
+								>
+									<div className="size-5">{action.icon}</div>
+									<IonLabel>{action.label}</IonLabel>
+								</div>
+							);
+						})}
+					</IonToolbar>
+				</IonFooter>
+			)}
 		</IonPage>
 	);
 }
