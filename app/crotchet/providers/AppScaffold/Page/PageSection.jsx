@@ -8,7 +8,7 @@ import PreferenceEditor from "@/crotchet/components/PreferenceEditor";
 
 export default function PageSection({
 	title,
-	type,
+	type = "list",
 	data: _data,
 	source,
 	meta = {},
@@ -59,6 +59,7 @@ export default function PageSection({
 				type="inline"
 				data={data}
 				key={dataRef}
+				showDefaultBackground
 			/>
 		);
 	}

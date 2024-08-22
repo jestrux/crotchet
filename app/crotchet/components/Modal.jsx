@@ -1,9 +1,7 @@
 import { useRef } from "react";
 import {
-	AlertDialog,
-	AlertDialogDescription,
-	AlertDialogLabel,
-} from "@reach/alert-dialog";
+	Dialog
+} from "@reach/dialog";
 import useKeyboard from "@/crotchet/hooks/useKeyboard";
 
 function Button({
@@ -151,7 +149,7 @@ const Modal = ({
 	const cancelRef = useRef();
 
 	return (
-		<AlertDialog
+		<Dialog
 			onDismiss={dismissible ? onClose : () => {}}
 			isOpen={true}
 			leastDestructiveRef={cancelRef}
@@ -160,11 +158,11 @@ const Modal = ({
                 ${showOverlayBg && "bg-black/20 dark:bg-black/70"}
             `}
 		>
-			<div ref={cancelRef} className="fixed inset-0" onClick={onClose}>
+			{/* <div ref={cancelRef} className="fixed inset-0" onClick={onClose}>
 				<AlertDialogLabel className="hidden">
 					{title || "Some title"}
 				</AlertDialogLabel>
-			</div>
+			</div> */}
 
 			<div
 				className={`max-h-full group bg-card text-content border shadow-2xl rounded-lg overflow-hidden overflow-y-auto w-full relative
@@ -220,7 +218,7 @@ const Modal = ({
 
 				<AlertDialogDescription>{children}</AlertDialogDescription>
 			</div>
-		</AlertDialog>
+		</Dialog>
 	);
 };
 

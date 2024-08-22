@@ -44,6 +44,7 @@ export default function ActionGrid({
 	entryActions,
 	hideTrailing = false,
 	payload,
+	showDefaultBackground = false,
 	onClose = () => {},
 }) {
 	const { loading, data: actions } = useDataLoader({ handler: data });
@@ -107,7 +108,9 @@ export default function ActionGrid({
 				>
 					{action.icon && (
 						<div
-							className="-ml-2 size-8 rounded-full p-1.5 bg-content/10 text-content/60"
+							className={clsx("-ml-2 size-8 rounded-full p-1.5", {
+								"bg-content/5": showDefaultBackground,
+							})}
 							style={
 								action.color
 									? {
@@ -156,11 +159,11 @@ export default function ActionGrid({
 					action={action}
 					onHold={onHold}
 					onClick={() => handleClick(action)}
-					className="bg-card shadow border-content/10 border-x border-t dark:border-b rounded-lg py-2 px-3 flex flex-col gap-1.5 items-start"
+					className="bg-card shadow-sm border border-content/10 rounded-lg py-2 px-3 flex flex-col gap-1.5 items-start"
 				>
 					{action.icon && (
 						<div
-							className="size-8 rounded-full p-1.5 bg-content/10 text-content/60"
+							className="size-8 rounded-full p-1.5 bg-content/5"
 							style={
 								action.color
 									? {
@@ -271,7 +274,7 @@ export default function ActionGrid({
 						typeWrap
 							? "flex gap-x-1.5 gap-y-2 flex-wrap justify-start"
 							: typeInline
-							? "bg-card shadow border-t dark:border border-content/5 rounded-lg overflow-hidden divide-y divide-content/5"
+							? "bg-card shadow-sm border border-content/5 rounded-lg overflow-hidden divide-y divide-content/5"
 							: "grid grid-cols-3 gap-2"
 					}
 				>

@@ -47,7 +47,7 @@ const IonicModalForm = ({ children, dismiss }) => {
 					</IonButtons>
 				</IonToolbar>
 			</IonHeader>
-			<IonContent className="ion-padding">
+			<IonContent className="ion-padding" fullscreen>
 				{typeof children == "function"
 					? children({
 							updateState: (value) => (stateRef.current = value),

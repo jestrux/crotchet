@@ -16,6 +16,7 @@ import {
 import { usePageContext } from "./PageProvider";
 import DropdownMenu from "@/crotchet/components/DropdownMenu";
 import IonicPageContent from "./IonicPageContent";
+import clsx from "clsx";
 
 export default function IonicPage({ inModal, dismiss }) {
 	const {
@@ -98,16 +99,17 @@ export default function IonicPage({ inModal, dismiss }) {
 				)}
 			</IonContent>
 
-			{toolbar && (
+			{toolbar && !pageResolving && (
 				<IonFooter mode="ios" translucent>
 					<IonToolbar className="flex items-center justify-center gap-4 px-2">
 						{toolbar.map((action, index) => {
 							return (
 								<div
 									key={index}
-									className={`${
-										action.flex && "flex-1"
-									} h-8 flex items-center justify-center gap-2 bg-content/5 rounded-md`}
+									className={clsx(
+										"text-primary translate-y-1 h-10 flex items-center justify-center gap-2 bg-content/[0.03] rounded-md",
+										action.flex ? "flex-1" : "w-10"
+									)}
 									onClick={action.handler}
 								>
 									<div className="size-5">{action.icon}</div>

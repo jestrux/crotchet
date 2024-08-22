@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useRef, useState } from "react";
-import { AlertDialog, AlertDialogLabel } from "@reach/alert-dialog";
+import { Portal } from "@reach/portal";
 import { useDataLoader } from "@/crotchet/hooks";
 import {
 	cleanObject,
@@ -20,14 +20,12 @@ export default function Sheet({
 	preview: _preview,
 	actions: _actions,
 	children,
-	dismissible = true,
 	showOverlayBg = true,
 	noHeading = false,
 	inset = true,
 	onClose = () => {},
 }) {
 	const [preview, setPreview] = useState(_preview);
-	const cancelRef = useRef();
 	const getShareActions = () => {
 		return window.globalActions({ share: true }).filter((action) => {
 			let matches = !objectIsEmpty(
@@ -182,107 +180,121 @@ export default function Sheet({
 	};
 
 	return (
-		<AlertDialog
-			onDismiss={dismissible ? onClose : () => {}}
-			isOpen={true}
-			leastDestructiveRef={cancelRef}
-			className={clsx(
-				"fixed z-[999]",
-				inset
-					? "inset-x-3 mb-[env(safe-area-inset-bottom)]"
-					: "inset-x-0"
-			)}
-			style={{
-				bottom: inset ? "calc(32px - env(safe-area-inset-bottom))" : 0,
-			}}
-		>
-			<div
-				ref={cancelRef}
-				className="fixed inset-0 bg-black/20 dark:bg-black/70"
-				onClick={() => onClose()}
-			>
-				<AlertDialogLabel className="hidden">Label</AlertDialogLabel>
-			</div>
-
+		<Portal>
 			<motion.div
 				className={clsx(
-					"bg-stone-100/95 dark:bg-card/95 backdrop-blur-sm rounded-3xl relative z-10 max-w-lg mx-auto group text-content border shadow-2xl overflow-hidden",
-					{ "p-3": !noHeading }
+					"fixed z-[999]",
+					inset
+						? "inset-x-3 mb-[env(safe-area-inset-bottom)]"
+						: "inset-x-0"
 				)}
 				style={{
-					paddingBottom: inset
-						? noHeading
-							? 0
-							: 12
-						: "calc(8px + env(safe-area-inset-bottom))",
-					boxShadow: showOverlayBg
-						? ""
-						: "0px 10px 30px -2px var(--shadow-color)",
+					bottom: inset
+						? "calc(32px - env(safe-area-inset-bottom))"
+						: 0,
 				}}
-				animate={{
-					y: 0,
-					opacity: 1,
+				drag="y"
+				dragConstraints={{
+					top: 0,
+					bottom: 0.5,
 				}}
-				initial={{
-					y: "10%",
-					opacity: 0,
+				dragElastic={{
+					top: 0,
+					bottom: 0.5,
 				}}
-				transition={{
-					duration: 0.2,
+				dragTransition={{
+					bounceDamping: 10000,
+					bounceStiffness: 10000,
+				}}
+				agEnd={(_, info) => {
+					if (info.offset.y > 0.5) onClose();
 				}}
 			>
-				{!noHeading && (
-					<div className="mb-3 pl-1 flex items-center justify-between gap-2">
-						{contentPreview(preview, title)}
+				<div
+					className="fixed inset-0 bg-black/20 dark:bg-black/70"
+					onClick={() => onClose()}
+				/>
 
-						<button
-							className="flex-shrink-0 ml-auto bg-content/5 border border-content/5 size-7 flex items-center justify-center rounded-full"
-							onClick={() => onClose()}
-						>
-							<svg
-								className="w-5"
-								fill="none"
-								viewBox="0 0 24 24"
-								strokeWidth="1.5"
-								stroke="currentColor"
+				<motion.div
+					className={clsx(
+						"bg-stone-100/95 dark:bg-card/95 backdrop-blur-sm rounded-3xl relative z-10 max-w-lg mx-auto group text-content border shadow-2xl overflow-hidden",
+						{ "p-3": !noHeading }
+					)}
+					style={{
+						paddingBottom: inset
+							? noHeading
+								? 0
+								: 12
+							: "calc(8px + env(safe-area-inset-bottom))",
+						boxShadow: showOverlayBg
+							? ""
+							: "0px 10px 30px -2px var(--shadow-color)",
+					}}
+					animate={{
+						y: 0,
+						opacity: 1,
+					}}
+					initial={{
+						y: "10%",
+						opacity: 0,
+					}}
+					transition={{
+						duration: 0.2,
+					}}
+				>
+					{!noHeading && (
+						<div className="mb-3 pl-1 flex items-center justify-between gap-2">
+							{contentPreview(preview, title)}
+
+							<button
+								className="flex-shrink-0 ml-auto bg-content/5 border border-content/5 size-7 flex items-center justify-center rounded-full"
+								onClick={() => onClose()}
 							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									d="M6 18 18 6M6 6l12 12"
-								></path>
-							</svg>
-						</button>
-					</div>
-				)}
+								<svg
+									className="w-5"
+									fill="none"
+									viewBox="0 0 24 24"
+									strokeWidth="1.5"
+									stroke="currentColor"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										d="M6 18 18 6M6 6l12 12"
+									></path>
+								</svg>
+							</button>
+						</div>
+					)}
 
-				{loadingShareActions ? (
-					<div className="flex justify-center">
-						{showLoader && <Loader size={40} />}
-					</div>
-				) : children ? (
-					children
-				) : (
-					<>
-						{!actions?.length && (
-							<div className="pb-4 flex h-full items-center justify-center opacity-50">
-								No matching actions
-							</div>
-						)}
+					{loadingShareActions ? (
+						<div className="flex justify-center">
+							{showLoader && <Loader size={40} />}
+						</div>
+					) : children ? (
+						children
+					) : (
+						<>
+							{!actions?.length && (
+								<div className="pb-4 flex h-full items-center justify-center opacity-50">
+									No matching actions
+								</div>
+							)}
 
-						{actions && (
-							<ActionGrid
-								key={"preview" + preview?.image}
-								type="inline"
-								data={actions}
-								hideTrailing
-								onClose={onClose}
-								payload={{ ...payload, preview }}
-							/>
-						)}
-					</>
-				)}
+							{actions && (
+								<ActionGrid
+									key={"preview" + preview?.image}
+									type="inline"
+									data={actions}
+									hideTrailing
+									onClose={onClose}
+									payload={{ ...payload, preview }}
+								/>
+							)}
+						</>
+					)}
+				</motion.div>
 			</motion.div>
-		</AlertDialog>
+		</Portal>
 	);
 }

@@ -58,7 +58,7 @@ const AppTabs = ({ app }) => {
 
 				<Redirect path="/app" exact to={"/app/" + nav[0].slug} />
 			</IonRouterOutlet>
-			<IonTabBar slot="bottom">
+			<IonTabBar slot="bottom" translucent mode="ios">
 				{nav.map((item, index) => (
 					<IonTabButton
 						key={[item.slug, index].join(" ")}
