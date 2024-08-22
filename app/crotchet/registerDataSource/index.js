@@ -179,6 +179,7 @@ export default function registerDataSource(provider, name, props = {}) {
 		sourceGet(
 			{
 				handler,
+				..._.pick(props, getterFields),
 			},
 			{
 				..._.pick(props, getterFields),

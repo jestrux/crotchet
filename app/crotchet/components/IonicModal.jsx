@@ -75,10 +75,10 @@ export default function IonicModal({ children }) {
 
 	return (
 		<IonModal isOpen={isOpen}>
-			{page.type == "form" && (
+			{page?.type == "form" && (
 				<IonicModalForm dismiss={dismiss}>{children}</IonicModalForm>
 			)}
-			{page.type != "form" && <IonicPage inModal dismiss={dismiss} />}
+			{page?.type != "form" && <IonicPage inModal dismiss={dismiss} />}
 		</IonModal>
 	);
 }

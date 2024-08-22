@@ -39,7 +39,7 @@ export default function BaseNavPage({ nav, page, slug }) {
 	const { push } = useHistory();
 
 	useEffect(() => {
-		if (page && (!matches || !slug)) return console.log("No match: ", slug);
+		if (page && (!matches || !slug)) return;
 
 		window.pushPage = (page) => {
 			const pageName = getPage(page);

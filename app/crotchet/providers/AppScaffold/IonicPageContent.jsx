@@ -4,6 +4,9 @@ import { usePageContext } from "./PageProvider";
 import clsx from "clsx";
 import { useState } from "react";
 import { randomId } from "@/crotchet/utils";
+import { IonItem, IonLabel, IonList } from "@ionic/react";
+import GridList from "@/crotchet/components/GridList";
+import { MutliGestureButton } from "@/crotchet/components";
 
 const PageAction = () => {
 	const { mainAction, scaffold } = usePageContext();
@@ -40,7 +43,7 @@ const PageAction = () => {
 	);
 };
 
-export default function IonicPageContent({ onSectionLoaded }) {
+function IonicPageContent({ onSectionLoaded }) {
 	const [pageDataRef, setPageDataRef] = useState(randomId());
 	const { page, content: _content, onDataUpdated } = usePageContext();
 	const { data: content } = useDataLoader({
@@ -77,4 +80,85 @@ export default function IonicPageContent({ onSectionLoaded }) {
 			<PageAction />
 		</>
 	);
+}
+
+export default function IonicPageContentWrapper({ onSectionLoaded }) {
+	const { page, pageData } = usePageContext();
+	const onClick =
+		typeof page?.entryAction != "function"
+			? null
+			: (action) =>
+					window.openActionSheet({
+						actions: page.entryAction(action),
+						preview: _.pick(action, [
+							"icon",
+							"image",
+							"video",
+							"title",
+							"subtitle",
+						]),
+					});
+	const onHold =
+		typeof page?.entryActions != "function"
+			? null
+			: (action) =>
+					window.openActionSheet({
+						actions: page.entryActions(action),
+						preview: _.pick(action, [
+							"icon",
+							"image",
+							"video",
+							"title",
+							"subtitle",
+						]),
+					});
+
+	if (pageData?.length && ["list", "grid"].includes(page?.type)) {
+		return (
+			<>
+				{page.type == "list" && (
+					<IonList
+						lines="none"
+						className="divide-y divide-content/10"
+					>
+						{pageData.map((item) => (
+							<MutliGestureButton
+								key={item._id}
+								className="w-full text-left"
+								onClick={onClick}
+								onHold={onHold}
+							>
+								<IonItem>
+									<IonLabel>
+										<div className="text-lg font-semibold">
+											{item.title}
+										</div>
+										<div className="text-sm opacity-60">
+											{item.subtitle}
+										</div>
+									</IonLabel>
+								</IonItem>
+							</MutliGestureButton>
+						))}
+					</IonList>
+				)}
+
+				{page.type == "grid" && (
+					<div className="px-5">
+						<GridList
+							data={pageData}
+							columns={2}
+							{...page?.layoutProps}
+							entryAction={page?.entryAction}
+							entryActions={page?.entryActions}
+						/>
+					</div>
+				)}
+
+				<PageAction />
+			</>
+		);
+	}
+
+	return <IonicPageContent onSectionLoaded={onSectionLoaded} />;
 }

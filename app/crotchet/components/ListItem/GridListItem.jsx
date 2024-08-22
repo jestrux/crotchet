@@ -25,7 +25,7 @@ export default function GridListItem({
 
 		Haptics.impact({ style: ImpactStyle.Medium });
 
-		if (_.isFunction(onHold)) return onHold();
+		return onHold();
 	});
 
 	const handleClick = () => {

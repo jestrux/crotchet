@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { useDataLoader, useEventListener } from "@/crotchet/hooks";
 import { someTime, randomId } from "@/crotchet/utils";
+import { sourceGet } from "../hooks/useSourceGet";
 
 const PageContext = createContext({
 	isOpen: false,
@@ -104,17 +105,16 @@ export default function PageProvider({
 	const onNavigateUp = (callback) => (navigateUpHandler.current = callback);
 
 	const { refetch, loading } = useDataLoader({
-		handler: async ({ fromRefetch }) => {
+		handler: async () => {
 			const filter = filterRef.current;
 			await someTime(5);
-			return typeof page?.resolve == "function"
-				? page.resolve({
-						fromRefetch,
-						filters: page?.filter?.field
-							? { [page.filter.field]: filter }
-							: null,
-				  })
-				: true;
+			if (!page?.resolve) return true;
+
+			return sourceGet(page.resolve, {
+				filters: page?.filter?.field
+					? { [page.filter.field]: filter }
+					: null,
+			});
 		},
 		listenForUpdates: page.listenForUpdates,
 		dismiss: onClose,

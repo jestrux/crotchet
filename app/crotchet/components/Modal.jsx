@@ -1,8 +1,5 @@
 import { useRef } from "react";
-import {
-	Dialog
-} from "@reach/dialog";
-import useKeyboard from "@/crotchet/hooks/useKeyboard";
+import { Dialog } from "@reach/dialog";
 
 function Button({
 	type = "button",
@@ -145,7 +142,6 @@ const Modal = ({
 	onClose,
 	noHeading,
 }) => {
-	// useKeyboard({ mode: "native" });
 	const cancelRef = useRef();
 
 	return (
@@ -216,7 +212,7 @@ const Modal = ({
 					</div>
 				)}
 
-				<AlertDialogDescription>{children}</AlertDialogDescription>
+				{children}
 			</div>
 		</Dialog>
 	);
