@@ -7,7 +7,7 @@ const querySetHero = async (endpoint, { prefixCompany = false } = {}) => {
 		baseUrl = await getToken("SETHERO-BASE-URL");
 		if (!baseUrl) return null;
 
-		companyId = await getToken("SETHERO-COMPANY-ID");
+		companyId = await getPreference("sethero-active-company");
 		if (!companyId) return null;
 
 		bearerToken = await getToken("SETHERO-API-TOKEN");
@@ -556,255 +556,388 @@ registerPage("setHeroCallsheets", {
 	}),
 });
 
+registerAction("setHeroLogout", {
+	label: "Logout",
+	handler: async () => {
+		await saveToken("SETHERO-BASE-URL", null);
+		await saveToken("SETHERO-API-TOKEN", null);
+		await savePreference("sethero-active-project", null);
+		await savePreference("sethero-active-company", null);
+
+		await someTime(100);
+		dispatch("sethero-auth-changed");
+	},
+});
+
 registerPage("setHeroHome", {
-	nav: () => [
-		{
-			icon: window.UI.svg(
-				"m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
-			),
-			label: "Home",
-			page: {
-				resolve: async () =>
-					await querySetHero("/projects", {
-						prefixCompany: true,
-					}).then(async (projects) => {
-						let projectId = await getPreference(
-							"sethero-active-project"
-						);
+	resolve: async () => {
+		console.log("Resolve...");
 
-						if (!projectId) {
-							projectId = projects[0].id;
-							savePreference("sethero-active-project", projectId);
-						}
+		const tokens = await Promise.all([
+			await getToken("SETHERO-BASE-URL"),
+			await getToken("SETHERO-API-TOKEN"),
+		]);
 
-						const activeProject = _.find(projects, [
-							"id",
-							projectId,
-						]);
+		return _.compact(tokens).length > 0;
+	},
+	listenForUpdates: "sethero-auth-changed",
+	// title: ({ pageResolving, pageData }) => {
+	// 	if (pageResolving || pageData) return null;
+	// 	return "SetHero";
+	// },
+	actions: ({ pageResolving }) => {
+		if (pageResolving) return null;
+		return [window.actions.setHeroLogout];
+	},
+	content: ({ pageResolving, pageData }) => {
+		if (pageResolving || pageData) return null;
 
-						return activeProject;
-					}),
-				listenForUpdates: "active-project-changed",
-				title: ({ pageData }) => {
-					if (!pageData?.title) return "SetHero";
+		return {
+			type: "list",
+			title: "Set Hero",
+			data: [
+				{
+					label: "Login to Get Started",
+					onClick: () => {
+						window.openAlertForm({
+							title: "SetHero Login",
+							fields: {
+								baseUrl: "text",
+								authToken: "text",
+							},
+							action: {
+								handler: async (res) => {
+									if (!res) return null;
 
-					return pageData.title;
+									let { baseUrl, authToken } = res;
+
+									baseUrl =
+										baseUrl.at(-1) == "/"
+											? baseUrl.slice(0, -1)
+											: baseUrl;
+
+									try {
+										const url = `${baseUrl}/companies`;
+										const companies = await networkRequest(
+											url,
+											{
+												bearerToken: authToken,
+											}
+										);
+
+										await saveToken(
+											"SETHERO-BASE-URL",
+											baseUrl
+										);
+										await saveToken(
+											"SETHERO-API-TOKEN",
+											authToken
+										);
+
+										await savePreference(
+											"sethero-active-project",
+											null
+										);
+
+										await savePreference(
+											"sethero-active-company",
+											companies[0].id
+										);
+
+										await someTime(100);
+										dispatch("sethero-auth-changed");
+
+										return true;
+									} catch (error) {
+										window.showToast("Invalid credentials");
+										return null;
+									}
+								},
+							},
+						});
+					},
 				},
-				content: () => [
-					{
-						title: "Project",
-						type: "actions",
-						data: [
-							{
-								icon: window.UI.svg(
-									"M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0 0 12 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 0 1-2.031.352 5.988 5.988 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.971Zm-16.5.52c.99-.203 1.99-.377 3-.52m0 0 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.989 5.989 0 0 1-2.031.352 5.989 5.989 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L5.25 4.971Z"
-								),
-								label: "Departments",
-							},
-							{
-								icon: window.UI.svg(
-									"M6 13.5V3.75m0 9.75a1.5 1.5 0 0 1 0 3m0-3a1.5 1.5 0 0 0 0 3m0 3.75V16.5m12-3V3.75m0 9.75a1.5 1.5 0 0 1 0 3m0-3a1.5 1.5 0 0 0 0 3m0 3.75V16.5m-6-9V3.75m0 3.75a1.5 1.5 0 0 1 0 3m0-3a1.5 1.5 0 0 0 0 3m0 9.75V10.5"
-								),
-								label: "Settings",
-							},
-							{
-								icon: window.UI.svg(
-									"M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"
-								),
-								label: "Admins",
-								handler: () => pushPage("setHeroCallsheets"),
-							},
-						],
+			],
+		};
+	},
+	nav: ({ pageResolving, pageData }) => {
+		if (pageResolving || !pageData) return null;
+
+		return [
+			{
+				icon: window.UI.svg(
+					"m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
+				),
+				label: "Home",
+				page: {
+					resolve: async () =>
+						await querySetHero("/projects", {
+							prefixCompany: true,
+						}).then(async (projects) => {
+							let projectId = await getPreference(
+								"sethero-active-project"
+							);
+
+							if (!projectId) {
+								projectId = projects[0].id;
+								savePreference(
+									"sethero-active-project",
+									projectId
+								);
+							}
+
+							const activeProject = _.find(projects, [
+								"id",
+								projectId,
+							]);
+
+							return activeProject;
+						}),
+					listenForUpdates: "active-project-changed",
+					icon: ({ pageData }) => {
+						if (!pageData) return null;
+
+						return {
+							label: pageData.title,
+							image: pageData.image_url,
+							handler: () =>
+								window
+									.openChoicePicker({
+										title: "Switch Project",
+										choices: async () => {
+											const res =
+												await window.dataSources.setHeroProjects.get();
+
+											return res.map((item) => {
+												const selected =
+													item.id == pageData.id;
+												return {
+													label: item.title,
+													value: item.id,
+													selected,
+												};
+											});
+										},
+									})
+									.then(async (value) => {
+										if (!value) return;
+										await savePreference(
+											"sethero-active-project",
+											value
+										);
+										dispatch("active-project-changed");
+									}),
+						};
 					},
-					{
-						title: "People",
-						type: "list",
-						data: [
-							{
-								icon: window.UI.svg(
-									"M22 11V3h-7v3H9V3H2v8h7V8h2v10h4v3h7v-8h-7v3h-2V8h2v3z"
-								),
-								label: "Crew",
-							},
-							{
-								icon: window.UI.svg(
-									"M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z"
-								),
-								label: "Talent",
-								handler: () => pushPage("setHeroCallsheets"),
-							},
-							{
-								icon: window.UI.svg(
-									"M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
-								),
-								label: "Clients",
-							},
-						],
+					title: ({ pageData }) => {
+						if (!pageData?.title) return null;
+
+						return pageData.title;
 					},
-					{
-						title: "Data",
-						type: "list",
-						data: [
+					actions: ({ pageResolving }) => {
+						if (pageResolving) return null;
+						return [
 							{
-								icon: window.UI.svg(
-									"M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z"
-								),
-								label: "Scenes",
+								label: "Change Company",
+								handler: () => {
+									window.showToast("Change company");
+								},
 							},
-							{
-								icon: window.UI.svg(
-									"M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"
-								),
-								label: "Locations",
-								handler: () => pushPage("setHeroCallsheets"),
-							},
-						],
+							window.actions.setHeroLogout,
+						];
 					},
-					{
-						title: "Recent Callsheets",
-						type: "grid",
-						source: window.dataSources.setHeroCallsheets,
-						meta: {
-							limit: 4,
-							fallbackIcon: window.UI.svg(
-								"M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"
-							),
+					content: () => [
+						{
+							title: "Project",
+							type: "actions",
+							data: [
+								{
+									icon: window.UI.svg(
+										"M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0 0 12 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 0 1-2.031.352 5.988 5.988 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.971Zm-16.5.52c.99-.203 1.99-.377 3-.52m0 0 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.989 5.989 0 0 1-2.031.352 5.989 5.989 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L5.25 4.971Z"
+									),
+									label: "Departments",
+								},
+								{
+									icon: window.UI.svg(
+										"M6 13.5V3.75m0 9.75a1.5 1.5 0 0 1 0 3m0-3a1.5 1.5 0 0 0 0 3m0 3.75V16.5m12-3V3.75m0 9.75a1.5 1.5 0 0 1 0 3m0-3a1.5 1.5 0 0 0 0 3m0 3.75V16.5m-6-9V3.75m0 3.75a1.5 1.5 0 0 1 0 3m0-3a1.5 1.5 0 0 0 0 3m0 9.75V10.5"
+									),
+									label: "Settings",
+								},
+								{
+									icon: window.UI.svg(
+										"M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"
+									),
+									label: "Admins",
+									handler: () =>
+										pushPage("setHeroCallsheets"),
+								},
+							],
 						},
-					},
-				],
-				actions: () => [
-					{
-						label: "Switch Project",
-						icon: window.UI.svg(
-							"M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"
-						),
-						handler: () =>
-							window
-								.openChoicePicker({
-									title: "Switch Project",
-									choices: async () => {
-										const res =
-											await window.dataSources.setHeroProjects.get();
-										return res.map((item) => {
-											return {
-												label: item.title,
-												value: item.id,
-											};
-										});
-									},
-								})
-								.then(async (value) => {
-									if (!value) return;
-									await savePreference(
-										"sethero-active-project",
-										value
-									);
-									dispatch("active-project-changed");
-								}),
-					},
-				],
+						{
+							title: "People",
+							type: "list",
+							data: [
+								{
+									icon: window.UI.svg(
+										"M22 11V3h-7v3H9V3H2v8h7V8h2v10h4v3h7v-8h-7v3h-2V8h2v3z"
+									),
+									label: "Crew",
+								},
+								{
+									icon: window.UI.svg(
+										"M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z"
+									),
+									label: "Talent",
+									handler: () =>
+										pushPage("setHeroCallsheets"),
+								},
+								{
+									icon: window.UI.svg(
+										"M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
+									),
+									label: "Clients",
+								},
+							],
+						},
+						{
+							title: "Data",
+							type: "list",
+							data: [
+								{
+									icon: window.UI.svg(
+										"M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z"
+									),
+									label: "Scenes",
+								},
+								{
+									icon: window.UI.svg(
+										"M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"
+									),
+									label: "Locations",
+									handler: () =>
+										pushPage("setHeroCallsheets"),
+								},
+							],
+						},
+						{
+							title: "Recent Callsheets",
+							type: "grid",
+							source: window.dataSources.setHeroCallsheets,
+							meta: {
+								limit: 4,
+								fallbackIcon: window.UI.svg(
+									"M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"
+								),
+							},
+						},
+					],
+				},
 			},
-		},
-		{
-			icon: window.UI.svg(
-				"M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"
-			),
-			label: "Callsheets",
-			page: {
-				title: "Callsheets",
-				entryAction: window.dataSources.setHeroCallsheets.entryAction,
-				entryActions: window.dataSources.setHeroCallsheets.entryActions,
-				layoutProps: window.dataSources.setHeroCallsheets.layoutProps,
-				resolve: () => window.dataSources.setHeroCallsheets.get(),
-				filter: "grid",
-				actions: ({ pageFilter, setPageFilter }) => {
-					const viewIcons = {
-						grid: UI.svg(
-							"M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z",
-							{ size: 22 }
-						),
+			{
+				icon: window.UI.svg(
+					"M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"
+				),
+				label: "Callsheets",
+				page: {
+					title: "Callsheets",
+					entryAction:
+						window.dataSources.setHeroCallsheets.entryAction,
+					entryActions:
+						window.dataSources.setHeroCallsheets.entryActions,
+					layoutProps:
+						window.dataSources.setHeroCallsheets.layoutProps,
+					resolve: () => window.dataSources.setHeroCallsheets.get(),
+					filter: "grid",
+					actions: ({ pageFilter, setPageFilter }) => {
+						const viewIcons = {
+							grid: UI.svg(
+								"M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z",
+								{ size: 22 }
+							),
 
-						list: UI.svg(
-							"M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z",
-							{ size: 22 }
-						),
+							list: UI.svg(
+								"M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z",
+								{ size: 22 }
+							),
 
-						calendar: UI.svg(
-							"M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z",
-							{ size: 22 }
-						),
-					};
+							calendar: UI.svg(
+								"M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z",
+								{ size: 22 }
+							),
+						};
 
-					return [
+						return [
+							{
+								type: "primary",
+								label: "Add",
+								icon: window.UI.icon("add"),
+								handler: window.actions.addSetHeroCallsheet,
+							},
+							{
+								priority: true,
+								icon: viewIcons[pageFilter ?? "grid"],
+								handler: () =>
+									window
+										.openChoicePicker({
+											// title: "Select View",
+											choices: [
+												{
+													icon: viewIcons.grid,
+													value: "grid",
+												},
+												{
+													icon: viewIcons.list,
+													value: "list",
+												},
+												// {
+												// 	icon: viewIcons.calendar,
+												// 	value: "calendar",
+												// },
+											],
+										})
+										.then((filter) =>
+											setPageFilter(filter || pageFilter)
+										),
+							},
+						];
+					},
+					type: ({ pageData, pageFilter }) => {
+						console.log("Page filter: ", pageFilter);
+						return pageFilter;
+					},
+				},
+			},
+			{
+				icon: window.UI.svg(
+					"M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"
+				),
+				label: "People",
+				page: {
+					title: "People",
+					type: "list",
+					tabs: ["Talent", "Clients", "Crew"],
+					resolve: ({ pageTab }) => {
+						// const fields = _.filter(header?.fields, [
+						// 	"group_slug",
+						// 	pageTab,
+						// ]);
+						return window.dataSources.setHeroContacts.get();
+					},
+					entryAction: window.dataSources.setHeroContacts.entryAction,
+					entryActions:
+						window.dataSources.setHeroContacts.entryActions,
+					actions: () => [
 						{
 							type: "primary",
 							label: "Add",
 							icon: window.UI.icon("add"),
-							handler: window.actions.addSetHeroCallsheet,
+							handler: window.actions.addSetHeroContact,
 						},
-						{
-							priority: true,
-							icon: viewIcons[pageFilter ?? "grid"],
-							handler: () =>
-								window
-									.openChoicePicker({
-										// title: "Select View",
-										choices: [
-											{
-												icon: viewIcons.grid,
-												value: "grid",
-											},
-											{
-												icon: viewIcons.list,
-												value: "list",
-											},
-											// {
-											// 	icon: viewIcons.calendar,
-											// 	value: "calendar",
-											// },
-										],
-									})
-									.then((filter) =>
-										setPageFilter(filter || pageFilter)
-									),
-						},
-					];
-				},
-				type: ({ pageData, pageFilter }) => {
-					console.log("Page filter: ", pageFilter);
-					return pageFilter;
+					],
 				},
 			},
-		},
-		{
-			icon: window.UI.svg(
-				"M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"
-			),
-			label: "People",
-			page: {
-				title: "People",
-				type: "list",
-				tabs: ["Talent", "Clients", "Crew"],
-				resolve: ({ pageTab }) => {
-					// const fields = _.filter(header?.fields, [
-					// 	"group_slug",
-					// 	pageTab,
-					// ]);
-					return window.dataSources.setHeroContacts.get();
-				},
-				entryAction: window.dataSources.setHeroContacts.entryAction,
-				entryActions: window.dataSources.setHeroContacts.entryActions,
-				actions: () => [
-					{
-						type: "primary",
-						label: "Add",
-						icon: window.UI.icon("add"),
-						handler: window.actions.addSetHeroContact,
-					},
-				],
-			},
-		},
-	],
+		];
+	},
 });
 
 // setCrotchetApp({

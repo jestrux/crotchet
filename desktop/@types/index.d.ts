@@ -7,6 +7,8 @@ declare var actions: { [key: string]: any };
 
 declare var dataSources: { [key: string]: any };
 
+declare var someTime: (duration?: number) => Promise<any>;
+
 declare var openUrl: (path: String) => Promise<any>;
 
 declare var onDesktop: () => boolean;
@@ -25,6 +27,11 @@ declare var savePreference: (
 declare var dispatch: (event: String, payload?: any) => void;
 
 declare var getToken: (name: String) => Promise<string | null | undefined>;
+
+declare var saveToken: (
+	key: String,
+	value: any
+) => Promise<string | null | undefined>;
 
 declare var networkRequest: (
 	url: String,
@@ -118,17 +125,25 @@ declare var ListenForUpdates:
 	| string[];
 declare var ChoiceItem:
 	| string
-	| { icon?: string | typeof UI.icon; label?: string; value: any };
+	| { icon?: string | typeof UI.icon; label?: string; value: any }
+	| {
+			icon?: string | typeof UI.icon;
+			label?: string;
+			handler: Function | PromiseLike<any>;
+	  };
 declare var ChoiceList:
 	| (typeof ChoiceItem)[]
 	| (() => PromiseLike<(typeof ChoiceItem)[]>);
 declare var PageContext: {
+	pageResolving?: boolean;
 	pageFilter?: string;
 	setPageFilter: (filter?: string) => {};
 	pageData?: { [key: string]: any };
 	pageTab?: string;
 };
-declare var PageTitle: string | ((payload: typeof PageContext) => string);
+declare var PageTitle:
+	| string
+	| ((payload: typeof PageContext) => string | null | undefined);
 declare var PageContent:
 	| { [key: string]: any }
 	| ((payload: typeof PageContext) => {} | [])
@@ -244,9 +259,10 @@ declare var openChoicePicker: (
 
 declare var openActionSheet: (props: {
 	title?: String;
+	inset?: boolean;
 	payload?: { [key: string]: any };
 	preview?: { [key: string]: any } | null | undefined;
-	actions?: [{ [key: string]: any }];
+	actions?: { [key: string]: any }[];
 	children?: { [key: string]: any };
 	content?:
 		| { [key: string]: any }

@@ -21,6 +21,7 @@ const PageContext = createContext({
 	formData: null,
 	setFormData: () => {},
 	type: () => {},
+	icon: () => {},
 	title: () => {},
 	condensingTitle: () => {},
 	nav: () => {},
@@ -319,6 +320,12 @@ export default function PageProvider({
 						return typeof type == "function"
 							? type(contextInfo)
 							: type;
+					},
+					icon: () => {
+						const icon = page?.icon;
+						return typeof icon == "function"
+							? icon(contextInfo)
+							: icon;
 					},
 					title: () => {
 						const title = page?.title;

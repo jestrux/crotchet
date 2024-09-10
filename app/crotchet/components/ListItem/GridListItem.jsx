@@ -76,10 +76,10 @@ export default function GridListItem({
 		return (
 			<div
 				className={clsx(
-					"min-h-full w-full space-y-1 p-2 pb-0",
+					"min-h-full w-full space-y-1 p-2 pb-1",
 					icon?.length > 0 ? "items-center" : "items-start",
 					{
-						"bg-card shadow border border-content/10 dark:border-content/10 rounded-xl overflow-hidden":
+						"bg-card border border-content/10 rounded-lg overflow-hidden":
 							inset,
 					}
 				)}
@@ -165,8 +165,8 @@ export default function GridListItem({
 							"flex-1 min-w-0 space-y-0.5",
 							icon?.length && "text-center",
 							inset
-								? "min-h-8 flex flex-col justify-center px-3s pt-0.5 pb-2.5"
-								: "px-1.5s"
+								? "min-h-8 flex flex-col justify-center px-1 pt-0.5 pb-2.5"
+								: "px-1.5"
 						)}
 					>
 						{title?.length > 0 && (
@@ -175,7 +175,9 @@ export default function GridListItem({
 							</h5>
 						)}
 						{subtitle?.toString().length > 0 && (
-							<p className="text-sm/none truncate opacity-75">{subtitle}</p>
+							<p className="text-sm/none truncate opacity-75">
+								{subtitle}
+							</p>
 						)}
 					</div>
 				)}

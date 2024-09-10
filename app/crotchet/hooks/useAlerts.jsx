@@ -135,8 +135,7 @@ export function AlertsWrapper() {
 						if (alert.action?.handler) {
 							try {
 								const res = await alert.action?.handler(values);
-								if (res == null)
-									return console.log("No return...");
+								if (res == null) return null;
 
 								alert.close(res);
 							} catch (error) {
@@ -350,6 +349,7 @@ export default function useAlerts() {
 			duration: 2000,
 			position: "top",
 			color: "dark",
+			swipeGesture: "vertical",
 			translucent: true,
 		});
 	};

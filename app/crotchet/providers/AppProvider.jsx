@@ -60,6 +60,18 @@ export function useCrotchetApp() {
 				homePage: "setHeroHome",
 			});
 
+			if (!window.extensionsSet) {
+				const event = "extensions-updated";
+				await new Promise((resolve) => {
+					const handler = async () => {
+						window.removeEventListener(event, handler);
+						resolve();
+					};
+
+					window.addEventListener(event, handler);
+				});
+			}
+
 			if (app.homePage) {
 				if (!window.pages?.[app.homePage]) {
 					const event = "page-registered-" + app.homePage;

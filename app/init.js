@@ -19,6 +19,8 @@ utils.dispatch("crotchet-ready");
 const installExtensions = (extensions) => {
 	if (!extensions?.length) return;
 
+	window.extensionsSet = true;
+
 	extensions
 		.filter(
 			(extension) =>

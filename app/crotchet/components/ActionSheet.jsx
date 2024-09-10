@@ -55,9 +55,6 @@ export default function Sheet({
 			if (_actions) {
 				if (typeof _actions == "function") _actions = await _actions();
 				else if (_actions instanceof Promise) _actions = await _actions;
-
-				console.log("Actions: ", _actions);
-
 				return objectFieldChoices(_actions);
 			}
 
@@ -224,7 +221,7 @@ export default function Sheet({
 
 				<motion.div
 					className={clsx(
-						"bg-stone-100/95 dark:bg-card/95 backdrop-blur-sm rounded-3xl relative z-10 max-w-lg mx-auto group text-content border shadow-2xl overflow-hidden",
+						"bg-stone-100/95 dark:bg-canvas backdrop-blur-sm rounded-3xl relative z-10 max-w-lg mx-auto group text-content border dark:border-content/10 shadow-2xl overflow-hidden",
 						{ "p-3": !noHeading }
 					)}
 					style={{
@@ -275,8 +272,9 @@ export default function Sheet({
 					)}
 
 					{loadingShareActions ? (
-						<div className="flex justify-center">
-							{showLoader && <Loader size={40} />}
+						<div className="flex justify-center py-4">
+							<Loader size={40} />
+							{/* {showLoader && <Loader size={40} />} */}
 						</div>
 					) : children ? (
 						children

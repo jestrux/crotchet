@@ -7,6 +7,8 @@
 		"dev": "NODE_ENV=dev npm run config && cd app && npm run dev",
 		"build": "npm run config && cd app && npm run build && cd ../",
 		"postbuild": "rm -r ./mobile/build && cp -R ./app/docs/. ./mobile/build && rm -r ./desktop/app && cp -R ./app/docs/. ./desktop/app",
+		"predeploy": "cd app && npm run build",
+		"deploy": "cd app && firebase deploy",
 		"preios": "cd app && npm run build && cd ../ && rm -r ./mobile/build && cp -R ./app/docs/. ./mobile/build",
 		"ios:open": "cd mobile && npx cap open ios",
 		"sync": "cd mobile && npx cap sync",

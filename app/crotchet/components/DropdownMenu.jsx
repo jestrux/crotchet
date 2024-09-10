@@ -48,12 +48,17 @@ export default function DropdownMenu({
 					ion-popover::part(backdrop) {
 						background-color: transparent;
 					}
+
+					.page-actions {
+						--width: 190px;
+					}
 				`}
 			</style>
 			<IonPopover
 				mode="md"
 				ref={popover}
 				isOpen={popoverOpen}
+				className="page-actions"
 				onDidDismiss={() => setPopoverOpen(false)}
 			>
 				{choiceSections.map(([section, choices]) => {

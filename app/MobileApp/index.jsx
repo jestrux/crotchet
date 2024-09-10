@@ -203,7 +203,7 @@ export default function MobileApp() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	if (loading) {
+	if (loading || !app) {
 		return (
 			<div className="py-12">
 				<Loader fillParent />

@@ -22,7 +22,7 @@ const IonicModalForm = ({ children, dismiss }) => {
 
 	return (
 		<IonPage>
-			<IonHeader>
+			<IonHeader mode="ios">
 				<IonToolbar mode="ios">
 					<IonButtons slot="start">
 						<IonButton
@@ -67,6 +67,8 @@ export default function IonicModal({ children }) {
 		if (!payload) return setIsOpen(false);
 
 		const res = await page.onSubmit(payload);
+
+		console.log("Submit res: ",res);
 
 		if (res === null) return;
 

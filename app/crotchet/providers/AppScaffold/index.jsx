@@ -16,19 +16,20 @@ import "./ionic-styles";
 import homePageActions from "./homePageActions";
 import { getPage } from "@/crotchet";
 import { ErrorBoundary } from "@/crotchet/components";
+import PageProvider, { usePageContext } from "./PageProvider";
 
-const AppRoot = ({ app }) => {
-	let { nav: _nav, ...rootPage } = app;
+const AppRoot = () => {
+	const { page: rootPage, nav: pageNav, content } = usePageContext();
+	const pageContent = content();
+	const _nav = pageNav();
 	let nav = [];
 
 	if (!_nav) {
-		rootPage.appActions = homePageActions;
+		if (pageContent) rootPage.appActions = homePageActions;
 		return <BaseNavPage page={rootPage} />;
 	}
 
 	if (_nav) {
-		if (typeof _nav == "function") _nav = _nav();
-
 		nav = _nav.map((item, index) => {
 			item.slug = item.slug || item.label?.toLowerCase();
 			item.page = item.page || {};
@@ -65,7 +66,13 @@ const AppRoot = ({ app }) => {
 						/>
 					))}
 
-					<Redirect path="/app" exact to={"/app/" + nav[0].slug} />
+					{nav?.[0] && (
+						<Redirect
+							path="/app"
+							exact
+							to={"/app/" + nav[0].slug}
+						/>
+					)}
 				</IonRouterOutlet>
 				<IonTabBar slot="bottom" translucent mode="ios">
 					{nav.map((item, index) => (
@@ -108,7 +115,14 @@ function AppScaffoldContent({ app } = {}) {
 	return (
 		<IonRouterOutlet>
 			<Route path="/page/:id" component={BaseNavPage} />
-			<Route path="/app" render={() => <AppRoot app={app} />} />
+			<Route
+				path="/app"
+				render={() => (
+					<PageProvider page={app}>
+						<AppRoot />
+					</PageProvider>
+				)}
+			/>
 			<Redirect path="/" exact to="/app" />
 		</IonRouterOutlet>
 	);

@@ -135,9 +135,11 @@ export default function ActionGrid({
 						)}
 					</div>
 
-					{!hideTrailing && (
+					{(!hideTrailing || action.selected) && (
 						<svg
-							className="ml-auto size-5 opacity-20"
+							className={clsx("ml-auto size-5", {
+								"opacity-20": !action.selected,
+							})}
 							fill="none"
 							viewBox="0 0 24 24"
 							strokeWidth={1.5}
@@ -146,7 +148,11 @@ export default function ActionGrid({
 							<path
 								strokeLinecap="round"
 								strokeLinejoin="round"
-								d="m8.25 4.5 7.5 7.5-7.5 7.5"
+								d={
+									action.selected
+										? "m4.5 12.75 6 6 9-13.5"
+										: "m8.25 4.5 7.5 7.5-7.5 7.5"
+								}
 							/>
 						</svg>
 					)}
@@ -159,7 +165,7 @@ export default function ActionGrid({
 					action={action}
 					onHold={onHold}
 					onClick={() => handleClick(action)}
-					className="bg-card shadow-sm border border-content/10 rounded-lg py-2 px-3 flex flex-col gap-1.5 items-start"
+					className="bg-card border border-content/10 rounded-lg py-2 px-3 flex flex-col gap-1.5 items-start"
 				>
 					{action.icon && (
 						<div
@@ -274,7 +280,7 @@ export default function ActionGrid({
 						typeWrap
 							? "flex gap-x-1.5 gap-y-2 flex-wrap justify-start"
 							: typeInline
-							? "bg-card shadow-sm border border-content/5 rounded-lg overflow-hidden divide-y divide-content/5"
+							? "bg-card border border-content/2 rounded-lg overflow-hidden divide-y divide-content/5"
 							: "grid grid-cols-3 gap-2"
 					}
 				>

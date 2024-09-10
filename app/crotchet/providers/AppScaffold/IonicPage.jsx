@@ -27,13 +27,16 @@ export default function IonicPage({ inModal, dismiss }) {
 		type,
 		tabs: _tabs,
 		condensingTitle,
+		icon: _icon,
 		title: _title,
 		pageResolving,
 		actions: _actions,
+		mainAction,
 	} = usePageContext();
 
 	const pageType = type();
 	const tabs = _tabs();
+	const icon = _icon();
 	const title = _title();
 	const actions = _actions();
 	const isMain = ({ priority, icon, type }) =>
@@ -42,10 +45,15 @@ export default function IonicPage({ inModal, dismiss }) {
 	const menuActions = _.filter(actions, _.negate(isMain));
 	const toolbar = _toolbar();
 
+	const hasAction = mainAction();
+
 	return (
 		<IonPage>
-			<IonHeader translucent mode="ios">
-				<IonToolbar {...(inModal ? { mode: "ios" } : { mode: "md" })}>
+			<IonHeader mode="ios" className="bg-card dark:bg-canvas">
+				<IonToolbar
+					color="none"
+					{...(inModal ? { mode: "ios" } : { mode: "md" })}
+				>
 					<IonButtons slot="start">
 						{inModal ? (
 							<IonButton
@@ -55,7 +63,28 @@ export default function IonicPage({ inModal, dismiss }) {
 								Cancel
 							</IonButton>
 						) : (
-							<IonBackButton text="" />
+							<IonBackButton mode="ios" text="" />
+						)}
+
+						{icon && (
+							<button
+								className="size-10 -mr-2 border bg-primary text-white rounded-full overflow-hidden ml-4 flex items-center justify-center font-bold text-sm/none tracking-wide"
+								onClick={icon.handler}
+							>
+								{icon.image ? (
+									<img
+										src={icon.image}
+										alt=""
+										className="size-full object-cover object-top bg-card"
+									/>
+								) : (
+									icon.label
+										?.split(" ")
+										.map((w) => w.charAt(0))
+										.slice(0, 2)
+										.join("")
+								)}
+							</button>
 						)}
 					</IonButtons>
 					{title && <IonTitle ce>{title}</IonTitle>}
@@ -101,9 +130,7 @@ export default function IonicPage({ inModal, dismiss }) {
 
 				{tabs?.length && (
 					<div className="-mt-3">
-						<IonToolbar
-							{...(inModal ? { mode: "ios" } : { mode: "md" })}
-						>
+						<IonToolbar mode="md">
 							<IonSegment
 								value={pageTab}
 								onIonChange={(e) => setPageTab(e.detail.value)}
@@ -124,14 +151,18 @@ export default function IonicPage({ inModal, dismiss }) {
 				{pageResolving && <IonProgressBar type="indeterminate" />}
 			</IonHeader>
 
-			<IonContent fullscreen>
-				{/* {title && condensingTitle() && !inModal && (
+			<IonContent fullscreen className="">
+				{/* {pageType != "list" && (
+					<div className="fixed inset-0 pointer-events-none bg-content/5 dark:bg-transparent -z-10"></div>
+				)} */}
+
+				{title && condensingTitle() && !inModal && !tabs && (
 					<IonHeader collapse="condense" mode="ios">
 						<IonToolbar>
 							<IonTitle size="large">{title}</IonTitle>
 						</IonToolbar>
 					</IonHeader>
-				)} */}
+				)}
 
 				{!pageType && <div className="h-5"></div>}
 
@@ -139,7 +170,7 @@ export default function IonicPage({ inModal, dismiss }) {
 					<IonicPageContent key={[pageFilter, pageTab].join(" ")} />
 				)}
 
-				<div className="h-16"></div>
+				<div className={hasAction ? "h-16" : "h-6"}></div>
 			</IonContent>
 
 			{toolbar && !pageResolving && (
