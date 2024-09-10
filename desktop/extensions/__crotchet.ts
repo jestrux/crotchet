@@ -1,4 +1,4 @@
-import "../@types/index";
+import "../../@types/index";
 
 registerAction("clipboard", {
 	global: true,

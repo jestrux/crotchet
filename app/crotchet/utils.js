@@ -2,6 +2,8 @@ import { matchSorter } from "match-sorter";
 import { onActionClick } from "./hooks/useActionClick";
 import { Browser } from "@capacitor/browser";
 
+export const devMode = () => import.meta.env.MODE == "development";
+
 export const randomId = () => "id" + Math.random().toString(36).slice(2);
 
 export const shuffle = (array) => [...array].sort(() => Math.random() - 0.5);

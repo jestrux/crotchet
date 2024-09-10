@@ -1,4 +1,4 @@
-import "../@types/index";
+import "../../@types/index";
 
 const getYoutubeId = (url) => {
 	if (!url?.length) return null;

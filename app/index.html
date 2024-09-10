@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="overflow-hidden hydrated">
+<html lang="en" class="overflow-hidden hydrated bg-canvas">
 	<head>
 		<meta charset="utf-8" />
 		<link rel="icon" href="favicon.ico" sizes="any" />
@@ -8,7 +8,10 @@
 			name="viewport"
 			content="width=device-width, initial-scale=1.0, viewport-fit=cover"
 		/>
-		<meta
+
+		<meta name="theme-color" content="#FFFFFF" />
+
+		<!-- <meta
 			name="theme-color"
 			content="#FFFFFF"
 			media="(prefers-color-scheme: light)"
@@ -17,7 +20,8 @@
 			name="theme-color"
 			content="#000000"
 			media="(prefers-color-scheme: dark)"
-		/>
+		/> -->
+
 		<meta name="description" content="Widgets to your heart's content" />
 
 		<link rel="manifest" href="manifest.json" />
@@ -64,17 +68,15 @@
 				@apply w-full bg-transparent border-content/20 rounded-lg shadow-sm focus:border-content/50 focus:ring-transparent;
 			}
 
-			@media (prefers-color-scheme: dark) {
-				:root {
-					--stroke-color: 53 53 53;
-					--canvas-color: 0 0 0;
-					--card-color: 37 37 37;
-					--content-color: 255 255 255;
-					--content-inverted-color: 0 0 0;
+			body.dark {
+				--stroke-color: 53 53 53;
+				--canvas-color: 0 0 0;
+				--card-color: 37 37 37;
+				--content-color: 255 255 255;
+				--content-inverted-color: 0 0 0;
 
-					--primary-color: 176 112 241;
-					--primary-light-color: 246 173 85;
-				}
+				--primary-color: 176 112 241;
+				--primary-light-color: 246 173 85;
 
 				input[type="date"] {
 					color-scheme: dark;
@@ -92,52 +94,6 @@
 				border-color: rgb(var(--stroke-color));
 				user-select: none;
 				min-width: 0;
-			}
-
-			#appBar {
-				background: var(--gradient-bg);
-				color: var(--gradient-bg-text);
-			}
-
-			#fab {
-				background: var(--gradient-bg-text);
-			}
-
-			#fab path {
-				stroke: url(#gradientMask);
-			}
-
-			@supports (background-clip: text) {
-				#fab span {
-					background: var(--gradient-bg);
-					background-clip: text;
-					--webkit-background-clip: text;
-					color: transparent;
-				}
-			}
-
-			@media (prefers-color-scheme: dark) {
-				#appBar {
-					background: rgb(var(--card-color));
-					color: rgb(var(--content-color));
-				}
-
-				#fab {
-					background: var(--gradient-bg);
-					color: var(--gradient-bg-text);
-				}
-
-				#fab path {
-					stroke: currentColor;
-				}
-
-				@supports (background-clip: text) {
-					#fab span {
-						background: var(--gradient-bg-text);
-						background-clip: text;
-						--webkit-background-clip: text;
-					}
-				}
 			}
 
 			.center-center {
@@ -242,6 +198,7 @@
 
 		<script>
 			window.tailwind.config = {
+				darkMode: "selector",
 				theme: {
 					extend: {
 						colors: {
@@ -268,23 +225,27 @@
 					window.matchMedia &&
 						window.matchMedia("(prefers-color-scheme: dark)")
 							.matches
-						? "dark"
-						: "light"
 				);
 
 				window
 					.matchMedia("(prefers-color-scheme: dark)")
 					.addEventListener("change", (event) => {
-						updateColorScheme(event.matches ? "dark" : "light");
+						updateColorScheme(event.matches);
 					});
 			});
 
-			function updateColorScheme(colorScheme) {
-				document.body.classList.remove("dark", "light");
-				document.body.classList.add(colorScheme);
+			function updateColorScheme(isDark) {
+				document
+					.querySelector("[name='theme-color']")
+					.setAttribute("content", isDark ? "#000000" : "#FFFFFF");
+				document.body.classList.toggle("dark", isDark);
+				document.documentElement.classList.toggle(
+					"ion-palette-dark",
+					isDark
+				);
 				window.dispatchEvent(
 					new CustomEvent("theme-changed", {
-						detail: colorScheme,
+						detail: isDark ? "dark" : "light",
 					})
 				);
 			}

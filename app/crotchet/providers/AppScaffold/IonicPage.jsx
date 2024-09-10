@@ -68,7 +68,7 @@ export default function IonicPage({ inModal, dismiss }) {
 
 						{icon && (
 							<button
-								className="size-10 -mr-2 border bg-primary text-white rounded-full overflow-hidden ml-4 flex items-center justify-center font-bold text-sm/none tracking-wide"
+								className="size-10 -mr-2 border bg-primary text-white rounded-full overflow-hidden ml-4 flex items-center justify-center font-bold text-sm/none tracking-wide uppercase"
 								onClick={icon.handler}
 							>
 								{icon.image ? (

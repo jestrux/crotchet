@@ -1,4 +1,4 @@
-import "../@types/index";
+import "../../@types/index";
 
 const querySetHero = async (endpoint, { prefixCompany = false } = {}) => {
 	let baseUrl, companyId, bearerToken, url;
@@ -583,8 +583,8 @@ registerPage("setHeroHome", {
 	// 	if (pageResolving || pageData) return null;
 	// 	return "SetHero";
 	// },
-	actions: ({ pageResolving }) => {
-		if (pageResolving) return null;
+	actions: ({ pageResolving, pageData }) => {
+		if (pageResolving || !pageData) return null;
 		return [window.actions.setHeroLogout];
 	},
 	content: ({ pageResolving, pageData }) => {

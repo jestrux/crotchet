@@ -1,10 +1,12 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import {
 	camelCaseToSentenceCase,
+	devMode,
 	dispatch,
 	getPreference,
 	randomId,
 	savePreference,
+	someTime,
 } from "@/crotchet/utils";
 import {
 	useDataLoader,
@@ -29,6 +31,7 @@ export function useAppContext() {
 }
 
 export function useCrotchetApp() {
+	const [data, setData] = useState(null);
 	const defaultApp = {
 		name: "Crotchet",
 		colors: {
@@ -37,7 +40,7 @@ export function useCrotchetApp() {
 		},
 	};
 
-	return useDataLoader({
+	var loader = useDataLoader({
 		handler: async () => {
 			await savePreference("__crotchetApp", null);
 
@@ -57,6 +60,7 @@ export function useCrotchetApp() {
 					primary: "#003376",
 					primaryDark: "#4680d5",
 				},
+				// homePage: devMode() ? "setHeroLocal" : "setHeroHome",
 				homePage: "setHeroHome",
 			});
 
@@ -73,6 +77,8 @@ export function useCrotchetApp() {
 			}
 
 			if (app.homePage) {
+				app.homePageName = _.clone(app).homePage;
+
 				if (!window.pages?.[app.homePage]) {
 					const event = "page-registered-" + app.homePage;
 					await new Promise((resolve) => {
@@ -90,8 +96,34 @@ export function useCrotchetApp() {
 
 			return app;
 		},
+		onSuccess: setData,
 		listenForUpdates: "crotchet-app-updated",
 	});
+
+	const handler = async () => {
+		await someTime();
+		setData((data) => ({
+			...data,
+			homePage: window.pages?.[data.homePageName],
+		}));
+	};
+
+	useEffect(() => {
+		let clearWatcher;
+
+		if (data?.homePageName) {
+			const event = `page-registered-${data.homePageName}`;
+			window.addEventListener(event, handler);
+			clearWatcher = () => window.removeEventListener(event, handler);
+		}
+
+		return () => {
+			if (typeof clearWatcher == "function") clearWatcher();
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [data?.homePageName]);
+
+	return { ...loader, data };
 }
 
 export default function AppProvider({ children }) {
@@ -281,6 +313,13 @@ export default function AppProvider({ children }) {
 							--on-primary-inverted-color: ${isLight ? "255 255 255" : "0 0 0"};
 							--ion-color-primary: rgb(var(--primary-color));
 							--ion-color-primary-contrast: rgb(var(--on-primary-color));
+						}
+
+						body.dark {
+							--primary-color: ${Object.values(primaryDarkColor.toRgb())
+								.slice(0, 3)
+								.join(" ")};
+							--on-primary-color: ${primaryDarkColor.isLight() ? "0 0 0" : "255 255 255"};
 						}
 
 						@media (prefers-color-scheme: dark) {

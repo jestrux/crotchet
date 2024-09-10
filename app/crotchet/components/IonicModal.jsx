@@ -48,12 +48,15 @@ const IonicModalForm = ({ children, dismiss }) => {
 				</IonToolbar>
 			</IonHeader>
 			<IonContent className="ion-padding" fullscreen>
-				{typeof children == "function"
-					? children({
-							updateState: (value) => (stateRef.current = value),
-							dismiss,
-					  })
-					: children}
+				<div className="bg-card min-h-full">
+					{typeof children == "function"
+						? children({
+								updateState: (value) =>
+									(stateRef.current = value),
+								dismiss,
+						  })
+						: children}
+				</div>
 			</IonContent>
 		</IonPage>
 	);
@@ -68,7 +71,6 @@ export default function IonicModal({ children }) {
 
 		const res = await page.onSubmit(payload);
 
-		console.log("Submit res: ",res);
 
 		if (res === null) return;
 

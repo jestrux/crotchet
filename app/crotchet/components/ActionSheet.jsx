@@ -246,6 +246,8 @@ export default function Sheet({
 						duration: 0.2,
 					}}
 				>
+					<div className="absolute inset-0 -z-10 dark:bg-content/10 pointer-events-none"></div>
+
 					{!noHeading && (
 						<div className="mb-3 pl-1 flex items-center justify-between gap-2">
 							{contentPreview(preview, title)}

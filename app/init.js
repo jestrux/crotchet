@@ -16,6 +16,37 @@ Object.assign(window, {
 
 utils.dispatch("crotchet-ready");
 
+const installExtension = async ({ name, url, contents }) => {
+	const existingScript = document.querySelector(
+		`[data-crotchet-extension="${name}"]`
+	);
+
+	if (existingScript) existingScript.remove();
+
+	const asset = document.createElement("script");
+
+	if (!contents && url) contents = await fetch(url).then((res) => res.text());
+
+	if (contents) {
+		asset.innerHTML = `
+			(() => { ${contents.replace("import", "//import")} })();
+		`;
+	}
+
+	asset.setAttribute("data-crotchet-extension", name);
+	document.body.appendChild(asset);
+};
+
+if (utils.devMode()) {
+	installExtension({
+		name: "setHeroLocal",
+		url: new URL("./extensions/setHero.ext.ts", import.meta.url).href,
+	});
+
+	if (import.meta.hot)
+		import.meta.hot.on("reload-extension", installExtension);
+}
+
 const installExtensions = (extensions) => {
 	if (!extensions?.length) return;
 
@@ -26,24 +57,7 @@ const installExtensions = (extensions) => {
 			(extension) =>
 				extension?.name?.length && extension?.contents?.length
 		)
-		.forEach(({ name, contents }) => {
-			const existingScript = document.querySelector(
-				`[data-crotchet-extension="${name}"]`
-			);
-
-			if (existingScript) existingScript.remove();
-
-			const asset = document.createElement("script");
-			asset.innerHTML = `
-				(() => { ${contents.replace(
-					'import "../@types/index";',
-					'//import "../@types/index";'
-				)} })();
-			`;
-
-			asset.setAttribute("data-crotchet-extension", name);
-			document.body.appendChild(asset);
-		});
+		.forEach(installExtension);
 
 	// window.showToast("Extensions installed!!");
 	utils.dispatch("extensions-updated");

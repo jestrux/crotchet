@@ -211,7 +211,8 @@ export default function MobileApp() {
 		);
 	}
 
-	if (app?.homePage) return <AppScaffold rootPage={app?.homePage} />;
+	if (app?.homePage)
+		return <AppScaffold key={app?.homePage._id} rootPage={app?.homePage} />;
 
 	return <CrotchetHomePage />;
 }
