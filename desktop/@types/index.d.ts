@@ -102,6 +102,7 @@ declare var UI: {
 		props?: {
 			size?: string | number;
 			opacity?: number;
+			filled?: boolean;
 			strokeWidth?: number;
 		}
 	) => any;

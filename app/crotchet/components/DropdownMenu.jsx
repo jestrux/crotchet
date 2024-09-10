@@ -66,14 +66,16 @@ export default function DropdownMenu({
 						<IonList
 							key={section + "idx"}
 							lines="none"
-							className="bg-card p-0"
+							className="bg-card p-0 border-b"
 						>
 							<IonItemGroup>
-								{section && section != "undefined" && (
-									<IonItemDivider>
-										<IonLabel>{section}</IonLabel>
-									</IonItemDivider>
-								)}
+								{section &&
+									section != "undefined" &&
+									!section.startsWith("#") && (
+										<IonItemDivider>
+											<IonLabel>{section}</IonLabel>
+										</IonItemDivider>
+									)}
 
 								{choices.map((choice) => {
 									return (

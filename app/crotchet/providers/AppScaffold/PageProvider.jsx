@@ -434,12 +434,12 @@ export default function PageProvider({
 						const appActions = page?.appActions;
 
 						return [
-							...((typeof pageActions == "function"
-								? pageActions(contextInfo)
-								: pageActions) || []),
 							...((typeof appActions == "function"
 								? appActions(contextInfo)
 								: appActions) || []),
+							...((typeof pageActions == "function"
+								? pageActions(contextInfo)
+								: pageActions) || []),
 						];
 					},
 					setActions,
