@@ -20,6 +20,7 @@ const PageContext = createContext({
 	setPageData: () => {},
 	formData: null,
 	setFormData: () => {},
+	type: () => {},
 	title: () => {},
 	condensingTitle: () => {},
 	nav: () => {},
@@ -73,8 +74,13 @@ export default function PageProvider({
 	);
 	const [preview, setPreview] = useState();
 	const [formData, setFormData] = useState(null);
-	const filterRef = useRef(page?.filter?.defaultValue);
+	const filterRef = useRef(page?.filter);
 	const [pageFilter, _setPageFilter] = useState(filterRef.current);
+	const setPageFilter = (filter) => {
+		filterRef.current = filter;
+		_setPageFilter(filter);
+		refetch();
+	};
 	const tabRef = useRef(page?.tab || page?.tabs?.[0]);
 	const [pageTab, _setPageTab] = useState(tabRef.current);
 
@@ -271,6 +277,7 @@ export default function PageProvider({
 		pageDataVersion,
 		formData,
 		pageFilter,
+		setPageFilter,
 		pageTab,
 		onClose,
 	};
@@ -307,6 +314,12 @@ export default function PageProvider({
 							? condensingTitle(contextInfo)
 							: condensingTitle;
 					},
+					type: () => {
+						const type = page?.type;
+						return typeof type == "function"
+							? type(contextInfo)
+							: type;
+					},
 					title: () => {
 						const title = page?.title;
 						return typeof title == "function"
@@ -333,11 +346,7 @@ export default function PageProvider({
 					},
 					setPreview,
 					pageFilter,
-					setPageFilter: (filter) => {
-						filterRef.current = filter;
-						_setPageFilter(filter);
-						refetch();
-					},
+					setPageFilter,
 					filters: () => {
 						const filters = page?.filters;
 						return typeof filters == "function"

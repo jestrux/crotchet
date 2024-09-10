@@ -1,5 +1,6 @@
 import { matchSorter } from "match-sorter";
 import { onActionClick } from "./hooks/useActionClick";
+import { Browser } from "@capacitor/browser";
 
 export const randomId = () => "id" + Math.random().toString(36).slice(2);
 
@@ -183,6 +184,77 @@ export const loadExternalAsset = async (url, { name, type } = {}) => {
 	}
 
 	return;
+};
+
+export const oauth = async (url) => {
+	const generateRandomString = (length) => {
+		const possible =
+			"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+		const values = crypto.getRandomValues(new Uint8Array(length));
+		return values.reduce(
+			(acc, x) => acc + possible[x % possible.length],
+			""
+		);
+	};
+
+	const sha256 = async (plain) => {
+		const encoder = new TextEncoder();
+		const data = encoder.encode(plain);
+		return window.crypto.subtle.digest("SHA-256", data);
+	};
+
+	const base64encode = (input) => {
+		return btoa(String.fromCharCode(...new Uint8Array(input)))
+			.replace(/=/g, "")
+			.replace(/\+/g, "-")
+			.replace(/\//g, "_");
+	};
+
+	const codeVerifier = generateRandomString(64);
+	const hashed = await sha256(codeVerifier);
+	const codeChallenge = base64encode(hashed);
+
+	const clientId = "YOUR_CLIENT_ID";
+	const redirectUri = "http://localhost:8080";
+
+	const scope = "user-read-private user-read-email";
+	const authUrl = new URL("https://accounts.spotify.com/authorize");
+
+	// generated in the previous step
+	window.localStorage.setItem("code_verifier", codeVerifier);
+
+	const params = {
+		response_type: "code",
+		client_id: clientId,
+		scope,
+		code_challenge_method: "S256",
+		code_challenge: codeChallenge,
+		redirect_uri: redirectUri,
+	};
+
+	authUrl.search = new URLSearchParams(params).toString();
+	window.location.href = authUrl.toString();
+
+	// return new Promise((resolve, reject) => {
+	// 	let browser = inAoo.create(this.url, "_blank");
+
+	// 	const openCapacitorSite = async () => {
+	// 		await Browser.open({ url: "http://capacitorjs.com/" });
+	// 	};
+
+	// 	let listener = browser.on("loadstart").subscribe((event: any) => {
+	// 		//Check the redirect uri
+	// 		if (event.url.indexOf(this.redirectURI) > -1) {
+	// 			listener.unsubscribe();
+	// 			browser.close();
+	// 			let token = event.url.split("=")[1].split("&")[0];
+	// 			this.accessToken = token;
+	// 			resolve(event.url);
+	// 		} else {
+	// 			reject("Could not authenticate");
+	// 		}
+	// 	});
+	// });
 };
 
 export const networkRequest = async (

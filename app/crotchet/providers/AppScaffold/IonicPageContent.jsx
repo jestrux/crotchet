@@ -83,7 +83,9 @@ function IonicPageContent({ onSectionLoaded }) {
 }
 
 export default function IonicPageContentWrapper({ onSectionLoaded }) {
-	const { page, pageData } = usePageContext();
+	const { page, pageData, type } = usePageContext();
+	const pageType = type();
+
 	const onClick =
 		typeof page?.entryAction != "function"
 			? null
@@ -113,13 +115,14 @@ export default function IonicPageContentWrapper({ onSectionLoaded }) {
 						]),
 					});
 
-	if (pageData?.length && ["list", "grid"].includes(page?.type)) {
+	if (pageData?.length && ["list", "grid"].includes(pageType)) {
 		return (
 			<>
-				{page.type == "list" && (
+				{pageType == "list" && (
 					<IonList
 						lines="none"
-						className="divide-y divide-content/10"
+						color="none"
+						className="p-0 divide-y divide-content/10 bg-transparent"
 					>
 						{pageData.map((item) => (
 							<MutliGestureButton
@@ -128,7 +131,7 @@ export default function IonicPageContentWrapper({ onSectionLoaded }) {
 								onClick={onClick}
 								onHold={onHold}
 							>
-								<IonItem>
+								<IonItem color="none">
 									<IonLabel>
 										<div className="text-lg font-semibold">
 											{item.title}
@@ -143,8 +146,8 @@ export default function IonicPageContentWrapper({ onSectionLoaded }) {
 					</IonList>
 				)}
 
-				{page.type == "grid" && (
-					<div className="px-5">
+				{pageType == "grid" && (
+					<div className="p-3">
 						<GridList
 							data={pageData}
 							columns={2}

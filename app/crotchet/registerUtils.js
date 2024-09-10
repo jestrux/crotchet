@@ -5,6 +5,7 @@ export default function registerPlatformUtils({
 	getFile,
 	readFile,
 	writeFile,
+	readNetworkFile,
 	share,
 } = {}) {
 	Object.assign(window, {
@@ -14,6 +15,7 @@ export default function registerPlatformUtils({
 		getFile,
 		readFile,
 		writeFile,
+		readNetworkFile,
 		share,
 	});
 }

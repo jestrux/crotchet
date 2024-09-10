@@ -43,6 +43,13 @@ export default function DropdownMenu({
 	return (
 		<>
 			<div onClick={openPopover}>{children}</div>
+			<style>
+				{`
+					ion-popover::part(backdrop) {
+						background-color: transparent;
+					}
+				`}
+			</style>
 			<IonPopover
 				mode="md"
 				ref={popover}
@@ -51,7 +58,11 @@ export default function DropdownMenu({
 			>
 				{choiceSections.map(([section, choices]) => {
 					return (
-						<IonList key={section + "idx"} lines="none">
+						<IonList
+							key={section + "idx"}
+							lines="none"
+							className="bg-card p-0"
+						>
 							<IonItemGroup>
 								{section && section != "undefined" && (
 									<IonItemDivider>
@@ -64,22 +75,23 @@ export default function DropdownMenu({
 										<IonItem
 											key={choice.__id}
 											onClick={() => handleSelect(choice)}
+											color="none"
 											style={{
 												color: choice?.destructive
 													? "red"
 													: "",
 											}}
 										>
-											<span className="flex items-center gap-3">
-												{choice.icon && (
-													<span className="size-4">
-														{choice.icon}
-													</span>
-												)}
-												<IonLabel>
+											<IonLabel>
+												<span className="flex items-center gap-3">
+													{choice.icon && (
+														<span className="size-4">
+															{choice.icon}
+														</span>
+													)}
 													{choice.label}
-												</IonLabel>
-											</span>
+												</span>
+											</IonLabel>
 										</IonItem>
 									);
 								})}

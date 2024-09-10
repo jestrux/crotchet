@@ -118,9 +118,10 @@ export function AlertsWrapper() {
 						<ActionSheet
 							key={alert.id}
 							inset
+							title={alert.title}
 							noHeading={!alert?.title?.length}
 							onClose={alert.close}
-							actions={objectFieldChoices(alert.choices)}
+							actions={alert.choices}
 						/>
 					);
 				}

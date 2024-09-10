@@ -15,6 +15,15 @@ declare var toHms: (number: Number) => string | null;
 
 declare var queryDb: (name: String) => Promise<any>;
 
+declare var getPreference: (key: String) => Promise<string | null | undefined>;
+
+declare var savePreference: (
+	key: String,
+	value: any
+) => Promise<string | null | undefined>;
+
+declare var dispatch: (event: String, payload?: any) => void;
+
 declare var getToken: (name: String) => Promise<string | null | undefined>;
 
 declare var networkRequest: (
@@ -79,11 +88,15 @@ declare var UI: {
 			| "add-circle"
 			| "search"
 			| "list",
-		props?: { size?: string }
+		props?: { size?: string | number }
 	) => any;
 	svg: (
 		path: String,
-		props?: { size?: string; opacity?: number; strokeWidth?: number }
+		props?: {
+			size?: string | number;
+			opacity?: number;
+			strokeWidth?: number;
+		}
 	) => any;
 };
 
@@ -106,7 +119,12 @@ declare var ListenForUpdates:
 declare var ChoiceItem:
 	| string
 	| { icon?: string | typeof UI.icon; label?: string; value: any };
+declare var ChoiceList:
+	| (typeof ChoiceItem)[]
+	| (() => PromiseLike<(typeof ChoiceItem)[]>);
 declare var PageContext: {
+	pageFilter?: string;
+	setPageFilter: (filter?: string) => {};
 	pageData?: { [key: string]: any };
 	pageTab?: string;
 };
@@ -124,11 +142,12 @@ declare var ActionButton:
 	| ((payload: any) => typeof ActionButton | null | undefined);
 
 declare var Page: {
-	type?: String;
+	type?: string | ((payload: typeof PageContext) => string);
 	resolve?: Function;
 	title?: typeof PageTitle;
 	condensingTitle?: boolean | ((payload: typeof PageContext) => boolean);
 	content?: typeof PageContent;
+	tab?: string;
 	tabs?:
 		| (typeof ChoiceItem)[]
 		| ((payload: typeof PageContext) => (typeof ChoiceItem)[]);
@@ -220,7 +239,7 @@ declare var openForm: (props: typeof Page) => PromiseLike<any>;
 declare var openAlertForm: (props: typeof Page) => PromiseLike<any>;
 
 declare var openChoicePicker: (
-	choices: (typeof ChoiceItem)[] | { choices: (typeof ChoiceItem)[] }
+	choices: typeof ChoiceList | { title?: string; choices: typeof ChoiceList }
 ) => PromiseLike<any>;
 
 declare var openActionSheet: (props: {

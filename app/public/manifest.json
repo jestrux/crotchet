@@ -1,0 +1,114 @@
+{
+	"background_color": "#ffffff",
+	"description": "SetHero",
+	"display": "standalone",
+	"gcm_sender_id": "40208056883",
+	"gcm_user_visible_only": true,
+	"icons": [
+		{
+			"src": "/favicon.ico",
+			"type": "image/x-icon",
+			"sizes": "16x16 32x32"
+		},
+		{ "src": "/icon-192.png", "type": "image/png", "sizes": "192x192" },
+		{ "src": "/icon-512.png", "type": "image/png", "sizes": "512x512" },
+		{
+			"src": "/icon-192-maskable.png",
+			"type": "image/png",
+			"sizes": "192x192",
+			"purpose": "maskable"
+		},
+		{
+			"src": "/icon-512-maskable.png",
+			"type": "image/png",
+			"sizes": "512x512",
+			"purpose": "maskable"
+		}
+	],
+	"name": "SetHero",
+	"share_target": {
+		"action": "compose/tweet",
+		"enctype": "multipart/form-data",
+		"method": "POST",
+		"params": {
+			"title": "title",
+			"text": "text",
+			"url": "url",
+			"files": [
+				{
+					"name": "externalMedia",
+					"accept": [
+						"image/jpeg",
+						"image/png",
+						"image/gif",
+						"video/quicktime",
+						"video/mp4"
+					]
+				}
+			]
+		}
+	},
+	"shortcuts": [
+		{
+			"name": "New post",
+			"url": "/compose/post?utm_source=jumplist&utm_medium=shortcut",
+			"icons": [
+				{
+					"src": "https://abs.twimg.com/responsive-web/client-web/icon-compose.1238442a.png",
+					"type": "image/png",
+					"sizes": "192x192"
+				}
+			]
+		},
+		{
+			"name": "Explore",
+			"url": "/explore?utm_source=jumplist&utm_medium=shortcut",
+			"icons": [
+				{
+					"src": "https://abs.twimg.com/responsive-web/client-web/icon-search-stroke.5f9aa88a.png",
+					"type": "image/png",
+					"sizes": "192x192"
+				}
+			]
+		},
+		{
+			"name": "Notifications",
+			"url": "/notifications?utm_source=jumplist&utm_medium=shortcut",
+			"icons": [
+				{
+					"src": "https://abs.twimg.com/responsive-web/client-web/icon-notifications-stroke.429602da.png",
+					"type": "image/png",
+					"sizes": "192x192"
+				}
+			]
+		},
+		{
+			"name": "Direct Messages",
+			"url": "/messages?utm_source=jumplist&utm_medium=shortcut",
+			"icons": [
+				{
+					"src": "https://abs.twimg.com/responsive-web/client-web/icon-messages-stroke.5f95edca.png",
+					"type": "image/png",
+					"sizes": "192x192"
+				}
+			]
+		}
+	],
+	"short_name": "SetHero",
+	"start_url": "/",
+	"theme_color": "#FFFFFF",
+	"scope": "/",
+	"android_package_name": "tz.co.ipfos",
+	"prefer_related_applications": true,
+	"related_applications": [
+		{
+			"id": "com.twitter.android",
+			"platform": "chromeos_play",
+			"url": "https://play.google.com/store/apps/details?id=com.twitter.android"
+		}
+	],
+	"launch_handler": {
+		"route_to": "existing-client",
+		"navigate_existing_client": "never"
+	}
+}

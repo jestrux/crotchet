@@ -41,6 +41,19 @@ registerPlatformUtils({
 			]);
 		});
 	},
+	readNetworkFile: (url, props = {}) => {
+		const ref = `readNetworkFile${window.randomId()}`;
+		return new Promise((res) => {
+			const handler = async (e) => {
+				window.removeEventListener(ref, handler);
+				res(e.detail);
+			};
+
+			window.addEventListener(ref, handler);
+
+			dispatch("read-network-file", [ref, { url, ...props }]);
+		});
+	},
 	readFile: (props) => {
 		const key = "readFile" + window.randomId();
 

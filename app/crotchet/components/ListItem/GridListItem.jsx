@@ -14,10 +14,11 @@ export default function GridListItem({
 	color,
 	onClick,
 	onHold,
-	aspectRatio = "16/9",
+	// aspectRatio = "16/9",
 	onDoubleClick,
 	meta,
 }) {
+	const aspectRatio = "2/1.3";
 	const inset = meta?.inset;
 	const imagePlaceholder = meta?.imagePlaceholder;
 	const gestures = useLongPress(() => {
@@ -75,10 +76,10 @@ export default function GridListItem({
 		return (
 			<div
 				className={clsx(
-					"min-h-full w-full space-y-1",
+					"min-h-full w-full space-y-1 p-2 pb-0",
 					icon?.length > 0 ? "items-center" : "items-start",
 					{
-						"bg-card shadow border border-content/10 dark:border-content/10 rounded-lg overflow-hidden":
+						"bg-card shadow border border-content/10 dark:border-content/10 rounded-xl overflow-hidden":
 							inset,
 					}
 				)}
@@ -90,7 +91,7 @@ export default function GridListItem({
 				) : (
 					<div
 						className={clsx(
-							"relative flex-shrink-0 overflow-hidden w-full bg-content/10",
+							"rounded-md mb-1 relative flex-shrink-0 overflow-hidden w-full bg-content/10",
 							{ "dark:border rounded-lg": !inset }
 						)}
 						style={{
@@ -130,7 +131,7 @@ export default function GridListItem({
 										alt=""
 									/>
 								) : (
-									<div className="h-full flex items-center justify-center">
+									<div className="h-full flex items-center justify-center opacity-60">
 										{imagePlaceholder}
 									</div>
 								)}
@@ -164,8 +165,8 @@ export default function GridListItem({
 							"flex-1 min-w-0 space-y-0.5",
 							icon?.length && "text-center",
 							inset
-								? "min-h-8 flex flex-col justify-center px-3 pt-0.5 pb-2.5"
-								: "px-1.5"
+								? "min-h-8 flex flex-col justify-center px-3s pt-0.5 pb-2.5"
+								: "px-1.5s"
 						)}
 					>
 						{title?.length > 0 && (
@@ -174,7 +175,7 @@ export default function GridListItem({
 							</h5>
 						)}
 						{subtitle?.toString().length > 0 && (
-							<p className="text-sm/none truncate">{subtitle}</p>
+							<p className="text-sm/none truncate opacity-75">{subtitle}</p>
 						)}
 					</div>
 				)}

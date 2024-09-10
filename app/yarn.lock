@@ -219,6 +219,11 @@
     tslib "2.6.2"
     yargs "17.7.2"
 
+"@capacitor/browser@^6.0.2":
+  version "6.0.2"
+  resolved "https://registry.yarnpkg.com/@capacitor/browser/-/browser-6.0.2.tgz#29fe5ff31f9e9277e8643d2f01df497dd2575f5f"
+  integrity sha512-mJjdKbpdCAaaDVZD/vjzpJJxL1VvwsGTcEGn+4PpCQyPu3+yNQO7vgjwBV7ZYS6+mZIKeYn5swWq0BFuAcDqFg==
+
 "@capacitor/cli@^5.0.0", "@capacitor/cli@^5.3.0", "@capacitor/cli@^5.6.0":
   version "5.7.7"
   resolved "https://registry.yarnpkg.com/@capacitor/cli/-/cli-5.7.7.tgz#3240f669ce04358611b4623dabe890eddb1a7a34"
@@ -247,10 +252,17 @@
   resolved "https://registry.yarnpkg.com/@capacitor/clipboard/-/clipboard-5.0.8.tgz#bb37fbf5e44a02f6c8900d672ba63a145e7d4694"
   integrity sha512-eIlJDwUp5UrGoNhASqQaHfW4mw5dw/COEoFbdVWC+wcB/fe8crcbYwpm8YbMwp0e/k+i+M/kOYcejvVmuFetZg==
 
-"@capacitor/core@^5.0.0", "@capacitor/core@^5.6.0":
+"@capacitor/core@^5.0.0":
   version "5.7.7"
   resolved "https://registry.yarnpkg.com/@capacitor/core/-/core-5.7.7.tgz#5ce10590073d95459ecff3064a601f872b55bb6a"
   integrity sha512-LeV1ljAihl/1lFGHZERNY2DtD1fbPBF3rNOSHFPMXIluK4Cq4nK4a4z/dLPX+Cv4F0TyCIzX3+/t79PMbhDwrg==
+  dependencies:
+    tslib "^2.1.0"
+
+"@capacitor/core@^5.0.6":
+  version "5.7.8"
+  resolved "https://registry.yarnpkg.com/@capacitor/core/-/core-5.7.8.tgz#584d5ac2754501ef1443ab4bf182d8f5be16f65e"
+  integrity sha512-rrZcm/2vJM0WdWRQup1TUidbjQV9PfIadSkV4rAGLD7R6PuzZSMPGT0gmoZzCRlXkqrazrWWDkurei3ozU02FA==
   dependencies:
     tslib "^2.1.0"
 

@@ -52,7 +52,14 @@ export default function Sheet({
 		showLoader,
 	} = useDataLoader({
 		handler: async () => {
-			if (_actions) return objectFieldChoices(_actions);
+			if (_actions) {
+				if (typeof _actions == "function") _actions = await _actions();
+				else if (_actions instanceof Promise) _actions = await _actions;
+
+				console.log("Actions: ", _actions);
+
+				return objectFieldChoices(_actions);
+			}
 
 			if (!objectIsEmpty(window.actions || {})) return getShareActions();
 
@@ -282,14 +289,16 @@ export default function Sheet({
 							)}
 
 							{actions && (
-								<ActionGrid
-									key={"preview" + preview?.image}
-									type="inline"
-									data={actions}
-									hideTrailing
-									onClose={onClose}
-									payload={{ ...payload, preview }}
-								/>
+								<div className="max-h-80 overflow-auto">
+									<ActionGrid
+										key={"preview" + preview?.image}
+										type="inline"
+										data={actions}
+										hideTrailing
+										onClose={onClose}
+										payload={{ ...payload, preview }}
+									/>
+								</div>
 							)}
 						</>
 					)}

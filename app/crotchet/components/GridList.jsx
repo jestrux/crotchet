@@ -6,7 +6,7 @@ import GridListItem from "./ListItem/GridListItem";
 export default function GridList({ source, data, isLoading, ...props }) {
 	const {
 		columns = "xs:2,md:3,xl:4",
-		gap = "0.5rem",
+		gap = "0.55rem",
 		aspectRatio,
 		meta,
 	} = {

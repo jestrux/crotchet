@@ -4,6 +4,7 @@ import {
 	dispatch,
 	getPreference,
 	randomId,
+	savePreference,
 } from "@/crotchet/utils";
 import {
 	useDataLoader,
@@ -28,14 +29,35 @@ export function useAppContext() {
 }
 
 export function useCrotchetApp() {
+	const defaultApp = {
+		name: "Crotchet",
+		colors: {
+			primary: "#84cc16",
+			primaryDark: "#a3e635",
+		},
+	};
+
 	return useDataLoader({
 		handler: async () => {
-			const app = await getPreference("__crotchetApp", {
-				name: "Crotchet",
+			await savePreference("__crotchetApp", null);
+
+			const defaultApp = {
+				name: "iPF OS",
 				colors: {
-					primary: "#84cc16",
-					primaryDark: "#a3e635",
+					primary: "#1F79E4",
+					primaryDark: "#4680d5",
 				},
+				homePage: "ipfHome",
+			};
+
+			// const app = await getPreference("__crotchetApp", defaultApp);
+			const app = _.cloneDeep({
+				name: "SetHero",
+				colors: {
+					primary: "#003376",
+					primaryDark: "#4680d5",
+				},
+				homePage: "setHeroHome",
 			});
 
 			if (app.homePage) {
@@ -251,7 +273,9 @@ export default function AppProvider({ children }) {
 
 						@media (prefers-color-scheme: dark) {
 							:root {
-								--primary-color: ${Object.values(primaryDarkColor.toRgb()).slice(0, 3).join(" ")};
+								--primary-color: ${Object.values(primaryDarkColor.toRgb())
+									.slice(0, 3)
+									.join(" ")};
 								--on-primary-color: ${primaryDarkColor.isLight() ? "0 0 0" : "255 255 255"};
 							}
 						}

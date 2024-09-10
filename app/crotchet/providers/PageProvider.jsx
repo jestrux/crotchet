@@ -369,8 +369,6 @@ export default function PageProvider({
 						const pageActions = actions || page?.actions;
 						const appActions = page?.appActions;
 
-						console.log("Page: ", page);
-
 						return [
 							...((typeof pageActions == "function"
 								? pageActions(contextInfo)
