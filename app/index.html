@@ -9,9 +9,9 @@
 			content="width=device-width, initial-scale=1.0, viewport-fit=cover"
 		/>
 
-		<meta name="theme-color" content="#FFFFFF" />
+		<!-- <meta name="theme-color" content="#FFFFFF" /> -->
 
-		<!-- <meta
+		<meta
 			name="theme-color"
 			content="#FFFFFF"
 			media="(prefers-color-scheme: light)"
@@ -20,7 +20,7 @@
 			name="theme-color"
 			content="#000000"
 			media="(prefers-color-scheme: dark)"
-		/> -->
+		/>
 
 		<meta name="description" content="Widgets to your heart's content" />
 
@@ -77,6 +77,23 @@
 
 				--primary-color: 176 112 241;
 				--primary-light-color: 246 173 85;
+
+				input[type="date"] {
+					color-scheme: dark;
+				}
+			}
+
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--stroke-color: 53 53 53;
+					--canvas-color: 0 0 0;
+					--card-color: 37 37 37;
+					--content-color: 255 255 255;
+					--content-inverted-color: 0 0 0;
+
+					--primary-color: 176 112 241;
+					--primary-light-color: 246 173 85;
+				}
 
 				input[type="date"] {
 					color-scheme: dark;
@@ -186,6 +203,7 @@
 		</style>
 
 		<script src="tailwindcss.js"></script>
+		<!-- <script src="https://cdn.tailwindcss.com"></script> -->
 		<!-- <script src="ionicons.js"></script> -->
 		<!-- <script
 			type="module"
@@ -197,8 +215,11 @@
 		></script> -->
 
 		<script>
+			if (!window.tailwind) {
+				window.tailwind = {};
+			}
+
 			window.tailwind.config = {
-				darkMode: "selector",
 				theme: {
 					extend: {
 						colors: {
@@ -235,9 +256,9 @@
 			});
 
 			function updateColorScheme(isDark) {
-				document
-					.querySelector("[name='theme-color']")
-					.setAttribute("content", isDark ? "#000000" : "#FFFFFF");
+				// document
+				// 	.querySelector("[name='theme-color']")
+				// 	.setAttribute("content", isDark ? "#000000" : "#FFFFFF");
 				document.body.classList.toggle("dark", isDark);
 				document.documentElement.classList.toggle(
 					"ion-palette-dark",

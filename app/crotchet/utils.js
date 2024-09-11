@@ -113,7 +113,11 @@ export const withCache = async (
 };
 
 export const getFromCache = async (key) => {
-	return await window.readFile({ name: `__cache/${key}` });
+	try {
+		return await window.readFile({ name: `__cache/${key}` });
+	} catch (error) {
+		//
+	}
 };
 
 export const cache = async (key, value) => {
@@ -127,15 +131,19 @@ export const cache = async (key, value) => {
 };
 
 export const getUserPreferences = async (fromSave) => {
-	let res = await window.readFile({ name: "__crotchetPreferences.json" });
+	try {
+		let res = await window.readFile({ name: "__crotchetPreferences.json" });
 
-	if (!res) {
-		res = {};
-		if (!fromSave)
-			await saveFile({ name: "__crotchetPreferences.json" }, {});
+		if (!res) {
+			res = {};
+			if (!fromSave)
+				await saveFile({ name: "__crotchetPreferences.json" }, {});
+		}
+
+		return res;
+	} catch (error) {
+		//
 	}
-
-	return res;
 };
 
 export const getPreference = async (key, defaultValue = null) => {
