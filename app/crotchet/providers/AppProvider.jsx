@@ -50,19 +50,19 @@ export function useCrotchetApp() {
 					primary: "#1F79E4",
 					primaryDark: "#4680d5",
 				},
-				homePage: "ipfHome",
+				// homePage: "ipfHome",
 			};
 
-			// const app = await getPreference("__crotchetApp", defaultApp);
-			const app = _.cloneDeep({
-				name: "SetHero",
-				colors: {
-					primary: "#003376",
-					primaryDark: "#4680d5",
-				},
-				// homePage: devMode() ? "setHeroLocal" : "setHeroHome",
-				homePage: "setHeroHome",
-			});
+			const app = await getPreference("__crotchetApp", defaultApp);
+			// const app = _.cloneDeep({
+			// 	name: "SetHero",
+			// 	colors: {
+			// 		primary: "#003376",
+			// 		primaryDark: "#4680d5",
+			// 	},
+			// 	// homePage: devMode() ? "setHeroLocal" : "setHeroHome",
+			// 	homePage: "setHeroHome",
+			// });
 
 			if (!window.extensionsSet) {
 				const event = "extensions-updated";

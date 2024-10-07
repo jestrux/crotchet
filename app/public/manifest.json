@@ -1,6 +1,6 @@
 {
 	"background_color": "#ffffff",
-	"description": "SetHero",
+	"description": "Crotchet",
 	"display": "standalone",
 	"gcm_sender_id": "40208056883",
 	"gcm_user_visible_only": true,
@@ -25,7 +25,7 @@
 			"purpose": "maskable"
 		}
 	],
-	"name": "SetHero",
+	"name": "Crotchet",
 	"share_target": {
 		"action": "compose/tweet",
 		"enctype": "multipart/form-data",
@@ -94,7 +94,7 @@
 			]
 		}
 	],
-	"short_name": "SetHero",
+	"short_name": "Crotchet",
 	"start_url": "/",
 	"theme_color": "#FFFFFF",
 	"scope": "/",
