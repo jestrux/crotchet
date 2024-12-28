@@ -6,6 +6,7 @@ import clsx from "clsx";
 import {
 	motion,
 	useAnimate,
+	useDragControls,
 	useMotionValue,
 	useTransform,
 } from "framer-motion";
@@ -38,7 +39,9 @@ export const BottomNavButton = ({
 					: "gap-1.5 h-11 w-11 lg:w-auto lg:px-3.5",
 				{ "flex-1": selected && action == "Search" },
 				selected ? activeClass : inActiveClass,
-				disabled ? "" : "pointer-events-auto"
+				disabled || ["Search", "Home"].includes(action)
+					? ""
+					: "pointer-events-auto"
 			)}
 			style={
 				action == "Home"
@@ -75,10 +78,8 @@ export const BottomNavButton = ({
 };
 
 const NavActions = ({ searchQuery, expanded, onCollapse }) => {
-	const [scrollArea, animate] = useAnimate();
-	const y = useMotionValue(0);
+	const { KeyboardPlaceholder } = useKeyboard();
 	const wrapper = useRef(null);
-	const sizeRef = useRef(null);
 	const { data: _actions, refetch } = useDataLoader({
 		handler: window.globalActions,
 		listenForUpdates: "extensions-updated",
@@ -86,12 +87,6 @@ const NavActions = ({ searchQuery, expanded, onCollapse }) => {
 
 	useEffect(() => {
 		refetch();
-
-		if (wrapper.current) {
-			sizeRef.current = wrapper.current.getBoundingClientRect();
-
-			if (!expanded) animate([[scrollArea.current, { y: 0 }]]);
-		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [expanded]);
 
@@ -102,31 +97,57 @@ const NavActions = ({ searchQuery, expanded, onCollapse }) => {
 			...[
 				{
 					label: "Add Widgets",
-					handler: () => {},
+					handler: () => {
+						window.openActionSheet({
+							title: "Add Widgets",
+							content: "Add Widgets details will go here...",
+						});
+					},
 					pinned: 1,
 					section: "Home Page",
 				},
 				{
 					label: "Manage Widgets",
-					handler: () => {},
+					handler: () => {
+						window.openActionSheet({
+							title: "Manage Widgets",
+							content: "Manage Widgets details will go here...",
+						});
+					},
 					pinned: 1,
 					section: "Home Page",
 				},
 				{
 					label: "Customize Navigation",
-					handler: () => {},
+					handler: () => {
+						window.openActionSheet({
+							title: "Customize Navigation",
+							content:
+								"Customize Navigation details will go here...",
+						});
+					},
 					pinned: 1,
 					section: "Home Page",
 				},
 				{
 					label: "Create Page",
-					handler: () => {},
+					handler: () => {
+						window.openActionSheet({
+							title: "Create Page",
+							content: "Create Page details will go here...",
+						});
+					},
 					pinned: 1,
 					section: "All Actions",
 				},
 				{
 					label: "Manage Pages",
-					handler: () => {},
+					handler: () => {
+						window.openActionSheet({
+							title: "Manage Pages",
+							content: "Manage Pages details will go here...",
+						});
+					},
 					pinned: 1,
 					section: "All Actions",
 				},
@@ -143,24 +164,8 @@ const NavActions = ({ searchQuery, expanded, onCollapse }) => {
 	);
 
 	return (
-		<div ref={wrapper} className="overflow-hidden">
-			<motion.div
-				ref={scrollArea}
-				drag="y"
-				dragConstraints={
-					sizeRef.current
-						? {
-								top: -sizeRef.current.height + 120,
-								bottom: 0,
-						  }
-						: wrapper
-				}
-				dragElastic={0}
-				onClick={onCollapse}
-				style={{
-					y,
-				}}
-			>
+		<div ref={wrapper} className="overflow-auto">
+			<div onClick={onCollapse}>
 				{!actionSections?.length && searchQuery?.length > 0 && (
 					<div className="rounded relative cursor-default select-none py-8 truncate text-content/30 text-center font-medium">
 						No results
@@ -211,8 +216,8 @@ const NavActions = ({ searchQuery, expanded, onCollapse }) => {
 						</div>
 					);
 				})}
-				{/* <KeyboardPlaceholder /> */}
-			</motion.div>
+				<KeyboardPlaceholder />
+			</div>
 		</div>
 	);
 };
@@ -401,6 +406,8 @@ export default function MobileNav() {
 	const [dragging, setDragging] = useState(false);
 	const [expanded, _setExpanded] = useState(false);
 	const y = useMotionValue(0);
+	const controls = useDragControls();
+
 	const ratio = useTransform(
 		y,
 		expanded ? [300, 0] : [-300, 0],
@@ -412,13 +419,35 @@ export default function MobileNav() {
 		expanded ? [0, 32] : [32, 0]
 	);
 
-	const handleExpand = () => {
-		const res = animate([[scope.current, { y: -300, dur: 0.5 }]]);
+	const handleExpand = async () => {
+		const parent = inputRef.current
+			.closest(".bottom-nav")
+			.getBoundingClientRect();
 
+		setExpanded(true);
+
+		animate(
+			scope.current,
+			{
+				y: [parent.height * 0.3, 0],
+				dur: 0.1,
+			},
+			{
+				type: "spring",
+				bounce: 0.1,
+				duration: 0.3,
+				// ease: "easeInOut",
+			}
+		);
+
+		focusInput();
+	};
+
+	const focusInput = (delay = 80) => {
 		setTimeout(() => {
-			res.cancel();
-			setExpanded(true);
-		}, 100);
+			inputRef.current.style.pointerEvents = "auto";
+			inputRef.current.focus();
+		}, delay);
 	};
 
 	const handleClear = () => {
@@ -429,27 +458,44 @@ export default function MobileNav() {
 		if (input?.getAttribute("is-focused")) inputRef.current?.focus();
 	};
 
-	const handleCollapse = () => {
-		inputRef.current.blur();
+	const handleCollapse = async () => {
+		// inputRef.current.blur();
+		// inputRef.current.style.pointerEvents = "";
 		setSearchQuery("");
 
-		setTimeout(() => {
-			const res = animate([[scope.current, { y: 300, dur: 0.5 }]]);
+		const parent = inputRef.current
+			.closest(".bottom-nav")
+			.getBoundingClientRect();
 
-			setTimeout(() => {
-				setExpanded(false);
-				res.cancel();
-			}, 50);
+		const res = animate(scope.current, {
+			y: parent.height * 0.6,
+			dur: 0.1,
+		});
+
+		setTimeout(() => {
+			setExpanded(false);
+			res.cancel();
+			animate(
+				scope.current,
+				{ y: 0 },
+				{
+					duration: 0,
+					ease: "none",
+				}
+			);
 		}, 50);
+	};
+
+	const handleToggle = () => {
+		if (expanded) handleCollapse();
+		else handleExpand();
 	};
 
 	const setExpanded = (newValue) => {
 		if (newValue) {
-			inputRef.current.style.pointerEvents = "auto";
-			inputRef.current.focus();
-		} else {
-			inputRef.current.style.pointerEvents = "";
-		}
+			// inputRef.current.style.pointerEvents = "auto";
+			// inputRef.current.focus();
+		} else inputRef.current.style.pointerEvents = "";
 
 		_setExpanded(newValue);
 	};
@@ -490,7 +536,7 @@ export default function MobileNav() {
 			<motion.div
 				ref={scope}
 				className={clsx(
-					"bottom-nav fixed inset-x-0 mx-auto z-50",
+					"bottom-nav fixed inset-x-0 mx-auto z-50 overflow-hidden",
 					{ expanded: expanded },
 					dragging || expanded
 						? "bg-stone-100/95 dark:bg-card/85 backdrop-blur-sm max-w-xl"
@@ -503,24 +549,42 @@ export default function MobileNav() {
 					borderTopRightRadius: borderRadius,
 				}}
 				drag="y"
+				dragControls={controls}
+				dragListener={!expanded}
+				dragElastic={{
+					top: expanded ? 0 : 0.5,
+					bottom: !expanded ? 0 : 0.5,
+				}}
 				dragConstraints={{
 					top: expanded ? 0 : 1,
 					bottom: expanded ? 1 : 0,
 				}}
-				dragTransition={{
-					bounceStiffness: 20000,
-					bounceDamping: 20000,
-				}}
+				// dragTransition={{
+				// 	bounceStiffness: 20000,
+				// 	bounceDamping: 20000,
+				// }}
 				onDrag={() => {
 					var delta = ratio.get();
-					if (expanded && delta >= 0.02) inputRef.current.blur();
+					// if (expanded && delta <= 0.75)
+					inputRef.current.blur();
 					setDragging(delta >= 0.02);
 				}}
 				onDragEnd={() => {
 					var delta = ratio.get();
-					if (delta >= 0.02) setExpanded(!expanded);
+
 					setDragging(false);
+
+					if (
+						(expanded && delta >= 0.9) ||
+						(!expanded && delta <= 0.1)
+					) {
+						if (expanded) focusInput(300);
+						return;
+					}
+
+					handleToggle();
 				}}
+				onClick={handleToggle}
 			>
 				<motion.div
 					style={{
@@ -528,55 +592,65 @@ export default function MobileNav() {
 						pointerEvents: !expanded ? "none" : "",
 					}}
 				>
-					<div className="mt-3 mx-3 relative border dark:border border-stroke shadow-sm rounded-full">
-						<svg
-							className="absolute top-0 left-3 bottom-0 my-auto size-5 opacity-30"
-							viewBox="0 0 24 24"
-							fill="none"
-							strokeWidth={2}
-							stroke="currentColor"
-						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-							/>
-						</svg>
-
-						<Input
-							ref={inputRef}
-							className="h-12 pl-10 w-full text-lg/none bg-card dark:bg-content/5 text-content/50 border-none ring-transparent focus:ring-0 rounded-full placeholder:text-content/40 focus:outline-none"
-							placeholder="Search..."
-							value={searchQuery}
-							onChange={setSearchQuery}
-						/>
-
-						{searchQuery && (
-							<button
-								className="absolute -inset-y-0.5 right-0 aspect-[1/1] flex items-center justify-center"
-								onClick={handleClear}
+					<div
+						className="sticky top-0 pt-3 z-50 bg-stone-100/95 dark:bg-card/85 backdrop-blur-sm"
+						onPointerDown={(e) => {
+							controls.start(e);
+						}}
+						onClick={(e) => e.stopPropagation()}
+					>
+						<div className="mx-3 relative border dark:border border-stroke shadow-sm rounded-full">
+							<svg
+								className="absolute top-0 left-3 bottom-0 my-auto size-5 opacity-30"
+								viewBox="0 0 24 24"
+								fill="none"
+								strokeWidth={2}
+								stroke="currentColor"
 							>
-								<svg
-									className="w-4 opacity-50"
-									fill="none"
-									viewBox="0 0 24 24"
-									strokeWidth={2}
-									stroke="currentColor"
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+								/>
+							</svg>
+
+							<Input
+								ref={inputRef}
+								className="h-12 pl-10 w-full text-lg/none bg-card dark:bg-content/5 text-content/50 border-none ring-transparent focus:ring-0 rounded-full placeholder:text-content/40 focus:outline-none"
+								placeholder="Search..."
+								value={searchQuery}
+								onChange={setSearchQuery}
+							/>
+
+							{searchQuery && (
+								<button
+									className="absolute -inset-y-0.5 right-0 aspect-[1/1] flex items-center justify-center"
+									onClick={handleClear}
 								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										d="M6 18 18 6M6 6l12 12"
-									></path>
-								</svg>
-							</button>
-						)}
+									<svg
+										className="w-4 opacity-50"
+										fill="none"
+										viewBox="0 0 24 24"
+										strokeWidth={2}
+										stroke="currentColor"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											d="M6 18 18 6M6 6l12 12"
+										></path>
+									</svg>
+								</button>
+							)}
+						</div>
 					</div>
 
-					<NavActions
-						{...{ expanded, searchQuery }}
-						onCollapse={() => setExpanded(false)}
-					/>
+					<div className="sticky top-0 h-[60vh] overscroll-none overflow-auto">
+						<NavActions
+							{...{ expanded, searchQuery }}
+							onCollapse={() => setExpanded(false)}
+						/>
+					</div>
 				</motion.div>
 			</motion.div>
 
