@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import { useLongPress } from "@/crotchet/hooks";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import openUrl from "@/crotchet/open-url";
 
 export default function GridListItem({
 	masonry,
@@ -12,21 +13,32 @@ export default function GridListItem({
 	title,
 	subtitle,
 	color,
+	// aspectRatio = "16/9",
+	share,
+	meta = {},
+	actions,
 	onClick,
 	onHold,
-	// aspectRatio = "16/9",
 	onDoubleClick,
-	meta,
 }) {
 	const aspectRatio = "2/1.3";
 	const inset = meta?.inset;
 	const imagePlaceholder = meta?.imagePlaceholder;
 	const gestures = useLongPress(() => {
-		if (!_.isFunction(onHold)) return;
+		if (!_.isFunction(onHold) && !share && !actions?.length) return;
 
 		Haptics.impact({ style: ImpactStyle.Medium });
 
-		return onHold();
+		if (_.isFunction(onHold)) return onHold();
+
+		if (actions?.length) {
+			return window.openChoicePicker({
+				// title: "Switch Project",
+				choices: actions,
+			});
+		}
+
+		openUrl(share);
 	});
 
 	const handleClick = () => {

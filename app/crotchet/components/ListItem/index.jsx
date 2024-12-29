@@ -195,7 +195,6 @@ export default function RegularListItem({
 	onDoubleClick,
 }) {
 	const gestures = useLongPress(() => {
-		console.log("On hold: ", actions);
 		if (!_.isFunction(onHold) && !share && !actions?.length) return;
 
 		Haptics.impact({ style: ImpactStyle.Medium });
