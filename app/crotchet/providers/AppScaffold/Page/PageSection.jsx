@@ -1,23 +1,39 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import GridList from "@/crotchet/components/GridList";
 import ActionGrid from "@/crotchet/components/ActionGrid";
 import { sourceGet } from "@/crotchet";
 import { randomId } from "@/crotchet/utils";
 import { useDataLoader } from "@/crotchet/hooks";
 import PreferenceEditor from "@/crotchet/components/PreferenceEditor";
+import ListView from "@/crotchet/components/ListView";
 
 export default function PageSection({
 	title,
 	type = "list",
 	data: _data,
 	source,
+	resolve,
 	meta = {},
 	onSectionLoaded = () => {},
 	...props
 }) {
+	const state = useRef({});
+	const setState = (key, value) => {
+		state.current[key] = value;
+	};
 	const [dataRef, setDataRef] = useState();
 	const { data } = useDataLoader({
-		handler: source ? () => sourceGet(source, meta) : _data,
+		handler: resolve
+			? async () => {
+					const res = await (typeof resolve == "function"
+						? resolve({ state: state.current, setState })
+						: Promise.resolve(true));
+
+					return res;
+			  }
+			: source
+			? () => sourceGet(source, meta)
+			: _data,
 		listenForUpdates: source?.listenForUpdates,
 		onUpdate: () => {
 			setDataRef(randomId());
@@ -52,16 +68,27 @@ export default function PageSection({
 
 	if (type == "list") {
 		return (
-			<ActionGrid
+			<ListView
 				{...sourceProps}
 				{...meta}
 				title={title}
-				type="inline"
 				data={data}
 				key={dataRef}
 				showDefaultBackground
 			/>
 		);
+
+		// return (
+		// 	<ActionGrid
+		// 		{...sourceProps}
+		// 		{...meta}
+		// 		title={title}
+		// 		type="inline"
+		// 		data={data}
+		// 		key={dataRef}
+		// 		showDefaultBackground
+		// 	/>
+		// );
 	}
 
 	if (type == "grid") {

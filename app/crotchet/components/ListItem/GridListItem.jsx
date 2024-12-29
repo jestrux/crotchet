@@ -76,7 +76,7 @@ export default function GridListItem({
 		return (
 			<div
 				className={clsx(
-					"min-h-full w-full space-y-1 p-2 pb-1",
+					"min-h-full w-full space-y-1 sp-2 spb-1",
 					icon?.length > 0 ? "items-center" : "items-start",
 					{
 						"bg-card border border-content/10 rounded-lg overflow-hidden":
@@ -166,7 +166,7 @@ export default function GridListItem({
 							icon?.length && "text-center",
 							inset
 								? "min-h-8 flex flex-col justify-center px-1 pt-0.5 pb-2.5"
-								: "px-1.5"
+								: "spx-1.5"
 						)}
 					>
 						{title?.length > 0 && (

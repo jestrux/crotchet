@@ -1,12 +1,13 @@
 import { matchSorter } from "match-sorter";
 import { onActionClick } from "./hooks/useActionClick";
-import { Browser } from "@capacitor/browser";
 
 export const devMode = () => import.meta.env.MODE == "development";
 
 export const randomId = () => "id" + Math.random().toString(36).slice(2);
 
 export const shuffle = (array) => [...array].sort(() => Math.random() - 0.5);
+
+export const random = (array) => shuffle(shuffle(array))[0];
 
 export const someTime = (t = 200) => new Promise((res) => setTimeout(res, t));
 
@@ -19,12 +20,6 @@ export const dispatch = (event, payload) => {
 		})
 	);
 };
-
-export const socketEmit = (event, payload) =>
-	dispatch("socket-emit", {
-		event,
-		payload,
-	});
 
 export const camelCaseToSentenceCase = (text) => {
 	if (!text || !text.length) return "";
@@ -129,6 +124,25 @@ export const cache = async (key, value) => {
 		//
 	}
 };
+
+export const fetchImage = async (url) => {
+	const blob = await fetch(url).then((response) => response.blob());
+	return new Promise((resolve) => {
+		const reader = new FileReader();
+		reader.onload = () => resolve(reader.result);
+		reader.readAsDataURL(blob);
+	});
+};
+
+export const shareImage = async (url) =>
+	window.share({
+		files: [await fetchImage(encodeURI(url))],
+	});
+
+export const copyFromUrl = async (url) =>
+	window.copyToClipboard(
+		await fetch(url).then((response) => response.text())
+	);
 
 export const getUserPreferences = async (fromSave) => {
 	try {
@@ -353,6 +367,68 @@ export const objectFieldChoices = (choices) =>
 
 export const objectField = (object, field) =>
 	typeof object == "object" ? object?.[field] : object;
+
+export const objectToQueryParams = (obj = {}) => {
+	const url = new URL("https://crotchet.app/");
+
+	Object.keys(obj).forEach((key) => {
+		let value = obj[key];
+
+		if (_.isObject(value) && !_.isArray(value))
+			value = JSON.stringify(value);
+
+		if (_.isArray(value)) value = value.map(encodeURIComponent).join("<!>");
+
+		if (!_.isArray(value)) value = encodeURIComponent(value);
+
+		url.searchParams.set(key, value);
+	});
+
+	return url.searchParams.toString();
+};
+
+export const urlQueryParamsAsObject = (path) => {
+	const url = new URL(
+		"https://crotchet.app/" + path.replace("crotchet://", "")
+	);
+
+	const mapper = (value) => {
+		if (isNaN(value)) {
+			try {
+				value = decodeURIComponent(value);
+			} catch (error) {
+				//
+			}
+
+			try {
+				value = JSON.parse(value);
+			} catch (error) {
+				//
+			}
+		} else {
+			value = Number(value);
+		}
+
+		return value;
+	};
+
+	const params = Array.from(url.searchParams.entries()).map(
+		([key, value]) => {
+			value = mapper(value);
+
+			try {
+				if (value.indexOf("<!>") != -1)
+					value = value.split("<!>").map(mapper);
+			} catch (error) {
+				//
+			}
+
+			return [key, value];
+		}
+	);
+
+	return Object.fromEntries(params);
+};
 
 export const sectionedChoices = (choices = [], query, { valuesOnly } = {}) => {
 	if (!choices?.length) return [];

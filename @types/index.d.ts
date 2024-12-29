@@ -7,11 +7,25 @@ declare var actions: { [key: string]: any };
 
 declare var dataSources: { [key: string]: any };
 
+declare var copyToClipboard: (any) => any;
+
+declare var copyFromUrl: (url?: string) => Promise<any>;
+
+declare var shareImage: (url?: string) => Promise<any>;
+
 declare var someTime: (duration?: number) => Promise<any>;
+
+declare var shuffle: (arr?: Array) => Array | undefined | null;
+
+declare var random: (arr?: Array) => any | undefined | null;
 
 declare var openUrl: (path: String) => Promise<any>;
 
 declare var onDesktop: () => boolean;
+
+declare var objectToQueryParams: (obj: { [key: string]: any }) => string;
+
+declare var urlQueryParamsAsObject: (path: string) => { [key: string]: any };
 
 declare var toHms: (number: Number) => string | null;
 
@@ -25,6 +39,10 @@ declare var savePreference: (
 ) => Promise<string | null | undefined>;
 
 declare var dispatch: (event: String, payload?: any) => void;
+
+declare var socketEmit: (event: String, payload?: any) => void;
+
+declare var camelCaseToSentenceCase: (string: String) => string;
 
 declare var getToken: (name: String) => Promise<string | null | undefined>;
 
@@ -69,10 +87,58 @@ declare var processShareData: (
 
 declare var sourceGet: (
 	source: { handler: () => PromiseLike<any> },
-	props: { orderBy: String }
+	props: {
+		orderBy?: String;
+		single?: boolean;
+		random?: boolean;
+		limit?: number;
+		filters?: { [key: string]: any };
+	}
 ) => Promise<any>;
 
+declare var DataItem: {
+	icon?: string | null;
+	video?: string | null;
+	image?: string | null;
+	title?: string | null;
+	subtitle?: string | null;
+	url?: string | null;
+	share?: string | null;
+	actions?: (typeof ActionButton)[] | (() => (typeof ActionButton)[]);
+	meta: { [key: string]: any };
+	status?:
+		| "success"
+		| "verified"
+		| "approved"
+		| "completed"
+		| "complete"
+		| "done"
+		| "true"
+		| true
+		| 1
+		| "1"
+		| null
+		// Error
+		| "error"
+		| "blocked"
+		| "0"
+		| 0
+		| false
+		| "false"
+		// Progress
+		| "in progress"
+		| "pending";
+	trailing?: string | null;
+	progress?: number | null;
+	checked?: boolean | null;
+	onClick?: () => {};
+	onDoubleClick?: () => {};
+	onHold?: () => {};
+	onRemove?: () => {};
+};
+
 declare var UI: {
+	media: (payload: { data?: DataItem | null; loading?: boolean }) => [];
 	list: (payload: { data?: []; loading?: boolean }) => [];
 	icon: (
 		icon?:
@@ -94,7 +160,8 @@ declare var UI: {
 			| "add"
 			| "add-circle"
 			| "search"
-			| "list",
+			| "list"
+			| "open-external",
 		props?: { size?: string | number }
 	) => any;
 	svg: (
@@ -153,7 +220,14 @@ declare var ActionButton:
 	| {
 			label?: string;
 			icon?: string | typeof UI.icon;
-			handler?: (payload: any) => any;
+			url?: string | null;
+			handler?: (payload: {
+				data?: any | null;
+				loading?: boolean | null;
+				refetch?: () => {};
+				state?: { [key: string]: any };
+				setState?: (key, value) => {};
+			}) => any;
 	  }
 	| ((payload: any) => typeof ActionButton | null | undefined);
 
@@ -200,12 +274,12 @@ declare var registerAction: (
 				shortcut?: String | undefined;
 				icon?: String | undefined;
 				label?: String | undefined;
-				context?: "share" | undefined;
+				context?: "share" | "shortcut" | undefined;
 				global?: boolean | undefined;
 				mobileOnly?: boolean | undefined;
 				desktopOnly?: boolean | undefined;
 				match?: (payload: any) => boolean | null | undefined;
-				handler?: (payload: any) => PromiseLike<any>;
+				handler?: (payload: any) => PromiseLike<any> | void;
 				url?: String | undefined;
 				tags?: string[];
 		  }
@@ -244,6 +318,17 @@ declare var registerWidget: (
 	}
 ) => void;
 
+declare var registerSection: (
+	name: String,
+	section: {
+		type?: "grid" | "list" | "actions" | null;
+		title?: String | undefined;
+		resolve?: (payload?: any) => PromiseLike<any> | undefined;
+		listenForUpdates?: typeof ListenForUpdates;
+		meta?: { [key: string]: any };
+	}
+) => void;
+
 declare var openRootPage: (page: string) => PromiseLike<any>;
 
 declare var openPage: (props: string | typeof Page) => PromiseLike<any>;
@@ -259,11 +344,12 @@ declare var openChoicePicker: (
 ) => PromiseLike<any>;
 
 declare var openActionSheet: (props: {
+	noHeading?: boolean | null;
 	title?: String;
 	inset?: boolean;
 	payload?: { [key: string]: any };
 	preview?: { [key: string]: any } | null | undefined;
-	actions?: { [key: string]: any }[];
+	actions?: { [key: string]: any }[] | (() => void);
 	children?: { [key: string]: any };
 	content?:
 		| { [key: string]: any }

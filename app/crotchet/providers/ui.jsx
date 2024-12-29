@@ -1,9 +1,15 @@
 import RegularListItem from "@/crotchet/components/ListItem";
+import MediaItem from "../components/MediaItem";
+
+export function media({ data } = {}) {
+	if (!data) return null;
+	return <MediaItem {...data} />;
+}
 
 export function list({ data } = {}) {
 	if (!data?.length) return null;
 	return (
-		<div className="px-3 relative size-full">
+		<div className="pt-1.5 px-3 relative size-full">
 			{data.map((item) => (
 				<RegularListItem key={item._id} {...item} />
 			))}
@@ -32,9 +38,11 @@ const iconMap = {
 	search: "m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z",
 	user: "M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z",
 	list: "M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z",
+	"open-external":
+		"M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25",
 };
 
-export const icon = (icon, { size = "20px", ...props } = {}) =>
+export const icon = (icon, { size = "18px", ...props } = {}) =>
 	svg(iconMap[icon] || iconMap.default, { size, ...props });
 
 export function svg(
@@ -45,15 +53,16 @@ export function svg(
 		? {
 				fill: "currentColor",
 		  }
-		: { fill: "none", strokeWidth: 1.5, stroke: "currentColor" };
+		: {
+				fill: "none",
+				strokeWidth: strokeWidth,
+				stroke: color,
+		  };
 
 	return (
 		<svg
 			{...(size ? { width: size, height: size } : {})}
 			viewBox="0 0 24 24"
-			fill="none"
-			strokeWidth={strokeWidth}
-			stroke={color}
 			{...fillStroke}
 		>
 			<path strokeLinecap="round" strokeLinejoin="round" d={path} />

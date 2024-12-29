@@ -1,4 +1,4 @@
-import { dispatch, onDesktop, socketEmit } from "./utils";
+import { dispatch, onDesktop } from "./utils";
 
 const urlQueryParamsAsObject = (path) => {
 	const url = new URL(
@@ -104,7 +104,7 @@ export default async function openUrl(path) {
 
 	if (path.startsWith("crotchet://socket/")) {
 		const { scheme, args } = processSchemeUrl("socket", path);
-		return socketEmit(scheme, args);
+		return window.socketEmit(scheme, args);
 	}
 
 	if (onDesktop()) return dispatch("open-url", new URL(path).href);

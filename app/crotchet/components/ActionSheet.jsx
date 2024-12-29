@@ -55,6 +55,9 @@ export default function Sheet({
 			if (_actions) {
 				if (typeof _actions == "function") _actions = await _actions();
 				else if (_actions instanceof Promise) _actions = await _actions;
+
+				if (!_actions) onClose();
+
 				return objectFieldChoices(_actions);
 			}
 
@@ -210,7 +213,7 @@ export default function Sheet({
 					bounceDamping: 10000,
 					bounceStiffness: 10000,
 				}}
-				agEnd={(_, info) => {
+				dragEnd={(_, info) => {
 					if (info.offset.y > 0.5) onClose();
 				}}
 			>

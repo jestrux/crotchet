@@ -146,6 +146,24 @@ export const globalActions = ({ share = false, desktopShortcuts } = {}) =>
 		})
 		.map(([, value]) => value);
 
+export const registerSection = (name, section) => {
+	const { resolve, type, title, listenForUpdates, meta } = section;
+
+	if (!window.sections) window.sections = {};
+
+	window.sections[name] = {
+		_id: randomId(),
+		resolve,
+		name,
+		type,
+		title,
+		meta,
+		listenForUpdates,
+	};
+
+	dispatch("sections-updated");
+};
+
 export const registerWidget = (name, widget) => {
 	const {
 		resolve,
@@ -157,6 +175,7 @@ export const registerWidget = (name, widget) => {
 		actions,
 		content,
 		actionButton,
+		listenForUpdates,
 	} = widget;
 
 	if (!window.widgets) window.widgets = {};
@@ -173,6 +192,7 @@ export const registerWidget = (name, widget) => {
 		actions,
 		content,
 		actionButton,
+		listenForUpdates,
 	};
 
 	dispatch("widgets-updated");

@@ -6,6 +6,7 @@ import GridListItem from "./ListItem/GridListItem";
 export default function GridList({ source, data, isLoading, ...props }) {
 	const {
 		columns = "xs:2,md:3,xl:4",
+		// gap,
 		gap = "0.8rem",
 		aspectRatio,
 		meta,
@@ -91,7 +92,7 @@ export default function GridList({ source, data, isLoading, ...props }) {
 			.join(" ");
 
 		content = (
-			<div className="@container">
+			<div className="@container px-1">
 				<div
 					className={clsx("pb-2 grid", columnClasses)}
 					style={{

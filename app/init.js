@@ -4,6 +4,7 @@ import * as utils from "./crotchet/utils";
 import * as firebaseUtils from "./crotchet/providers/firebase";
 import * as UI from "./crotchet/providers/ui";
 import * as crotchetThings from "./crotchet";
+import "./crotchet/providers/socket";
 
 Object.assign(window, {
 	...utils,

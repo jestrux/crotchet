@@ -358,7 +358,7 @@ const NavItems = ({ expanded, dragging, onExpand }) => {
 			}}
 		>
 			<div className="border dark:border border-content/5 shadow-sm bg-stone-100/95 dark:bg-card/85 backdrop-blur-sm w-full lg:w-auto min-w-96 px-2 lg:rounded-full overflow-hidden">
-				<div className="h-10 lg:h-14 px-3 lg:px-0 pt-3.5 lg:pt-0 mb-[env(safe-area-inset-bottom)] lg:mb-0 flex items-center justify-between gap-4 lg:gap-2 max-w-sm mx-auto">
+				<div className="h-[50px] lg:h-14 px-1 md:px-3 lg:px-0 pt-4 lg:pt-0 mb-[env(safe-area-inset-bottom)] lg:mb-0 flex items-center justify-between gap-4 lg:gap-2 max-w-sm mx-auto">
 					{items.map((item, index) => {
 						const isMainAction = ["home", "search"].includes(
 							item.action?.toLowerCase()
@@ -517,7 +517,7 @@ export default function MobileNav() {
 				{
 					/*css*/ `
 					.bottom-nav {
-						--inset-bottom: calc(56px + env(safe-area-inset-bottom) * 0.6);
+						--inset-bottom: calc(64px + env(safe-area-inset-bottom) * 0.6);
 						bottom: calc(-100vh + var(--inset-bottom));
 					}
 					.bottom-nav.expanded {
@@ -593,7 +593,7 @@ export default function MobileNav() {
 					}}
 				>
 					<div
-						className="sticky top-0 pt-3 z-50 bg-stone-100/95 dark:bg-card/85 backdrop-blur-sm"
+						className="sticky top-0 pt-3 z-50"
 						onPointerDown={(e) => {
 							controls.start(e);
 						}}

@@ -2,6 +2,7 @@ import clsx from "clsx";
 import { useActionClick, useDataLoader } from "@/crotchet/hooks";
 import Loader from "./Loader";
 import { onActionClick } from "@/crotchet/hooks/useActionClick";
+import { useRef } from "react";
 
 function ActionButton({ button, propagate = true }) {
 	const { loading, onClick } = useActionClick(button, {
@@ -70,16 +71,21 @@ export default function Widget({
 	content: _content,
 	actionButton: _actionButton,
 	onClick,
+	listenForUpdates,
 }) {
-	const { data, loading } = useDataLoader({
+	const state = useRef({});
+	const setState = (key, value) => {
+		state.current[key] = value;
+	};
+	const { data, refetch, loading } = useDataLoader({
 		handler: async () => {
 			const res = await (typeof resolve == "function"
-				? resolve({})
+				? resolve({ state: state.current, setState })
 				: Promise.resolve(true));
 
 			return res;
 		},
-		listenForUpdates: "firebase-table-updated:readingList",
+		listenForUpdates,
 	});
 
 	const evaluate = (item, payload, defaultValue) => {
@@ -87,13 +93,14 @@ export default function Widget({
 		return typeof item == "function" ? item(payload) ?? defaultValue : item;
 	};
 
-	const content = evaluate(_content, { data, loading });
-	const actions = evaluate(_actions, { data, loading }, []);
-	const actionButton = evaluate(_actionButton, { data, loading }, []);
+	const context = { data, loading, state, setState, refetch };
+	const content = evaluate(_content, context);
+	const actions = evaluate(_actions, context, []);
+	const actionButton = evaluate(_actionButton, context, []);
 
 	const aspectRatio = {
 		small: "1/0.75",
-		wide: "2/0.8",
+		wide: "2/1.02",
 		large: "4/1",
 	}[size || "wide"];
 
@@ -102,6 +109,9 @@ export default function Widget({
 			<div
 				className="h-full flex flex-col relative text-content/60"
 				{...(typeof onClick == "function" ? { onClick } : {})}
+				style={{
+					aspectRatio,
+				}}
 			>
 				{(icon || title?.length > 0) && (
 					<div className="rounded-t-2xl relative z-10 flex-shrink-0 h-10 flex items-center gap-1.5 px-3.5 bg-content/5">
@@ -120,7 +130,7 @@ export default function Widget({
 				{actions?.length > 0 && (
 					<div className="absolute right-2 top-2 z-10 flex items-center gap-2">
 						<div
-							className="flex items-center gap-2"
+							className="flex items-center gap-2.5"
 							style={{ color: color?.length ? color : "" }}
 						>
 							{actions.map((action, index) => {
@@ -137,7 +147,9 @@ export default function Widget({
 											},
 											action.className || ""
 										)}
-										onClick={onActionClick(action)}
+										onClick={() =>
+											onActionClick(action)(context)
+										}
 										style={{
 											color: !color?.length
 												? ""
@@ -174,7 +186,7 @@ export default function Widget({
 					style={{
 						background: !background?.length ? "" : background,
 						color: color?.length ? color : "",
-						aspectRatio,
+						// aspectRatio,
 					}}
 				>
 					{/* <div className="flex-1">

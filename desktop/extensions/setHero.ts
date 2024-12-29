@@ -520,33 +520,33 @@ registerAction("addSetHeroContact", () =>
 	})
 );
 
-registerWidget("setHeroProjects", {
-	title: "SetHero Projects",
-	resolve: () => dataSources.setHeroProjects.get(),
-	content: UI.list,
-	actions: () => [
-		{
-			label: "Add Project",
-			icon: UI.icon("add"),
-			handler: window.actions.addSetHeroProject,
-		},
-	],
-	listenForUpdates: "firebase-table-updated:setHeroProjects",
-});
+// registerWidget("setHeroProjects", {
+// 	title: "SetHero Projects",
+// 	resolve: () => dataSources.setHeroProjects.get(),
+// 	content: UI.list,
+// 	actions: () => [
+// 		{
+// 			label: "Add Project",
+// 			icon: UI.icon("add"),
+// 			handler: window.actions.addSetHeroProject,
+// 		},
+// 	],
+// 	listenForUpdates: "firebase-table-updated:setHeroProjects",
+// });
 
-registerWidget("setHeroCallsheets", {
-	title: "SetHero Callsheets",
-	resolve: () => dataSources.setHeroCallsheets.get(),
-	content: UI.list,
-	actions: () => [
-		{
-			label: "Add Callsheet",
-			icon: UI.icon("add"),
-			handler: window.actions.addSetHeroCallsheet.handler,
-		},
-	],
-	listenForUpdates: "firebase-table-updated:setHeroCallsheet",
-});
+// registerWidget("setHeroCallsheets", {
+// 	title: "SetHero Callsheets",
+// 	resolve: () => dataSources.setHeroCallsheets.get(),
+// 	content: UI.list,
+// 	actions: () => [
+// 		{
+// 			label: "Add Callsheet",
+// 			icon: UI.icon("add"),
+// 			handler: window.actions.addSetHeroCallsheet.handler,
+// 		},
+// 	],
+// 	listenForUpdates: "firebase-table-updated:setHeroCallsheet",
+// });
 
 registerPage("setHeroCallsheets", {
 	title: "Callsheets",

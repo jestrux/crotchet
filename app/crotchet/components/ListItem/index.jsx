@@ -7,17 +7,21 @@ import { useState } from "react";
 
 const Status = ({ status }) => {
 	const positive = [
+		"success",
 		"verified",
 		"approved",
 		"completed",
 		"complete",
 		"done",
 		"true",
+		true,
 		1,
 		"1",
 	].includes(status);
 
-	const negative = ["blocked", "0", 0, false, "false"].includes(status);
+	const negative = ["error", "blocked", "0", 0, false, "false"].includes(
+		status
+	);
 
 	const pending = ["in progress", "pending"].includes(status);
 
@@ -179,23 +183,31 @@ export default function RegularListItem({
 	subtitle,
 	url,
 	status,
-	// status = "status",
 	trailing,
 	progress,
 	checked,
+	share,
+	meta = {},
+	actions,
 	onRemove = () => {},
 	onClick,
 	onHold,
-	share,
 	onDoubleClick,
-	meta = {},
 }) {
 	const gestures = useLongPress(() => {
-		if (!_.isFunction(onHold) && !share) return;
+		console.log("On hold: ", actions);
+		if (!_.isFunction(onHold) && !share && !actions?.length) return;
 
 		Haptics.impact({ style: ImpactStyle.Medium });
 
 		if (_.isFunction(onHold)) return onHold();
+
+		if (actions?.length) {
+			return window.openChoicePicker({
+				// title: "Switch Project",
+				choices: actions,
+			});
+		}
 
 		openUrl(share);
 	});
@@ -220,10 +232,10 @@ export default function RegularListItem({
 				(image?.length || video?.length) && (
 					<div
 						className={clsx(
-							"mr-2 h-8 relative flex-shrink-0 bg-content/10 border border-content/10 overflow-hidden",
+							"mr-2 h-9 relative flex-shrink-0 bg-content/10 border border-content/10 overflow-hidden",
 							meta?.face
 								? "aspect-square rounded-full"
-								: "aspect-[1.3/1] rounded"
+								: "aspect-[1.45/1] rounded"
 						)}
 					>
 						<img
@@ -234,10 +246,21 @@ export default function RegularListItem({
 
 						{video?.length && (
 							<div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-								<div className="relative size-4 flex items-center justify-center rounded-full overflow-hidden bg-card">
+								<svg
+									className="ml-px size-4 relative text-white/90"
+									viewBox="0 0 24 24"
+									fill="currentColor"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"
+									/>
+								</svg>
+								{/* <div className="relative size-4 flex items-center justify-center rounded-full overflow-hidden bg-card">
 									<div className="absolute inset-0 bg-content/60"></div>
 									<svg
-										className="size-2.5 relative text-canvas"
+										className="ml-px size-2.5 relative text-canvas"
 										viewBox="0 0 24 24"
 										fill="currentColor"
 									>
@@ -247,14 +270,14 @@ export default function RegularListItem({
 											d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"
 										/>
 									</svg>
-								</div>
+								</div> */}
 							</div>
 						)}
 					</div>
 				)
 			)}
 
-			<div className="flex-1 mr-3 min-w-0 space-y-1">
+			<div className="flex-1 mr-3 min-w-0 space-y-[7px]">
 				{title?.length > 0 && (
 					<h5
 						className="text-sm leading-none font-medium line-clamp-1 first-letter:capitalize"
@@ -329,7 +352,7 @@ export default function RegularListItem({
 			{...gestures}
 			onClick={handleClick}
 			onDoubleClick={onDoubleClick}
-			className="py-2 lg:group w-full text-left flex items-center relative"
+			className="py-[5px] lg:group w-full text-left flex items-center relative"
 		>
 			{content()}
 
