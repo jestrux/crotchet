@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Portal } from "@reach/portal";
 import { useDataLoader } from "@/crotchet/hooks";
 import {
@@ -46,11 +46,7 @@ export default function Sheet({
 			return true;
 		});
 	};
-	const {
-		data: actions,
-		loading: loadingShareActions,
-		showLoader,
-	} = useDataLoader({
+	const { data: actions, loading: loadingShareActions } = useDataLoader({
 		handler: async () => {
 			if (_actions) {
 				if (typeof _actions == "function") _actions = await _actions();
@@ -129,7 +125,7 @@ export default function Sheet({
 			if (image?.length || video?.length) {
 				media = (
 					<div
-						className="flex-shrink-0 h-10 w-12 rounded-md bg-cover bg-center relative overflow-hidden"
+						className="flex-shrink-0 h-10 w-12 rounded-md bg-content/5 bg-cover bg-center relative overflow-hidden"
 						style={{
 							backgroundImage: `url(${video || image})`,
 						}}
@@ -188,7 +184,7 @@ export default function Sheet({
 
 	return (
 		<Portal>
-			<motion.div
+			<div
 				className={clsx(
 					"fixed z-[999]",
 					inset
@@ -199,22 +195,6 @@ export default function Sheet({
 					bottom: inset
 						? "calc(32px - env(safe-area-inset-bottom))"
 						: 0,
-				}}
-				drag="y"
-				dragConstraints={{
-					top: 0,
-					bottom: 0.5,
-				}}
-				dragElastic={{
-					top: 0,
-					bottom: 0.5,
-				}}
-				dragTransition={{
-					bounceDamping: 10000,
-					bounceStiffness: 10000,
-				}}
-				dragEnd={(_, info) => {
-					if (info.offset.y > 0.5) onClose();
 				}}
 			>
 				<div
@@ -247,6 +227,18 @@ export default function Sheet({
 					}}
 					transition={{
 						duration: 0.2,
+					}}
+					drag="y"
+					dragConstraints={{
+						top: 0,
+						bottom: 0.5,
+					}}
+					dragElastic={{
+						top: 0,
+						bottom: 0.5,
+					}}
+					onDragEnd={(_, info) => {
+						if (info.offset.y > 0) onClose();
 					}}
 				>
 					<div className="absolute inset-0 -z-10 dark:bg-content/10 pointer-events-none"></div>
@@ -294,6 +286,7 @@ export default function Sheet({
 							{actions && (
 								<div className="max-h-80 overflow-auto">
 									<ActionGrid
+										flat={noHeading}
 										key={"preview" + preview?.image}
 										type="inline"
 										data={actions}
@@ -306,7 +299,7 @@ export default function Sheet({
 						</>
 					)}
 				</motion.div>
-			</motion.div>
+			</div>
 		</Portal>
 	);
 }

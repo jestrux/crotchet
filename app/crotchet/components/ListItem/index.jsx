@@ -202,9 +202,9 @@ export default function RegularListItem({
 		if (_.isFunction(onHold)) return onHold();
 
 		if (actions?.length) {
-			return window.openChoicePicker({
-				// title: "Switch Project",
-				choices: actions,
+			return window.openActionSheet({
+				noHeading: true,
+				actions,
 			});
 		}
 

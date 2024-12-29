@@ -57,7 +57,6 @@ export const BottomNavButton = ({
 		>
 			<span
 				className={clsx(
-					"-ml-0.5",
 					selected ? "size-5" : "size-6 slg:size-5 opacity-70"
 				)}
 			>
@@ -357,7 +356,7 @@ const NavItems = ({ expanded, dragging, onExpand }) => {
 				y: expanded || dragging || bottomSheetVisible ? "10%" : 0,
 			}}
 		>
-			<div className="border dark:border border-content/5 shadow-sm bg-stone-100/95 dark:bg-card/85 backdrop-blur-sm w-full lg:w-auto min-w-96 px-2 lg:rounded-full overflow-hidden">
+			<div className="border dark:border border-content/5 shadow-sm bg-stone-100/95 dark:bg-card/95 backdrop-blur-sm w-full lg:w-auto min-w-96 px-2 lg:rounded-full overflow-hidden">
 				<div className="h-[50px] lg:h-14 px-1 md:px-3 lg:px-0 pt-4 lg:pt-0 mb-[env(safe-area-inset-bottom)] lg:mb-0 flex items-center justify-between gap-4 lg:gap-2 max-w-sm mx-auto">
 					{items.map((item, index) => {
 						const isMainAction = ["home", "search"].includes(
@@ -539,7 +538,7 @@ export default function MobileNav() {
 					"bottom-nav fixed inset-x-0 mx-auto z-50 overflow-hidden",
 					{ expanded: expanded },
 					dragging || expanded
-						? "bg-stone-100/95 dark:bg-card/85 backdrop-blur-sm max-w-xl"
+						? "bg-stone-100/95 dark:bg-card/95 backdrop-blur-sm max-w-xl"
 						: "max-w-96"
 				)}
 				style={{
