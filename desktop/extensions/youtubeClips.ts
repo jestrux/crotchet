@@ -164,6 +164,7 @@ const getActions = (payload) => {
 
 registerWidget("randomYoutubeClip", {
 	listenForUpdates: "refetch-random-youtube-clip-widget",
+	onSwipe: ({ refetch }) => refetch(),
 	resolve: async () => {
 		const entry = await sourceGet(
 			{ handler: () => queryDb("youtubeClips") },

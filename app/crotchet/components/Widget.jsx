@@ -3,6 +3,7 @@ import { useActionClick, useDataLoader } from "@/crotchet/hooks";
 import Loader from "./Loader";
 import { onActionClick } from "@/crotchet/hooks/useActionClick";
 import { useRef } from "react";
+import { motion } from "framer-motion";
 
 function ActionButton({ button, propagate = true }) {
 	const { loading, onClick } = useActionClick(button, {
@@ -71,6 +72,7 @@ export default function Widget({
 	content: _content,
 	actionButton: _actionButton,
 	onClick,
+	onSwipe,
 	listenForUpdates,
 }) {
 	const state = useRef({});
@@ -105,7 +107,29 @@ export default function Widget({
 	}[size || "wide"];
 
 	return (
-		<div className="rounded-2xl bg-card shadow-md border border-content/10 overflow-hidden relative">
+		<motion.div
+			className="rounded-2xl bg-card shadow-md border border-content/10 overflow-hidden relative"
+			drag="x"
+			dragListener={typeof onSwipe == "function"}
+			dragConstraints={{
+				left: 0.1,
+				right: 0.1,
+			}}
+			dragElastic={{
+				left: 0.1,
+				right: 0.1,
+			}}
+			onDragEnd={(_, info) => {
+				if (typeof onSwipe != "function") return;
+
+				setTimeout(() => {
+					onSwipe({
+						...context,
+						direction: info.offset > 0 ? 1 : -1,
+					});
+				}, 10);
+			}}
+		>
 			<div
 				className="h-full flex flex-col relative text-content/60"
 				{...(typeof onClick == "function" ? { onClick } : {})}
@@ -205,6 +229,6 @@ export default function Widget({
 
 				{actionButton && <ActionButton button={actionButton} />}
 			</div>
-		</div>
+		</motion.div>
 	);
 }

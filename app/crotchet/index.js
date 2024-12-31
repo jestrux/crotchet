@@ -176,6 +176,8 @@ export const registerWidget = (name, widget) => {
 		content,
 		actionButton,
 		listenForUpdates,
+		onClick,
+		onSwipe,
 	} = widget;
 
 	if (!window.widgets) window.widgets = {};
@@ -193,6 +195,8 @@ export const registerWidget = (name, widget) => {
 		content,
 		actionButton,
 		listenForUpdates,
+		onClick,
+		onSwipe,
 	};
 
 	dispatch("widgets-updated");

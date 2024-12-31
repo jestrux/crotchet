@@ -216,18 +216,24 @@ declare var PageContent:
 	| { [key: string]: any }
 	| ((payload: typeof PageContext) => {} | [])
 	| string;
+declare var WidgetActionContext: {
+	data?: any | null;
+	loading?: boolean | null;
+	refetch: () => {};
+	state?: { [key: string]: any };
+	setState?: (key, value) => {};
+};
 declare var ActionButton:
 	| {
 			label?: string;
 			icon?: string | typeof UI.icon;
 			url?: string | null;
-			handler?: (payload: {
-				data?: any | null;
-				loading?: boolean | null;
-				refetch?: () => {};
-				state?: { [key: string]: any };
-				setState?: (key, value) => {};
-			}) => any;
+			handler?: (
+				payload?:
+					| typeof WidgetActionContext
+					| { [key: string]: any }
+					| null
+			) => any;
 	  }
 	| ((payload: any) => typeof ActionButton | null | undefined);
 
@@ -314,6 +320,9 @@ declare var registerWidget: (
 		filter?: { [key: string]: any } | ((payload: any) => {}) | undefined;
 		content?: typeof PageContent;
 		actionButton?: typeof ActionButton;
+		onSwipe?: (
+			payload: typeof WidgetActionContext & { direction: 1 | -1 }
+		) => any;
 		onClick?: { [key: string]: any } | undefined;
 	}
 ) => void;
