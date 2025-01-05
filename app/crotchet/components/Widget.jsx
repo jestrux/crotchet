@@ -99,6 +99,7 @@ export default function Widget({
 	const content = evaluate(_content, context);
 	const actions = evaluate(_actions, context, []);
 	const actionButton = evaluate(_actionButton, context, []);
+	const canDrag = typeof onSwipe == "function";
 
 	const aspectRatio = {
 		small: "1/0.75",
@@ -108,17 +109,19 @@ export default function Widget({
 
 	return (
 		<motion.div
-			className="rounded-2xl bg-card shadow-md border border-content/10 overflow-hidden relative"
-			drag="x"
-			dragListener={typeof onSwipe == "function"}
+			className={clsx(
+				"rounded-2xl bg-card border border-content/10 overflow-hidden relative",
+				canDrag ? "shadow-xl" : "shadow-md"
+			)}
+			drag
+			dragListener={canDrag}
 			dragConstraints={{
-				left: 0.1,
-				right: 0.1,
+				left: 0,
+				right: 0,
+				top: 0,
+				bottom: 0,
 			}}
-			dragElastic={{
-				left: 0.1,
-				right: 0.1,
-			}}
+			dragElastic={{ left: 0.2, right: 0.2, top: 0.2, bottom: 0.2 }}
 			onDragEnd={(_, info) => {
 				if (typeof onSwipe != "function") return;
 
