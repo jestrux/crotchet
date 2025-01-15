@@ -3,6 +3,8 @@ import { useEventListener } from "@/crotchet/hooks";
 import { dispatch, hideApp } from "@/crotchet/utils";
 import AppContent from "./AppContent";
 import registerPlatformUtils from "@/crotchet/registerUtils";
+import ThemeBg from "@/DesktopApp/ThemeBg";
+import { useAppContext } from "@/crotchet/providers/AppProvider";
 
 registerPlatformUtils({
 	showToast: (...toast) => {
@@ -91,10 +93,11 @@ registerPlatformUtils({
 });
 
 export default function DesktopApp() {
+	const {
+		appTheme: { ThemeStyles },
+	} = useAppContext();
 	const toastTimerRef = useRef();
 	const [toast, setToast] = useState(null);
-
-	console.log("Desktop app...");
 
 	window.desktop.showToast = (message) => {
 		if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
@@ -134,10 +137,14 @@ export default function DesktopApp() {
 
 	return (
 		<div className="h-screen w-screen text-content pointer-events-auto">
-			<div className="relative bg-stone-100/95 dark:bg-card/95 backdrop-blur-sm size-full overflow-hidden">
-				<div className="border border-transparent dark:border-content/30 rounded-xl fixed inset-0 pointer-events-none z-50"></div>
+			{/* <div className="relative bg-stone-100/95 dark:bg-card/95 backdrop-blur-sm size-full overflow-hidden"> */}
+			<ThemeStyles />
 
-				<AppContent />
+			<div className="relative size-full overflow-hidden">
+				<div className="border border-transparent dark:border-content/30 rounded-xl fixed inset-0 pointer-events-none z-50"></div>
+				<ThemeBg className="relative size-full overflow-hidden">
+					<AppContent />
+				</ThemeBg>
 			</div>
 
 			{toast && (

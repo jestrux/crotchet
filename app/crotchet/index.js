@@ -36,6 +36,7 @@ export const registerAction = (name, action) => {
 		handler,
 		hideApp: actionHidesApp,
 		actions,
+		preview,
 		tags = [],
 		icon,
 		global = false,
@@ -74,6 +75,7 @@ export const registerAction = (name, action) => {
 		mobileOnly,
 		desktopOnly,
 		actions,
+		preview,
 		handler: _handler,
 	};
 

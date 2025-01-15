@@ -549,9 +549,9 @@ export const withLoader = async (action, props) => {
 
 		if (onDesktop()) {
 			if (isMessageStatus) {
-				await window.__crotchet.someTime(20);
+				await someTime(20);
 				if (!document.body.getAttribute("data-visible"))
-					window.__crotchet.backgroundToast(message);
+					window.backgroundToast?.(message);
 			}
 
 			dispatch("with-loader-status-change", {

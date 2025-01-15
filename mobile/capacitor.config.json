@@ -3,7 +3,9 @@
     "appName": "Crotchet",
     "webDir": "build",
     "server": {
-        "androidScheme": "https"
+        "androidScheme": "https",
+        "url": "http://172.20.10.6:5173",
+        "cleartext": true
     },
     "electron": {
         "customUrlScheme": "crotchet",

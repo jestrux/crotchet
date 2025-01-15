@@ -9,6 +9,7 @@ import { onActionClick } from "@/crotchet/hooks/useActionClick";
 import CommandKey from "./CommandKey";
 import PageMenu from "./PageMenu";
 import PageButton from "./PageButton";
+import ThemeBg from "@/DesktopApp/ThemeBg";
 
 export default function PageActionBar() {
 	const {
@@ -163,7 +164,7 @@ export default function PageActionBar() {
 	};
 
 	return (
-		<div className="rounded-b-xl bg-card fixed bottom-0 inset-x-0 h-11 px-3 flex gap-4 items-center border-t z-10">
+		<ThemeBg overlay className="rounded-b-xl bg-card fixed bottom-0 inset-x-0 h-11 px-3 flex gap-4 items-center border-t z-10">
 			{!pageResolving && (
 				<>
 					<div className="h-full flex-1 flex items-center gap-4">
@@ -173,7 +174,9 @@ export default function PageActionBar() {
 					{mainActionSet() && (
 						<PageButton
 							className="gap-1"
-							onClick={() => handleMainAction({ page, pageData })}
+							onClick={() =>
+								handleMainAction({ page, pageData })
+							}
 							rounded="md"
 							size="sm"
 							variant="ghost"
@@ -231,6 +234,6 @@ export default function PageActionBar() {
 					)}
 				</>
 			)}
-		</div>
+		</ThemeBg>
 	);
 }

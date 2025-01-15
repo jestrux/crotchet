@@ -242,6 +242,7 @@ declare var Page: {
 	resolve?: Function;
 	title?: typeof PageTitle;
 	condensingTitle?: boolean | ((payload: typeof PageContext) => boolean);
+	placeholder?: string;
 	content?: typeof PageContent;
 	tab?: string;
 	tabs?:
@@ -266,6 +267,13 @@ declare var Page: {
 				payload: typeof PageContext
 		  ) => (typeof ActionButton & { flex: boolean })[]);
 
+	filter?: {
+		field?: string;
+		defaultValue?: string;
+	};
+
+	filters?: (typeof ChoiceItem)[];
+
 	// form details
 	data?: { [key: string]: any };
 	fields?: { [key: string]: any };
@@ -285,6 +293,7 @@ declare var registerAction: (
 				mobileOnly?: boolean | undefined;
 				desktopOnly?: boolean | undefined;
 				match?: (payload: any) => boolean | null | undefined;
+				actions?: (typeof ActionButton)[] | (() => (typeof ActionButton)[]);
 				handler?: (payload: any) => PromiseLike<any> | void;
 				url?: String | undefined;
 				tags?: string[];

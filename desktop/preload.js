@@ -10,10 +10,9 @@ window.addEventListener("crotchet-ready", () => {
 				(res) => res?.name?.length && res?.contents?.length
 			).forEach(({ name, contents }) => {
 				const asset = document.createElement("script");
-				asset.innerHTML = contents.replace(
-					`import "../@types/index";`,
-					`//import "../@types/index";`
-				);
+				asset.innerHTML = `
+					(() => { ${contents.replace("import", "//import")} })();
+				`;
 				asset.setAttribute("data-crotchet-extension", name);
 				document.body.appendChild(asset);
 			});

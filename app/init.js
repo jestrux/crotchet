@@ -39,11 +39,6 @@ const installExtension = async ({ name, url, contents }) => {
 };
 
 if (utils.devMode()) {
-	installExtension({
-		name: "setHeroLocal",
-		url: new URL("./extensions/setHero.ext.ts", import.meta.url).href,
-	});
-
 	if (import.meta.hot)
 		import.meta.hot.on("reload-extension", installExtension);
 }

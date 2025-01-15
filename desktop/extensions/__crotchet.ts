@@ -120,6 +120,89 @@ registerAction("kitTest", {
 	url: `crotchet://socket/run?command=code /Users/waky/.kenv`,
 });
 
+const getThemes = ({
+	filter = "",
+	savePreference = (key, value) => {},
+	inlineActions = false,
+} = {}) => {
+	const defaultThemes = {
+		"System Default": { colorScheme: "system" },
+		"Default Dark": { colorScheme: "dark" },
+		"Default Light": { colorScheme: "light" },
+		"Make Lemonade": { colorScheme: "dark", tintColor: "#4d7c0f" },
+		"Kingsley Shacklebolt": { colorScheme: "dark", tintColor: "#7e22ce" },
+		"Oceanic View": { colorScheme: "dark", tintColor: "#0e7490" },
+		"Orange Brat": { colorScheme: "dark", tintColor: "#c2410c" },
+		"Roses are Red": { colorScheme: "dark", tintColor: "#be123c" },
+	};
+
+	const themes = Object.keys(defaultThemes).reduce((agg, name) => {
+		const themeProps = defaultThemes[name];
+		themeProps.name = name;
+		let { colorScheme } = themeProps;
+		colorScheme = colorScheme?.toLowerCase();
+
+		const handler = async () => {
+			await savePreference("crotchet-app-theme", themeProps);
+			window["crotchet-app-theme"] = themeProps;
+			dispatch("crotchet-app-theme-updated");
+			dispatch("with-loader-status-change", {
+				status: "success",
+				message: `Theme set to ${name}`,
+			});
+		};
+
+		const theme = {
+			label: name,
+			value: name,
+			...(inlineActions
+				? { section: "Set Theme", handler }
+				: {
+						action: () => ({
+							label: "Select Theme",
+							handler,
+						}),
+				  }),
+		};
+
+		if (!filter || filter == colorScheme) agg.push(theme);
+
+		return agg;
+	}, []);
+
+	if (filter) console.log("App themes choices...", filter, themes);
+
+	return themes;
+};
+
+registerAction("appTheme", {
+	global: true,
+	icon: UI.svg(
+		"M4.098 19.902a3.75 3.75 0 0 0 5.304 0l6.401-6.402M6.75 21A3.75 3.75 0 0 1 3 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 0 0 3.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008Z"
+	),
+	actions: () =>
+		getThemes({
+			savePreference: savePreference,
+			inlineActions: true,
+		}),
+	handler: async () => {
+		await openPage({
+			title: "Set App Theme",
+			placeholder: "Type to search themes",
+			type: "search",
+			filter: {
+				field: "type",
+				defaultValue: "",
+			},
+			filters: [{ label: "All", value: "" }, "Dark", "Light", "System"],
+			resolve: ({ filters }) => {
+				const filter = filters?.type?.toLowerCase();
+				return getThemes({ filter, savePreference });
+			},
+		});
+	},
+});
+
 registerAction("remote", {
 	global: true,
 	mobileOnly: true,

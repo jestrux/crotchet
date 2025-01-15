@@ -162,6 +162,63 @@ const getActions = (payload) => {
 	}, []);
 };
 
+const addClip = async ({ url }) => {
+	return openPage({
+		title: "Add youtube Clip",
+		// resolve: () => getYoutubeVideoDetails(url),
+		// handler: saveVideo,
+	});
+};
+
+registerDataSource("db", "youtubeClips", {
+	table: "youtubeClips",
+	label: "Youtube Clips",
+	collection: "videos",
+	orderBy: "updatedAt,desc",
+	mapEntry: (entry) => ({
+		...entry,
+		video: `https://i.ytimg.com/vi/${entry._id}/hqdefault.jpg`,
+		title: entry.name,
+		subtitle: `${[entry.crop?.[0], entry.crop?.[1]]
+			?.map(toHms)
+			.join(", ")} - ${toHms(entry.duration)}`,
+		url: getYoutubeClipUrl(entry),
+	}),
+	searchFields: ["title"],
+	layoutProps: {
+		layout: "grid",
+		aspectRatio: "16/9",
+		columns: "sm:2,2xl:3,4xl:4",
+	},
+	actions: [
+		{
+			label: "Random Clip",
+			handler: async (_, { dataSources, openUrl }) =>
+				openUrl(
+					getYoutubeClipUrl(await dataSources.youtubeClips.random())
+				),
+			section: "Play",
+		},
+		{
+			label: "Latest Clip",
+			handler: async (_, { dataSources, openUrl }) =>
+				openUrl(
+					getYoutubeClipUrl(await dataSources.youtubeClips.latest())
+				),
+			section: "Play",
+		},
+		{
+			label: "Add Clip",
+			handler: addClip,
+		},
+	],
+	entryActions: getActions,
+	entryAction: (entry) => ({
+		label: "Play Video",
+		url: entry.url,
+	}),
+});
+
 registerWidget("randomYoutubeClip", {
 	listenForUpdates: "refetch-random-youtube-clip-widget",
 	onSwipe: ({ refetch }) => refetch(),
@@ -273,17 +330,7 @@ registerAction("addToYoutubeClips", {
 	label: "Add to Youtube Clips",
 	context: "share",
 	match: ({ url }) => url?.toString().length && getYoutubeId(url),
-	handler: async (payload) => {
-		showAlert(`${JSON.stringify(payload)} - youtube clips!!!`);
-		// return withLoader(async () => {
-		// 	// successMessage,
-		// 	// errorMessage,
-		// 	await someTime(200);
-		// 	setTimeout(() => {
-		// 		alert(`${JSON.stringify(payload)} Added to reading list!!!`);
-		// 	}, 300);
-		// });
-	},
+	handler: addClip,
 });
 
 registerAction("randomClip", {

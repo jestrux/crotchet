@@ -9,6 +9,7 @@ import {
 	useKeyDetector,
 } from "@/crotchet/hooks";
 import { randomId, dispatch, sectionedChoices } from "@/crotchet/utils";
+import ThemeBg from "@/DesktopApp/ThemeBg";
 
 const PageMenuContent = forwardRef(function PageMenuContent(
 	{ idRef, choices, width, selected, onSelect, onOpen, onClose },
@@ -91,7 +92,8 @@ const PageMenuContent = forwardRef(function PageMenuContent(
 	};
 
 	return (
-		<div
+		<ThemeBg
+			overlay
 			id="menuContent"
 			className="z-10 absolute w-56 rounded-md overflow-hidden bg-card border shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none text-xs"
 			style={{ width }}
@@ -174,7 +176,7 @@ const PageMenuContent = forwardRef(function PageMenuContent(
 					);
 				})}
 			</div>
-		</div>
+		</ThemeBg>
 	);
 });
 
