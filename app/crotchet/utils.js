@@ -11,7 +11,7 @@ export const random = (array) => shuffle(shuffle(array))[0];
 
 export const someTime = (t = 200) => new Promise((res) => setTimeout(res, t));
 
-export const onDesktop = () => document.body.classList.contains("on-electron");
+export const onDesktop = () => localStorage.__onDesktop;
 
 export const dispatch = (event, payload) => {
 	window.dispatchEvent(
