@@ -73,8 +73,11 @@ export default function useAppPages() {
 		popPage(pages.at(-1)?._id, data)
 	);
 
-	// window.openPage = (page) => pushPage(page);
+	window.closePage = (data) => dispatch("close-page", data);
 
+	window.openPage = (page) => dispatch("open-page", page);
+
+	// window.openPage = (page) => pushPage(page);
 	// window.openForm = (page) => pushPage({ ...page, type: "form" });
 
 	const popPage = (pageId, data) => {

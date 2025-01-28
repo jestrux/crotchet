@@ -131,7 +131,7 @@ const getCommands = async () => {
 };
 
 export default function AppContent() {
-	const { pages, popPage, pushPage } = useAppContext();
+	const { pages, popPage } = useAppContext();
 	const rootPage = {
 		id: "root",
 		_id: "root",
@@ -140,7 +140,8 @@ export default function AppContent() {
 		listenForUpdates: ["app-commands-updated", "app-actions-updated"],
 	};
 
-	window.openPage = pushPage;
+	// window.openPage = pushPage;
+	// window.closePage = popPage;
 
 	return (
 		<>

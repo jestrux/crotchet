@@ -290,6 +290,10 @@ const getPlayClipPage = (clip) => {
 			cropEnabled = !cropEnabled;
 			restartVideo();
 		}
+		if (action == "open") {
+			closePage();
+			openUrl(getYoutubeActualUrl(clip));
+		}
 	};
 
 	return {
@@ -411,10 +415,11 @@ const getPlayClipPage = (clip) => {
 				section: "Open",
 				label: "Open on Youtube",
 				shortLabel: "Open",
-				handler: () => {
-					ctx.closePage();
-					openUrl(getYoutubeActualUrl(clip));
-				},
+				handler: () =>
+					dispatch("youtube-clip-action", {
+						ctx,
+						action: "open",
+					}),
 			},
 		],
 	};

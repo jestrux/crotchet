@@ -366,6 +366,8 @@ declare var registerSection: (
 
 declare var openRootPage: (page: string) => PromiseLike<any>;
 
+declare var closePage: () => void;
+
 declare var openPage: (props: string | typeof Page) => PromiseLike<any>;
 
 declare var pushPage: (props: string | typeof Page) => PromiseLike<any>;
