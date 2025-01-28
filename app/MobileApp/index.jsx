@@ -11,7 +11,7 @@ import { useCrotchetApp } from "@/crotchet/providers/AppProvider";
 import { Loader } from "@/crotchet/components";
 
 import CrotchetHomePage from "./CrotchetHomePage";
-import AppScaffold from "@/crotchet/providers/AppScaffold";
+// import AppScaffold from "@/crotchet/providers/AppScaffold";
 
 registerPlatformUtils({
 	readClipboard: async () => await Clipboard.read(),
@@ -74,7 +74,7 @@ registerPlatformUtils({
 });
 
 export default function MobileApp() {
-	const { data: app, loading } = useCrotchetApp();
+	const { initializing } = useCrotchetApp();
 	const handleShareIntent = async (result, fromOpen) => {
 		// window.showAlert(
 		// 	"Handle share: " + JSON.stringify({ result, fromOpen })
@@ -203,7 +203,7 @@ export default function MobileApp() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	if (loading || !app) {
+	if (initializing) {
 		return (
 			<div className="py-12">
 				<Loader fillParent />
@@ -211,8 +211,8 @@ export default function MobileApp() {
 		);
 	}
 
-	if (app?.homePage)
-		return <AppScaffold key={app?.homePage._id} rootPage={app?.homePage} />;
+	// if (app?.homePage)
+	// 	return <AppScaffold key={app?.homePage._id} rootPage={app?.homePage} />;
 
 	return <CrotchetHomePage />;
 }
