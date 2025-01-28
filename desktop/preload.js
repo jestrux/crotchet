@@ -34,6 +34,11 @@ window.addEventListener("socket-emit", (e) => {
 	ipcRenderer.send("socket-emit", { event, payload });
 });
 
+window.addEventListener("socket-broadcast", (e) => {
+	const { event, payload } = e.detail;
+	ipcRenderer.send("socket-broadcast", { event, payload });
+});
+
 window.addEventListener("get-file", (e) => {
 	const [key, props] = e.detail;
 	document.body.classList.add(`get-file-${key}`);

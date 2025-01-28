@@ -203,6 +203,17 @@ module.exports = function socketServer(server) {
 			runScript(command, args, callback);
 		},
 
+		"run-action": ({ action, payload }) => {
+			crotchetApp.toggleWindow(true);
+			crotchetApp.windowEmit("socket", {
+				event: "run-action",
+				payload: {
+					action,
+					payload,
+				},
+			});
+		},
+
 		app(props) {
 			if (crotchetApp.openApp) crotchetApp.openApp(props);
 			else {
@@ -257,6 +268,10 @@ module.exports = function socketServer(server) {
 
 		Object.keys(events).forEach((key) => socket.on(key, events[key]));
 	});
+
+	ipcMain.on("socket-broadcast", (_, { event, payload }) =>
+		io.emit(event, payload)
+	);
 
 	ipcMain.on("socket-emit", (_, { event, payload }) => {
 		events[event](payload);

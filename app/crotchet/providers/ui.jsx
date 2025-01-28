@@ -1,10 +1,50 @@
 import RegularListItem from "@/crotchet/components/ListItem";
 import MediaItem from "../components/MediaItem";
+import { useEventListener, useOnInit } from "../hooks";
+import { useLayoutEffect, useRef } from "react";
+import { usePageContext } from "./PageProvider";
 
 export function media({ data } = {}) {
 	if (!data) return null;
 	return <MediaItem {...data} />;
 }
+
+function Component({ data }) {
+	const { page, isOpen } = usePageContext();
+	const elementRef = useRef();
+
+	useLayoutEffect(() => {
+		if (data.onInit) {
+			data.onInit({
+				$el: elementRef.current,
+			});
+		}
+
+		return () => {
+			if (data.onDestroy) data.onDestroy();
+		};
+	}, []);
+
+	useEventListener("remote-action-" + page._id, (_, payload) => {
+		if (!isOpen) return;
+		if (data.onRemoteAction) data.onRemoteAction(payload);
+	});
+
+	const content =
+		typeof data.content == "function" ? data.content() : data.content;
+	const className =
+		typeof data.className == "function" ? data.className() : data.className;
+
+	return (
+		<div
+			ref={elementRef}
+			className={className}
+			dangerouslySetInnerHTML={{ __html: content }}
+		></div>
+	);
+}
+
+export const component = (data) => <Component data={data} />;
 
 export function list({ data } = {}) {
 	if (!data?.length) return null;

@@ -2,7 +2,7 @@ import { Capacitor } from "@capacitor/core";
 import { useEffect, useRef, useState } from "react";
 // import { Keyboard } from "@capacitor/keyboard";
 
-export default function useKeyboard() {
+export default function useKeyboard({ mode = "none" } = {}) {
 	const [keyboardHeight, setKeyboardHeight] = useState(0);
 	let keyboardPlugin = useRef();
 
@@ -35,7 +35,7 @@ export default function useKeyboard() {
 			});
 
 			Keyboard.setResizeMode({
-				mode: "none",
+				mode,
 			});
 
 			Keyboard.addListener("keyboardDidShow", (info) => {
@@ -50,12 +50,12 @@ export default function useKeyboard() {
 		}
 	};
 
-	const KeyboardPlaceholder = () => (
+	const KeyboardPlaceholder = ({ noMargin = false }) => (
 		<div
 			className="h-16"
 			style={{
 				height: `${keyboardHeight}px`,
-				marginBottom: "env(safe-area-inset-bottom)",
+				marginBottom: noMargin ? 0 : "env(safe-area-inset-bottom)",
 			}}
 		>
 			&nbsp;

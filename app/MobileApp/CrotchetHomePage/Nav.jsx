@@ -336,6 +336,81 @@ const getNavItems = async () => {
 	return navItems.filter((item) => pinnedItems.includes(item.action));
 };
 
+const FloatingRemote = ({ expanded, dragging, focusInput }) => {
+	const [remoteActions, setRemoteActions] = useState([]);
+	const [remotePage, setRemotePage] = useState({});
+	const { KeyboardPlaceholder } = useKeyboard();
+	const { data: socketConnected } = useDataLoader({
+		handler: async () => {
+			// if (!window.socket?.connected) {
+			// 	const event = "socket-connected";
+			// 	await new Promise((resolve) => {
+			// 		const handler = async () => {
+			// 			window.removeEventListener(event, handler);
+			// 			resolve();
+			// 		};
+
+			// 		window.addEventListener(event, handler);
+			// 	});
+			// }
+			return window.socket?.connected;
+		},
+		listenForUpdates: ["socket-connected", "socket-disconnected"],
+	});
+
+	const handleRemoteActions = ({ page, actions } = {}) => {
+		setRemoteActions(actions || []);
+		setRemotePage(page || {});
+	};
+
+	useEffect(() => {
+		if (socketConnected)
+			window.socket?.on("page-remote-actions", handleRemoteActions);
+
+		return () =>
+			window.socket?.off("page-remote-actions", handleRemoteActions);
+	}, [socketConnected]);
+
+	// console.log("Socket Connected: ", socketConnected);
+
+	if (!expanded || dragging || !remoteActions?.length) return null;
+
+	return (
+		<div
+			className="fixed inset-x-0 bottom-0 z-50 overflow-hidden border-t dark:border border-content/5 bg-stone-100 dark:bg-card"
+			onClick={focusInput}
+		>
+			<div className="w-screen z-50 overflow-x-auto bg-stone-100/95 dark:bg-content/5">
+				<div className="relative h-12 flex items-center justify-between px-3">
+					<div className="flex-shrink-0 pr-4 mr-4 border-r dark:border-content/15 truncate max-w-40">
+						{remotePage?.title || "Remote"}
+					</div>
+					<div className="flex items-center gap-2">
+						{remoteActions.map((action, index) => (
+							<button
+								key={index}
+								className="flex-shrink-0 h-12 flex py-1.5"
+								onClick={() =>
+									window.socketEmit("emit", {
+										event: "remote-action",
+										payload: action,
+									})
+								}
+							>
+								<span className="h-full flex items-center justify-center rounded-full px-3 border border-content/20 text-sm">
+									{action.shortLabel || action.label}
+								</span>
+							</button>
+						))}
+						<div className="flex-shrink-0 w-6˝˝˝">&nbsp;</div>
+					</div>
+				</div>
+			</div>
+			<KeyboardPlaceholder noMargin />
+		</div>
+	);
+};
+
 const NavItems = ({ expanded, dragging, onExpand }) => {
 	const { data: items } = useDataLoader({
 		handler: getNavItems,
@@ -654,6 +729,8 @@ export default function MobileNav() {
 			</motion.div>
 
 			<NavItems onExpand={handleExpand} {...{ expanded, dragging }} />
+
+			<FloatingRemote {...{ expanded, dragging, focusInput }} />
 		</>
 	);
 }

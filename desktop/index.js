@@ -12,6 +12,7 @@ global.crotchetApp = crotchetApp;
 
 const expressServer = require("./modules/express-server");
 const socketServer = require("./modules/socket-server");
+const getIp = require("./utils/getIp");
 const server = expressServer();
 
 socketServer(server);
@@ -43,6 +44,7 @@ const createMainWindow = () => {
 	mainWindow.webContents.executeJavaScript(
 		/*js*/ `
 			localStorage.__onDesktop = true;
+			localStorage.__dataSocketUrl = 'http://${getIp()}:3127';
 		`,
 		true
 	);

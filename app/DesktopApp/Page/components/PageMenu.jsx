@@ -95,15 +95,15 @@ const PageMenuContent = forwardRef(function PageMenuContent(
 		<ThemeBg
 			overlay
 			id="menuContent"
-			className="z-10 absolute w-56 rounded-md overflow-hidden bg-card border shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none text-xs"
+			className="z-[9999] absolute w-56 rounded-md overflow-hidden border shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none text-xs"
 			style={{ width }}
 			ref={containerRef}
 		>
-			<div className="sticky top-0 bg-card z-10 border-b border-content/10">
+			<div className="sticky top-0">
 				<input
 					ref={inputRef}
 					type="text"
-					className="placeholder:text-content/30 border-none"
+					className="placeholder:text-content/30 z-10 !rounded-none border-0 border-b !border-content/10"
 					placeholder="Type to search"
 					value={query}
 					onChange={(e) => {

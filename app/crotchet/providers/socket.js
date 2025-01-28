@@ -1,7 +1,7 @@
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { io } from "socket.io-client";
 import { db } from "./firebase";
-import { onDesktop } from "../utils";
+import { dispatch, onDesktop } from "../utils";
 
 const getSocket = () => {
 	return new Promise((resolve, reject) => {
@@ -27,10 +27,14 @@ const getSocket = () => {
 };
 
 (() => {
-	if (onDesktop()) {
+	const _onDesktop = onDesktop();
+	const _socketUrl = localStorage.__dataSocketUrl;
+	// document.body.getAttribute("data-socket-url")
+
+	if (_onDesktop) {
 		setDoc(
 			doc(db, "__crotchet", "desktop"),
-			{ socket: document.body.getAttribute("data-socket-url") },
+			{ socket: _socketUrl },
 			{ merge: true }
 		);
 
@@ -47,7 +51,11 @@ const getSocket = () => {
 		getSocket()
 			.then((_socket) => {
 				window.socket = _socket;
-				console.log("Socket connected");
+				dispatch("socket-connected");
+
+				_socket.on("disconnect", function () {
+					dispatch("socket-disconnected");
+				});
 
 				window.socketEmit = (event, payload) => {
 					console.log("Socket emit: ", event, payload);

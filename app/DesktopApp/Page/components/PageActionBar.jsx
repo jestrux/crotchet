@@ -13,6 +13,7 @@ import ThemeBg from "@/DesktopApp/ThemeBg";
 
 export default function PageActionBar() {
 	const {
+		fullScreen,
 		page,
 		pageData,
 		pageResolving,
@@ -22,13 +23,12 @@ export default function PageActionBar() {
 		onMainActionClick,
 		mainAction: _mainAction,
 		secondaryAction: _secondaryAction,
-		actions: _actions,
+		actions,
 	} = usePageContext();
 	const actionsButtonRef = useRef();
 
 	const secondaryAction = _secondaryAction();
 	const mainAction = _mainAction();
-	const actions = _actions();
 
 	const handleSecondaryAction = (payload) =>
 		onActionClick(secondaryAction)(payload);
@@ -163,20 +163,46 @@ export default function PageActionBar() {
 		);
 	};
 
+	const ActionBarWrapper = ({ children }) => {
+		if (fullScreen) {
+			return (
+				<div className="fixed -bottom-9 inset-x-0 h-11 px-3 flex gap-4 items-center z-[999]">
+					{children}
+				</div>
+			);
+		}
+
+		return (
+			<ThemeBg
+				overlay
+				className="rounded-b-xl bg-card fixed bottom-0 inset-x-0 h-11 px-3 flex gap-4 items-center border-t z-[999]"
+			>
+				{children}
+			</ThemeBg>
+		);
+	};
+
 	return (
-		<ThemeBg overlay className="rounded-b-xl bg-card fixed bottom-0 inset-x-0 h-11 px-3 flex gap-4 items-center border-t z-10">
+		<ActionBarWrapper>
 			{!pageResolving && (
 				<>
-					<div className="h-full flex-1 flex items-center gap-4">
+					<div
+						className={clsx(
+							"h-full flex-1 flex items-center gap-4",
+							{
+								"opacity-0": fullScreen,
+							}
+						)}
+					>
 						{renderSecondaryContent()}
 					</div>
 
 					{mainActionSet() && (
 						<PageButton
-							className="gap-1"
-							onClick={() =>
-								handleMainAction({ page, pageData })
-							}
+							className={clsx("gap-1", {
+								"opacity-0": fullScreen,
+							})}
+							onClick={() => handleMainAction({ page, pageData })}
 							rounded="md"
 							size="sm"
 							variant="ghost"
@@ -188,7 +214,7 @@ export default function PageActionBar() {
 						</PageButton>
 					)}
 
-					{mainActionSet() && actions?.length > 0 && (
+					{mainActionSet() && actions?.length > 0 && !fullScreen && (
 						<div className="h-full border-l-2 border-content/15 max-h-5"></div>
 					)}
 
@@ -223,17 +249,28 @@ export default function PageActionBar() {
 									size="sm"
 									variant="ghost"
 								>
-									<span className="mr-0.5 capitalize text-sm">
+									<span
+										className={clsx(
+											"mr-0.5 capitalize text-sm",
+											{
+												"opacity-0": fullScreen,
+											}
+										)}
+									>
 										Actions
 									</span>
-									<CommandKey label="Cmd" />
-									<CommandKey label="K" />
+									{!fullScreen && (
+										<>
+											<CommandKey label="Cmd" />
+											<CommandKey label="K" />
+										</>
+									)}
 								</PageButton>
 							}
 						/>
 					)}
 				</>
 			)}
-		</ThemeBg>
+		</ActionBarWrapper>
 	);
 }

@@ -50,6 +50,10 @@ export default function useAppPages() {
 	};
 
 	const pushPage = (page) => {
+		dispatch("with-loader-status-change", {
+			status: "idle",
+		});
+
 		const [newPage, resolver] = getNewPage(page);
 
 		setPages([...pages, newPage]);

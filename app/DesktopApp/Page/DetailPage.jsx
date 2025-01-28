@@ -1,13 +1,13 @@
 import { useRef } from "react";
 import PageFilters from "./components/PageFilters";
 import { usePageContext } from "@/crotchet/providers/PageProvider";
+import PageContent from "./components/PageContent";
 // import ActionPage from "./ActionPage";
 // import FormPage from "./FormPage";
 
 export default function DetailPage() {
-	const { page, pageResolving, onOpen, onClose } = usePageContext();
+	const { page, title, content, pageResolving, onOpen, onClose } = usePageContext();
 	const popoverTitleRef = useRef(null);
-	const containerRef = useRef(null);
 
 	onOpen(() => {
 		setTimeout(() => {
@@ -30,7 +30,7 @@ export default function DetailPage() {
 		// if (pageHasFields) content = <FormPage page={page} />;
 		// return <ActionPage page={page}>{content}</ActionPage>;
 
-		return <div>Detail Page</div>;
+		return content;
 	};
 
 	return (
@@ -63,22 +63,13 @@ export default function DetailPage() {
 				)}
 
 				<span className="w-full text-base font-bold">
-					{page?.title}
+					{title}
 				</span>
 
 				{!pageResolving && <PageFilters />}
 			</div>
 
-			{!pageResolving && (
-				<div
-					id="popoverContent"
-					ref={containerRef}
-					className="-mt-0.5 relative w-screen overflow-auto focus:outline-none"
-					style={{ height: "calc(100vh - 100px)" }}
-				>
-					{renderPage()}
-				</div>
-			)}
+			<PageContent>{renderPage()}</PageContent>
 		</>
 	);
 }

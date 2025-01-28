@@ -24,19 +24,33 @@ const appIcon = UI.svg(
 	}
 );
 
-const openOnDesktop = (path) => {
-	socketEmit("app", {
+const mapEntry = (entry) => ({
+	...entry,
+	video: `https://i.ytimg.com/vi/${entry._id}/hqdefault.jpg`,
+	title: entry.name,
+	subtitle: `${[entry.crop?.[0], entry.crop?.[1]]
+		?.map(toHms)
+		.join(", ")} - ${toHms(entry.duration)}`,
+	url: getYoutubeClipUrl(entry),
+});
+
+const openOnDesktop = (clip) =>
+	socketEmit("run-action", {
+		action: "playYoutubeClip",
 		scheme: "youtubeClips",
-		url: path.replace("/youtubeClips/desktop/", "/youtubeClips"),
+		url: getYoutubeClipUrl(clip).replace(
+			"/youtubeClips/desktop/",
+			"/youtubeClips"
+		),
 		window: {
 			// maximize: true,
 			// fullScreen: true,
 		},
+		payload: clip,
+		// payload: getPlayClipPage(clip),
 	});
-};
 
 const getActions = (payload) => {
-	const clipUrl = getYoutubeClipUrl(payload);
 	const actions = {
 		// playVideo: {
 		// 	icon: appIcon,
@@ -48,8 +62,8 @@ const getActions = (payload) => {
 			: {
 					playOnDesktop: {
 						icon: UI.icon("open-external"),
-						match: (_, { onDesktop }) => !onDesktop(),
-						handler: () => openOnDesktop(clipUrl),
+						match: () => !onDesktop(),
+						handler: () => openOnDesktop(payload),
 					},
 			  }),
 		playOnYoutube: {
@@ -69,7 +83,7 @@ const getActions = (payload) => {
 						icon: appIcon,
 						label: "Edit Video",
 						section: "Edit",
-						handler: async (_, { dataSources, openForm }) => {
+						handler: async () => {
 							// return editVideo({
 							// 	title: "Edit Youtube Clip",
 							// 	resolve: payload,
@@ -89,7 +103,7 @@ const getActions = (payload) => {
 						label: "Change Source",
 						section: "Edit",
 						handler: () => showToast("Change Clip Source"),
-						// handler: async (_, { dataSources, openForm, openPage }) => {
+						// handler: async () => {
 						// 	const url = await openForm({
 						// 		title: "Change Clip Source",
 						// 		field: {
@@ -122,10 +136,7 @@ const getActions = (payload) => {
 			icon: appIcon,
 			label: "Delete Video",
 			destructive: true,
-			handler: async (
-				_,
-				{ dataSources, showToast, confirmDangerousAction }
-			) => {
+			handler: async () => {
 				const confirmed = await confirmDangerousAction();
 
 				if (!confirmed) return;
@@ -170,20 +181,253 @@ const addClip = async ({ url }) => {
 	});
 };
 
+const createInterval = (callback, interval) => {
+	let rafId = null;
+	let lastTime = performance.now();
+
+	const tick = (currentTime) => {
+		if (currentTime - lastTime >= interval) {
+			callback();
+			lastTime = currentTime;
+		}
+		rafId = requestAnimationFrame(tick);
+	};
+
+	rafId = requestAnimationFrame(tick);
+
+	return () => {
+		if (rafId !== null) {
+			cancelAnimationFrame(rafId);
+			rafId = null;
+			console.log("Clean looper...");
+		}
+	};
+};
+
+const getPlayClipPage = (clip) => {
+	clip = mapEntry(clip);
+	const formatCropTime = (time) => Number(Number(time).toFixed(3));
+	const { duration } = clip;
+	const videoId = clip._id || clip.id;
+	const [start, end] = (clip.crop || [0, duration]).map(formatCropTime);
+	const crop = [start, end];
+	let cropEnabled = true;
+	let player,
+		inited = false;
+
+	const restartVideo = () => {
+		const [start] = crop.map(formatCropTime);
+		player.seekTo(cropEnabled ? start : 0);
+		player.playVideo();
+	};
+
+	const seekTo = (time) => {
+		const [start, end] = crop.map(formatCropTime);
+		if (time >= end || time >= duration || time <= start) time = 0;
+		player.seekTo(time);
+		player.playVideo();
+	};
+
+	const listenForTime = (e) => {
+		console.log("On state change:", e.data);
+
+		if (e && (e.data != 1 || inited)) return;
+		inited = true;
+
+		stopLooper = createInterval(() => {
+			let lastTimeUpdate = 0;
+			const time = formatCropTime(player.getCurrentTime());
+
+			if (cropEnabled && time !== lastTimeUpdate) {
+				lastTimeUpdate = time;
+
+				const [start, end] = crop.map(formatCropTime);
+
+				if (time >= end || time >= duration || time <= start)
+					restartVideo();
+			} else {
+				console.log("Same time as before...");
+			}
+		}, 350);
+	};
+
+	let stopLooper;
+
+	const initPlayer = () => {
+		let script = document.querySelector("#youtube-player-iframe");
+		const connectJS = () => {
+			player = new window.YT.Player("youtube-player");
+			// , {
+			// 	events: {
+			// 		onReady: () => {
+			// 			console.log("On player ready...");
+			// 			window.addEventListener("message", listenForTime);
+			// 		},
+			// 	},
+			// });
+			console.log("Player: ", player);
+			player.addEventListener("onStateChange", listenForTime);
+		};
+
+		if (!script) {
+			script = document.createElement("script");
+			script.id = "youtube-player-iframe";
+			script.src = "https://www.youtube.com/iframe_api";
+			document.body.appendChild(script);
+		}
+
+		if (window.YT?.Player) connectJS();
+		else window.onYouTubeIframeAPIReady = () => connectJS();
+	};
+
+	const handleAction = (e) => {
+		const time = formatCropTime(player.getCurrentTime());
+		const { action } = e?.detail || {};
+		if (action == "restart") restartVideo();
+		if (action == "skip-back") seekTo(time - 5);
+		if (action == "skip-forward") seekTo(time + 5);
+		if (action == "toggle-crop") {
+			cropEnabled = !cropEnabled;
+			restartVideo();
+		}
+	};
+
+	return {
+		type: "detail",
+		title: clip.title,
+		fullScreen: true,
+		content: () => {
+			const src = `https://www.youtube.com/embed/${videoId}?&autoplay=1&enablejsapi=1&controls=0&start=${start.toFixed(
+				0
+			)}`;
+			// const handleReady = () => {}
+			return UI.component({
+				content: () => `
+					<div class="absolute inset-0 bg-black flex items-center justify-center">
+						<iframe
+							id="youtube-player"
+							class="pointer-events-none size-full"
+							src="${src}"
+							allow="autoplay; encrypted-media"
+							allowfullscreen
+						></iframe>
+					</div>
+				`,
+				onInit: ({ $el }) => {
+					// const iframe = $el.querySelector("#youtube-player");
+					// console.log("On init: ", iframe);
+					// iframe.addEventListener("load", (...args) => {
+					// 	console.log("Iframe loaded...", ...args);
+					// });
+					initPlayer();
+					window.addEventListener(
+						"youtube-clip-action",
+						handleAction,
+						false
+					);
+				},
+				onRemoteAction: (action) =>
+					dispatch("youtube-clip-action", { action: action.id }),
+				onDestroy: () => {
+					console.log("Do a clean YT clips destroy...");
+					if (typeof stopLooper == "function") stopLooper();
+					window.removeEventListener(
+						"youtube-clip-action",
+						handleAction,
+						false
+					);
+					// if (window.YT?.Player)
+					// 	window.addEventListener("message", listenForTime);
+					// else console.log("No player initialized...");
+
+					// const script = document.querySelector(
+					// 	"#youtube-player-iframe"
+					// );
+					// if (script) script.remove();
+					// if (window.YT) delete window.YT;
+				},
+			});
+		},
+		// preview: () =>
+		// 	UI.component({
+		// 		content: `
+		// 			<div class="absolute inset-0 bg-black flex items-center justify-center">
+		// 				<img class="max-w-full max-h-full" src="${clip.video}" />
+		// 			</div>
+		// 		`,
+		// 	}),
+		action: (ctx) => ({
+			label: "Restart",
+			id: "restart",
+			handler: () =>
+				dispatch("youtube-clip-action", { ctx, action: "restart" }),
+		}),
+		actions: (ctx) => [
+			{
+				id: "restart",
+				remote: true,
+				label: "Restart",
+				handler: () =>
+					dispatch("youtube-clip-action", { ctx, action: "restart" }),
+			},
+			{
+				id: "toggle-crop",
+				remote: true,
+				shortLabel: "Crop",
+				label: "Toggle Crop",
+				handler: () =>
+					dispatch("youtube-clip-action", {
+						ctx,
+						action: "toggle-crop",
+					}),
+			},
+			{
+				id: "skip-back",
+				remote: true,
+				section: "Skip",
+				label: "Skip Back",
+				shortLabel: "Back",
+				handler: () =>
+					dispatch("youtube-clip-action", {
+						ctx,
+						action: "skip-back",
+					}),
+			},
+			{
+				id: "skip-forward",
+				remote: true,
+				section: "Skip",
+				label: "Skip Forward",
+				shortLabel: "Forward",
+				handler: () =>
+					dispatch("youtube-clip-action", {
+						ctx,
+						action: "skip-forward",
+					}),
+			},
+			{
+				id: "open",
+				remote: true,
+				section: "Open",
+				label: "Open on Youtube",
+				shortLabel: "Open",
+				handler: () => {
+					ctx.closePage();
+					openUrl(getYoutubeActualUrl(clip));
+				},
+			},
+		],
+	};
+};
+
+const playClip = async (clip) => openPage(getPlayClipPage(clip));
+
 registerDataSource("db", "youtubeClips", {
 	table: "youtubeClips",
 	label: "Youtube Clips",
 	collection: "videos",
 	orderBy: "updatedAt,desc",
-	mapEntry: (entry) => ({
-		...entry,
-		video: `https://i.ytimg.com/vi/${entry._id}/hqdefault.jpg`,
-		title: entry.name,
-		subtitle: `${[entry.crop?.[0], entry.crop?.[1]]
-			?.map(toHms)
-			.join(", ")} - ${toHms(entry.duration)}`,
-		url: getYoutubeClipUrl(entry),
-	}),
+	mapEntry,
 	searchFields: ["title"],
 	layoutProps: {
 		layout: "grid",
@@ -193,18 +437,13 @@ registerDataSource("db", "youtubeClips", {
 	actions: [
 		{
 			label: "Random Clip",
-			handler: async (_, { dataSources, openUrl }) =>
-				openUrl(
-					getYoutubeClipUrl(await dataSources.youtubeClips.random())
-				),
+			handler: async () => openUrl("crotchet://action/randomYoutubeClip"),
 			section: "Play",
 		},
 		{
 			label: "Latest Clip",
-			handler: async (_, { dataSources, openUrl }) =>
-				openUrl(
-					getYoutubeClipUrl(await dataSources.youtubeClips.latest())
-				),
+			handler: async () =>
+				playClip(await withLoader(dataSources.youtubeClips.latest())),
 			section: "Play",
 		},
 		{
@@ -215,7 +454,8 @@ registerDataSource("db", "youtubeClips", {
 	entryActions: getActions,
 	entryAction: (entry) => ({
 		label: "Play Video",
-		url: entry.url,
+		// url: entry.url,
+		handler: () => playClip(entry),
 	}),
 });
 
@@ -223,10 +463,12 @@ registerWidget("randomYoutubeClip", {
 	listenForUpdates: "refetch-random-youtube-clip-widget",
 	onSwipe: ({ refetch }) => refetch(),
 	resolve: async () => {
-		const entry = await sourceGet(
+		let entry = await sourceGet(
 			{ handler: () => queryDb("youtubeClips") },
 			{ orderBy: "_index,desc", single: true, random: true }
 		);
+
+		if (entry) entry = mapEntry(entry);
 
 		const getYoutubeUrl = (payload) => {
 			const { _id, crop, duration } = payload || {};
@@ -253,7 +495,10 @@ registerWidget("randomYoutubeClip", {
 				{
 					label: "Play On Desktop",
 					icon: UI.icon("open-external"),
-					handler: () => openOnDesktop(getYoutubeClipUrl(entry)),
+					handler: () => {
+						console.log("Widget entry: ", entry);
+						return openOnDesktop(entry);
+					},
 				},
 				{
 					label: "Play On Youtube",
@@ -326,6 +571,8 @@ registerSection("recentYoutubeClips", {
 	},
 });
 
+registerAction("playYoutubeClip", playClip);
+
 registerAction("addToYoutubeClips", {
 	label: "Add to Youtube Clips",
 	context: "share",
@@ -333,12 +580,33 @@ registerAction("addToYoutubeClips", {
 	handler: addClip,
 });
 
-registerAction("randomClip", {
+registerAction("randomYoutubeClip", {
+	label: "Random Clip",
 	icon: appIcon,
 	global: true,
 	context: "shortcut",
 	tags: ["youtube"],
 	handler: async () => {
+		if (onDesktop()) {
+			try {
+				const res = await withLoader(
+					sourceGet(
+						{ handler: () => queryDb("youtubeClips") },
+						{
+							orderBy: "updatedAt,desc",
+							random: true,
+							single: true,
+						}
+					)
+				);
+
+				if (!res) return showToast("Failed to get clip");
+
+				return playClip(res);
+			} catch (error) {
+				showToast("Failed to get clip");
+			}
+		}
 		window.openActionSheet({
 			noHeading: true,
 			actions: async () => {
@@ -371,8 +639,7 @@ registerAction("randomClip", {
 							{
 								label: "Play On Desktop",
 								icon: UI.icon("open-external"),
-								handler: () =>
-									openOnDesktop(getYoutubeClipUrl(entry)),
+								handler: () => openOnDesktop(entry),
 							},
 							{
 								label: "Play On Youtube",

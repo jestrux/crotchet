@@ -2,8 +2,7 @@ import { usePageContext } from "@/crotchet/providers/PageProvider";
 import PageHeader from "./components/PageHeader";
 
 export default function DetailPage() {
-	const { content: _content } = usePageContext();
-	const content = _content();
+	const { content } = usePageContext();
 
 	const renderPage = () => {
 		// const pageHasFields =

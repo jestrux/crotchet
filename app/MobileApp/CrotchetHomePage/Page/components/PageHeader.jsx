@@ -9,7 +9,7 @@ export default function PageHeader() {
 	const navRef = useRef(null);
 	const stuck = useStickyObserver(navRef.current, -50);
 	const isRootPage = page?.id == "root";
-	const pageHasHeader = title() || !isRootPage;
+	const pageHasHeader = title || !isRootPage;
 	const pageCanPop = typeof onClose == "function" && !isRootPage;
 
 	if (!pageHasHeader) {
@@ -68,11 +68,11 @@ export default function PageHeader() {
 									pageCanPop ? "pr-12" : "pl-2"
 								)}
 							>
-								{page?.title}
+								{title}
 							</div>
 						) : (
 							<div className="px-6 text-3xl font-bold">
-								{page?.title}
+								{title}
 							</div>
 						)}
 					</div>

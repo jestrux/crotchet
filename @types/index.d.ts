@@ -96,6 +96,8 @@ declare var sourceGet: (
 	}
 ) => Promise<any>;
 
+declare var GenericObject: { [key: string]: any };
+
 declare var DataItem: {
 	icon?: string | null;
 	video?: string | null;
@@ -138,6 +140,13 @@ declare var DataItem: {
 };
 
 declare var UI: {
+	component: (payload: {
+		className?: string | null | (() => string | null);
+		content?: string | null | (() => string | null);
+		onInit?: (({ $el }) => void) | null;
+		onRemoteAction?: ((GenericObject) => void) | null;
+		onDestroy?: (({}) => void) | null;
+	}) => [];
 	media: (payload: { data?: DataItem | null; loading?: boolean }) => [];
 	list: (payload: { data?: []; loading?: boolean }) => [];
 	icon: (
@@ -216,6 +225,10 @@ declare var PageContent:
 	| { [key: string]: any }
 	| ((payload: typeof PageContext) => {} | [])
 	| string;
+declare var PagePreview:
+	| { [key: string]: any }
+	| ((payload: typeof PageContext) => {} | [])
+	| string;
 declare var WidgetActionContext: {
 	data?: any | null;
 	loading?: boolean | null;
@@ -241,9 +254,11 @@ declare var Page: {
 	type?: string | ((payload: typeof PageContext) => string);
 	resolve?: Function;
 	title?: typeof PageTitle;
+	fullScreen?: boolean | ((payload: typeof PageContext) => boolean);
 	condensingTitle?: boolean | ((payload: typeof PageContext) => boolean);
 	placeholder?: string;
 	content?: typeof PageContent;
+	preview?: typeof PagePreview;
 	tab?: string;
 	tabs?:
 		| (typeof ChoiceItem)[]
@@ -293,7 +308,9 @@ declare var registerAction: (
 				mobileOnly?: boolean | undefined;
 				desktopOnly?: boolean | undefined;
 				match?: (payload: any) => boolean | null | undefined;
-				actions?: (typeof ActionButton)[] | (() => (typeof ActionButton)[]);
+				actions?:
+					| (typeof ActionButton)[]
+					| (() => (typeof ActionButton)[]);
 				handler?: (payload: any) => PromiseLike<any> | void;
 				url?: String | undefined;
 				tags?: string[];

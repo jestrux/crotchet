@@ -20,11 +20,13 @@ const searchUnsplash = async (searchQuery = "") => {
 		// subtitle: entry.description,
 		subtitle: entry.user?.name || entry.description,
 		image: entry.urls.regular,
+		href: entry.links.html,
 		url: `crotchet://copy/${entry.urls.regular}`,
 	}));
 };
 
-registerAction("randomPic", {
+registerAction("randomUnsplashPic", {
+	label: "Random Pic",
 	icon: UI.svg(
 		"M7.5 6.75V0h9v6.75h-9zm9 3.75H24V24H0V10.5h7.5v6.75h9V10.5z",
 		{ filled: true }
@@ -33,6 +35,57 @@ registerAction("randomPic", {
 	context: "shortcut",
 	tags: ["image"],
 	handler: async () => {
+		if (onDesktop()) {
+			try {
+				return openPage({
+					type: "detail",
+					title: ({ pageData }) => pageData?.title || null,
+					resolve: async () => {
+						const images = await searchUnsplash();
+
+						if (!images) {
+							showToast("Failed to get image");
+							return null;
+						}
+
+						return random(images);
+					},
+					content: ({ pageData }) => {
+						if (!pageData) return null;
+
+						return UI.component({
+							className:
+								"absolute inset-0 bg-black flex items-center justify-center",
+							content: !pageData ? '' : `<img class="max-w-full h-full" src="${pageData.image}" />`,
+						});
+					},
+					action: ({ pageData }) =>
+						!pageData
+							? null
+							: {
+									label: "Open",
+									handler: () => openUrl(pageData.href),
+							  },
+					actions: ({ pageData }) =>
+						!pageData
+							? null
+							: [
+									{
+										label: "Copy",
+										handler: () => {
+											copyToClipboard(pageData.image);
+											showToast("Image copied");
+										},
+									},
+							  ],
+				});
+			} catch (error) {
+				showToast("Failed to get clip");
+			}
+
+			return;
+		}
+
 		window.openActionSheet({
 			noHeading: true,
 			actions: async () => {

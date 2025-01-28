@@ -28,17 +28,15 @@ export default function IonicPage({ inModal, dismiss }) {
 		tabs: _tabs,
 		condensingTitle,
 		icon: _icon,
-		title: _title,
+		title,
 		pageResolving,
-		actions: _actions,
+		actions,
 		mainAction,
 	} = usePageContext();
 
 	const pageType = type();
 	const tabs = _tabs();
 	const icon = _icon();
-	const title = _title();
-	const actions = _actions();
 	const isMain = ({ priority, icon, type }) =>
 		type == "primary" || (priority && icon);
 	const mainActions = _.filter(actions, isMain);

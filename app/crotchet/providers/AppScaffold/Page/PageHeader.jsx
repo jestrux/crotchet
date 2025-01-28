@@ -4,8 +4,7 @@ import useStickyObserver from "@/crotchet/hooks/useStickyObserver";
 import { usePageContext } from "../PageProvider";
 
 export default function PageHeader({ refreshKey }) {
-	const { page, title: _title, onClose } = usePageContext();
-	const title = _title();
+	const { page, title, onClose } = usePageContext();
 
 	const navRef = useRef(null);
 	const stuck = useStickyObserver(navRef.current, -50);

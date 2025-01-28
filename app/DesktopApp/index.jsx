@@ -5,6 +5,7 @@ import AppContent from "./AppContent";
 import registerPlatformUtils from "@/crotchet/registerUtils";
 import ThemeBg from "@/DesktopApp/ThemeBg";
 import { useAppContext } from "@/crotchet/providers/AppProvider";
+import { onActionClick } from "@/crotchet/hooks/useActionClick";
 
 registerPlatformUtils({
 	showToast: (...toast) => {
@@ -135,23 +136,17 @@ export default function DesktopApp() {
 		handleHideApp();
 	});
 
-	useEventListener("socket", (_, { event, payload } = {}) => {
+	useEventListener("socket", (_, { event, payload = {} } = {}) => {
+		// console.log("Socket event: ", event, payload);
+
 		if (event == "run-action") {
-			console.log("Socket run action: ", payload);
-			// try {
-			// 	const action = actions[payload];
-
-			// 	if (
-			// 		typeof action?.handler == "function" ||
-			// 		action?.handler instanceof Promise
-			// 	) {
-			// 		actions[payload].handler();
-
-			// 		return;
-			// 	}
-			// } catch (error) {
-			// 	//
-			// }
+			const { action, ...args } = payload;
+			try {
+				onActionClick(window.actions[action])(args.payload);
+				return;
+			} catch (error) {
+				//
+			}
 
 			return;
 		}
@@ -172,6 +167,15 @@ export default function DesktopApp() {
 		if (event == "open-page") {
 			// return dispatch("open-page", payload);
 			console.log("Socket open page: ", payload);
+			window.openPage({
+				type: "detail",
+				...(payload || {}),
+			});
+		}
+
+		if (event == "remote-action") {
+			// console.log("Socket remote action: ", payload);
+			dispatch("remote-action-" + payload.pageId, payload);
 		}
 	});
 
@@ -188,7 +192,7 @@ export default function DesktopApp() {
 			</div>
 
 			{toast && (
-				<div className="fixed inline-flex items-center bottom-14 h-7 px-3 z-50 bg-content/85 text-on-content text-xs drop-shadow-sm rounded-full -translate-x-1/2 left-1/2">
+				<div className="fixed inline-flex items-center bottom-14 h-7 px-3 z-[999999] bg-content/85 text-on-content text-xs drop-shadow-sm rounded-full -translate-x-1/2 left-1/2">
 					{toast}
 				</div>
 			)}

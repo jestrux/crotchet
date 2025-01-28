@@ -16,8 +16,12 @@ const PageContext = createContext({
 	setPageData: () => {},
 	formData: null,
 	setFormData: () => {},
-	content: () => {},
-	preview: () => {},
+	fullScreen: false,
+	title: null,
+	content: null,
+	// content: () => {},
+	preview: null,
+	// preview: () => {},
 	setPreview: () => {},
 	pageFilter: null,
 	setPageFilter: () => {},
@@ -27,7 +31,7 @@ const PageContext = createContext({
 	setMainAction: () => {},
 	secondaryAction: () => {},
 	setSecondaryAction: () => {},
-	actions: () => {},
+	actions: null,
 	setActions: () => {},
 	onOpen: () => {},
 	onClose: () => {},
@@ -256,6 +260,7 @@ export default function PageProvider({
 		pageDataVersion,
 		formData,
 		pageFilter,
+		closePage: () => onClose(),
 	};
 
 	return (
@@ -283,19 +288,22 @@ export default function PageProvider({
 					onReady,
 					onDataUpdated,
 					onEscape,
-					title: () => {
+					get fullScreen() {
+						return page?.fullScreen ?? false;
+					},
+					get title() {
 						const title = page?.title;
 						return typeof title == "function"
 							? title(contextInfo)
 							: title;
 					},
-					content: () => {
+					get content() {
 						const content = page?.content;
 						return typeof content == "function"
 							? content(contextInfo)
 							: content;
 					},
-					preview: () => {
+					get preview() {
 						let pagePreview = preview || page?.preview;
 						return typeof pagePreview == "function"
 							? pagePreview(contextInfo)
@@ -365,7 +373,7 @@ export default function PageProvider({
 							: null;
 					},
 					setSecondaryAction,
-					actions: () => {
+					get actions() {
 						const pageActions = actions || page?.actions;
 						const appActions = page?.appActions;
 

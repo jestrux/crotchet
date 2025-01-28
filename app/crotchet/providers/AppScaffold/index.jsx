@@ -16,11 +16,11 @@ import "./ionic-styles";
 import homePageActions from "./homePageActions";
 import { getPage } from "@/crotchet";
 import { ErrorBoundary } from "@/crotchet/components";
-import PageProvider, { usePageContext } from "./PageProvider";
+import PageProvider, { usePageContext } from "@/crotchet/providers/PageProvider";
 
 const AppRoot = () => {
-	const { page: rootPage, nav: pageNav, content } = usePageContext();
-	const pageContent = content();
+	const { page: rootPage, nav: pageNav, content: pageContent } = usePageContext();
+	// const pageContent = content();
 	const _nav = pageNav();
 	let nav = [];
 

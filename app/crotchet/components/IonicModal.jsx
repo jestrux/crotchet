@@ -14,10 +14,8 @@ import { usePageContext } from "@/crotchet/providers/AppScaffold/PageProvider";
 import IonicPage from "../providers/AppScaffold/IonicPage";
 
 const IonicModalForm = ({ children, dismiss }) => {
-	const { title: _title, mainAction } = usePageContext();
+	const { title, mainAction } = usePageContext();
 	const stateRef = useRef(null);
-
-	const title = _title();
 	const action = mainAction();
 
 	return (
