@@ -135,6 +135,46 @@ export default function DesktopApp() {
 		handleHideApp();
 	});
 
+	useEventListener("socket", (_, { event, payload } = {}) => {
+		if (event == "run-action") {
+			console.log("Socket run action: ", payload);
+			// try {
+			// 	const action = actions[payload];
+
+			// 	if (
+			// 		typeof action?.handler == "function" ||
+			// 		action?.handler instanceof Promise
+			// 	) {
+			// 		actions[payload].handler();
+
+			// 		return;
+			// 	}
+			// } catch (error) {
+			// 	//
+			// }
+
+			return;
+		}
+
+		if (event == "open-url") {
+			console.log("Socket open url: ", payload);
+			// try {
+			// 	setTimeout(() => {
+			// 		openUrl(payload);
+			// 	}, 20);
+			// } catch (error) {
+			// 	//
+			// }
+
+			return;
+		}
+
+		if (event == "open-page") {
+			// return dispatch("open-page", payload);
+			console.log("Socket open page: ", payload);
+		}
+	});
+
 	return (
 		<div className="h-screen w-screen text-content pointer-events-auto">
 			{/* <div className="relative bg-stone-100/95 dark:bg-card/95 backdrop-blur-sm size-full overflow-hidden"> */}

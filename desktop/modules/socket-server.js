@@ -204,7 +204,13 @@ module.exports = function socketServer(server) {
 		},
 
 		app(props) {
-			crotchetApp.openApp(props);
+			if (crotchetApp.openApp) crotchetApp.openApp(props);
+			else {
+				crotchetApp.windowEmit("socket", {
+					event: "open-page",
+					payload: props,
+				});
+			}
 		},
 
 		open(url) {
