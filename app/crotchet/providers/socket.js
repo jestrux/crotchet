@@ -26,25 +26,37 @@ const getSocket = () => {
 	});
 };
 
-(() => {
+(async () => {
 	const _onDesktop = onDesktop();
 	const _socketUrl = localStorage.__dataSocketUrl;
 	// document.body.getAttribute("data-socket-url")
 
 	if (_onDesktop) {
-		setDoc(
-			doc(db, "__crotchet", "desktop"),
-			{ socket: _socketUrl },
-			{ merge: true }
-		);
+		const event = "initialize-app";
+		const isFloatingWindow = await new Promise((resolve) => {
+			const handler = async (e) => {
+				window.removeEventListener(event, handler);
+				resolve(e.detail.pageId != "root");
+			};
 
-		window.socketEmit = (event, payload) =>
-			window.dispatch("socket-emit", {
-				event,
-				payload,
-			});
+			window.addEventListener(event, handler);
+		});
 
-		return;
+		if (!isFloatingWindow) {
+			setDoc(
+				doc(db, "__crotchet", "desktop"),
+				{ socket: _socketUrl },
+				{ merge: true }
+			);
+
+			window.socketEmit = (event, payload) =>
+				window.dispatch("socket-emit", {
+					event,
+					payload,
+				});
+
+			return;
+		}
 	}
 
 	if (!window.socket?.connected) {

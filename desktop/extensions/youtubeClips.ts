@@ -36,6 +36,7 @@ const mapEntry = (entry) => ({
 
 const openOnDesktop = (clip) =>
 	socketEmit("run-action", {
+		showWindow: true,
 		action: "playYoutubeClip",
 		scheme: "youtubeClips",
 		url: getYoutubeClipUrl(clip).replace(
@@ -204,7 +205,7 @@ const createInterval = (callback, interval) => {
 	};
 };
 
-const getPlayClipPage = (clip) => {
+const getPlayClipPage = (clip, external) => {
 	clip = mapEntry(clip);
 	const formatCropTime = (time) => Number(Number(time).toFixed(3));
 	const { duration } = clip;
@@ -294,9 +295,14 @@ const getPlayClipPage = (clip) => {
 			closePage();
 			openUrl(getYoutubeActualUrl(clip));
 		}
+		if (action == "pip") {
+			closePage();
+			openPage(getPlayClipPage(clip, true));
+		}
 	};
 
 	return {
+		external,
 		type: "detail",
 		title: clip.title,
 		fullScreen: true,
@@ -368,6 +374,15 @@ const getPlayClipPage = (clip) => {
 		}),
 		actions: (ctx) => [
 			{
+				id: "pip",
+				remote: true,
+				label: "Picture in Picture",
+				shortLabel: "Pip",
+				shortcut: "Shift + Option + P",
+				handler: () =>
+					dispatch("youtube-clip-action", { ctx, action: "pip" }),
+			},
+			{
 				id: "restart",
 				remote: true,
 				label: "Restart",
@@ -417,8 +432,7 @@ const getPlayClipPage = (clip) => {
 				id: "open",
 				remote: true,
 				section: "Open",
-				label: "Open on Youtube",
-				shortLabel: "Open",
+				label: "On Youtube",
 				shortcut: "Option + Y",
 				handler: () =>
 					dispatch("youtube-clip-action", {

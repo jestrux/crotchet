@@ -73,9 +73,9 @@ window.addEventListener("toggle-app", (e) => {
 	ipcRenderer.send("toggle-app-window", e.detail);
 });
 
-window.addEventListener("toggle-background-window", (e) => {
-	ipcRenderer.send("toggle-background-window", e.detail);
-});
+window.addEventListener("open-external-window", (e) =>
+	ipcRenderer.send("open-external-window", e.detail)
+);
 
 window.addEventListener("DOMContentLoaded", () => {
 	document.body.classList.add("on-electron");
@@ -90,6 +90,17 @@ ipcRenderer.on("background-window", function () {
 
 ipcRenderer.on("menu-item-click", function (_, itemId) {
 	window.dispatchEvent(new CustomEvent(`menu-item-click:${itemId}`));
+});
+
+window.addEventListener("crotchet-dekstop-ready", function () {
+	ipcRenderer.send("crotchet-ready");
+});
+
+ipcRenderer.on("initialize-app", function (_, props) {
+	window.__crotchetAppInitialized = true;
+	return window.dispatchEvent(
+		new CustomEvent("initialize-app", { detail: props })
+	);
 });
 
 ipcRenderer.on("socket", function (_, props) {

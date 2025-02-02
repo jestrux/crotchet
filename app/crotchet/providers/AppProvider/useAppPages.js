@@ -1,5 +1,11 @@
 import { useEventListener, useKeyDetector, useOnInit } from "@/crotchet/hooks";
-import { camelCaseToSentenceCase, dispatch, randomId } from "@/crotchet/utils";
+import {
+	camelCaseToSentenceCase,
+	dispatch,
+	hideApp,
+	onDesktop,
+	randomId,
+} from "@/crotchet/utils";
 import { useState } from "react";
 
 export default function useAppPages() {
@@ -50,11 +56,35 @@ export default function useAppPages() {
 	};
 
 	const pushPage = (page) => {
+		const [newPage, resolver] = getNewPage(page);
+
+		if (page.external) {
+			hideApp();
+			window.externalPages = {};
+			window.externalPages[newPage._id] = newPage;
+
+			const newPageProps = Object.entries(newPage).reduce(
+				(agg, [key, value]) => {
+					const valueType = typeof value;
+
+					if (["string", "number"].includes(valueType))
+						agg[key] = value;
+
+					return agg;
+				},
+				{}
+			);
+			dispatch("open-external-window", {
+				pageId: newPage._id,
+				...newPageProps,
+			});
+			// console.log("New page: ", newPageProps);
+			return;
+		}
+
 		dispatch("with-loader-status-change", {
 			status: "idle",
 		});
-
-		const [newPage, resolver] = getNewPage(page);
 
 		setPages([...pages, newPage]);
 
@@ -82,10 +112,25 @@ export default function useAppPages() {
 	// window.openPage = (page) => pushPage(page);
 	// window.openForm = (page) => pushPage({ ...page, type: "form" });
 
+	const notifyRemoteOnPageClose = (pageId) => {
+		if (onDesktop()) {
+			dispatch("socket-broadcast", {
+				event: "remote-page-closed",
+				payload: {
+					page: {
+						_id: pageId,
+					},
+				},
+			});
+		}
+	};
+
 	const popPage = (pageId, data) => {
 		const page = pages.filter(({ _id }) => _id == pageId);
 
 		if (typeof page.resolver == "function") page.resolver(data);
+
+		notifyRemoteOnPageClose(pageId);
 
 		setPages(() => {
 			const newPages = pages.filter((p) => p.id != pageId);
@@ -173,7 +218,12 @@ export default function useAppPages() {
 		pushPage,
 		popPage,
 		popToRoot: () => {
-			setPages([]);
+			setPages((pages) => {
+				if (onDesktop())
+					pages.forEach((page) => notifyRemoteOnPageClose(page._id));
+
+				return [];
+			});
 			dispatch("open-root");
 			window.currentPageId = "root";
 		},

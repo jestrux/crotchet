@@ -23,8 +23,6 @@ const PageContentWrapper = () => {
 
 	useEffect(() => {
 		if (window.onDesktop()) {
-			if (!isOpen) return;
-
 			const actionNames = (actions || []).reduce((agg, action) => {
 				if (action.label && action.remote)
 					agg.push({
@@ -41,11 +39,15 @@ const PageContentWrapper = () => {
 			}, []);
 
 			window.dispatch("socket-broadcast", {
-				event: "page-remote-actions",
+				event:
+					!isOpen || !actionNames.length
+						? "remote-page-closed"
+						: "remote-page-changed",
 				payload: {
-					actions: actionNames,
 					page: {
+						_id: pageId,
 						title,
+						actions: actionNames,
 					},
 				},
 			});
@@ -55,7 +57,7 @@ const PageContentWrapper = () => {
 	useKeyDetector({
 		key: Object.keys(actionShortcutMap),
 		action: (_, key) => {
-			if (!actionShortcutMap[key]) return;
+			if (!isOpen || !actionShortcutMap[key]) return;
 
 			dispatch("command-matched-" + pageId);
 			actionShortcutMap[key]();

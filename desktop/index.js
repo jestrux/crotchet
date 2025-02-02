@@ -44,6 +44,7 @@ const createMainWindow = () => {
 	mainWindow.webContents.executeJavaScript(
 		/*js*/ `
 			localStorage.__onDesktop = true;
+			localStorage.__floatingWindow = false;
 			localStorage.__dataSocketUrl = 'http://${getIp()}:3127';
 		`,
 		true

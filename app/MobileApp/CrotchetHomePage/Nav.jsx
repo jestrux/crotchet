@@ -1,7 +1,14 @@
 import { NavButton, MutliGestureButton, Input } from "@/crotchet/components";
 import { useDataLoader } from "@/crotchet/hooks";
+import { onActionClick } from "@/crotchet/hooks/useActionClick";
 import useKeyboard from "@/crotchet/hooks/useKeyboard";
-import { getPreference, sectionedChoices } from "@/crotchet/utils";
+import useRemote from "@/crotchet/providers/Remote/useRemote";
+import {
+	dispatch,
+	getPreference,
+	isValidAction,
+	sectionedChoices,
+} from "@/crotchet/utils";
 import clsx from "clsx";
 import {
 	motion,
@@ -223,7 +230,8 @@ const NavActions = ({ searchQuery, expanded, onCollapse }) => {
 
 const getNavItems = async () => {
 	const pinnedItems = await getPreference("pinnedNavItems", [
-		"Pages",
+		"Remote",
+		// "Pages",
 		// "Home",
 		"Search",
 		"Profile",
@@ -246,6 +254,7 @@ const getNavItems = async () => {
 			),
 			action: "Remote",
 			label: "Remote",
+			handler: () => dispatch("open-remote-controller"),
 		},
 		{
 			icon: (
@@ -336,42 +345,10 @@ const getNavItems = async () => {
 	return navItems.filter((item) => pinnedItems.includes(item.action));
 };
 
-const FloatingRemote = ({ expanded, dragging, focusInput }) => {
-	const [remoteActions, setRemoteActions] = useState([]);
-	const [remotePage, setRemotePage] = useState({});
+const FloatingRemote = ({ expanded, dragging, onCollapse, focusInput }) => {
 	const { KeyboardPlaceholder } = useKeyboard();
-	const { data: socketConnected } = useDataLoader({
-		handler: async () => {
-			// if (!window.socket?.connected) {
-			// 	const event = "socket-connected";
-			// 	await new Promise((resolve) => {
-			// 		const handler = async () => {
-			// 			window.removeEventListener(event, handler);
-			// 			resolve();
-			// 		};
-
-			// 		window.addEventListener(event, handler);
-			// 	});
-			// }
-			return window.socket?.connected;
-		},
-		listenForUpdates: ["socket-connected", "socket-disconnected"],
-	});
-
-	const handleRemoteActions = ({ page, actions } = {}) => {
-		setRemoteActions(actions || []);
-		setRemotePage(page || {});
-	};
-
-	useEffect(() => {
-		if (socketConnected)
-			window.socket?.on("page-remote-actions", handleRemoteActions);
-
-		return () =>
-			window.socket?.off("page-remote-actions", handleRemoteActions);
-	}, [socketConnected]);
-
-	// console.log("Socket Connected: ", socketConnected);
+	const { currentPage: remotePage, openPage } = useRemote();
+	const remoteActions = remotePage?.actions || [];
 
 	if (!expanded || dragging || !remoteActions?.length) return null;
 
@@ -382,7 +359,14 @@ const FloatingRemote = ({ expanded, dragging, focusInput }) => {
 		>
 			<div className="w-screen z-50 overflow-x-auto bg-stone-100/95 dark:bg-content/5">
 				<div className="relative h-12 flex items-center justify-between px-3">
-					<div className="flex-shrink-0 pr-4 mr-4 border-r dark:border-content/15 truncate max-w-40">
+					<div
+						className="flex-shrink-0 pr-4 mr-4 border-r dark:border-content/15 truncate max-w-40"
+						onClick={(e) => {
+							e.stopPropagation();
+							onCollapse();
+							openPage(remotePage);
+						}}
+					>
 						{remotePage?.title || "Remote"}
 					</div>
 					<div className="flex items-center gap-2">
@@ -453,12 +437,14 @@ const NavItems = ({ expanded, dragging, onExpand }) => {
 								// }
 								onClick={() => {
 									if (isMainAction) onExpand();
+									else if (isValidAction(item))
+										onActionClick(item)();
 									else {
 										window.openActionSheet({
 											title: item.action,
 											content:
 												item.action +
-												" details will go here...",
+												" and its details will go here...",
 										});
 									}
 								}}
@@ -721,8 +707,11 @@ export default function MobileNav() {
 
 					<div className="sticky top-0 h-[60vh] overscroll-none overflow-auto">
 						<NavActions
-							{...{ expanded, searchQuery }}
-							onCollapse={() => setExpanded(false)}
+							{...{
+								expanded,
+								searchQuery,
+								onCollapse: handleCollapse,
+							}}
 						/>
 					</div>
 				</motion.div>
@@ -730,7 +719,14 @@ export default function MobileNav() {
 
 			<NavItems onExpand={handleExpand} {...{ expanded, dragging }} />
 
-			<FloatingRemote {...{ expanded, dragging, focusInput }} />
+			<FloatingRemote
+				{...{
+					onCollapse: handleCollapse,
+					expanded,
+					dragging,
+					focusInput,
+				}}
+			/>
 		</>
 	);
 }

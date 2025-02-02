@@ -1,4 +1,11 @@
-const { Tray, Menu, app, globalShortcut } = require("electron");
+const {
+	Tray,
+	Menu,
+	app,
+	globalShortcut,
+	BrowserWindow,
+	screen,
+} = require("electron");
 const { getWriteableFile, readFile } = require("./files");
 
 module.exports = function Crotchet() {
@@ -6,6 +13,7 @@ module.exports = function Crotchet() {
 	this.tray = null;
 	this.showWindow = isDev;
 	this.menuItems = {};
+	this.externalWindows = {};
 	this.fullScreenTimeout = { then: (resolve) => setTimeout(resolve, 40) };
 
 	this.setMainWindow = (window) => {
@@ -38,11 +46,14 @@ module.exports = function Crotchet() {
 		});
 	};
 
-	this.socketEmit = (event, payload, background) =>
-		this.windowEmit("socket", { event, payload }, background);
+	this.socketEmit = (event, payload, windowId) =>
+		this.windowEmit("socket", { event, payload }, windowId);
 
-	this.windowEmit = (event, payload, background) =>
-		this.mainWindow.webContents.send(event, payload, background);
+	this.windowEmit = (event, payload, windowId) => {
+		let window = this.mainWindow;
+		if (windowId) window = this.externalWindows[windowId].window;
+		window.webContents?.send(event, payload);
+	};
 
 	this.toggleWindow = (show) => {
 		if (show == undefined) show = !this.showWindow;
@@ -56,6 +67,28 @@ module.exports = function Crotchet() {
 		this.showWindow = show;
 
 		return show;
+	};
+
+	this.initializeWindow = () => {
+		const pendingExternalWindow = Object.values(this.externalWindows).find(
+			({ pending }) => pending
+		);
+		if (pendingExternalWindow) {
+			this.externalWindows[pendingExternalWindow._id] = {
+				...pendingExternalWindow,
+				pending: false,
+			};
+
+			return this.windowEmit(
+				"initialize-app",
+				pendingExternalWindow.payload || {},
+				pendingExternalWindow._id
+			);
+		}
+
+		this.windowEmit("initialize-app", {
+			pageId: "root",
+		});
 	};
 
 	this.setMenuItems = (items = [], { replace = false } = {}) => {
@@ -110,5 +143,56 @@ module.exports = function Crotchet() {
 			}),
 			{ replace }
 		);
+	};
+
+	this.openExternalWindow = (payload = {}) => {
+		console.log("Open external window: ", payload);
+
+		try {
+			const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+			const windowWidth = 400;
+			const windowHeight = 300;
+			// const windowWidth = 600;
+			// const windowHeight = 800;
+			const randomId = "window-" + Math.random().toString(36).slice(2);
+			const window = new BrowserWindow({
+				// backgroundColor: "#FFF",
+				// titleBarStyle: "hidden",
+				width: windowWidth,
+				height: windowHeight,
+				x: width - windowWidth - width * 0.2,
+				y: height * 0.2,
+				// frame: false,
+				// show: false,
+				// frame: false,
+				// transparent: true,
+				// resizable: isDev,
+				// minimizable: false,
+				alwaysOnTop: true,
+				webPreferences: {
+					devTools: true,
+					nodeIntegration: true,
+					preload: appDir("preload.js"),
+				},
+			});
+
+			window.setVisibleOnAllWorkspaces(true, {
+				visibleOnFullScreen: true,
+			});
+			// window.setHiddenInMissionControl(true);
+			// window.webContents.openDevTools({ mode: "detach" });
+
+			if (isDev) window.loadURL("http://localhost:5173/");
+			else window.loadFile(buildDir("index.html"));
+
+			this.externalWindows[randomId] = {
+				_id: randomId,
+				payload,
+				pending: true,
+				window,
+			};
+		} catch (error) {
+			console.log("Open external window error: ", error);
+		}
 	};
 };

@@ -203,15 +203,15 @@ registerAction("appTheme", {
 	},
 });
 
-registerAction("remote", {
-	global: true,
-	mobileOnly: true,
-	handler: async () =>
-		openActionSheet({
-			title: "Remote",
-			content: "Remote apps will go here...",
-		}),
-});
+// registerAction("remote", {
+// 	global: true,
+// 	mobileOnly: true,
+// 	handler: async () =>
+// 		openActionSheet({
+// 			title: "Remote",
+// 			content: "Remote apps will go here...",
+// 		}),
+// });
 
 registerAction("searchHeroIcons", {
 	global: true,

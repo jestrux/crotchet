@@ -251,6 +251,7 @@ declare var ActionButton:
 	| ((payload: any) => typeof ActionButton | null | undefined);
 
 declare var Page: {
+	external?: boolean | null;
 	type?: string | ((payload: typeof PageContext) => string);
 	resolve?: Function;
 	title?: typeof PageTitle;

@@ -203,8 +203,16 @@ module.exports = function socketServer(server) {
 			runScript(command, args, callback);
 		},
 
-		"run-action": ({ action, payload }) => {
+		"close-page": ({ pageId, data }) => {
 			crotchetApp.toggleWindow(true);
+			crotchetApp.windowEmit("socket", {
+				event: "close-page",
+				payload: { pageId, data },
+			});
+		},
+
+		"run-action": ({ action, showWindow, payload }) => {
+			if (showWindow) crotchetApp.toggleWindow(true);
 			crotchetApp.windowEmit("socket", {
 				event: "run-action",
 				payload: {
@@ -231,8 +239,8 @@ module.exports = function socketServer(server) {
 		"background-action": ({ _action, ...payload } = {}) =>
 			crotchetApp.backgroundAction(_action, payload),
 
-		emit({ event, payload } = {}) {
-			crotchetApp.toggleWindow(true);
+		emit({ event, payload, showWindow } = {}) {
+			if (showWindow) crotchetApp.toggleWindow(true);
 			crotchetApp.windowEmit("socket", { event, payload });
 		},
 
@@ -291,6 +299,14 @@ module.exports = function socketServer(server) {
 
 	ipcMain.on("toggle-app-window", (_, show = false) =>
 		crotchetApp.toggleWindow(show)
+	);
+
+	ipcMain.on("crotchet-ready", () => {
+		crotchetApp.initializeWindow()
+	});
+
+	ipcMain.on("open-external-window", (_, show = false) =>
+		crotchetApp.openExternalWindow(show)
 	);
 
 	ipcMain.on("open-url", (_, url) => {

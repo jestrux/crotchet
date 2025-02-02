@@ -3,6 +3,7 @@ import { useDataLoader } from "@/crotchet/hooks";
 import { AlertsWrapper } from "@/crotchet/hooks/useAlerts";
 import useAppPages from "./useAppPages";
 import { useAppTheme, useInitAppTheme } from "../AppTheme";
+import RemoteConnect from "../Remote/RemoteConnect";
 
 export const AppContext = createContext({
 	initializing: false,
@@ -57,6 +58,7 @@ export default function AppProvider({ children }) {
 		<AppContext.Provider value={value}>
 			{children}
 			<AlertsWrapper />
+			<RemoteConnect />
 		</AppContext.Provider>
 	);
 }

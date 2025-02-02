@@ -96,6 +96,7 @@ registerPlatformUtils({
 export default function DesktopApp() {
 	const {
 		appTheme: { ThemeStyles },
+		popPage,
 	} = useAppContext();
 	const toastTimerRef = useRef();
 	const [toast, setToast] = useState(null);
@@ -171,6 +172,11 @@ export default function DesktopApp() {
 				type: "detail",
 				...(payload || {}),
 			});
+		}
+
+		if (event == "close-page") {
+			console.log("Remote close page: ", payload);
+			return popPage(payload.pageId, payload.data);
 		}
 
 		if (event == "remote-action") {
