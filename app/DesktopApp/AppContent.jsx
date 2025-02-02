@@ -38,6 +38,7 @@ const commandProps = (item, section, favorites) => {
 				? item.actions
 				: []),
 			{
+				shortcut: "Shift + Option + F",
 				label: faved ? "Remove from favorites" : "Add to favorites",
 				handler: () => {
 					window.withLoader(
@@ -55,6 +56,7 @@ const commandProps = (item, section, favorites) => {
 			},
 			{
 				label: "Move to top",
+				shortcut: "Shift + Option + T",
 				handler: () => {
 					window.withLoader(
 						async () => {

@@ -371,7 +371,7 @@ const getPlayClipPage = (clip) => {
 				id: "restart",
 				remote: true,
 				label: "Restart",
-				shortcut: "R",
+				shortcut: "Option + R",
 				handler: () =>
 					dispatch("youtube-clip-action", { ctx, action: "restart" }),
 			},
@@ -393,7 +393,7 @@ const getPlayClipPage = (clip) => {
 				section: "Skip",
 				label: "Skip Back",
 				shortLabel: "Back",
-				shortcut: "ArrowLeft",
+				shortcut: "Option + ArrowLeft",
 				handler: () =>
 					dispatch("youtube-clip-action", {
 						ctx,
@@ -406,7 +406,7 @@ const getPlayClipPage = (clip) => {
 				section: "Skip",
 				label: "Skip Forward",
 				shortLabel: "Forward",
-				shortcut: "ArrowRight",
+				shortcut: "Option + ArrowRight",
 				handler: () =>
 					dispatch("youtube-clip-action", {
 						ctx,
@@ -419,7 +419,7 @@ const getPlayClipPage = (clip) => {
 				section: "Open",
 				label: "Open on Youtube",
 				shortLabel: "Open",
-				shortcut: "Y",
+				shortcut: "Option + Y",
 				handler: () =>
 					dispatch("youtube-clip-action", {
 						ctx,

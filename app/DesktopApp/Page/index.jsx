@@ -11,6 +11,7 @@ import DetailPage from "./DetailPage";
 import { useEffect } from "react";
 import { onActionClick } from "@/crotchet/hooks/useActionClick";
 import { useKeyDetector } from "@/crotchet/hooks";
+import { dispatch } from "@/crotchet/utils";
 
 const PageContentWrapper = () => {
 	const { page, title, pageResolving, isOpen, actions } = usePageContext();
@@ -53,7 +54,12 @@ const PageContentWrapper = () => {
 
 	useKeyDetector({
 		key: Object.keys(actionShortcutMap),
-		action: (_, key) => actionShortcutMap[key]?.(),
+		action: (_, key) => {
+			if (!actionShortcutMap[key]) return;
+
+			dispatch("command-matched-" + pageId);
+			actionShortcutMap[key]();
+		},
 	});
 
 	return (

@@ -63,6 +63,7 @@ export default function SearchPage() {
 		onOpen,
 		onBlur,
 		onClose,
+		onCommandMatched,
 		onReady,
 		onDataUpdated,
 		onClick,
@@ -70,6 +71,7 @@ export default function SearchPage() {
 		onNavigateDown,
 		onNavigateUp,
 	} = usePageContext();
+	const commandMatchedRef = useRef(false);
 	const activeChoiceIndexRef = useRef(null);
 	const [activeChoice, _setActiveChoice] = useState();
 	const [query, setQuery] = useState("");
@@ -128,6 +130,11 @@ export default function SearchPage() {
 
 	const focusInput = () => {
 		if (inputRef.current) inputRef.current.select();
+	};
+
+	const clearSearchQuery = () => {
+		inputRef.current.value = "";
+		setQuery("");
 	};
 
 	const navigateToStart = (focus) => {
@@ -214,7 +221,7 @@ export default function SearchPage() {
 		if (!isOpen) return;
 
 		if (query.length) {
-			setQuery("");
+			clearSearchQuery();
 			navigateToStart();
 
 			if (popAll && typeof onPopAll == "function") onClose({ popAll });
@@ -255,6 +262,8 @@ export default function SearchPage() {
 
 	onEscape((payload) => handleEscape(payload));
 
+	onCommandMatched(() => (commandMatchedRef.current = true));
+
 	return (
 		<div ref={containerRef}>
 			<div className="h-14 px-4 flex items-center comboboxData.isExpanded border-b border-content/10 z-10 relative">
@@ -285,9 +294,13 @@ export default function SearchPage() {
 					ref={inputRef}
 					className="popover-input bg-transparent h-full flex-1 border-none shadow-none px-0 py-3 text-xl focus:outline-none placeholder-content/30"
 					placeholder={page?.placeholder || "Type to search actions"}
-					// onKeyDown={onKeyDown}
 					value={query}
 					onChange={(e) => {
+						if (commandMatchedRef.current)
+							return (commandMatchedRef.current = false);
+
+						if (!isOpen) return;
+
 						setQuery(e.target.value);
 						navigateToStart();
 					}}

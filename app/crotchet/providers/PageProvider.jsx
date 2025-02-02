@@ -34,6 +34,7 @@ const PageContext = createContext({
 	actions: null,
 	setActions: () => {},
 	onOpen: () => {},
+	onCommandMatched: () => {},
 	onBlur: () => {},
 	onClose: () => {},
 	onReady: () => {},
@@ -101,6 +102,10 @@ export default function PageProvider({
 
 	const openHandler = useRef(() => {});
 	const onOpen = (callback) => (openHandler.current = callback);
+
+	const commandMatchedHandler = useRef(() => {});
+	const onCommandMatched = (callback) =>
+		(commandMatchedHandler.current = callback);
 
 	const blurHandler = useRef(() => {});
 	const onBlur = (callback) => (blurHandler.current = callback);
@@ -191,6 +196,11 @@ export default function PageProvider({
 	useEventListener("open-" + page?._id, openHandler.current);
 
 	useEventListener("blur-" + page?._id, blurHandler.current);
+
+	useEventListener(
+		"command-matched-" + page?._id,
+		commandMatchedHandler.current
+	);
 
 	useEventListener(
 		"escape-" + page?._id,
@@ -292,6 +302,7 @@ export default function PageProvider({
 					onOpen,
 					onBlur,
 					onClose,
+					onCommandMatched,
 					onReady,
 					onDataUpdated,
 					onEscape,
@@ -391,23 +402,7 @@ export default function PageProvider({
 							...((typeof appActions == "function"
 								? appActions(contextInfo)
 								: appActions) || []),
-						].map((action) => {
-							if (
-								action.shortcut &&
-								![
-									"Shift",
-									"Ctrl",
-									"Cmd",
-									"Control",
-									"Meta",
-									"Option",
-									"Alt",
-								].includes(action.shortcut)
-							)
-								action.shortcut = "Option + " + action.shortcut;
-
-							return action;
-						});
+						];
 					},
 					setActions,
 					onClick,
