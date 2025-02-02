@@ -9,10 +9,16 @@ import PageLoader from "./components/PageLoader";
 import PageActionBar from "./components/PageActionBar";
 import DetailPage from "./DetailPage";
 import { useEffect } from "react";
+import { onActionClick } from "@/crotchet/hooks/useActionClick";
+import { useKeyDetector } from "@/crotchet/hooks";
 
 const PageContentWrapper = () => {
 	const { page, title, pageResolving, isOpen, actions } = usePageContext();
 	const pageId = page?._id;
+	const actionShortcutMap = (actions || []).reduce((agg, action) => {
+		if (action.shortcut) agg[action.shortcut] = onActionClick(action);
+		return agg;
+	}, {});
 
 	useEffect(() => {
 		if (window.onDesktop()) {
@@ -21,14 +27,18 @@ const PageContentWrapper = () => {
 			const actionNames = (actions || []).reduce((agg, action) => {
 				if (action.label && action.remote)
 					agg.push({
-						..._.pick(action, ["id", "label", "shortLabel"]),
+						..._.pick(action, [
+							"id",
+							"label",
+							"shortLabel",
+							"shortcut",
+						]),
 						// ...action,
 						pageId,
 					});
 				return agg;
 			}, []);
 
-			// console.log("Page actions: ", actionNames);
 			window.dispatch("socket-broadcast", {
 				event: "page-remote-actions",
 				payload: {
@@ -40,6 +50,11 @@ const PageContentWrapper = () => {
 			});
 		}
 	}, [title, isOpen, actions, pageId]);
+
+	useKeyDetector({
+		key: Object.keys(actionShortcutMap),
+		action: (_, key) => actionShortcutMap[key]?.(),
+	});
 
 	return (
 		<>

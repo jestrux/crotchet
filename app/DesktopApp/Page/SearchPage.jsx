@@ -61,6 +61,7 @@ export default function SearchPage() {
 		setMainAction,
 		setActions,
 		onOpen,
+		onBlur,
 		onClose,
 		onReady,
 		onDataUpdated,
@@ -224,9 +225,13 @@ export default function SearchPage() {
 		onClose({ popAll });
 	};
 
+	onBlur(() => {
+		if (inputRef.current) inputRef.current.blur();
+	});
+
 	onOpen(() => {
 		if (!activeChoice) navigateToStart("select");
-		else focusInput();
+		focusInput();
 	});
 
 	onReady(() => navigateToStart());

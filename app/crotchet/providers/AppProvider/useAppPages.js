@@ -58,6 +58,8 @@ export default function useAppPages() {
 
 		setPages([...pages, newPage]);
 
+		dispatch(`blur-${window.currentPageId}`);
+
 		window.currentPageId = newPage._id;
 
 		setTimeout(() => {

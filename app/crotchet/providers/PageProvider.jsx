@@ -34,6 +34,7 @@ const PageContext = createContext({
 	actions: null,
 	setActions: () => {},
 	onOpen: () => {},
+	onBlur: () => {},
 	onClose: () => {},
 	onReady: () => {},
 	onDataUpdated: () => {},
@@ -100,6 +101,9 @@ export default function PageProvider({
 
 	const openHandler = useRef(() => {});
 	const onOpen = (callback) => (openHandler.current = callback);
+
+	const blurHandler = useRef(() => {});
+	const onBlur = (callback) => (blurHandler.current = callback);
 
 	const navigateDownHandler = useRef(() => {});
 	const onNavigateDown = (callback) => {
@@ -185,6 +189,8 @@ export default function PageProvider({
 	useEventListener("click-" + page?._id, pageInFocus(clickHandler.current));
 
 	useEventListener("open-" + page?._id, openHandler.current);
+
+	useEventListener("blur-" + page?._id, blurHandler.current);
 
 	useEventListener(
 		"escape-" + page?._id,
@@ -284,6 +290,7 @@ export default function PageProvider({
 					pageResolving: loading,
 					pageStatus,
 					onOpen,
+					onBlur,
 					onClose,
 					onReady,
 					onDataUpdated,
@@ -384,7 +391,23 @@ export default function PageProvider({
 							...((typeof appActions == "function"
 								? appActions(contextInfo)
 								: appActions) || []),
-						];
+						].map((action) => {
+							if (
+								action.shortcut &&
+								![
+									"Shift",
+									"Ctrl",
+									"Cmd",
+									"Control",
+									"Meta",
+									"Option",
+									"Alt",
+								].includes(action.shortcut)
+							)
+								action.shortcut = "Option + " + action.shortcut;
+
+							return action;
+						});
 					},
 					setActions,
 					onClick,

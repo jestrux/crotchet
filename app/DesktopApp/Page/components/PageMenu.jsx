@@ -10,6 +10,7 @@ import {
 } from "@/crotchet/hooks";
 import { randomId, dispatch, sectionedChoices } from "@/crotchet/utils";
 import ThemeBg from "@/DesktopApp/ThemeBg";
+import CommandKey from "./CommandKey";
 
 const PageMenuContent = forwardRef(function PageMenuContent(
 	{ idRef, choices, width, selected, onSelect, onOpen, onClose },
@@ -169,6 +170,14 @@ const PageMenuContent = forwardRef(function PageMenuContent(
 										>
 											{choice.label}
 										</span>
+
+										{choice.shortcut && (
+											<span className="ml-auto flex items-center">
+												<CommandKey
+													label={choice.shortcut}
+												/>
+											</span>
+										)}
 									</button>
 								);
 							})}
@@ -220,9 +229,7 @@ export default function PageMenu({
 	};
 
 	const doProcess = useCallback((open) => {
-		const pageWrapper = wrapperRef.current?.closest(
-			"#pageWrapper"
-		);
+		const pageWrapper = wrapperRef.current?.closest("#pageWrapper");
 
 		if (!pageWrapper) return;
 
