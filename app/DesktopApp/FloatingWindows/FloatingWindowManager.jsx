@@ -22,13 +22,13 @@ export default function FloatingWindowManager() {
 
 		dispatch("floating-windows-updated");
 
-		dispatch("open-external-window", {
+		window.socketEmit("open-floating-window", {
 			_id: pageId,
 			window: page.window,
 		});
 	};
 
-	useEventListener("floating-window-action", (e, { _id, action }) => {
+	useEventListener("floating-window-action", (__, { _id, action }) => {
 		if (action == "init") {
 			const page = window.floatingWindows[_id];
 			const content =
@@ -60,7 +60,6 @@ export default function FloatingWindowManager() {
 								]),
 								// ...action,
 								pageId: _id,
-								floating: true,
 							});
 						return agg;
 					},
@@ -88,6 +87,17 @@ export default function FloatingWindowManager() {
 						page.onEvent("ready", page);
 				}, 10);
 			}, 10);
+		}
+
+		if (action == "close") {
+			window.dispatch("socket-broadcast", {
+				event: "remote-page-closed",
+				payload: {
+					page: {
+						_id,
+					},
+				},
+			});
 		}
 	});
 

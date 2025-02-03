@@ -15,9 +15,11 @@ declare var shareImage: (url?: string) => Promise<any>;
 
 declare var someTime: (duration?: number) => Promise<any>;
 
-declare var shuffle: (arr?: Array) => Array | undefined | null;
+declare var shuffle: (arr?: any[]) => any[] | undefined | null;
 
-declare var random: (arr?: Array) => any | undefined | null;
+declare var random: (arr?: any[]) => any | undefined | null;
+
+declare var randomId: (prefix?: String) => string;
 
 declare var openUrl: (path: String) => Promise<any>;
 
@@ -147,7 +149,10 @@ declare var UI: {
 		onRemoteAction?: ((GenericObject) => void) | null;
 		onDestroy?: (({}) => void) | null;
 	}) => [];
-	media: (payload: { data?: DataItem | null; loading?: boolean }) => [];
+	media: (payload: {
+		data?: typeof DataItem | null;
+		loading?: boolean;
+	}) => [];
 	list: (payload: { data?: []; loading?: boolean }) => [];
 	icon: (
 		icon?:

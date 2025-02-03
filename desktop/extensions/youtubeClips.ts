@@ -59,7 +59,21 @@ const getActions = (payload) => {
 		// 	section: "Play",
 		// },
 		...(onDesktop()
-			? {}
+			? {
+					playPictureinPicture: {
+						shortcut: "Shift + Option + P",
+						label: "Play PIP",
+						icon: UI.svg(
+							"M19 7h-8v6h8V7zm2-4H3c-1.1 0-2 .9-2 2v14c0 1.1.9 1.98 2 1.98h18c1.1 0 2-.88 2-1.98V5c0-1.1-.9-2-2-2zm0 16.01H3V4.98h18v14.03z",
+							{ size: "18px", filled: true }
+						),
+						handler: () =>
+							openOnDesktop({
+								...payload,
+								external: true,
+							}),
+					},
+			  }
 			: {
 					playOnDesktop: {
 						icon: UI.icon("open-external"),
@@ -72,13 +86,11 @@ const getActions = (payload) => {
 							"M19 7h-8v6h8V7zm2-4H3c-1.1 0-2 .9-2 2v14c0 1.1.9 1.98 2 1.98h18c1.1 0 2-.88 2-1.98V5c0-1.1-.9-2-2-2zm0 16.01H3V4.98h18v14.03z",
 							{ size: "18px", filled: true }
 						),
-						handler: () => {
-							console.log("Widget entry: ", payload);
-							return openOnDesktop({
+						handler: () =>
+							openOnDesktop({
 								...payload,
 								external: true,
-							});
-						},
+							}),
 					},
 			  }),
 		playOnYoutube: {

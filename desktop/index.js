@@ -3,8 +3,7 @@ const Crotchet = require("./modules/crotchet");
 const { app, BrowserWindow } = require("electron");
 
 global.isDev = process.env.NODE_ENV == "dev";
-let mainWindow = null,
-	externalWindows = {};
+let mainWindow = null;
 const crotchetApp = new Crotchet();
 
 global.appDir = (...subPaths) => path.join(__dirname, ...subPaths);
@@ -79,7 +78,7 @@ const createMainWindow = () => {
 		});
 	}
 
-	crotchetApp.initialize({ mainWindow, externalWindows });
+	crotchetApp.initialize(mainWindow);
 };
 
 app.whenReady().then(() => {

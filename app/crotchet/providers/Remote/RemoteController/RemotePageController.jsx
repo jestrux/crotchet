@@ -1,21 +1,16 @@
-import { useEffect } from "react";
-import useRemote from "../useRemote";
+import { useEventListener } from "@/crotchet/hooks";
 
 export default function RemotePageController({ page, onClose }) {
-	const { pages } = useRemote();
-
-	useEffect(() => {
-		if (!pages || !page || !onClose) return;
-
-		if (!pages.find((p) => p._id == page._id)) onClose();
-	}, [pages]);
-
 	const handleRemoteAction = (action) => {
 		window.socketEmit("emit", {
 			event: "remote-action",
 			payload: action,
 		});
 	};
+
+	useEventListener("close-remote-page-controller-" + page._id, () =>
+		onClose()
+	);
 
 	return (
 		<div className="min-h-32 pb-12">
@@ -43,11 +38,17 @@ export default function RemotePageController({ page, onClose }) {
 
 						<button
 							className="flex-shrink-0 h-12 flex py-1.5"
-							onClick={() =>
+							onClick={() => {
+								if (page.floating)
+									return window.socketEmit(
+										"close-floating-window",
+										page._id
+									);
+
 								window.socketEmit("close-page", {
 									pageId: page._id,
-								})
-							}
+								});
+							}}
 						>
 							<span className="h-full flex items-center justify-center rounded-full px-3 text-sm underline">
 								Close Page

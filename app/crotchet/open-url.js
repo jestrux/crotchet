@@ -1,4 +1,4 @@
-import { dispatch, onDesktop } from "./utils";
+import { dispatch, onDesktop, showApp } from "./utils";
 
 const urlQueryParamsAsObject = (path) => {
 	const url = new URL(
@@ -66,7 +66,7 @@ const processSchemeUrl = (schemeName, path) => {
 };
 
 export default async function openUrl(path) {
-	if (onDesktop()) dispatch("toggle-app", true);
+	if (onDesktop()) showApp();
 
 	if (path.startsWith("crotchet://copy"))
 		return window.copyToClipboard(path.replace("crotchet://copy/", ""));

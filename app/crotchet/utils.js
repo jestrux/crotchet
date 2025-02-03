@@ -47,9 +47,12 @@ export const camelCaseToSentenceCase = (text) => {
 	return result.charAt(0).toUpperCase() + result.slice(1);
 };
 
-export const showApp = async () => dispatch("toggle-app", true);
+export const toggleApp = async (status) =>
+	window.socketEmit("toggle-app-window", status);
 
-export const hideApp = async () => dispatch("toggle-app", false);
+export const showApp = async () => toggleApp(true);
+
+export const hideApp = async () => toggleApp(false);
 
 export const openRemotePageController = async (pageId) => {
 	dispatch("socket-broadcast", {
