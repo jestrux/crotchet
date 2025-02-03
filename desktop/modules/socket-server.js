@@ -247,6 +247,9 @@ module.exports = function socketServer(server) {
 		"floating-window-ready": (payload) =>
 			crotchetApp.emitFloatingWindowAction(payload._id, "init"),
 
+		"floating-window-action": ({ _id, action, payload } = {}) =>
+			crotchetApp.emitFloatingWindowAction(_id, action, payload),
+
 		"floating-window-event": (payload) => {
 			crotchetApp.windowEmit(
 				"floating-window-event",

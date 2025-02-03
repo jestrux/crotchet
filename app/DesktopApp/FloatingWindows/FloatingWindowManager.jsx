@@ -24,6 +24,7 @@ export default function FloatingWindowManager() {
 
 		window.socketEmit("open-floating-window", {
 			_id: pageId,
+			externalAssets: page.externalAssets,
 			window: page.window,
 		});
 	};

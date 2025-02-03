@@ -347,7 +347,7 @@ const getNavItems = async () => {
 
 const FloatingRemote = ({ expanded, dragging, onCollapse, focusInput }) => {
 	const { KeyboardPlaceholder } = useKeyboard();
-	const { currentPage: remotePage, openPage } = useRemote();
+	const { currentPage: remotePage, openPage, onAction } = useRemote();
 	const remoteActions = remotePage?.actions || [];
 
 	if (!expanded || dragging || !remoteActions?.length) return null;
@@ -374,12 +374,7 @@ const FloatingRemote = ({ expanded, dragging, onCollapse, focusInput }) => {
 							<button
 								key={index}
 								className="flex-shrink-0 h-12 flex py-1.5"
-								onClick={() =>
-									window.socketEmit("emit", {
-										event: "remote-action",
-										payload: action,
-									})
-								}
+								onClick={() => onAction(action, remotePage)}
 							>
 								<span className="h-full flex items-center justify-center rounded-full px-3 border border-content/20 text-sm">
 									{action.shortLabel || action.label}

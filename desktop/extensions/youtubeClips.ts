@@ -236,7 +236,8 @@ const getPlayClipPage = (clip, external = false) => {
 	const formatCropTime = (time) => Number(Number(time).toFixed(3));
 	const { duration } = clip;
 	const [start, end] = (clip.crop || [0, duration]).map(formatCropTime);
-	const src = `https://www.youtube.com/embed/${
+	// const src = `https://www.youtube.com/embed/${
+	const src = `https://www.youtube-nocookie.com/embed/${
 		clip._id || clip.id
 	}?&autoplay=1&enablejsapi=1&controls=0&start=${start.toFixed(0)}`;
 	const crop = [start, end];
@@ -319,7 +320,7 @@ const getPlayClipPage = (clip, external = false) => {
 			cropEnabled = !cropEnabled;
 			restartVideo();
 		}
-		if (action == "open") {
+		if (action == "youtube") {
 			closePage();
 			openUrl(getYoutubeActualUrl(clip));
 		}
@@ -331,11 +332,135 @@ const getPlayClipPage = (clip, external = false) => {
 
 	const componentProps = {
 		content: () => `
-			<div class="absolute inset-0 bg-black flex items-center justify-center">
+			<div class="absolute inset-0 bg-black flex items-center justify-center"
+				x-data="{
+					cropEnabled: true,
+					lastTimeUpdate: 0,
+					player: null,
+					videoId: '${clip._id || clip.id}',
+					start: ${start},
+					end: ${end},
+					duration: ${duration},
+					get crop () {
+						return [this.start, this.end].map(this.formatCropTime)
+					},
+					get src () {
+						return [
+							'https://www.youtube-nocookie.com/embed/',
+							this.videoId,
+							'?autoplay=1&enablejsapi=1&controls=0&start=',
+							this.start.toFixed(0),
+						].join('')
+					},
+					get youtubeUrl () {
+						return [
+							'https://youtube.com/watch?v=',
+							this.videoId,
+							'&t=',
+							this.crop[0].toFixed(0),
+						].join('')
+					},
+					handleRemoteAction(payload) {
+						console.log('Remote action in: ', payload);
+						const action = payload.id;
+						if (action == 'restart') this.restartVideo();
+						if (action == 'skip-back') this.seekTo(this.currentTime - 5);
+						if (action == 'skip-forward') this.seekTo(this.currentTime + 5);
+						if (action == 'toggle-crop') {
+							this.cropEnabled = !this.cropEnabled;
+							this.restartVideo();
+						}
+						if (action == 'restore') {
+							window.closeFloatingWindow(this.$page._id);
+							window.socketEmit('run-action', {
+								showWindow: true,
+								action: 'playYoutubeClip',
+								payload: this.videoId,
+							});
+						}
+						if (action == 'youtube') {
+							window.closeFloatingWindow(this.$page._id);
+							window.socketEmit('open', this.youtubeUrl);
+						}
+					},
+					init() {
+						console.log('Page:', this.$page);
+						this.$onRemoteAction((payload) => this.handleRemoteAction(payload));
+						if(!window.YT?.Player) {
+							this.loadPlayer();
+							return console.log('Player not loaded!!!');
+						}
+						this.initPlayer();
+					},
+					loadPlayer() {
+						window.onYouTubeIframeAPIReady = () => {
+							console.log('Iframe ready...');
+							this.initPlayer();
+						};
+					},
+					initPlayer() {
+						console.log('Init youtube player', window.YT.Player);
+						this.player = new window.YT.Player('youtube-player', {
+							events: {
+								onReady: () => {
+									console.log('On player ready...');
+									window.addEventListener('message', (e) => this.listenForTime(e));
+								},
+							},
+						});
+					},
+					formatCropTime(time) {
+						return Number(Number(time).toFixed(3))
+					},
+					restartVideo(){
+						const [start] = this.crop;
+						this.seekTo(this.cropEnabled ? start : 0, true);
+					},
+					seekTo(time, skipCheck){
+						if(!skipCheck) {
+							const [start, end] = this.crop;
+							if (time >= end || time >= this.duration || time <= start) time = 0;
+						}
+						this.currentTime = time;
+						this.player.seekTo(time);
+						this.player.playVideo();
+					},
+					listenForTime(event){
+						this.lastTimeUpdate = 0;
+
+						const data = JSON.parse(event.data);
+
+						if (
+							data.event === 'infoDelivery' &&
+							data.info &&
+							data.info.currentTime
+						) {
+							const time = this.formatCropTime(data.info.currentTime);
+							this.currentTime = time;
+
+							if (time == this.lastTimeUpdate) return;
+
+							this.lastTimeUpdate = time;
+
+							let [start, end] = this.crop;
+
+							if(!this.cropEnabled) {
+								start = 0;
+								end = this.duration;
+							}
+
+							if (time < end && time > start) return;
+
+							this.restartVideo();
+						}
+					}
+				}"
+			>
 				<iframe
 					id="youtube-player"
 					class="pointer-events-none size-full"
 					src="${src}"
+					x-bind:src="src"
 					allow="autoplay; encrypted-media"
 					allowfullscreen
 				></iframe>
@@ -435,8 +560,17 @@ const getPlayClipPage = (clip, external = false) => {
 					action: "skip-forward",
 				}),
 		},
+		...(external
+			? [
+					{
+						id: "restore",
+						remote: true,
+						label: "Restore",
+					},
+			  ]
+			: []),
 		{
-			id: "open",
+			id: "youtube",
 			remote: true,
 			section: "Open",
 			label: "On Youtube",
@@ -444,7 +578,7 @@ const getPlayClipPage = (clip, external = false) => {
 			handler: () =>
 				dispatch("youtube-clip-action", {
 					ctx,
-					action: "open",
+					action: "youtube",
 				}),
 		},
 	];
@@ -462,7 +596,14 @@ const getPlayClipPage = (clip, external = false) => {
 				width: 500,
 				height: 280,
 			},
-			onEvent: (event, payload) => {
+			externalAssets: [
+				{
+					type: "script",
+					name: "youtubeIframeApi",
+					url: "https://www.youtube.com/iframe_api",
+				},
+			],
+			onEvent: (event) => {
 				if (event == "ready")
 					openRemotePageController("floatingYoutubeClip");
 			},
@@ -516,8 +657,23 @@ const getRandomClip = async () => {
 	}
 };
 
-const playClip = async (clip, external = false) =>
+const playClip = async (clip, external = false) => {
+	if (typeof clip == "string") {
+		const pageRes = await withLoader(
+			queryDb("youtubeClips", {
+				rowId: clip,
+			})
+		);
+
+		console.log("Clip: ", clip, pageRes);
+
+		if (!pageRes._id) return;
+
+		clip = pageRes;
+	}
+
 	openPage(getPlayClipPage(clip, external || clip?.external));
+};
 
 registerDataSource("db", "youtubeClips", {
 	table: "youtubeClips",

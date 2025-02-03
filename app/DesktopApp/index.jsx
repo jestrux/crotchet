@@ -192,8 +192,13 @@ export default function DesktopApp() {
 		}
 
 		if (event == "remote-action") {
-			// console.log("Socket remote action: ", payload);
-			dispatch("remote-action-" + payload.pageId, payload);
+			if (payload.floating) {
+				window.socketEmit("floating-window-event", {
+					_id: payload.pageId,
+					action: "remote-action",
+					...payload,
+				});
+			} else dispatch("remote-action-" + payload.pageId, payload);
 		}
 
 		if (event == "floating-window-action")

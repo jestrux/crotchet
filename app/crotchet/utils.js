@@ -54,6 +54,10 @@ export const showApp = async () => toggleApp(true);
 
 export const hideApp = async () => toggleApp(false);
 
+export const closeFloatingWindow = async (windowId) => {
+	window.socketEmit("close-floating-window", windowId);
+};
+
 export const openRemotePageController = async (pageId) => {
 	dispatch("socket-broadcast", {
 		event: "open-remote-page-controller",
@@ -212,29 +216,54 @@ export const savePreference = async (key, value) => {
 	return key ? value : prefs;
 };
 
-export const loadExternalAsset = async (url, { name, type } = {}) => {
+export const loadExternalAsset = async (url, { name, type, defer } = {}) => {
 	if (!url?.length) return null;
 
 	type = type || url.split(".").at(-1);
 
 	name = name || url.split("/").at(-1);
 
-	if (!document.querySelector(`[data-external-asset="${name}"]`)) {
-		const contents = await withCache(
-			name,
-			new Promise((resolve) =>
-				fetch(url)
-					.then((res) => res.text())
-					.then(resolve)
-			)
-		);
+	const isCss = type == "css" || type == "style";
 
-		const asset = document.createElement(
-			type == "css" ? "style" : "script"
-		);
-		asset.innerHTML = contents;
-		asset.setAttribute("data-external-asset", name);
-		document.querySelector("head").appendChild(asset);
+	if (!document.querySelector(`[data-external-asset="${name}"]`)) {
+		try {
+			const contents = await withCache(
+				name,
+				new Promise((resolve, reject) =>
+					fetch(url)
+						.then((res) => res.text())
+						.then(resolve)
+						.catch(reject)
+				)
+			);
+
+			const asset = document.createElement(isCss ? "style" : "script");
+			asset.innerHTML = contents;
+			asset.setAttribute("data-external-asset", name);
+			document.querySelector("head").appendChild(asset);
+		} catch (error) {
+			return await new Promise((resolve, reject) => {
+				const asset = document.createElement(
+					isCss ? "style" : "script"
+				);
+
+				if (isCss) {
+					asset.setAttribute("href", url);
+					asset.setAttribute("type", "text/css");
+				} else {
+					asset.setAttribute("type", "text/javascript");
+					asset.setAttribute("src", url);
+					if (defer) asset.setAttribute("defer", "defer");
+				}
+
+				asset.setAttribute("data-external-asset", name);
+				document.querySelector("head").appendChild(asset);
+
+				asset.onload = setTimeout(() => {
+					resolve();
+				}, 300);
+			});
+		}
 	}
 
 	return;

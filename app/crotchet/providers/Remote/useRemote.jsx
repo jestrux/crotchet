@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useDataLoader, useEventListener } from "../../hooks";
 import RemoteController from "./RemoteController";
 import RemotePageController from "./RemoteController/RemotePageController";
@@ -7,17 +6,30 @@ import { dispatch } from "@/crotchet/utils";
 export default function useRemote() {
 	const { data: pages } = useDataLoader({
 		handler: async () => {
-			return window.remotePages;
+			const pages = window.remotePages;
+			if (!pages || !window.activeRemotePageController) return pages;
+
+			const activePageId = window.activeRemotePageController;
+			const activePage = pages.find((p) => p._id == activePageId);
+
+			if (!activePage)
+				dispatch("close-remote-page-controller-" + activePageId);
+
+			return pages;
 		},
 		listenForUpdates: "remote-updated",
 	});
 
-	const onAction = (action) => {
+	const onAction = (action, page) =>
 		window.socketEmit("emit", {
 			event: "remote-action",
-			payload: action,
+			payload: {
+				floating: page.floating,
+				_id: page._id,
+				pageId: page._id,
+				...action,
+			},
 		});
-	};
 
 	const openController = () => {
 		window.openActionSheet({
@@ -54,14 +66,6 @@ export default function useRemote() {
 
 		if (page) openPage(page);
 	});
-
-	useEffect(() => {
-		if (!pages || !window.activeRemotePageController) return;
-		const activePageId = window.activeRemotePageController;
-		const activePage = pages.find((p) => p._id == activePageId);
-		if (!activePage)
-			dispatch("close-remote-page-controller-" + activePageId);
-	}, [pages]);
 
 	return {
 		pages,

@@ -2,7 +2,7 @@ import { useState } from "react";
 import useRemote from "../useRemote";
 
 export default function RemoteController({ setTitle, onClose }) {
-	const { pages, openPage } = useRemote();
+	const { pages, openPage, onAction } = useRemote();
 	const [activePage, setActivePage] = useState(null);
 
 	const handleOpenPage = (page) => {
@@ -17,12 +17,7 @@ export default function RemoteController({ setTitle, onClose }) {
 		setTitle("Remote Controller");
 	};
 
-	const handleRemoteAction = (action) => {
-		window.socketEmit("emit", {
-			event: "remote-action",
-			payload: action,
-		});
-	};
+	const handleRemoteAction = (action, page) => onAction(action, page);
 
 	if (activePage) {
 		return (
@@ -32,7 +27,9 @@ export default function RemoteController({ setTitle, onClose }) {
 						<button
 							key={index}
 							className="flex-shrink-0 h-12 w-full flex py-1.5"
-							onClick={() => handleRemoteAction(action)}
+							onClick={() =>
+								handleRemoteAction(action, activePage)
+							}
 						>
 							<span className="w-full h-full flex items-center justify-center rounded-full px-3 border border-content/20 text-sm">
 								{action.shortLabel || action.label}
@@ -83,7 +80,7 @@ export default function RemoteController({ setTitle, onClose }) {
 											key={index}
 											className="flex-shrink-0 h-12 flex py-1.5"
 											onClick={() =>
-												handleRemoteAction(action)
+												handleRemoteAction(action, page)
 											}
 										>
 											<span className="h-full flex items-center justify-center rounded-full px-3 border border-content/20 text-sm">

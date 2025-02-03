@@ -276,7 +276,7 @@ export default function PageProvider({
 		pageDataVersion,
 		formData,
 		pageFilter,
-		closePage: () => onClose(),
+		closePage: (payload) => onClose(payload),
 	};
 
 	return (

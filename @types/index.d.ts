@@ -31,7 +31,12 @@ declare var urlQueryParamsAsObject: (path: string) => { [key: string]: any };
 
 declare var toHms: (number: Number) => string | null;
 
-declare var queryDb: (name: String) => Promise<any>;
+declare var queryDb: (
+	name: String,
+	options?: {
+		rowId?: String | null;
+	} | null
+) => Promise<any>;
 
 declare var getPreference: (key: String) => Promise<string | null | undefined>;
 
@@ -374,9 +379,13 @@ declare var openRootPage: (page: string) => PromiseLike<any>;
 
 declare var closePage: () => void;
 
-declare var openPage: (props: string | typeof Page) => PromiseLike<any>;
-
 declare var openRemotePageController: (pageId: string) => void;
+
+declare var openFloatingWindow: (props: typeof Page) => PromiseLike<any>;
+
+declare var closeFloatingWindow: (windowId: string) => void;
+
+declare var openPage: (props: string | typeof Page) => PromiseLike<any>;
 
 declare var pushPage: (props: string | typeof Page) => PromiseLike<any>;
 

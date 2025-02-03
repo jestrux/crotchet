@@ -148,7 +148,7 @@ module.exports = function Crotchet() {
 	};
 
 	this.emitFloatingWindowAction = (windowId, action, payload = {}) => {
-		crotchetApp.windowEmit("socket", {
+		this.windowEmit("socket", {
 			event: "floating-window-action",
 			payload: { _id: windowId, action, ...payload },
 		});
@@ -168,7 +168,7 @@ module.exports = function Crotchet() {
 			const windowId =
 				payload._id || "window-" + Math.random().toString(36).slice(2);
 
-			let window = this.floatingWindows[windowId];
+			let window = this.floatingWindows[windowId]?.window;
 			if (!window) {
 				window = new BrowserWindow({
 					backgroundColor: background,
@@ -214,12 +214,13 @@ module.exports = function Crotchet() {
 					window,
 				};
 
+				// window.webContents.openDevTools({ mode: "detach" });
+				// window.setHiddenInMissionControl(true);
+
 				return;
 			}
 
 			this.emitFloatingWindowAction(windowId, "init");
-			// window.setHiddenInMissionControl(true);
-			// window.webContents.openDevTools({ mode: "detach" });
 		} catch (error) {
 			console.log("Open external window error: ", error);
 		}

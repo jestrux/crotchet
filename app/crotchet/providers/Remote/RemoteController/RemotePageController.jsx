@@ -1,12 +1,10 @@
 import { useEventListener } from "@/crotchet/hooks";
+import useRemote from "../useRemote";
 
 export default function RemotePageController({ page, onClose }) {
-	const handleRemoteAction = (action) => {
-		window.socketEmit("emit", {
-			event: "remote-action",
-			payload: action,
-		});
-	};
+	const { onAction } = useRemote();
+
+	const handleRemoteAction = (action, page) => onAction(action, page);
 
 	useEventListener("close-remote-page-controller-" + page._id, () =>
 		onClose()
@@ -19,7 +17,7 @@ export default function RemotePageController({ page, onClose }) {
 					<button
 						key={index}
 						className="flex-shrink-0 h-12 w-full flex py-1.5"
-						onClick={() => handleRemoteAction(action)}
+						onClick={() => handleRemoteAction(action, page)}
 					>
 						<span className="w-full h-full flex items-center justify-center rounded-full px-3 border border-content/20 text-sm">
 							{action.shortLabel || action.label}
@@ -40,10 +38,7 @@ export default function RemotePageController({ page, onClose }) {
 							className="flex-shrink-0 h-12 flex py-1.5"
 							onClick={() => {
 								if (page.floating)
-									return window.socketEmit(
-										"close-floating-window",
-										page._id
-									);
+									return window.closeFloatingWindow(page._id);
 
 								window.socketEmit("close-page", {
 									pageId: page._id,
