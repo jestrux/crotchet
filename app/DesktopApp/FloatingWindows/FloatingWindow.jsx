@@ -10,7 +10,6 @@ export default function FloatingWindow({ page }) {
 	useLayoutEffect(() => {
 		dispatch("floating-window-ready", {
 			_id: page._id,
-			$el: elementRef.current,
 		});
 
 		return () => {
