@@ -239,9 +239,21 @@ module.exports = function socketServer(server) {
 		"background-action": ({ _action, ...payload } = {}) =>
 			crotchetApp.backgroundAction(_action, payload),
 
+		"floating-window-event": (payload) => {
+			crotchetApp.windowEmit(
+				"floating-window-event",
+				payload,
+				payload._id
+			);
+		},
+
 		emit({ event, payload, showWindow } = {}) {
 			if (showWindow) crotchetApp.toggleWindow(true);
 			crotchetApp.windowEmit("socket", { event, payload });
+		},
+
+		broadcast({ event, payload } = {}) {
+			io.emit(event, payload);
 		},
 
 		async type({ text, replace } = { replace: false }) {
@@ -282,6 +294,7 @@ module.exports = function socketServer(server) {
 	);
 
 	ipcMain.on("socket-emit", (_, { event, payload }) => {
+		if (typeof events[event] != "function") return;
 		events[event](payload);
 	});
 
@@ -302,11 +315,18 @@ module.exports = function socketServer(server) {
 	);
 
 	ipcMain.on("crotchet-ready", () => {
-		crotchetApp.initializeWindow()
+		crotchetApp.initializeWindow();
 	});
 
-	ipcMain.on("open-external-window", (_, show = false) =>
-		crotchetApp.openExternalWindow(show)
+	ipcMain.on("floating-window-ready", (_, payload) => {
+		crotchetApp.windowEmit("socket", {
+			event: "floating-window-action",
+			payload: { ...payload, action: "init" },
+		});
+	});
+
+	ipcMain.on("open-external-window", (_, payload) =>
+		crotchetApp.openExternalWindow(payload)
 	);
 
 	ipcMain.on("open-url", (_, url) => {

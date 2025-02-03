@@ -23,6 +23,7 @@ export default function RemoteConnect() {
 		const existingIndex = window.remotePages.findIndex(
 			(p) => p._id == page._id
 		);
+
 		if (existingIndex != -1)
 			window.remotePages.splice(existingIndex, 1, page);
 		else window.remotePages.push(page);
@@ -40,15 +41,27 @@ export default function RemoteConnect() {
 		dispatch("remote-updated");
 	};
 
+	const handleOpenRemotePageController = (payload) => {
+		dispatch("open-remote-page-controller", payload);
+	};
+
 	useEffect(() => {
 		canUpdate();
 
 		window.socket?.on("remote-page-changed", handleRemotePageChanged);
 		window.socket?.on("remote-page-closed", handleRemotePageClosed);
+		window.socket?.on(
+			"open-remote-page-controller",
+			handleOpenRemotePageController
+		);
 
 		return () => {
 			window.socket?.off("remote-page-changed", handleRemotePageChanged);
 			window.socket?.off("remote-page-closed", handleRemotePageClosed);
+			window.socket?.off(
+				"open-remote-page-controller",
+				handleOpenRemotePageController
+			);
 		};
 	}, [socketConnected]);
 

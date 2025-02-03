@@ -96,10 +96,20 @@ window.addEventListener("crotchet-dekstop-ready", function () {
 	ipcRenderer.send("crotchet-ready");
 });
 
+window.addEventListener("floating-window-ready", function (e) {
+	ipcRenderer.send("floating-window-ready", e.detail);
+});
+
 ipcRenderer.on("initialize-app", function (_, props) {
 	window.__crotchetAppInitialized = true;
 	return window.dispatchEvent(
 		new CustomEvent("initialize-app", { detail: props })
+	);
+});
+
+ipcRenderer.on("floating-window-event", function (_, props) {
+	window.dispatchEvent(
+		new CustomEvent("floating-window-event-" + props._id, { detail: props })
 	);
 });
 

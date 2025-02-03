@@ -66,6 +66,20 @@ const getActions = (payload) => {
 						match: () => !onDesktop(),
 						handler: () => openOnDesktop(payload),
 					},
+					playPipOnDesktop: {
+						label: "Play PIP On Desktop",
+						icon: UI.svg(
+							"M19 7h-8v6h8V7zm2-4H3c-1.1 0-2 .9-2 2v14c0 1.1.9 1.98 2 1.98h18c1.1 0 2-.88 2-1.98V5c0-1.1-.9-2-2-2zm0 16.01H3V4.98h18v14.03z",
+							{ size: "18px", filled: true }
+						),
+						handler: () => {
+							console.log("Widget entry: ", payload);
+							return openOnDesktop({
+								...payload,
+								external: true,
+							});
+						},
+					},
 			  }),
 		playOnYoutube: {
 			icon: appIcon,
@@ -205,12 +219,14 @@ const createInterval = (callback, interval) => {
 	};
 };
 
-const getPlayClipPage = (clip, external) => {
+const getPlayClipPage = (clip, external = false) => {
 	clip = mapEntry(clip);
 	const formatCropTime = (time) => Number(Number(time).toFixed(3));
 	const { duration } = clip;
-	const videoId = clip._id || clip.id;
 	const [start, end] = (clip.crop || [0, duration]).map(formatCropTime);
+	const src = `https://www.youtube.com/embed/${
+		clip._id || clip.id
+	}?&autoplay=1&enablejsapi=1&controls=0&start=${start.toFixed(0)}`;
 	const crop = [start, end];
 	let cropEnabled = true;
 	let player,
@@ -301,63 +317,151 @@ const getPlayClipPage = (clip, external) => {
 		}
 	};
 
+	const componentProps = {
+		content: () => `
+			<div class="absolute inset-0 bg-black flex items-center justify-center">
+				<iframe
+					id="youtube-player"
+					class="pointer-events-none size-full"
+					src="${src}"
+					allow="autoplay; encrypted-media"
+					allowfullscreen
+				></iframe>
+			</div>
+		`,
+		onInit: ({ $el }) => {
+			// const iframe = $el.querySelector("#youtube-player");
+			// console.log("On init: ", iframe);
+			// iframe.addEventListener("load", (...args) => {
+			// 	console.log("Iframe loaded...", ...args);
+			// });
+			initPlayer();
+			window.addEventListener("youtube-clip-action", handleAction, false);
+		},
+		onRemoteAction: (action) =>
+			dispatch("youtube-clip-action", { action: action.id }),
+		onDestroy: () => {
+			console.log("Do a clean YT clips destroy...");
+			if (typeof stopLooper == "function") stopLooper();
+			window.removeEventListener(
+				"youtube-clip-action",
+				handleAction,
+				false
+			);
+			// if (window.YT?.Player)
+			// 	window.addEventListener("message", listenForTime);
+			// else console.log("No player initialized...");
+
+			// const script = document.querySelector(
+			// 	"#youtube-player-iframe"
+			// );
+			// if (script) script.remove();
+			// if (window.YT) delete window.YT;
+		},
+	};
+
+	const actions = (ctx, external = false) => [
+		...(external
+			? []
+			: [
+					{
+						id: "pip",
+						remote: true,
+						label: "Picture in Picture",
+						shortLabel: "Pip",
+						shortcut: "Shift + Option + P",
+						handler: () =>
+							dispatch("youtube-clip-action", {
+								ctx,
+								action: "pip",
+							}),
+					},
+			  ]),
+		{
+			id: "restart",
+			remote: true,
+			label: "Restart",
+			shortcut: "Option + R",
+			handler: () =>
+				dispatch("youtube-clip-action", { ctx, action: "restart" }),
+		},
+		{
+			id: "toggle-crop",
+			remote: true,
+			shortLabel: "Crop",
+			label: "Toggle Crop",
+			shortcut: "Shift + Option + C",
+			handler: () =>
+				dispatch("youtube-clip-action", {
+					ctx,
+					action: "toggle-crop",
+				}),
+		},
+		{
+			id: "skip-back",
+			remote: true,
+			section: "Skip",
+			label: "Skip Back",
+			shortLabel: "Back",
+			shortcut: "Option + ArrowLeft",
+			handler: () =>
+				dispatch("youtube-clip-action", {
+					ctx,
+					action: "skip-back",
+				}),
+		},
+		{
+			id: "skip-forward",
+			remote: true,
+			section: "Skip",
+			label: "Skip Forward",
+			shortLabel: "Forward",
+			shortcut: "Option + ArrowRight",
+			handler: () =>
+				dispatch("youtube-clip-action", {
+					ctx,
+					action: "skip-forward",
+				}),
+		},
+		{
+			id: "open",
+			remote: true,
+			section: "Open",
+			label: "On Youtube",
+			shortcut: "Option + Y",
+			handler: () =>
+				dispatch("youtube-clip-action", {
+					ctx,
+					action: "open",
+				}),
+		},
+	];
+
+	if (external) {
+		return {
+			external: true,
+			id: "floatingYoutubeClip",
+			title: clip.title,
+			...componentProps,
+			actions: actions({}, true),
+			window: {
+				background: "black",
+				// frame: false,
+				width: 500,
+				height: 280,
+			},
+			onEvent: (event, payload) => {
+				if (event == "ready")
+					openRemotePageController("floatingYoutubeClip");
+			},
+		};
+	}
+
 	return {
-		external,
 		type: "detail",
 		title: clip.title,
 		fullScreen: true,
-		content: () => {
-			const src = `https://www.youtube.com/embed/${videoId}?&autoplay=1&enablejsapi=1&controls=0&start=${start.toFixed(
-				0
-			)}`;
-			// const handleReady = () => {}
-			return UI.component({
-				content: () => `
-					<div class="absolute inset-0 bg-black flex items-center justify-center">
-						<iframe
-							id="youtube-player"
-							class="pointer-events-none size-full"
-							src="${src}"
-							allow="autoplay; encrypted-media"
-							allowfullscreen
-						></iframe>
-					</div>
-				`,
-				onInit: ({ $el }) => {
-					// const iframe = $el.querySelector("#youtube-player");
-					// console.log("On init: ", iframe);
-					// iframe.addEventListener("load", (...args) => {
-					// 	console.log("Iframe loaded...", ...args);
-					// });
-					initPlayer();
-					window.addEventListener(
-						"youtube-clip-action",
-						handleAction,
-						false
-					);
-				},
-				onRemoteAction: (action) =>
-					dispatch("youtube-clip-action", { action: action.id }),
-				onDestroy: () => {
-					console.log("Do a clean YT clips destroy...");
-					if (typeof stopLooper == "function") stopLooper();
-					window.removeEventListener(
-						"youtube-clip-action",
-						handleAction,
-						false
-					);
-					// if (window.YT?.Player)
-					// 	window.addEventListener("message", listenForTime);
-					// else console.log("No player initialized...");
-
-					// const script = document.querySelector(
-					// 	"#youtube-player-iframe"
-					// );
-					// if (script) script.remove();
-					// if (window.YT) delete window.YT;
-				},
-			});
-		},
+		content: () => UI.component(componentProps),
 		// preview: () =>
 		// 	UI.component({
 		// 		content: `
@@ -372,79 +476,36 @@ const getPlayClipPage = (clip, external) => {
 			handler: () =>
 				dispatch("youtube-clip-action", { ctx, action: "restart" }),
 		}),
-		actions: (ctx) => [
-			{
-				id: "pip",
-				remote: true,
-				label: "Picture in Picture",
-				shortLabel: "Pip",
-				shortcut: "Shift + Option + P",
-				handler: () =>
-					dispatch("youtube-clip-action", { ctx, action: "pip" }),
-			},
-			{
-				id: "restart",
-				remote: true,
-				label: "Restart",
-				shortcut: "Option + R",
-				handler: () =>
-					dispatch("youtube-clip-action", { ctx, action: "restart" }),
-			},
-			{
-				id: "toggle-crop",
-				remote: true,
-				shortLabel: "Crop",
-				label: "Toggle Crop",
-				shortcut: "Shift + Option + C",
-				handler: () =>
-					dispatch("youtube-clip-action", {
-						ctx,
-						action: "toggle-crop",
-					}),
-			},
-			{
-				id: "skip-back",
-				remote: true,
-				section: "Skip",
-				label: "Skip Back",
-				shortLabel: "Back",
-				shortcut: "Option + ArrowLeft",
-				handler: () =>
-					dispatch("youtube-clip-action", {
-						ctx,
-						action: "skip-back",
-					}),
-			},
-			{
-				id: "skip-forward",
-				remote: true,
-				section: "Skip",
-				label: "Skip Forward",
-				shortLabel: "Forward",
-				shortcut: "Option + ArrowRight",
-				handler: () =>
-					dispatch("youtube-clip-action", {
-						ctx,
-						action: "skip-forward",
-					}),
-			},
-			{
-				id: "open",
-				remote: true,
-				section: "Open",
-				label: "On Youtube",
-				shortcut: "Option + Y",
-				handler: () =>
-					dispatch("youtube-clip-action", {
-						ctx,
-						action: "open",
-					}),
-			},
-		],
+		actions,
 	};
 };
 
-const playClip = async (clip) => openPage(getPlayClipPage(clip));
+const getRandomClip = async () => {
+	try {
+		const res = await withLoader(
+			sourceGet(
+				{ handler: () => queryDb("youtubeClips") },
+				{
+					orderBy: "updatedAt,desc",
+					random: true,
+					single: true,
+				}
+			)
+		);
+
+		if (!res) {
+			showToast("Failed to get clip");
+			return null;
+		}
+
+		return res;
+	} catch (error) {
+		showToast("Failed to get clip");
+	}
+};
+
+const playClip = async (clip, external = false) =>
+	openPage(getPlayClipPage(clip, external || clip?.external));
 
 registerDataSource("db", "youtubeClips", {
 	table: "youtubeClips",
@@ -522,6 +583,17 @@ registerWidget("randomYoutubeClip", {
 					handler: () => {
 						console.log("Widget entry: ", entry);
 						return openOnDesktop(entry);
+					},
+				},
+				{
+					label: "Play PIP On Desktop",
+					icon: UI.svg(
+						"M19 7h-8v6h8V7zm2-4H3c-1.1 0-2 .9-2 2v14c0 1.1.9 1.98 2 1.98h18c1.1 0 2-.88 2-1.98V5c0-1.1-.9-2-2-2zm0 16.01H3V4.98h18v14.03z",
+						{ size: "18px", filled: true }
+					),
+					handler: () => {
+						console.log("Widget entry: ", entry);
+						return openOnDesktop({ ...entry, external: true });
 					},
 				},
 				{
@@ -610,27 +682,28 @@ registerAction("randomYoutubeClip", {
 	global: true,
 	context: "shortcut",
 	tags: ["youtube"],
+	actions: () =>
+		!onDesktop()
+			? []
+			: [
+					{
+						id: "pip",
+						label: "Picture in Picture",
+						shortLabel: "Pip",
+						shortcut: "Shift + Option + P",
+						handler: async () => {
+							const clip = await getRandomClip();
+							if (clip) playClip(clip, true);
+						},
+					},
+			  ],
 	handler: async () => {
 		if (onDesktop()) {
-			try {
-				const res = await withLoader(
-					sourceGet(
-						{ handler: () => queryDb("youtubeClips") },
-						{
-							orderBy: "updatedAt,desc",
-							random: true,
-							single: true,
-						}
-					)
-				);
-
-				if (!res) return showToast("Failed to get clip");
-
-				return playClip(res);
-			} catch (error) {
-				showToast("Failed to get clip");
-			}
+			const clip = await getRandomClip();
+			if (clip) playClip(clip);
+			return;
 		}
+
 		window.openActionSheet({
 			noHeading: true,
 			actions: async () => {
@@ -664,6 +737,20 @@ registerAction("randomYoutubeClip", {
 								label: "Play On Desktop",
 								icon: UI.icon("open-external"),
 								handler: () => openOnDesktop(entry),
+							},
+							{
+								label: "Play PIP On Desktop",
+								icon: UI.svg(
+									"M19 7h-8v6h8V7zm2-4H3c-1.1 0-2 .9-2 2v14c0 1.1.9 1.98 2 1.98h18c1.1 0 2-.88 2-1.98V5c0-1.1-.9-2-2-2zm0 16.01H3V4.98h18v14.03z",
+									{ size: "18px", filled: true }
+								),
+								handler: () => {
+									console.log("Widget entry: ", entry);
+									return openOnDesktop({
+										...entry,
+										external: true,
+									});
+								},
 							},
 							{
 								label: "Play On Youtube",

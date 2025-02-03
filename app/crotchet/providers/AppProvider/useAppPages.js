@@ -58,29 +58,7 @@ export default function useAppPages() {
 	const pushPage = (page) => {
 		const [newPage, resolver] = getNewPage(page);
 
-		if (page.external) {
-			hideApp();
-			window.externalPages = {};
-			window.externalPages[newPage._id] = newPage;
-
-			const newPageProps = Object.entries(newPage).reduce(
-				(agg, [key, value]) => {
-					const valueType = typeof value;
-
-					if (["string", "number"].includes(valueType))
-						agg[key] = value;
-
-					return agg;
-				},
-				{}
-			);
-			dispatch("open-external-window", {
-				pageId: newPage._id,
-				...newPageProps,
-			});
-			// console.log("New page: ", newPageProps);
-			return;
-		}
+		if (page.external) return window.openFloatingWindow(page);
 
 		dispatch("with-loader-status-change", {
 			status: "idle",

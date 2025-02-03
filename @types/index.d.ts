@@ -371,6 +371,8 @@ declare var closePage: () => void;
 
 declare var openPage: (props: string | typeof Page) => PromiseLike<any>;
 
+declare var openRemotePageController: (pageId: string) => void;
+
 declare var pushPage: (props: string | typeof Page) => PromiseLike<any>;
 
 declare var openForm: (props: typeof Page) => PromiseLike<any>;

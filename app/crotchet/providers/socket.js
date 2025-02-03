@@ -1,7 +1,7 @@
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { io } from "socket.io-client";
 import { db } from "./firebase";
-import { dispatch, onDesktop } from "../utils";
+import { dispatch, onDesktop, onDesktopInitialize } from "../utils";
 
 const getSocket = () => {
 	return new Promise((resolve, reject) => {
@@ -27,36 +27,24 @@ const getSocket = () => {
 };
 
 (async () => {
-	const _onDesktop = onDesktop();
 	const _socketUrl = localStorage.__dataSocketUrl;
-	// document.body.getAttribute("data-socket-url")
 
-	if (_onDesktop) {
-		const event = "initialize-app";
-		const isFloatingWindow = await new Promise((resolve) => {
-			const handler = async (e) => {
-				window.removeEventListener(event, handler);
-				resolve(e.detail.pageId != "root");
-			};
-
-			window.addEventListener(event, handler);
-		});
-
+	if (onDesktop()) {
+		const { isFloatingWindow } = await onDesktopInitialize();
 		if (!isFloatingWindow) {
 			setDoc(
 				doc(db, "__crotchet", "desktop"),
 				{ socket: _socketUrl },
 				{ merge: true }
 			);
-
-			window.socketEmit = (event, payload) =>
-				window.dispatch("socket-emit", {
-					event,
-					payload,
-				});
-
-			return;
 		}
+		window.socketEmit = (event, payload) =>
+			window.dispatch("socket-emit", {
+				event,
+				payload,
+			});
+
+		return;
 	}
 
 	if (!window.socket?.connected) {

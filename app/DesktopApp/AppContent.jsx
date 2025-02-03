@@ -1,4 +1,3 @@
-// import DraggableElement from "@/crotchet/components/DraggableElement";
 import Page from "./Page";
 import {
 	hideApp,
@@ -7,8 +6,6 @@ import {
 	savePreference,
 } from "@/crotchet/utils";
 import { useAppContext } from "@/crotchet/providers/AppProvider";
-import { useDataLoader } from "@/crotchet/hooks";
-import FloatingWindow from "./FloatingWindow";
 
 const getFavoriteCommands = () => getPreference("favorite-commands", []);
 
@@ -136,50 +133,13 @@ const getCommands = async () => {
 
 export default function AppContent() {
 	const { pages, popPage } = useAppContext();
-	const { data: rootPage, loading } = useDataLoader({
-		handler: async () => {
-			const event = "initialize-app";
-			dispatch("crotchet-dekstop-ready");
-			const rootPage = await new Promise((resolve) => {
-				const handler = async (e) => {
-					window.removeEventListener(event, handler);
-					resolve(e.detail);
-				};
-
-				window.addEventListener(event, handler);
-			});
-
-			const isFloatingWindow = rootPage?.pageId != "root";
-
-			if (isFloatingWindow) {
-				return {
-					floating: true,
-					type: "detail",
-					...(rootPage || {}),
-				};
-			}
-
-			return {
-				id: "root",
-				_id: "root",
-				type: "search",
-				resolve: getCommands,
-				listenForUpdates: [
-					"app-commands-updated",
-					"app-actions-updated",
-				],
-			};
-		},
-		// listenForUpdates: "crotchet-app-updated",
-	});
-
-	// window.openPage = pushPage;
-	// window.closePage = popPage;
-
-	// if (loading) return;
-	if (loading || !rootPage) return;
-
-	if (rootPage.floating) return <FloatingWindow page={rootPage} />;
+	const rootPage = {
+		id: "root",
+		_id: "root",
+		type: "search",
+		resolve: getCommands,
+		listenForUpdates: ["app-commands-updated", "app-actions-updated"],
+	};
 
 	return (
 		<>

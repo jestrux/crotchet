@@ -62,8 +62,12 @@ const installExtensions = (extensions) => {
 	}, 300);
 };
 
-setTimeout(() => {
-	if (utils.onDesktop()) {
+if (utils.onDesktop()) {
+	utils.onDesktopInitialize().then(({ isFloatingWindow }) => {
+		window.__isFloatingWindow = isFloatingWindow;
+
+		if (isFloatingWindow) return;
+
 		document
 			.querySelectorAll("[data-crotchet-extension]")
 			.forEach((extension) => {
@@ -81,7 +85,9 @@ setTimeout(() => {
 					}
 				);
 			});
-	} else {
+	});
+} else {
+	setTimeout(() => {
 		utils.getFromCache("__crotchetExtensions").then((res) => {
 			installExtensions(res);
 
@@ -90,5 +96,5 @@ setTimeout(() => {
 				utils.cache("__crotchetExtensions", res);
 			});
 		});
-	}
-}, 500);
+	}, 500);
+}

@@ -41,6 +41,11 @@ export default function useRemote() {
 
 	useEventListener("open-remote-controller", openController);
 
+	useEventListener("open-remote-page-controller", (_, pageId) => {
+		const page = (pages || []).find(({ _id }) => _id == pageId);
+		if (page) openPage(page);
+	});
+
 	return {
 		pages,
 		onAction,

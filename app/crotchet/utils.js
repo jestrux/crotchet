@@ -3,7 +3,8 @@ import { onActionClick } from "./hooks/useActionClick";
 
 export const devMode = () => import.meta.env.MODE == "development";
 
-export const randomId = () => "id" + Math.random().toString(36).slice(2);
+export const randomId = (prefix = "id") =>
+	prefix + Math.random().toString(36).slice(2);
 
 export const shuffle = (array) => [...array].sort(() => Math.random() - 0.5);
 
@@ -12,6 +13,25 @@ export const random = (array) => shuffle(shuffle(array))[0];
 export const someTime = (t = 200) => new Promise((res) => setTimeout(res, t));
 
 export const onDesktop = () => localStorage.__onDesktop;
+
+export const onFloatingWindow = () => window.__isFloatingWindow;
+
+export const onDesktopInitialize = async () => {
+	const event = "initialize-app";
+	const page = await new Promise((resolve) => {
+		const handler = async (e) => {
+			window.removeEventListener(event, handler);
+			resolve(e.detail);
+		};
+
+		window.addEventListener(event, handler);
+	});
+	const isFloatingWindow = page.pageId != "root";
+	return {
+		...page,
+		isFloatingWindow,
+	};
+};
 
 export const dispatch = (event, payload) => {
 	window.dispatchEvent(
@@ -30,6 +50,13 @@ export const camelCaseToSentenceCase = (text) => {
 export const showApp = async () => dispatch("toggle-app", true);
 
 export const hideApp = async () => dispatch("toggle-app", false);
+
+export const openRemotePageController = async (pageId) => {
+	dispatch("socket-broadcast", {
+		event: "open-remote-page-controller",
+		payload: pageId,
+	});
+};
 
 export const getWriteableFile = async (path) => {
 	const res = path

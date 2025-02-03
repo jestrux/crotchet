@@ -13,11 +13,11 @@ module.exports = function Crotchet() {
 	this.tray = null;
 	this.showWindow = isDev;
 	this.menuItems = {};
-	this.externalWindows = {};
 	this.fullScreenTimeout = { then: (resolve) => setTimeout(resolve, 40) };
 
-	this.setMainWindow = (window) => {
-		this.mainWindow = window;
+	this.initialize = ({ mainWindow, externalWindows }) => {
+		this.mainWindow = mainWindow;
+		this.externalWindows = externalWindows;
 		this.registerShortcuts();
 	};
 
@@ -51,7 +51,16 @@ module.exports = function Crotchet() {
 
 	this.windowEmit = (event, payload, windowId) => {
 		let window = this.mainWindow;
-		if (windowId) window = this.externalWindows[windowId].window;
+		try {
+			if (
+				windowId &&
+				this.externalWindows[windowId] &&
+				this.externalWindows[windowId].window
+			)
+				window = this.externalWindows[windowId].window;
+		} catch (error) {
+			window = this.mainWindow;
+		}
 		window.webContents?.send(event, payload);
 	};
 
@@ -146,51 +155,68 @@ module.exports = function Crotchet() {
 	};
 
 	this.openExternalWindow = (payload = {}) => {
-		console.log("Open external window: ", payload);
+		if (!this.externalWindows) this.externalWindows = {};
+		const {
+			background = "#FFFFFF",
+			width: windowWidth = 400,
+			height: windowHeight = 300,
+		} = payload.window || {};
 
 		try {
-			const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-			const windowWidth = 400;
-			const windowHeight = 300;
-			// const windowWidth = 600;
-			// const windowHeight = 800;
-			const randomId = "window-" + Math.random().toString(36).slice(2);
-			const window = new BrowserWindow({
-				// backgroundColor: "#FFF",
-				// titleBarStyle: "hidden",
-				width: windowWidth,
-				height: windowHeight,
-				x: width - windowWidth - width * 0.2,
-				y: height * 0.2,
-				// frame: false,
-				// show: false,
-				// frame: false,
-				// transparent: true,
-				// resizable: isDev,
-				// minimizable: false,
-				alwaysOnTop: true,
-				webPreferences: {
-					devTools: true,
-					nodeIntegration: true,
-					preload: appDir("preload.js"),
-				},
-			});
+			const { width, height } = screen.getPrimaryDisplay().bounds;
+			const x = Math.round(width - windowWidth - width * 0.02);
+			const y = Math.round(height * 0.08);
+			const windowId =
+				payload._id || "window-" + Math.random().toString(36).slice(2);
 
-			window.setVisibleOnAllWorkspaces(true, {
-				visibleOnFullScreen: true,
-			});
+			let window = this.externalWindows[windowId];
+			if (!window) {
+				window = new BrowserWindow({
+					backgroundColor: background,
+					// titleBarStyle: "hidden",
+					titleBarStyle: "hiddenInset",
+					title: payload.title,
+					width: windowWidth,
+					height: windowHeight,
+					x,
+					y,
+					// frame: false,
+					// show: false,
+					// frame: false,
+					// transparent: true,
+					resizable: false,
+					fullscreenable: false,
+					minimizable: false,
+					maximizable: false,
+					alwaysOnTop: true,
+					webPreferences: {
+						devTools: true,
+						nodeIntegration: true,
+						preload: appDir("preload.js"),
+					},
+				});
+
+				window.setVisibleOnAllWorkspaces(true, {
+					visibleOnFullScreen: true,
+				});
+
+				if (isDev) window.loadURL("http://localhost:5173/");
+				else window.loadFile(buildDir("index.html"));
+
+				this.externalWindows[windowId] = {
+					_id: windowId,
+					payload,
+					pending: true,
+					window,
+				};
+			} else {
+				crotchetApp.windowEmit("socket", {
+					event: "floating-window-action",
+					payload: { _id: windowId, action: "init" },
+				});
+			}
 			// window.setHiddenInMissionControl(true);
 			// window.webContents.openDevTools({ mode: "detach" });
-
-			if (isDev) window.loadURL("http://localhost:5173/");
-			else window.loadFile(buildDir("index.html"));
-
-			this.externalWindows[randomId] = {
-				_id: randomId,
-				payload,
-				pending: true,
-				window,
-			};
 		} catch (error) {
 			console.log("Open external window error: ", error);
 		}
