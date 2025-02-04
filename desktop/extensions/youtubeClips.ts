@@ -498,24 +498,12 @@ const getPlayClipPage = (clip, external = false) => {
 	};
 
 	const actions = (ctx, external = false) => [
-		...(external
-			? []
-			: [
-					{
-						id: "pip",
-						remote: true,
-						label: "Picture in Picture",
-						shortLabel: "Pip",
-						shortcut: "Shift + Option + P",
-						handler: () =>
-							dispatch("youtube-clip-action", {
-								ctx,
-								action: "pip",
-							}),
-					},
-			  ]),
 		{
 			id: "restart",
+			icon: UI.svg(
+				"M7.11 8.53L5.7 7.11C4.8 8.27 4.24 9.61 4.07 11h2.02c.14-.87.49-1.72 1.02-2.47zM6.09 13H4.07c.17 1.39.72 2.73 1.62 3.89l1.41-1.42c-.52-.75-.87-1.59-1.01-2.47zm1.01 5.32c1.16.9 2.51 1.44 3.9 1.61V17.9c-.87-.15-1.71-.49-2.46-1.03L7.1 18.32zM13 4.07V1L8.45 5.55 13 10V6.09c2.84.48 5 2.94 5 5.91s-2.16 5.43-5 5.91v2.02c3.95-.49 7-3.85 7-7.93s-3.05-7.44-7-7.93z",
+				{ size: "18px", filled: true }
+			),
 			remote: true,
 			label: "Restart",
 			shortcut: "Option + R",
@@ -523,19 +511,11 @@ const getPlayClipPage = (clip, external = false) => {
 				dispatch("youtube-clip-action", { ctx, action: "restart" }),
 		},
 		{
-			id: "toggle-crop",
-			remote: true,
-			shortLabel: "Crop",
-			label: "Toggle Crop",
-			shortcut: "Shift + Option + C",
-			handler: () =>
-				dispatch("youtube-clip-action", {
-					ctx,
-					action: "toggle-crop",
-				}),
-		},
-		{
 			id: "skip-back",
+			icon: UI.svg("M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z", {
+				size: "18px",
+				filled: true,
+			}),
 			remote: true,
 			section: "Skip",
 			label: "Skip Back",
@@ -549,6 +529,10 @@ const getPlayClipPage = (clip, external = false) => {
 		},
 		{
 			id: "skip-forward",
+			icon: UI.svg("M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z", {
+				size: "18px",
+				filled: true,
+			}),
 			remote: true,
 			section: "Skip",
 			label: "Skip Forward",
@@ -560,17 +544,61 @@ const getPlayClipPage = (clip, external = false) => {
 					action: "skip-forward",
 				}),
 		},
+		{
+			id: "toggle-crop",
+			icon: UI.svg(
+				"M17 15h2V7c0-1.1-.9-2-2-2H9v2h8v8zM7 17V1H5v4H1v2h4v10c0 1.1.9 2 2 2h10v4h2v-4h4v-2H7z",
+				{ size: "18px", filled: true }
+			),
+			remote: true,
+			shortLabel: "Crop",
+			label: "Toggle Crop",
+			shortcut: "Shift + Option + C",
+			handler: () =>
+				dispatch("youtube-clip-action", {
+					ctx,
+					action: "toggle-crop",
+				}),
+		},
 		...(external
 			? [
 					{
 						id: "restore",
+						icon: UI.svg(
+							"M7.41 18.59L8.83 20 12 16.83 15.17 20l1.41-1.41L12 14l-4.59 4.59zm9.18-13.18L15.17 4 12 7.17 8.83 4 7.41 5.41 12 10l4.59-4.59z",
+							{ size: "18px", filled: true }
+						),
 						remote: true,
 						label: "Restore",
 					},
 			  ]
-			: []),
+			: [
+					{
+						id: "pip",
+						icon: UI.svg(
+							"M19 7h-8v6h8V7zm2-4H3c-1.1 0-2 .9-2 2v14c0 1.1.9 1.98 2 1.98h18c1.1 0 2-.88 2-1.98V5c0-1.1-.9-2-2-2zm0 16.01H3V4.98h18v14.03z",
+							{ size: "18px", filled: true }
+						),
+						remote: true,
+						label: "Picture in Picture",
+						shortLabel: "Pip",
+						shortcut: "Shift + Option + P",
+						handler: () =>
+							dispatch("youtube-clip-action", {
+								ctx,
+								action: "pip",
+							}),
+					},
+			  ]),
 		{
 			id: "youtube",
+			icon: UI.svg(
+				"M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z",
+				{
+					size: "18px",
+					filled: true,
+				}
+			),
 			remote: true,
 			section: "Open",
 			label: "On Youtube",
@@ -587,6 +615,8 @@ const getPlayClipPage = (clip, external = false) => {
 		return {
 			external: true,
 			id: "floatingYoutubeClip",
+			image: clip.poster,
+			video: clip.video,
 			title: clip.title,
 			...componentProps,
 			actions: actions({}, true),
@@ -611,7 +641,10 @@ const getPlayClipPage = (clip, external = false) => {
 	}
 
 	return {
+		id: "youtubeClipDetail",
 		type: "detail",
+		image: clip.poster,
+		video: clip.video,
 		title: clip.title,
 		fullScreen: true,
 		content: () => UI.component(componentProps),

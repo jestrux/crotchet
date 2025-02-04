@@ -43,7 +43,8 @@ export default function useRemote() {
 
 		window
 			.openActionSheet({
-				title: page.title,
+				// title: page.title,
+				noHeading: true,
 				content: <RemotePageController page={page} />,
 			})
 			.then(() => {

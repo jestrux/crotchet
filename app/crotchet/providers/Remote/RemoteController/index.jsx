@@ -31,9 +31,18 @@ export default function RemoteController({ setTitle, onClose }) {
 								handleRemoteAction(action, activePage)
 							}
 						>
-							<span className="w-full h-full flex items-center justify-center rounded-full px-3 border border-content/20 text-sm">
-								{action.shortLabel || action.label}
-							</span>
+							{action.icon ? (
+								<span
+									className="size-12 flex items-center justify-center"
+									dangerouslySetInnerHTML={{
+										__html: action.icon,
+									}}
+								></span>
+							) : (
+								<span className="h-full flex items-center justify-center rounded-full px-3 border border-content/20 text-sm">
+									{action.shortLabel || action.label}
+								</span>
+							)}
 						</button>
 					))}
 					<div className="flex-shrink-0 w-6˝˝˝">&nbsp;</div>
@@ -62,31 +71,53 @@ export default function RemoteController({ setTitle, onClose }) {
 	}
 
 	return (
-		<div className="min-h-16 -mx-4">
+		<div className="min-h-16">
 			{pages?.map((page) => {
 				return (
-					<div key={page._id} className="overflow-hidden">
-						<div className="pl-2 w-full z-50 overflow-x-auto">
-							<div className="relative h-12 flex items-center justify-between px-3">
-								<div
-									className="flex-shrink-0 pr-4 mr-4 border-r dark:border-content/15 truncate max-w-40"
-									onClick={() => handleOpenPage(page)}
-								>
+					<div
+						key={page._id}
+						className="overflow-hidden rounded-md bg-card border border-content/10"
+						onClick={() => handleOpenPage(page)}
+					>
+						<div className="pl-3 w-full z-50 overflow-x-auto">
+							<div className="relative h-12 flex items-center justify-between gap-2">
+								{page.preview && (
+									<img
+										className="flex-shrink-0 -ml-1 -mr-0.5 h-8 w-10 rounded-md border dark:border border-content/5"
+										src={page.preview.image}
+									/>
+								)}
+
+								<div className="flex-shrink-0 truncate max-w-40">
 									{page.title || "Remote"}
 								</div>
+
 								<div className="flex items-center gap-2">
 									{page.actions.map((action, index) => (
 										<button
 											key={index}
-											className="flex-shrink-0 h-12 flex py-1.5"
-											onClick={() =>
-												handleRemoteAction(action, page)
-											}
+											className="flex-shrink-0 h-9 flex items-center justify-center rounded-full bg-content/5 border border-content/10"
+											onClick={(e) => {
+												e.stopPropagation();
+												handleRemoteAction(
+													action,
+													page
+												);
+											}}
 										>
-											<span className="h-full flex items-center justify-center rounded-full px-3 border border-content/20 text-sm">
-												{action.shortLabel ||
-													action.label}
-											</span>
+											{action.icon ? (
+												<span
+													className="size-9 flex items-center justify-center"
+													dangerouslySetInnerHTML={{
+														__html: action.icon,
+													}}
+												></span>
+											) : (
+												<span className="h-full flex items-center justify-center rounded-full py-1.5 px-3 border border-content/20 text-sm">
+													{action.shortLabel ||
+														action.label}
+												</span>
+											)}
 										</button>
 									))}
 									<div className="flex-shrink-0 w-6˝˝˝">

@@ -1,5 +1,6 @@
 import { matchSorter } from "match-sorter";
 import { onActionClick } from "./hooks/useActionClick";
+import ReactDOMServer from "react-dom/server";
 
 export const devMode = () => import.meta.env.MODE == "development";
 
@@ -686,4 +687,55 @@ export const processShareData = (value, type = "text", meta = {}) => {
 		payload,
 		preview: !objectIsEmpty(preview) ? preview : null,
 	};
+};
+
+export const extractHtmlFromComponent = (component, options = {}) => {
+	const { pretty = false, staticMarkup = false } = options;
+
+	// Choose rendering method based on options
+	const htmlString = staticMarkup
+		? ReactDOMServer.renderToStaticMarkup(component)
+		: ReactDOMServer.renderToString(component);
+
+	if (!pretty) {
+		return htmlString;
+	}
+
+	// Pretty print HTML if requested
+	const beautifyHtml = (html) => {
+		let formatted = "";
+		let indent = "";
+		const indentSize = 2;
+
+		// Split by < to get array of tags and content
+		const tokens = html.split("<");
+
+		for (let i = 0; i < tokens.length; i++) {
+			if (!tokens[i]) continue;
+
+			// Handle closing tags
+			if (tokens[i].startsWith("/")) {
+				indent = indent.slice(indentSize);
+				formatted += indent + "<" + tokens[i] + "\n";
+			}
+			// Handle self-closing tags
+			else if (tokens[i].endsWith("/>")) {
+				formatted += indent + "<" + tokens[i] + "\n";
+			}
+			// Handle opening tags
+			else {
+				formatted += indent + "<" + tokens[i];
+				if (!tokens[i].endsWith(">")) {
+					formatted += "\n";
+				}
+				if (!tokens[i].includes("/>") && !tokens[i].startsWith("!--")) {
+					indent += " ".repeat(indentSize);
+				}
+			}
+		}
+
+		return formatted.trim();
+	};
+
+	return beautifyHtml(htmlString);
 };

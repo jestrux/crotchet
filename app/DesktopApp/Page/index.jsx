@@ -11,7 +11,7 @@ import DetailPage from "./DetailPage";
 import { useEffect } from "react";
 import { onActionClick } from "@/crotchet/hooks/useActionClick";
 import { useKeyDetector } from "@/crotchet/hooks";
-import { dispatch } from "@/crotchet/utils";
+import { dispatch, extractHtmlFromComponent } from "@/crotchet/utils";
 
 const PageContentWrapper = () => {
 	const { page, title, pageResolving, isOpen, actions } = usePageContext();
@@ -34,6 +34,9 @@ const PageContentWrapper = () => {
 						]),
 						// ...action,
 						pageId,
+						icon: action.icon
+							? extractHtmlFromComponent(action.icon)
+							: null,
 					});
 				return agg;
 			}, []);
@@ -46,6 +49,14 @@ const PageContentWrapper = () => {
 				payload: {
 					page: {
 						_id: pageId,
+						...(page.image || page.video
+							? {
+									preview: {
+										image: page.image || page.video,
+										video: page.video,
+									},
+							  }
+							: {}),
 						title,
 						actions: actionNames,
 					},

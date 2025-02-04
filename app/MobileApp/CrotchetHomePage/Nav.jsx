@@ -1,5 +1,5 @@
 import { NavButton, MutliGestureButton, Input } from "@/crotchet/components";
-import { useDataLoader } from "@/crotchet/hooks";
+import { useDataLoader, useEventListener } from "@/crotchet/hooks";
 import { onActionClick } from "@/crotchet/hooks/useActionClick";
 import useKeyboard from "@/crotchet/hooks/useKeyboard";
 import useRemote from "@/crotchet/providers/Remote/useRemote";
@@ -350,35 +350,55 @@ const FloatingRemote = ({ expanded, dragging, onCollapse, focusInput }) => {
 	const { currentPage: remotePage, openPage, onAction } = useRemote();
 	const remoteActions = remotePage?.actions || [];
 
+	useEventListener("open-remote-page-controller", () => onCollapse(true));
+
 	if (!expanded || dragging || !remoteActions?.length) return null;
 
 	return (
 		<div
 			className="fixed inset-x-0 bottom-0 z-50 overflow-hidden border-t dark:border border-content/5 bg-stone-100 dark:bg-card"
-			onClick={focusInput}
+			onClick={(e) => {
+				e.stopPropagation();
+				onCollapse();
+				openPage(remotePage);
+			}}
 		>
 			<div className="w-screen z-50 overflow-x-auto bg-stone-100/95 dark:bg-content/5">
-				<div className="relative h-12 flex items-center justify-between px-3">
-					<div
-						className="flex-shrink-0 pr-4 mr-4 border-r dark:border-content/15 truncate max-w-40"
-						onClick={(e) => {
-							e.stopPropagation();
-							onCollapse();
-							openPage(remotePage);
-						}}
-					>
-						{remotePage?.title || "Remote"}
+				<div className="relative h-12 flex items-center justify-between gap-2 px-3">
+					{remotePage.preview && (
+						<img
+							className="flex-shrink-0 -ml-1 -mr-0.5 h-8 w-10 rounded-md border dark:border border-content/5"
+							src={remotePage.preview.image}
+						/>
+					)}
+
+					<div className="flex-shrink-0 truncate max-w-40">
+						{remotePage.title || "Remote"}
 					</div>
+
 					<div className="flex items-center gap-2">
-						{remoteActions.map((action, index) => (
+						{remotePage.actions.map((action, index) => (
 							<button
 								key={index}
-								className="flex-shrink-0 h-12 flex py-1.5"
-								onClick={() => onAction(action, remotePage)}
+								className="flex-shrink-0 h-9 flex items-center justify-center rounded-full bg-content/5 border border-content/10"
+								onClick={(e) => {
+									e.stopPropagation();
+									focusInput(0);
+									onAction(action, remotePage);
+								}}
 							>
-								<span className="h-full flex items-center justify-center rounded-full px-3 border border-content/20 text-sm">
-									{action.shortLabel || action.label}
-								</span>
+								{action.icon ? (
+									<span
+										className="size-9 flex items-center justify-center"
+										dangerouslySetInnerHTML={{
+											__html: action.icon,
+										}}
+									></span>
+								) : (
+									<span className="h-full flex items-center justify-center rounded-full py-1.5 px-3 border border-content/20 text-sm">
+										{action.shortLabel || action.label}
+									</span>
+								)}
 							</button>
 						))}
 						<div className="flex-shrink-0 w-6˝˝˝">&nbsp;</div>
@@ -499,6 +519,12 @@ export default function MobileNav() {
 	};
 
 	const focusInput = (delay = 80) => {
+		if (!delay) {
+			inputRef.current.style.pointerEvents = "auto";
+			inputRef.current.focus();
+			return;
+		}
+
 		setTimeout(() => {
 			inputRef.current.style.pointerEvents = "auto";
 			inputRef.current.focus();
@@ -513,9 +539,12 @@ export default function MobileNav() {
 		if (input?.getAttribute("is-focused")) inputRef.current?.focus();
 	};
 
-	const handleCollapse = async () => {
-		// inputRef.current.blur();
-		// inputRef.current.style.pointerEvents = "";
+	const handleCollapse = async (blurInput) => {
+		if (blurInput == true) {
+			inputRef.current.blur();
+			inputRef.current.style.pointerEvents = "";
+		}
+
 		setSearchQuery("");
 
 		const parent = inputRef.current
@@ -565,7 +594,7 @@ export default function MobileNav() {
 				style={{
 					opacity: ratio,
 				}}
-				onClick={handleCollapse}
+				onClick={() => handleCollapse()}
 			/>
 
 			<style>

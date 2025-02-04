@@ -1,5 +1,10 @@
 import { useDataLoader, useEventListener } from "@/crotchet/hooks";
-import { dispatch, hideApp, randomId } from "@/crotchet/utils";
+import {
+	dispatch,
+	extractHtmlFromComponent,
+	hideApp,
+	randomId,
+} from "@/crotchet/utils";
 
 export default function FloatingWindowManager() {
 	useDataLoader({
@@ -61,6 +66,9 @@ export default function FloatingWindowManager() {
 								]),
 								// ...action,
 								pageId: _id,
+								icon: action.icon
+									? extractHtmlFromComponent(action.icon)
+									: null,
 							});
 						return agg;
 					},
@@ -75,6 +83,14 @@ export default function FloatingWindowManager() {
 						page: {
 							_id,
 							floating: true,
+							...(page.image || page.video
+								? {
+										preview: {
+											image: page.image || page.video,
+											video: page.video,
+										},
+								  }
+								: {}),
 							title: page.title,
 							actions: actionNames,
 						},
