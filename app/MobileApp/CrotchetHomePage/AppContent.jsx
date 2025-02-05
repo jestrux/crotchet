@@ -51,7 +51,7 @@ const HomePage = () => {
 		>
 			<div className="hidden lg:block sticky top-0 h-full w-1/3 max-w-[400px] bg-yellow-500 dark:bg-card shadow rounded-2xl overflow-hidden">
 				<div className="h-full flex flex-col relative overflow-hidden">
-					<div className="mt-5 w-full px-4">
+					<div className="mt-5 w-full px-4 ml-0.5">
 						<h2 className="text-3xl font-bold">Hey Walter,</h2>
 						<p>Here's how things are looking</p>
 					</div>
@@ -65,7 +65,6 @@ const HomePage = () => {
 								type="inline"
 								fallbackIcon={
 									<svg
-										className="mt-0.5 size-[18px] opacity-80"
 										fill="none"
 										viewBox="0 0 24 24"
 										strokeWidth={1.5}
@@ -91,7 +90,6 @@ const HomePage = () => {
 									type="inline"
 									fallbackIcon={
 										<svg
-											className="mt-0.5 size-[18px] opacity-80"
 											fill="none"
 											viewBox="0 0 24 24"
 											strokeWidth={1.5}
