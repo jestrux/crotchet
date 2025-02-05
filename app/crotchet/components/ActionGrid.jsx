@@ -33,8 +33,9 @@ const Icon = ({ icon, fallback }) => {
 };
 
 export default function ActionGrid({
-	flat,
+	flat = false,
 	title,
+	smallTitle = false,
 	type,
 	data,
 	fallbackIcon,
@@ -109,7 +110,7 @@ export default function ActionGrid({
 				>
 					{action.icon && (
 						<div
-							className={clsx("-ml-2 size-8 rounded-full p-1.5", {
+							className={clsx("-ml-2 -mr-1.5 size-7 rounded-full p-1.5", {
 								"bg-content/5": showDefaultBackground,
 							})}
 							style={
@@ -126,7 +127,7 @@ export default function ActionGrid({
 					)}
 
 					<div className="flex flex-col flex-1">
-						<div className="first-letter:capitalize">
+						<div className="first-letter:capitalize text-[15px]">
 							{action.label || action.title}
 						</div>
 						{action.subtitle && (
@@ -245,8 +246,15 @@ export default function ActionGrid({
 	return (
 		<div>
 			{title && (
-				<div className="px-1 mb-1">
-					<h2 className="text-xl font-semibold">{title}</h2>
+				<div
+					className={clsx(
+						"font-semibold px-1.5 mb-1 flex items-center",
+						!smallTitle
+							? "text-xl"
+							: "uppercase tracking-wide text-xs opacity-50"
+					)}
+				>
+					{title}
 				</div>
 			)}
 
