@@ -1,7 +1,7 @@
 import { useDataLoader, useEventListener } from "../../hooks";
 import RemoteController from "./RemoteController";
 import RemotePageController from "./RemoteController/RemotePageController";
-import { dispatch } from "@/crotchet/utils";
+import { dispatch, onScreenSize } from "@/crotchet/utils";
 
 export default function useRemote() {
 	const { data: pages } = useDataLoader({
@@ -61,6 +61,8 @@ export default function useRemote() {
 	useEventListener("open-remote-controller", openController);
 
 	useEventListener("open-remote-page-controller", (_, pageId) => {
+		if (onScreenSize("lg")) return;
+
 		const page = (pages || []).find(({ _id }) => _id == pageId);
 		if (window.activeRemotePageController == pageId)
 			dispatch("close-remote-page-controller-" + pageId);

@@ -4,6 +4,10 @@ import ReactDOMServer from "react-dom/server";
 
 export const devMode = () => import.meta.env.MODE == "development";
 
+export const onScreenSize = (size = "lg") => {
+	if (size == "lg") return window.innerWidth >= 1024;
+};
+
 export const randomId = (prefix = "id") =>
 	prefix + Math.random().toString(36).slice(2);
 
