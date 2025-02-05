@@ -7,6 +7,7 @@ import {
 	isValidUrl,
 	objectFieldChoices,
 	objectIsEmpty,
+	onScreenSize,
 } from "@/crotchet/utils";
 import Loader from "@/crotchet/components/Loader";
 import ActionGrid from "@/crotchet/components/ActionGrid";
@@ -182,11 +183,14 @@ export default function Sheet({
 		);
 	};
 
+	const onlg = onScreenSize("lg");
+
 	return (
 		<Portal>
 			<div
 				className={clsx(
 					"fixed z-[999]",
+					{ "top-0 flex items-center justify-center": onlg },
 					inset
 						? "inset-x-3 mb-[env(safe-area-inset-bottom)]"
 						: "inset-x-0"
@@ -204,8 +208,9 @@ export default function Sheet({
 
 				<motion.div
 					className={clsx(
-						"bg-stone-100/95 dark:bg-canvas backdrop-blur-sm rounded-3xl relative z-10 max-w-lg mx-auto group text-content border dark:border-content/10 shadow-2xl overflow-hidden",
-						{ "p-3": !noHeading }
+						"bg-stone-100/95 dark:bg-canvas backdrop-blur-sm relative z-10 w-full max-w-lg mx-auto group text-content border dark:border-content/10 shadow-2xl overflow-hidden",
+						{ "p-3": !noHeading },
+						onlg ? "rounded-xl" : "rounded-3xl"
 					)}
 					style={{
 						paddingBottom: inset
@@ -220,11 +225,19 @@ export default function Sheet({
 					animate={{
 						y: 0,
 						opacity: 1,
+						scale: 1,
 					}}
-					initial={{
-						y: "10%",
-						opacity: 0,
-					}}
+					initial={
+						onlg
+							? {
+									scale: 0.9,
+									opacity: 0,
+							  }
+							: {
+									y: "10%",
+									opacity: 0,
+							  }
+					}
 					transition={{
 						duration: 0.2,
 					}}
