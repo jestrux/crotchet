@@ -45,14 +45,14 @@ export default function RemoteController({ flat = false, onClose }) {
 
 		return (
 			<div
-				className="˝˝˝mt-0.5"
+				className="pt-0.5 border-t border-content/10"
 				onClick={() => setActivePage(null)}
 			>
 				<div className="grid grid-cols-3 gap-1 p-1">
 					{page.actions.map((action, index) => (
 						<button
 							key={index}
-							className="min-h-20 flex-shrink-0 rounded-md bg-card dark:bg-content/10 border border-content/10 w-full flex flex-col items-center justify-center gap-1"
+							className="h-10 flex-shrink-0 rounded bg-card dark:bg-content/10 border border-content/10 w-full flex items-center justify-center gap-1"
 							onClick={(e) => {
 								e.stopPropagation();
 								handleRemoteAction(action, page);
@@ -60,13 +60,17 @@ export default function RemoteController({ flat = false, onClose }) {
 						>
 							{action.icon && (
 								<span
-									className="size-8 flex items-center justify-center"
+									className="size-6 flex items-center justify-center"
 									dangerouslySetInnerHTML={{
 										__html: action.icon,
 									}}
 								></span>
 							)}
-							<span className="text-sm">
+							<span
+								className={clsx(
+									action.icon ? "text-[11px]" : "text-sm"
+								)}
+							>
 								{action.shortLabel || action.label}
 							</span>
 						</button>
