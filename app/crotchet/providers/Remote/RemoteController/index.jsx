@@ -44,7 +44,10 @@ export default function RemoteController({ flat = false, onClose }) {
 		const page = activePage;
 
 		return (
-			<div onClick={() => setActivePage(null)}>
+			<div
+				className="˝˝˝mt-0.5"
+				onClick={() => setActivePage(null)}
+			>
 				<div className="grid grid-cols-3 gap-1 p-1">
 					{page.actions.map((action, index) => (
 						<button
@@ -96,8 +99,10 @@ export default function RemoteController({ flat = false, onClose }) {
 		);
 	}
 
+	if (!pages?.length) return null;
+
 	return (
-		<div className={clsx(flat ? "" : "min-h-16")}>
+		<div className={clsx(flat ? "mt-0.5 flex-shrink-0" : "min-h-16")}>
 			{pages?.map((page) => {
 				return (
 					<div

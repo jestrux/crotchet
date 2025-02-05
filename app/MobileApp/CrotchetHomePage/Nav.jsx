@@ -2,12 +2,7 @@ import { NavButton, MutliGestureButton, Input } from "@/crotchet/components";
 import { useDataLoader } from "@/crotchet/hooks";
 import { onActionClick } from "@/crotchet/hooks/useActionClick";
 import useKeyboard from "@/crotchet/hooks/useKeyboard";
-import {
-	dispatch,
-	getPreference,
-	isValidAction,
-	sectionedChoices,
-} from "@/crotchet/utils";
+import { dispatch, getPreference, isValidAction } from "@/crotchet/utils";
 import clsx from "clsx";
 import {
 	motion,
@@ -18,6 +13,7 @@ import {
 } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import FloatingRemote from "../FloatingRemote";
+import { useMobileActions } from "./useMobileActions";
 
 export const BottomNavButton = ({
 	disabled,
@@ -83,91 +79,11 @@ export const BottomNavButton = ({
 	);
 };
 
-const NavActions = ({ searchQuery, expanded, onCollapse }) => {
+const NavActions = ({ actionSections, searchQuery, onCollapse }) => {
 	const { KeyboardPlaceholder } = useKeyboard();
 	const wrapper = useRef(null);
-	const { data: _actions, refetch } = useDataLoader({
-		handler: window.globalActions,
-		listenForUpdates: "extensions-updated",
-	});
 
-	useEffect(() => {
-		refetch();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [expanded]);
-
-	if (!_actions?.length) return null;
-
-	const actionSections = sectionedChoices(
-		[
-			...[
-				{
-					label: "Add Widgets",
-					handler: () => {
-						window.openActionSheet({
-							title: "Add Widgets",
-							content: "Add Widgets details will go here...",
-						});
-					},
-					pinned: 1,
-					section: "Home Page",
-				},
-				{
-					label: "Manage Widgets",
-					handler: () => {
-						window.openActionSheet({
-							title: "Manage Widgets",
-							content: "Manage Widgets details will go here...",
-						});
-					},
-					pinned: 1,
-					section: "Home Page",
-				},
-				{
-					label: "Customize Navigation",
-					handler: () => {
-						window.openActionSheet({
-							title: "Customize Navigation",
-							content:
-								"Customize Navigation details will go here...",
-						});
-					},
-					pinned: 1,
-					section: "Home Page",
-				},
-				{
-					label: "Create Page",
-					handler: () => {
-						window.openActionSheet({
-							title: "Create Page",
-							content: "Create Page details will go here...",
-						});
-					},
-					pinned: 1,
-					section: "All Actions",
-				},
-				{
-					label: "Manage Pages",
-					handler: () => {
-						window.openActionSheet({
-							title: "Manage Pages",
-							content: "Manage Pages details will go here...",
-						});
-					},
-					pinned: 1,
-					section: "All Actions",
-				},
-			],
-			..._actions.map((a) => {
-				return {
-					...a,
-					pinned: 0,
-					section: "All Actions",
-				};
-			}),
-		],
-		searchQuery
-	);
+	if (!actionSections?.length) return null;
 
 	return (
 		<div ref={wrapper} className="overflow-auto">
@@ -412,7 +328,8 @@ export default function MobileNav() {
 
 	const [scope, animate] = useAnimate();
 	const inputRef = useRef(null);
-	const [searchQuery, setSearchQuery] = useState("");
+	const { searchQuery, setSearchQuery, actionSections, refetch } =
+		useMobileActions();
 	const [dragging, setDragging] = useState(false);
 	const [expanded, _setExpanded] = useState(false);
 	const y = useMotionValue(0);
@@ -518,6 +435,11 @@ export default function MobileNav() {
 
 		_setExpanded(newValue);
 	};
+
+	useEffect(() => {
+		refetch();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [expanded]);
 
 	return (
 		<>
@@ -667,7 +589,7 @@ export default function MobileNav() {
 					<div className="sticky top-0 h-[60vh] overscroll-none overflow-auto">
 						<NavActions
 							{...{
-								expanded,
+								actionSections,
 								searchQuery,
 								onCollapse: handleCollapse,
 							}}
