@@ -76,6 +76,15 @@ window.addEventListener("read-network-file", (e) => {
 		);
 });
 
+window.addEventListener("scan-network", (e) => {
+	const [key, props] = e.detail;
+	ipcRenderer
+		.invoke("scan-network", props)
+		.then((result) =>
+			window.dispatchEvent(new CustomEvent(key, { detail: result }))
+		);
+});
+
 window.addEventListener("restore", () => ipcRenderer.send("restore"));
 
 ipcRenderer.on("floating-window-event", function (_, props) {

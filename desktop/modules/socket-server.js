@@ -10,6 +10,8 @@ const {
 	getWriteableFile,
 	readNetworkFile,
 } = require("./files");
+const getIp = require("../utils/getIp");
+const findLocalDevices = require("local-devices");
 
 const Key = {
 	Escape: 0,
@@ -330,6 +332,13 @@ module.exports = function socketServer(server) {
 	ipcMain.handle("read-network-file", async (_, { url }) =>
 		readNetworkFile(url)
 	);
+
+	ipcMain.handle("scan-network", async () => {
+		const localIp = getIp();
+		const networkPrefix = localIp.split(".").slice(0, 3).join(".");
+		// return findLocalDevices(networkPrefix);
+		return findLocalDevices();
+	});
 
 	ipcMain.on("crotchet-ready", () => {
 		crotchetApp.initializeWindow();

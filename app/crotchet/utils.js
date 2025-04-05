@@ -743,3 +743,19 @@ export const extractHtmlFromComponent = (component, options = {}) => {
 
 	return beautifyHtml(htmlString);
 };
+
+export const scanNetwork = async () => {
+	return await new Promise((resolve) => {
+		const key = `scan-network-${Date.now()}`;
+		window.addEventListener(
+			key,
+			(e) => {
+				resolve(e.detail);
+			},
+			{ once: true }
+		);
+		window.dispatchEvent(
+			new CustomEvent("scan-network", { detail: [key] })
+		);
+	});
+};

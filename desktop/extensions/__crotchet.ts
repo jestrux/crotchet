@@ -220,6 +220,101 @@ registerAction("searchHeroIcons", {
 	tags: ["svg", "icon", "search"],
 });
 
+registerAction("samsungRemote", {
+	global: true,
+	handler: async () => {
+		const tvIp = await openPage({
+			resolve: async () => {
+				const foundDevices = await scanNetwork();
+
+				if (foundDevices.length === 0)
+					return showToast("No Samsung TVs found on network");
+
+				console.log("Devices: ", foundDevices);
+
+				return foundDevices.map(({ ip }) => ({
+					label: `Samsung TV (${ip})`,
+					// value: ip,
+					action: {
+						label: "Select",
+						handler: () => {
+							// console.log("Selected TV: ", ip);
+							// closePage(ip);
+							dispatch("close-page", ip);
+						},
+					},
+				}));
+			},
+		});
+
+		if (!tvIp) return console.log("No TV IP:", tvIp);
+
+		console.log("TV IP:", tvIp);
+
+		// Create WebSocket connection to TV
+		const ws = new WebSocket(
+			`ws://${tvIp}:8001/api/v2/channels/samsung.remote.control?name=${encodeURIComponent(
+				"CrotchetRemote"
+			)}`
+		);
+
+		ws.onopen = () => {
+			showToast("Connected to TV!");
+
+			// Send initial handshake
+			ws.send(
+				JSON.stringify({
+					method: "ms.channel.connect",
+					params: {
+						device: {
+							id: "CrotchetRemote",
+							name: "Crotchet Remote",
+							type: "native",
+						},
+					},
+				})
+			);
+		};
+
+		ws.onerror = (error) => {
+			showToast("Failed to connect to TV");
+			console.error("WebSocket error:", error);
+		};
+
+		ws.onclose = () => {
+			showToast("Disconnected from TV");
+		};
+
+		// Return remote control interface
+		const remoteControl = {
+			sendKey: (key) => {
+				if (ws.readyState === WebSocket.OPEN) {
+					ws.send(
+						JSON.stringify({
+							method: "ms.remote.control",
+							params: {
+								Cmd: "Click",
+								DataOfCmd: key,
+								Option: false,
+								TypeOfRemote: "SendRemoteKey",
+							},
+						})
+					);
+				} else {
+					showToast("Not connected to TV");
+				}
+			},
+			disconnect: () => {
+				ws.close();
+			},
+		};
+
+		console.log("Remote control: ", remoteControl);
+
+		return remoteControl;
+	},
+});
+
 registerAction("editIpfApp", {
 	global: true,
 	handler: async () => {

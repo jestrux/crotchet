@@ -118,6 +118,8 @@ declare var sourceGet: (
 
 declare var readNetworkFile: (url: String) => PromiseLike<any>;
 
+declare var scanNetwork: () => Promise<string[]>;
+
 declare var GenericObject: { [key: string]: any };
 
 declare var DataItem: {

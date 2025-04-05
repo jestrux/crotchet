@@ -2,7 +2,6 @@ import { useEventListener, useKeyDetector, useOnInit } from "@/crotchet/hooks";
 import {
 	camelCaseToSentenceCase,
 	dispatch,
-	hideApp,
 	onDesktop,
 	randomId,
 } from "@/crotchet/utils";
@@ -85,7 +84,8 @@ export default function useAppPages() {
 
 	window.closePage = (data) => dispatch("close-page", data);
 
-	window.openPage = (page) => dispatch("open-page", page);
+	// window.openPage = (page) => dispatch("open-page", page);
+	window.openPage = (page) => pushPage(page);
 
 	// window.openPage = (page) => pushPage(page);
 	// window.openForm = (page) => pushPage({ ...page, type: "form" });
@@ -104,9 +104,9 @@ export default function useAppPages() {
 	};
 
 	const popPage = (pageId, data) => {
-		const page = pages.filter(({ _id }) => _id == pageId);
+		const page = pages.find(({ _id }) => _id == pageId);
 
-		if (typeof page.resolver == "function") page.resolver(data);
+		if (typeof page?.resolver == "function") page.resolver(data);
 
 		notifyRemoteOnPageClose(pageId);
 
