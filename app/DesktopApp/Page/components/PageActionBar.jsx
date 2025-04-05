@@ -14,7 +14,6 @@ import ThemeBg from "@/DesktopApp/ThemeBg";
 export default function PageActionBar() {
 	const {
 		fullScreen,
-		page,
 		pageData,
 		pageResolving,
 		pageStatus,
@@ -24,6 +23,7 @@ export default function PageActionBar() {
 		mainAction: _mainAction,
 		secondaryAction: _secondaryAction,
 		actions,
+		contextInfo,
 	} = usePageContext();
 	const actionsButtonRef = useRef();
 
@@ -40,11 +40,11 @@ export default function PageActionBar() {
 	});
 
 	onSecondaryActionClick(() => {
-		handleSecondaryAction({ page, pageData });
+		handleSecondaryAction(contextInfo);
 	});
 
 	onMainActionClick(() => {
-		handleMainAction({ page, pageData });
+		handleMainAction(contextInfo);
 	});
 
 	const mainActionSet = () => {
@@ -123,7 +123,7 @@ export default function PageActionBar() {
 					size="sm"
 					variant="ghost"
 					colorScheme={secondaryAction.destructive && "red"}
-					onClick={() => handleSecondaryAction({ page, pageData })}
+					onClick={() => handleSecondaryAction(contextInfo)}
 				>
 					<span className="mr-0.5 capitalize text-sm">
 						{secondaryAction.label}
@@ -202,7 +202,7 @@ export default function PageActionBar() {
 							className={clsx("gap-1", {
 								"opacity-0": fullScreen,
 							})}
-							onClick={() => handleMainAction({ page, pageData })}
+							onClick={() => handleMainAction(contextInfo)}
 							rounded="md"
 							size="sm"
 							variant="ghost"

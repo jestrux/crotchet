@@ -23,6 +23,7 @@ import {
 	getDownloadURL,
 	uploadBytesResumable,
 	uploadString,
+	uploadBytes,
 } from "firebase/storage";
 
 // Cors for firebase storage
@@ -258,4 +259,21 @@ export const uploadRawString = async (
 		"raw"
 	);
 	return await getDownloadURL(fileRef);
+};
+
+export const uploadStringAsFile = async (
+	content,
+	{ name = randomId() + ".txt", type = "text/plain" }
+) => {
+	const file = new Blob([content], {
+		type,
+	});
+
+	console.log("File ref: ", "crotchet-uploads/file-" + name);
+
+	const fileRef = ref(storage, "crotchet-uploads/file-" + name);
+
+	var res = await uploadBytes(fileRef, file, { type });
+
+	return await getDownloadURL(res.ref);
 };

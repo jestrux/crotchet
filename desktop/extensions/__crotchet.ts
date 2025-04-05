@@ -219,3 +219,116 @@ registerAction("searchHeroIcons", {
 	url: `crotchet://search/heroIcons`,
 	tags: ["svg", "icon", "search"],
 });
+
+registerAction("editIpfApp", {
+	global: true,
+	handler: async () => {
+		const url =
+			"https://firebasestorage.googleapis.com/v0/b/letterplace-c103c.appspot.com/o/crotchet-uploads%2Ffile-ipf-os-app.json?alt=media&token=5670f9c6-417f-4c1a-a3cd-471815050659";
+		return openPage({
+			listenForUpdates: "ipf-app-updated",
+			title: "Edit iPF App",
+			resolve: async () => {
+				const data = await readNetworkFile(url).then((res) =>
+					JSON.parse(res)
+				);
+
+				const updateApp = () =>
+					uploadStringAsFile(JSON.stringify(data), {
+						type: "application/json",
+						name: "ipf-os-app.json",
+					}).then(() => dispatch("ipf-app-updated"));
+
+				return [
+					{
+						label: "App Color",
+						trailing: `
+							<div class="rounded-full size-6" style="background-color: ${data.color};"></div>
+						`,
+						section: "App",
+						action: {
+							label: "Change Color",
+							handler: () => {
+								const newColor =
+									"#" +
+									Math.floor(
+										Math.random() * 16777215
+									).toString(16);
+
+								data.colorDark = tinycolor(newColor)
+									.clone()
+									.toString();
+
+								while (
+									tinycolor.readability(
+										"#1f2937",
+										data.colorDark
+									) < 3.5
+								) {
+									data.colorDark = tinycolor(data.colorDark)
+										.brighten(5)
+										.saturate(10)
+										.toString();
+								}
+
+								data.color = tinycolor(newColor)
+									.clone()
+									.toString();
+
+								while (
+									tinycolor.readability(
+										"#FFFFFF",
+										data.color
+									) < 4.5
+								) {
+									data.color = tinycolor(data.color)
+										.darken(10)
+										.toString();
+								}
+
+								console.log(
+									"Select color",
+									data.color,
+									data.colorDark
+								);
+
+								return withLoader(() => updateApp(), {
+									successMessage: "App color updated",
+									errorMessage: "App color not updated",
+								});
+							},
+						},
+					},
+					{
+						label: "Default Page",
+						trailing: `
+							<div class="rounded-full size-6" style="background-color: ${data.color};"></div>
+						`,
+						section: "App",
+						action: {
+							label: "Change Default Page",
+							handler: () => {
+								console.log("Select default page", data);
+								data.settings.mainPage = 2;
+								return withLoader(() => updateApp(), {
+									successMessage: "Default page updated",
+									errorMessage: "Default page not updated",
+								});
+							},
+						},
+					},
+					...(data.pages || []).map((page) => ({
+						label: page.name,
+						section: "Pages",
+						action: {
+							label: "Customize",
+							handler: () => {
+								console.log("Customize page", page);
+							},
+						},
+					})),
+				];
+			},
+		});
+	},
+});

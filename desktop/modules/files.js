@@ -1,6 +1,8 @@
 const fs = require("fs");
 const { app, shell, dialog } = require("electron");
 const path = require("path");
+const https = require('https');
+const http = require('http');
 const appDir = (...subPaths) => path.join(__dirname, "../", ...subPaths);
 const buildDir = (...subPaths) => appDir("app", ...subPaths);
 
@@ -99,6 +101,27 @@ const getWriteableFile = async (path) => {
 	};
 };
 
+const readNetworkFile = (url) => {
+    return new Promise((resolve, reject) => {
+        const protocol = url.startsWith('https') ? https : http;
+        
+        protocol.get(url, (res) => {
+            let data = '';
+            
+            res.on('data', (chunk) => {
+                data += chunk;
+            });
+            
+            res.on('end', () => {
+                resolve(data);
+            });
+            
+        }).on('error', (err) => {
+            reject(err);
+        });
+    });
+};
+
 module.exports = {
 	appDir,
 	buildDir,
@@ -106,5 +129,6 @@ module.exports = {
 	getWriteableFile,
 	readDir,
 	readFile,
+	readNetworkFile,
 	writeFile,
 };

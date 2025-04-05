@@ -48,6 +48,7 @@ const PageContext = createContext({
 	onSecondaryActionClick: () => {},
 	onNavigateDown: () => {},
 	onNavigateUp: () => {},
+	contextInfo: {},
 });
 
 export function usePageContext() {
@@ -413,6 +414,9 @@ export default function PageProvider({
 					onMainActionClick,
 					onNavigateDown,
 					onNavigateUp,
+					get contextInfo() {
+						return contextInfo;
+					},
 				}}
 			>
 				{children}

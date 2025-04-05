@@ -3,7 +3,13 @@ const { ipcMain, shell, clipboard, nativeImage } = require("electron");
 const { Server } = require("socket.io");
 const runScript = require("../utils/runScript");
 const showToast = require("../utils/show-toast");
-const { getFile, readFile, writeFile, getWriteableFile } = require("./files");
+const {
+	getFile,
+	readFile,
+	writeFile,
+	getWriteableFile,
+	readNetworkFile,
+} = require("./files");
 
 const Key = {
 	Escape: 0,
@@ -320,6 +326,10 @@ module.exports = function socketServer(server) {
 	ipcMain.handle("read-file", (_, payload) => readFile(payload));
 
 	ipcMain.handle("write-file", (_, payload) => writeFile(payload));
+
+	ipcMain.handle("read-network-file", async (_, { url }) =>
+		readNetworkFile(url)
+	);
 
 	ipcMain.on("crotchet-ready", () => {
 		crotchetApp.initializeWindow();

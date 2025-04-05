@@ -3,6 +3,11 @@ declare var _: any;
 
 declare var moment: (...any) => any;
 
+declare var tinycolor: {
+	(...any): any;
+	readability: (color1: string, color2: string) => number;
+};
+
 declare var actions: { [key: string]: any };
 
 declare var dataSources: { [key: string]: any };
@@ -36,6 +41,14 @@ declare var queryDb: (
 	options?: {
 		rowId?: String | null;
 	} | null
+) => Promise<any>;
+
+declare var uploadStringAsFile: (
+	data: String,
+	options: {
+		type: "application/json" | "text/plain" | "application/octet-stream";
+		name: String;
+	}
 ) => Promise<any>;
 
 declare var getPreference: (key: String) => Promise<string | null | undefined>;
@@ -102,6 +115,8 @@ declare var sourceGet: (
 		filters?: { [key: string]: any };
 	}
 ) => Promise<any>;
+
+declare var readNetworkFile: (url: String) => PromiseLike<any>;
 
 declare var GenericObject: { [key: string]: any };
 
@@ -227,6 +242,7 @@ declare var PageContext: {
 	setPageFilter: (filter?: string) => {};
 	pageData?: { [key: string]: any };
 	pageTab?: string;
+	closePage: (payload?: any | null | undefined) => {};
 };
 declare var PageTitle:
 	| string
@@ -261,6 +277,7 @@ declare var ActionButton:
 	| ((payload: any) => typeof ActionButton | null | undefined);
 
 declare var Page: {
+	listenForUpdates?: typeof ListenForUpdates;
 	external?: boolean | null;
 	type?: string | ((payload: typeof PageContext) => string);
 	resolve?: Function;

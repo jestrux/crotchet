@@ -1,5 +1,6 @@
 import lodash from "lodash";
 import moment from "moment";
+import tinycolor from "tinycolor2";
 import * as utils from "./crotchet/utils";
 import * as firebaseUtils from "./crotchet/providers/firebase";
 import * as UI from "./crotchet/providers/ui";
@@ -10,6 +11,7 @@ Object.assign(window, {
 	...utils,
 	_: lodash,
 	moment,
+	tinycolor,
 	...crotchetThings,
 	...firebaseUtils,
 	UI,

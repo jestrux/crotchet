@@ -348,14 +348,21 @@ export default function SearchPage() {
 							)}
 
 							{choices.map((choice) => {
-								const { icon, image, video } = choice;
+								const { icon, image, video, trailing } = choice;
 
 								return (
 									<PageListItem
 										key={choice.__id}
 										className="cursor-default"
 										trailing={
-											icon?.length ? (
+											trailing?.length ? (
+												<div
+													className="mr-2"
+													dangerouslySetInnerHTML={{
+														__html: trailing,
+													}}
+												/>
+											) : icon?.length ? (
 												<div
 													className="mr-2"
 													dangerouslySetInnerHTML={{

@@ -67,6 +67,15 @@ window.addEventListener("write-file", (e) =>
 	ipcRenderer.invoke("write-file", e.detail)
 );
 
+window.addEventListener("read-network-file", (e) => {
+	const [key, props] = e.detail;
+	ipcRenderer
+		.invoke("read-network-file", props)
+		.then((result) =>
+			window.dispatchEvent(new CustomEvent(key, { detail: result }))
+		);
+});
+
 window.addEventListener("restore", () => ipcRenderer.send("restore"));
 
 ipcRenderer.on("floating-window-event", function (_, props) {
