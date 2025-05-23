@@ -337,7 +337,7 @@ module.exports = function socketServer(server) {
 		const localIp = getIp();
 		const networkPrefix = localIp.split(".").slice(0, 3).join(".");
 		// return findLocalDevices(networkPrefix);
-		return findLocalDevices();
+		return await findLocalDevices();
 	});
 
 	ipcMain.on("crotchet-ready", () => {
