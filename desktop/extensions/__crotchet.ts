@@ -94,6 +94,12 @@ registerAction("crotchetAppData", {
 	url: `crotchet://socket/run?command=open /Users/waky/Library/Application\\ Support/Electron/Crotchet`,
 });
 
+registerAction("convertToPdf", {
+	global: true,
+	desktopOnly: true,
+	url: `crotchet://socket/run?command=open web-experiments://convert/to-pdf`,
+});
+
 registerAction("setHero", {
 	global: true,
 	desktopOnly: true,
