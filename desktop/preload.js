@@ -1,29 +1,113 @@
 /* global document */
-const { ipcRenderer } = require("electron");
+const { ipcRenderer, contextBridge } = require("electron");
 const getIp = require("./utils/getIp");
 const { appDir, readDir } = require("./modules/files");
 
-window.addEventListener("crotchet-ready", () => {
-	readDir({ path: appDir("extensions") }).then((res) => {
-		if (res) {
-			res.filter(
-				(res) => res?.name?.length && res?.contents?.length
-			).forEach(({ name, contents }) => {
-				const asset = document.createElement("script");
-				asset.innerHTML = `
+const readFile = (props) => ipcRenderer.invoke("read-file", props);
+
+const writeFile = (contents) => ipcRenderer.invoke("write-file", contents);
+
+contextBridge.exposeInMainWorld(
+	"onCrotchetReady",
+	async ({ queryDb, dbInsert }) => {
+		const dbExtensions = await queryDb("__crotchetExtensions");
+		const devExtensions = await queryDb("__crotchetDevExtensions");
+
+		const installExtension = ({ name, contents }) => {
+			const asset = document.createElement("script");
+			asset.innerHTML = `
 					(() => { ${contents.replace("import", "//import")} })();
 				`;
-				asset.setAttribute("data-crotchet-extension", name);
-				document.body.appendChild(asset);
+			asset.setAttribute("data-crotchet-extension", name);
+			document.body.appendChild(asset);
+		};
+
+		if (devExtensions?.length) {
+			devExtensions.forEach(({ name, contents }) =>
+				installExtension({ name, contents })
+			);
+		}
+
+		readDir({ path: appDir("extensions") }).then((res) => {
+			if (res) {
+				res.filter(
+					(res) => res?.name?.length && res?.contents?.length
+				).forEach(({ name, contents, updatedAt }) => {
+					installExtension({ name, contents });
+
+					const dbExtension = dbExtensions.find(
+						(dbExtension) => dbExtension.name === name
+					);
+
+					// Check if we need to update the database
+					const shouldUpdate = true;
+					// const shouldUpdate =
+					// 	!dbExtension ||
+					// 	(dbExtension.updatedAt &&
+					// 		updatedAt &&
+					// 		new Date(updatedAt) >
+					// 			new Date(dbExtension.updatedAt));
+
+					if (shouldUpdate) {
+						console.log(
+							"Updating extension in DB: ",
+							name,
+							updatedAt,
+							dbExtension?.updatedAt
+						);
+						dbInsert(
+							"__crotchetExtensions",
+							{
+								name,
+								contents,
+								updatedAt,
+							},
+							{
+								rowId: name,
+							}
+						);
+					}
+				});
+			}
+		});
+
+		// Sync extensions from Firebase to local filesystem
+		if (dbExtensions?.length) {
+			dbExtensions.forEach(({ name, contents, isLocal, updatedAt }) => {
+				if (isLocal)
+					return console.log(
+						`Don't sync ${name}, it's a local extension under app/public/extensions`
+					);
+
+				const extensionPath = appDir("extensions", name + ".ts");
+
+				// Check if file exists and compare timestamps
+				readFile({ path: extensionPath }).then((localFile) => {
+					const shouldUpdate =
+						!localFile ||
+						(localFile.updatedAt &&
+							updatedAt &&
+							new Date(updatedAt) >
+								new Date(localFile.updatedAt));
+
+					if (shouldUpdate) {
+						console.log(
+							"Updating extension locally: ",
+							name,
+							localFile?.updatedAt,
+							updatedAt
+						);
+						writeFile({
+							path: extensionPath,
+							contents: contents,
+							updatedAt: updatedAt,
+						});
+					}
+				});
 			});
 		}
-	});
-	// readFile({ path: appDir("extensions/index.ts") }).then((contents) => {
-	// 	const asset = document.createElement("script");
-	// 	asset.innerHTML = contents;
-	// 	document.body.appendChild(asset);
-	// });
-});
+	}
+);
 
 window.addEventListener("open-url", (e) => {
 	ipcRenderer.send("open-url", e.detail);

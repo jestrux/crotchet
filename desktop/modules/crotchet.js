@@ -204,7 +204,7 @@ module.exports = function Crotchet() {
 					delete this.floatingWindows[windowId];
 				});
 
-				if (isDev) window.loadURL("http://localhost:5173/");
+				if (isDev) window.loadURL("http://localhost:5170/");
 				else window.loadFile(buildDir("index.html"));
 
 				this.floatingWindows[windowId] = {

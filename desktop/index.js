@@ -63,7 +63,7 @@ const createMainWindow = () => {
 			true
 		);
 
-		mainWindow.loadURL("http://localhost:5173/");
+		mainWindow.loadURL("http://localhost:5170/");
 
 		try {
 			require("electron-reloader")(module);

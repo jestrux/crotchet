@@ -94,10 +94,49 @@ registerAction("crotchetAppData", {
 	url: `crotchet://socket/run?command=open /Users/waky/Library/Application\\ Support/Electron/Crotchet`,
 });
 
-registerAction("convertToPdf", {
+registerAction("crotchetFirebase", {
 	global: true,
 	desktopOnly: true,
+	url: `crotchet://socket/run?command=open https://console.firebase.google.com/u/0/project/letterplace-c103c/firestore/databases/-default-/data/~2F__db~2F__crotchetExtensions?fb_gclid=CjwKCAiA-ty8BhA_EiwAkyoa3wWtyAXXVINn-puxha8loFtxpREcnM1_rMT3j3BUjytvEQqvsvJnjxoCfGYQAvD_BwE`,
+});
+
+registerAction("webExperiments", {
+	global: true,
+	desktopOnly: true,
+	section: "Web Experiments",
+	url: `crotchet://socket/run?command=open web-experiments://`,
+});
+
+registerAction("webExperimentsCreateApp", {
+	label: "Create App",
+	global: true,
+	desktopOnly: true,
+	section: "Web Experiments",
+	url: `crotchet://socket/run?command=open web-experiments://create-app`,
+});
+
+registerAction("webExperimentsConvertToPdf", {
+	label: "Convert to PDF",
+	global: true,
+	desktopOnly: true,
+	section: "Web Experiments",
 	url: `crotchet://socket/run?command=open web-experiments://convert/to-pdf`,
+});
+
+registerAction("webExperimentsConvertCodeToScreenshot", {
+	label: "Code to Screenshot",
+	global: true,
+	desktopOnly: true,
+	section: "Web Experiments",
+	url: `crotchet://socket/run?command=open web-experiments://convert/code-to-screenshot`,
+});
+
+registerAction("webExperimentsPromptFun", {
+	label: "Prompt Fun",
+	global: true,
+	desktopOnly: true,
+	section: "Web Experiments",
+	url: `crotchet://socket/run?command=open web-experiments://ai/prompt-fun`,
 });
 
 registerAction("setHero", {

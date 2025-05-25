@@ -42,6 +42,9 @@ export default defineConfig({
 		},
 		outDir: "./docs",
 	},
+	server: {
+		port: 5170,
+	},
 	optimizeDeps: {
 		disabled: false,
 	},

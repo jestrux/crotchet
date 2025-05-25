@@ -344,6 +344,7 @@ declare var registerAction: (
 				handler?: (payload: any) => PromiseLike<any> | void;
 				url?: String | undefined;
 				tags?: string[];
+				section?: string | undefined;
 		  }
 ) => void;
 

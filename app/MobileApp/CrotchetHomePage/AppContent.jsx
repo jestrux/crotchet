@@ -19,7 +19,7 @@ const HomePage = () => {
 
 			return [];
 		},
-		listenForUpdates: "extensions-updated",
+		listenForUpdates: "app-actions-updated",
 	});
 
 	const { actionSections } = useMobileActions();

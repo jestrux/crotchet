@@ -28,7 +28,7 @@ const toggleCommandInFavorites = async (command, status) => {
 const commandProps = (item, section, favorites) => {
 	const faved = favorites.includes(item.name);
 	const props = {
-		section: faved ? "Favorites" : section,
+		section: faved ? "Favorites" : item.section ?? section,
 		pinned: favorites.indexOf(item.name),
 		actions: (...payload) => [
 			...(typeof item.actions == "function"

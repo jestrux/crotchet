@@ -17,9 +17,18 @@ Object.assign(window, {
 	UI,
 });
 
-utils.dispatch("crotchet-ready");
+if (window.onCrotchetReady) {
+	window.onCrotchetReady({
+		queryDb: firebaseUtils.queryDb,
+		dbInsert: firebaseUtils.dbInsert,
+		inDevMode: utils.devMode(),
+	});
+}
 
-const installExtension = async ({ name, url, contents }) => {
+const installExtension = async (
+	{ name, url, contents },
+	{ sync = false } = {}
+) => {
 	const existingScript = document.querySelector(
 		`[data-crotchet-extension="${name}"]`
 	);
@@ -36,13 +45,33 @@ const installExtension = async ({ name, url, contents }) => {
 		`;
 	}
 
+	if (sync) {
+		console.log("Syncing local extension: ", name);
+		firebaseUtils.dbInsert(
+			"__crotchetDevExtensions",
+			{
+				name,
+				url,
+				contents,
+				isLocal: true,
+				updatedAt: new Date().toISOString(),
+			},
+			{
+				rowId: name,
+			}
+		);
+	}
+
 	asset.setAttribute("data-crotchet-extension", name);
 	document.body.appendChild(asset);
 };
 
 if (utils.devMode()) {
-	if (import.meta.hot)
-		import.meta.hot.on("reload-extension", installExtension);
+	if (import.meta.hot) {
+		import.meta.hot.on("reload-extension", (data) =>
+			installExtension(data, { sync: true })
+		);
+	}
 }
 
 const installExtensions = (extensions) => {
@@ -67,26 +96,7 @@ const installExtensions = (extensions) => {
 if (utils.onDesktop()) {
 	utils.onDesktopInitialize().then(({ isFloatingWindow }) => {
 		window.__isFloatingWindow = isFloatingWindow;
-
 		if (isFloatingWindow) return;
-
-		document
-			.querySelectorAll("[data-crotchet-extension]")
-			.forEach((extension) => {
-				const name = extension.getAttribute("data-crotchet-extension");
-				const contents = extension.innerHTML;
-
-				firebaseUtils.dbInsert(
-					"__crotchetExtensions",
-					{
-						name,
-						contents,
-					},
-					{
-						rowId: name,
-					}
-				);
-			});
 	});
 } else {
 	setTimeout(() => {
@@ -98,5 +108,7 @@ if (utils.onDesktop()) {
 				utils.cache("__crotchetExtensions", res);
 			});
 		});
+
+		firebaseUtils.watchDb("__crotchetDevExtensions", installExtensions);
 	}, 500);
 }

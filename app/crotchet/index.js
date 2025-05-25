@@ -38,6 +38,7 @@ export const registerAction = (name, action) => {
 		actions,
 		preview,
 		tags = [],
+		section,
 		icon,
 		global = false,
 		context,
@@ -68,6 +69,7 @@ export const registerAction = (name, action) => {
 			label || name.replace("-", " ").replace("_", " ")
 		),
 		tags,
+		section,
 		global,
 		context,
 		match,

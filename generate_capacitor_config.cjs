@@ -41,7 +41,7 @@ const capacitorConfig = {
 };
 
 if (process.env.NODE_ENV == "dev") {
-	capacitorConfig.server.url = `http://${getIp()}:5173`;
+	capacitorConfig.server.url = `http://${getIp()}:5170`;
 	capacitorConfig.server.cleartext = true;
 }
 

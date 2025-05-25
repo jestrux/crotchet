@@ -17,7 +17,15 @@
 		"ios:dev": "NODE_ENV=dev npm run config && cd mobile && npx cap run ios",
 		"predesktop": "cd app && npm run build && cd ../ && rm -r ./desktop/app && cp -R ./app/docs/. ./desktop/app",
 		"desktop": "cd desktop && npm run package",
-		"desktop:dev": "cd desktop && npm run dev"
+		"desktop:dev": "cd desktop && npm run dev",
+		"dev:config": "NODE_ENV=dev npm run config",
+		"dev:app": "yarn --cwd app dev",
+		"dev:desktop": "yarn --cwd desktop dev",
+		"dev:ios": "cd mobile && npx cap open ios",
+		"start": "concurrently \"yarn dev:config\" \"yarn dev:app\" && wait-on http://localhost:5170 && npm run dev:desktop"
 	},
-	"dependencies": {}
+	"devDependencies": {
+		"concurrently": "^9.1.2",
+		"wait-on": "^8.0.3"
+	}
 }
