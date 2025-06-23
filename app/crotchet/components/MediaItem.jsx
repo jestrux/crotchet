@@ -7,6 +7,8 @@ import clsx from "clsx";
 export default function MediaItem({
 	video,
 	image,
+	title,
+	subtitle,
 	url,
 	share,
 	actions,
@@ -24,7 +26,13 @@ export default function MediaItem({
 
 		if (actions?.length) {
 			return window.openActionSheet({
-				noHeading: true,
+				preview: {
+					image,
+					video,
+					title,
+					subtitle,
+				},
+				title: "Actions",
 				actions,
 			});
 		}
@@ -45,7 +53,7 @@ export default function MediaItem({
 		>
 			<div
 				className={clsx(
-					" bg-content/10 border border-content/10 overflow-hidden"
+					"pointer-events-none bg-content/10 border border-content/10 overflow-hidden"
 				)}
 			>
 				<img

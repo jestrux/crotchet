@@ -203,7 +203,12 @@ export default function RegularListItem({
 
 		if (actions?.length) {
 			return window.openActionSheet({
-				noHeading: true,
+				preview: {
+					image,
+					video,
+					title,
+					subtitle,
+				},
 				actions,
 			});
 		}

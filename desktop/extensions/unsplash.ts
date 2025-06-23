@@ -25,6 +25,8 @@ const searchUnsplash = async (searchQuery = "") => {
 	}));
 };
 
+const randomUnsplashPic = async () => random(await searchUnsplash());
+
 registerAction("randomUnsplashPic", {
 	label: "Random Pic",
 	icon: UI.svg(
@@ -40,23 +42,16 @@ registerAction("randomUnsplashPic", {
 				return openPage({
 					type: "detail",
 					title: ({ pageData }) => pageData?.title || null,
-					resolve: async () => {
-						const images = await searchUnsplash();
-
-						if (!images) {
-							showToast("Failed to get image");
-							return null;
-						}
-
-						return random(images);
-					},
+					resolve: randomUnsplashPic,
 					content: ({ pageData }) => {
 						if (!pageData) return null;
 
 						return UI.component({
 							className:
 								"absolute inset-0 bg-black flex items-center justify-center",
-							content: !pageData ? '' : `<img class="max-w-full h-full" src="${pageData.image}" />`,
+							content: !pageData
+								? ""
+								: `<img class="max-w-full h-full" src="${pageData.image}" />`,
 						});
 					},
 					action: ({ pageData }) =>
@@ -125,4 +120,24 @@ registerAction("randomUnsplashPic", {
 			},
 		});
 	},
+});
+
+registerWidget("randomUnsplashPic", {
+	listenForUpdates: "refetch-random-unsplash-widget",
+	// onSwipe: ({ refetch }) => refetch(),
+	resolve: async () => {
+		const entry = await randomUnsplashPic();
+		return {
+			...entry,
+			url: entry.href,
+			actions: [
+				{
+					label: "Shuffle",
+					icon: UI.icon("shuffle"),
+					handler: () => dispatch("refetch-random-unsplash-widget"),
+				},
+			],
+		};
+	},
+	content: UI.media,
 });

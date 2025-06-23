@@ -820,38 +820,38 @@ const formatVideo = (entry) => ({
 	actions: getActions(entry),
 });
 
-// registerWidget("youtubeClips", {
-// 	title: "Youtube Clips",
-// 	resolve: async ({ state }) => {
-// 		const res = await sourceGet(
-// 			{ handler: () => queryDb("youtubeClips") },
-// 			{ orderBy: "updatedAt,desc", random: state.random, limit: 3 }
-// 		);
-// 		return res?.map((entry) => ({
-// 			...entry,
-// 			video: `https://i.ytimg.com/vi/${entry._id}/hqdefault.jpg`,
-// 			title: entry.name,
-// 			subtitle: `${[entry.crop?.[0], entry.crop?.[1]]
-// 				?.map(toHms)
-// 				.join(", ")} - ${toHms(entry.duration)}`,
-// 			url: getYoutubeActualUrl(entry),
-// 			actions: getActions(entry),
-// 		}));
-// 	},
-// 	content: UI.list,
-// 	actions: [
-// 		{
-// 			label: "Shuffle",
-// 			icon: UI.icon("shuffle"),
-// 			handler: ({ refetch, setState }) => {
-// 				setState("random", true);
-// 				refetch();
-// 			},
-// 		},
-// 		{ label: "Add Clip", icon: UI.icon("add"), handler: () => {} },
-// 	],
-// 	listenForUpdates: "firebase-table-updated:youtubeClips",
-// });
+registerWidget("youtubeClips", {
+	title: "Youtube Clips",
+	resolve: async ({ state }) => {
+		const res = await sourceGet(
+			{ handler: () => queryDb("youtubeClips") },
+			{ orderBy: "updatedAt,desc", random: state.random, limit: 3 }
+		);
+		return res?.map((entry) => ({
+			...entry,
+			video: `https://i.ytimg.com/vi/${entry._id}/hqdefault.jpg`,
+			title: entry.name,
+			subtitle: `${[entry.crop?.[0], entry.crop?.[1]]
+				?.map(toHms)
+				.join(", ")} - ${toHms(entry.duration)}`,
+			url: getYoutubeActualUrl(entry),
+			actions: getActions(entry),
+		}));
+	},
+	content: UI.list,
+	actions: [
+		{
+			label: "Shuffle",
+			icon: UI.icon("shuffle"),
+			handler: ({ refetch, setState }) => {
+				setState("random", true);
+				refetch();
+			},
+		},
+		// { label: "Add Clip", icon: UI.icon("add"), handler: () => {} },
+	],
+	listenForUpdates: "firebase-table-updated:youtubeClips",
+});
 
 registerSection("recentYoutubeClips", {
 	title: "Recent Clips",
@@ -859,12 +859,12 @@ registerSection("recentYoutubeClips", {
 	resolve: async ({ state }) => {
 		const res = await sourceGet(
 			{ handler: () => queryDb("youtubeClips") },
-			{ orderBy: "updatedAt,desc", random: state.random, limit: 2 }
+			{ orderBy: "updatedAt,desc", random: state.random, limit: 4 }
 		);
 		return res?.map(formatVideo);
 	},
 	meta: {
-		limit: 2,
+		limit: 4,
 	},
 });
 

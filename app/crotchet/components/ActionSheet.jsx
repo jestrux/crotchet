@@ -24,6 +24,10 @@ export default function Sheet({
 	showOverlayBg = true,
 	noHeading = false,
 	inset = true,
+	sortable = false,
+	selectable = false,
+	emptyStateMessage = "No matching actions",
+	onChange = () => {},
 	onClose = () => {},
 }) {
 	const [preview, setPreview] = useState(_preview);
@@ -241,7 +245,7 @@ export default function Sheet({
 					transition={{
 						duration: 0.2,
 					}}
-					drag="y"
+					drag={sortable ? null : "y"}
 					dragConstraints={{
 						top: 0,
 						bottom: 0.5,
@@ -292,7 +296,7 @@ export default function Sheet({
 						<>
 							{!actions?.length && (
 								<div className="pb-4 flex h-full items-center justify-center opacity-50">
-									No matching actions
+									{emptyStateMessage}
 								</div>
 							)}
 
@@ -304,7 +308,10 @@ export default function Sheet({
 										type="inline"
 										data={actions}
 										hideTrailing
-										onClose={onClose}
+										selectable={selectable}
+										sortable={sortable}
+										onChange={onChange}
+										onClose={selectable ? null : onClose}
 										payload={{ ...payload, preview }}
 									/>
 								</div>

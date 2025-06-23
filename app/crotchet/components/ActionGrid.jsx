@@ -1,6 +1,9 @@
 import clsx from "clsx";
 import { useDataLoader, useActionClick } from "@/crotchet/hooks";
 import { MutliGestureButton } from "@/crotchet/components";
+import { useState } from "react";
+import { randomId } from "@/crotchet/utils";
+import DragAndDropList from "./DragAndDropList";
 
 function ActionButton({
 	action,
@@ -47,11 +50,46 @@ export default function ActionGrid({
 	hideTrailing = false,
 	payload,
 	showDefaultBackground = false,
+	sortable = false,
+	selectable = false,
+	onChange = () => {},
 	onClose = () => {},
 }) {
-	const { loading, data: actions } = useDataLoader({ handler: data });
+	const [actions, setActions] = useState([]);
+	const { loading } = useDataLoader({
+		handler: data,
+		onSuccess: (v) =>
+			setActions(
+				v.map((action) => {
+					return {
+						__gridId: randomId("gridAction"),
+						...action,
+					};
+				})
+			),
+	});
+
+	const handleReorder = (newActions) => {
+		setActions(() => {
+			onChange(newActions);
+			return newActions;
+		});
+	};
 
 	const handleClick = (action) => {
+		if (selectable) {
+			setActions((actions) => {
+				const newActions = actions.map((a) => {
+					if (a.__gridId == action.__gridId) a.selected = !a.selected;
+					return a;
+				});
+
+				onChange(newActions);
+
+				return newActions;
+			});
+			return;
+		}
 		const onClick =
 			typeof action.onClick == "function"
 				? action.onClick
@@ -110,9 +148,12 @@ export default function ActionGrid({
 				>
 					{action.icon && (
 						<div
-							className={clsx("-ml-2 -mr-1.5 size-7 rounded-full p-1.5", {
-								"bg-content/5": showDefaultBackground,
-							})}
+							className={clsx(
+								"-ml-2 -mr-1.5 size-7 rounded-full p-1.5",
+								{
+									"bg-content/5": showDefaultBackground,
+								}
+							)}
 							style={
 								action.color
 									? {
@@ -295,12 +336,27 @@ export default function ActionGrid({
 							: "grid grid-cols-3 gap-2"
 					}
 				>
-					{actions.map((action, index) => (
-						<ActionItem
-							key={action._id + " " + index}
-							action={action}
+					{!sortable && (
+						<>
+							{actions.map((action, index) => (
+								<ActionItem
+									key={action._id + " " + index}
+									action={action}
+								/>
+							))}
+						</>
+					)}
+
+					{sortable && (
+						<DragAndDropList
+							items={actions}
+							getId={(item) => item.__gridId}
+							onReorder={handleReorder}
+							renderItem={(action) => (
+								<ActionItem action={action} />
+							)}
 						/>
-					))}
+					)}
 				</div>
 			)}
 		</div>

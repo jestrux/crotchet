@@ -1,30 +1,5 @@
 import "../../@types/index";
 
-registerAction("clipboard", {
-	global: true,
-	mobileOnly: true,
-	handler: async () => {
-		try {
-			const { type, value } = await readClipboard();
-			const { payload, preview } =
-				processShareData(value, type, {
-					fromClipboard: true,
-				}) || {};
-
-			if (!payload) return showToast("Nothing in clipboard");
-
-			return openActionSheet({
-				title: "Select an action",
-				payload,
-				preview,
-			});
-		} catch (error) {
-			showToast(error);
-			// console.log("Clipboard error: ", error);
-		}
-	},
-});
-
 registerAction("sendEmail", {
 	global: true,
 	desktopOnly: true,

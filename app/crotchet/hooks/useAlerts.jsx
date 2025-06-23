@@ -1,10 +1,5 @@
 import { useState, Children, cloneElement, useRef } from "react";
-import {
-	dispatch,
-	randomId,
-	isReactComponent,
-	objectFieldChoices,
-} from "@/crotchet/utils";
+import { dispatch, randomId, isReactComponent } from "@/crotchet/utils";
 import {
 	Modal,
 	MessageModal,
@@ -122,6 +117,10 @@ export function AlertsWrapper() {
 							noHeading={!alert?.title?.length}
 							onClose={alert.close}
 							actions={alert.choices}
+							sortable={alert.sortable}
+							selectable={alert.multiple}
+							onChange={alert.onChange}
+							emptyStateMessage={alert.emptyStateMessage}
 						/>
 					);
 				}

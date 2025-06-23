@@ -29,11 +29,9 @@ export default function FloatingRemote({
 	const handleRemoteActionClick = (e, action) => {
 		if (onLarge) return;
 
-		(e) => {
-			e.stopPropagation();
-			focusInput(0);
-			onAction(action, remotePage);
-		};
+		e.stopPropagation();
+		focusInput(0);
+		onAction(action, remotePage);
 	};
 
 	return (

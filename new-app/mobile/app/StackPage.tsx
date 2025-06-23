@@ -2,7 +2,6 @@ import { View, Text, Pressable } from "react-native";
 import { Stack } from "expo-router";
 import { StackWithTheme, useTheme } from "@/components/theming";
 import { Ionicons } from "@expo/vector-icons";
-import { UserDropdown } from "@/components/UserDropdown";
 import { useBottomSheet } from "@/hooks/useBottomSheet";
 import { getThemeColors } from "@/components/screenOptions";
 import { CustomBottomSheet } from "@/components/CustomBottomSheet";
@@ -12,14 +11,13 @@ export default function StackPage() {
 	const colors = getThemeColors(colorScheme as "light" | "dark");
 	const headerTitle = "Crotchet";
 	const { Sheet, show } = useBottomSheet();
-
-	const headerRight = () => <UserDropdown />;
+	const { Sheet: MenuSheet, show: showMenu } = useBottomSheet();
 
 	const headerLeft = () => (
 		<View className="flex-row items-center gap-3 sml-4">
 			<Pressable
 				onPress={show}
-				className="sbg-foreground/50 rounded-full size-8 flex items-center justify-center border border-foreground/5"
+				className="rounded-full size-8 flex items-center justify-center"
 			>
 				<Ionicons
 					name="options"
@@ -32,6 +30,38 @@ export default function StackPage() {
 			</Text>
 		</View>
 	);
+
+	const headerRight = () => {
+		return (
+			<View className="flex-row items-center">
+				<Pressable
+					className="rounded-full size-8 flex items-center justify-center"
+					onPress={showMenu}
+				>
+					<Ionicons
+						name="person-circle"
+						size={30}
+						color={colors.foregroundColor}
+					/>
+				</Pressable>
+				<MenuSheet
+					choices={[
+						{
+							label: "Profile",
+							icon: <Ionicons name="person" size={20} />,
+							href: "/profile",
+						},
+						{
+							label: "Logout",
+							icon: <Ionicons name="log-out-outline" size={20} />,
+							onPress: () => {},
+						},
+					]}
+					onClose={() => {}}
+				/>
+			</View>
+		);
+	};
 
 	return (
 		<>

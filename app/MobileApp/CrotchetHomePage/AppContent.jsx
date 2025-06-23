@@ -8,6 +8,7 @@ import { BottomNavPlaceholder } from "@/crotchet/providers/AppScaffold/Page/Page
 import RemoteController from "@/crotchet/providers/Remote/RemoteController";
 import { useMobileActions } from "./useMobileActions";
 import ActionGrid from "@/crotchet/components/ActionGrid";
+import { getPreference } from "@/crotchet/utils";
 
 const HomePage = () => {
 	const { data: shortcuts } = useDataLoader({
@@ -24,22 +25,34 @@ const HomePage = () => {
 
 	const { actionSections } = useMobileActions();
 
-	const { data: sections } = useDataLoader({
-		handler: () => {
-			if (window.sections) return _.values(window.sections);
+	const { data: homePageContent } = useDataLoader({
+		handler: async () => {
+			const content = await getPreference("homePageContent", []);
+			return content
+				.map(({ name }) => {
+					if (name.toString().startsWith("widget") && window.widgets)
+						return {
+							type: "widget",
+							content: window.widgets[name.substring(6)] ?? null,
+						};
+					else if (
+						name.toString().startsWith("section") &&
+						window.sections
+					)
+						return {
+							type: "section",
+							content: window.sections[name.substring(7)] ?? null,
+						};
 
-			return [];
+					return null;
+				})
+				.filter((i) => i.content);
 		},
-		listenForUpdates: "sections-updated",
-	});
-
-	const { data: widgets } = useDataLoader({
-		handler: () => {
-			if (window.widgets) return _.values(window.widgets);
-
-			return [];
-		},
-		listenForUpdates: "widgets-updated",
+		listenForUpdates: [
+			"sections-updated",
+			"widgets-updated",
+			"home-page-content-updated",
+		],
 	});
 
 	return (
@@ -126,17 +139,19 @@ const HomePage = () => {
 				</div>
 
 				<div className="grid gap-6 max-w-xl mx-auto">
-					{widgets?.map((widget) => (
-						<Widget key={widget._id} {...widget} />
-					))}
-
-					{sections?.map((section, index) => (
-						<PageSection
-							key={index}
-							{...section}
-							// onSectionLoaded={onSectionLoaded}
-						/>
-					))}
+					{homePageContent?.map((entry, index) =>
+						entry.type == "section" ? (
+							<PageSection
+								key={entry.content._id + index}
+								{...entry.content}
+							/>
+						) : (
+							<Widget
+								key={entry.content._id + index}
+								{...entry.content}
+							/>
+						)
+					)}
 
 					<BottomNavPlaceholder />
 				</div>

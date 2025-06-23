@@ -263,7 +263,7 @@ const getNavItems = async () => {
 	return navItems.filter((item) => pinnedItems.includes(item.action));
 };
 
-const NavItems = ({ expanded, dragging, bottomNavHidden, onExpand }) => {
+const NavItems = ({ expanded, dragging, onExpand, bottomNavHidden }) => {
 	const { data: items } = useDataLoader({
 		handler: getNavItems,
 	});
@@ -330,6 +330,7 @@ export default function MobileNav() {
 		useMobileActions();
 	const [dragging, setDragging] = useState(false);
 	const [expanded, _setExpanded] = useState(false);
+	const [preferencesOpen, setPreferencesOpen] = useState(false);
 	const y = useMotionValue(0);
 	const controls = useDragControls();
 
@@ -389,6 +390,20 @@ export default function MobileNav() {
 		if (input?.getAttribute("is-focused")) inputRef.current?.focus();
 	};
 
+	const handleOpenPreferences = () => {
+		inputRef.current.blur();
+		inputRef.current.style.pointerEvents = "";
+		setSearchQuery("");
+		setPreferencesOpen(true);
+	};
+
+	const handleHidePreferences = () => {
+		setPreferencesOpen(false);
+		setTimeout(() => {
+			inputRef.current.focus();
+		}, 10);
+	};
+
 	const handleCollapse = async (blurInput) => {
 		if (blurInput == true) {
 			inputRef.current.blur();
@@ -396,6 +411,7 @@ export default function MobileNav() {
 		}
 
 		setSearchQuery("");
+		setPreferencesOpen(false);
 
 		const parent = inputRef.current
 			.closest(".bottom-nav")
@@ -459,8 +475,14 @@ export default function MobileNav() {
 						--inset-bottom: calc(64px + env(safe-area-inset-bottom) * 0.6);
 						bottom: calc(-100vh + var(--inset-bottom));
 					}
+
 					.bottom-nav.expanded {
 						bottom: calc(-35vh + var(--inset-bottom));
+					}
+
+					.bottom-nav.expanded.preferences-open {
+						padding-top: env(safe-area-inset-top);
+						bottom: 0;
 					}
 
 					@media (min-width: 1024px) {
@@ -477,6 +499,7 @@ export default function MobileNav() {
 				className={clsx(
 					"bottom-nav fixed inset-x-0 mx-auto z-50 overflow-hidden",
 					{ expanded: expanded },
+					{ "preferences-open": preferencesOpen },
 					dragging || expanded
 						? "bg-stone-100/95 dark:bg-card/95 backdrop-blur-sm max-w-xl"
 						: "max-w-96"
@@ -517,7 +540,7 @@ export default function MobileNav() {
 						(expanded && delta >= 0.9) ||
 						(!expanded && delta <= 0.1)
 					) {
-						if (expanded) focusInput(300);
+						if (expanded && !preferencesOpen) focusInput(300);
 						return;
 					}
 
@@ -532,66 +555,147 @@ export default function MobileNav() {
 					}}
 				>
 					<div
-						className="sticky top-0 pt-3 z-50"
+						className={clsx("sticky top-0 z-50", {
+							"pt-3": !preferencesOpen,
+						})}
 						onPointerDown={(e) => {
 							controls.start(e);
 						}}
 						onClick={(e) => e.stopPropagation()}
 					>
-						<div className="mx-3 relative border dark:border border-stroke shadow-sm rounded-full">
-							<svg
-								className="absolute top-0 left-3 bottom-0 my-auto size-5 opacity-30"
-								viewBox="0 0 24 24"
-								fill="none"
-								strokeWidth={2}
-								stroke="currentColor"
+						<div className="mx-3 h-12 relative bg-card dark:bg-content/5 text-content/50 border dark:border border-stroke shadow-sm rounded-full">
+							<div
+								className="absolute inset-0"
+								style={
+									preferencesOpen
+										? {
+												opacity: 0,
+												pointerEvents: "none",
+										  }
+										: {}
+								}
 							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+								<svg
+									className="absolute top-0 left-3 bottom-0 my-auto size-5 opacity-50"
+									viewBox="0 0 24 24"
+									fill="none"
+									strokeWidth={2}
+									stroke="currentColor"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+									/>
+								</svg>
+
+								<Input
+									ref={inputRef}
+									className="pl-10 size-full text-lg/none bg-transparent text-content/50 border-none ring-transparent focus:ring-0 rounded-full placeholder:text-content/40 focus:outline-none"
+									placeholder="Search..."
+									value={searchQuery}
+									onChange={setSearchQuery}
 								/>
-							</svg>
+							</div>
 
-							<Input
-								ref={inputRef}
-								className="h-12 pl-10 w-full text-lg/none bg-card dark:bg-content/5 text-content/50 border-none ring-transparent focus:ring-0 rounded-full placeholder:text-content/40 focus:outline-none"
-								placeholder="Search..."
-								value={searchQuery}
-								onChange={setSearchQuery}
-							/>
-
-							{searchQuery && (
+							<div
+								className="absolute inset-y-0 flex items-center justify-center"
+								style={
+									!preferencesOpen
+										? {
+												opacity: 0,
+												pointerEvents: "none",
+										  }
+										: {}
+								}
+							>
 								<button
-									className="absolute -inset-y-0.5 right-0 aspect-[1/1] flex items-center justify-center"
-									onClick={handleClear}
+									className="h-full w-10 flex items-center justify-center"
+									onClick={handleHidePreferences}
 								>
 									<svg
-										className="w-4 opacity-50"
+										xmlns="http://www.w3.org/2000/svg"
 										fill="none"
 										viewBox="0 0 24 24"
-										strokeWidth={2}
+										strokeWidth={2.5}
 										stroke="currentColor"
+										className="size-4"
 									>
 										<path
 											strokeLinecap="round"
 											strokeLinejoin="round"
-											d="M6 18 18 6M6 6l12 12"
-										></path>
+											d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
+										/>
 									</svg>
 								</button>
+
+								<div className="">Customize Home Screen</div>
+							</div>
+
+							{!preferencesOpen && (
+								<>
+									{searchQuery && (
+										<button
+											className="absolute -inset-y-0.5 right-0 aspect-[1/1] flex items-center justify-center"
+											onClick={handleClear}
+										>
+											<svg
+												className="w-4 opacity-50"
+												fill="none"
+												viewBox="0 0 24 24"
+												strokeWidth={2}
+												stroke="currentColor"
+											>
+												<path
+													strokeLinecap="round"
+													strokeLinejoin="round"
+													d="M6 18 18 6M6 6l12 12"
+												></path>
+											</svg>
+										</button>
+									)}
+
+									{!searchQuery && (
+										<button
+											className="absolute -inset-y-0.5 right-0 aspect-[1/1] flex items-center justify-center"
+											onClick={handleOpenPreferences}
+										>
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												fill="none"
+												viewBox="0 0 24 24"
+												strokeWidth={1.5}
+												stroke="currentColor"
+												className="size-6"
+											>
+												<path
+													strokeLinecap="round"
+													strokeLinejoin="round"
+													d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"
+												/>
+											</svg>
+										</button>
+									)}
+								</>
 							)}
 						</div>
 					</div>
 
-					<div className="sticky top-0 h-[60vh] overscroll-none overflow-auto">
-						<NavActions
-							{...{
-								actionSections,
-								searchQuery,
-								onCollapse: handleCollapse,
-							}}
-						/>
+					<div
+						className={clsx(
+							"sticky top-0 overflow-auto",
+							preferencesOpen ? "h-screen" : "h-[60vh]"
+						)}
+					>
+						{!preferencesOpen && (
+							<NavActions
+								{...{
+									actionSections,
+									searchQuery,
+									onCollapse: handleCollapse,
+								}}
+							/>
+						)}
 					</div>
 				</motion.div>
 			</motion.div>
@@ -601,14 +705,16 @@ export default function MobileNav() {
 				{...{ expanded, dragging, bottomNavHidden }}
 			/>
 
-			<FloatingRemote
-				{...{
-					onCollapse: handleCollapse,
-					expanded,
-					dragging,
-					focusInput,
-				}}
-			/>
+			{!preferencesOpen && (
+				<FloatingRemote
+					{...{
+						onCollapse: handleCollapse,
+						expanded,
+						dragging,
+						focusInput,
+					}}
+				/>
+			)}
 		</>
 	);
 }

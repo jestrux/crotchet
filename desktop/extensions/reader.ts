@@ -90,23 +90,23 @@ registerAction("addToReadingList", {
 // 	],
 // });
 
-// registerSection("watchList", {
-// 	title: "Watchlist",
-// 	type: "list",
-// 	listenForUpdates: "firebase-table-updated:watchList",
-// 	resolve: async ({ state }) => {
-// 		const res = await sourceGet(
-// 			{ handler: () => queryDb("reader") },
-// 			{
-// 				orderBy: "_index,desc",
-// 				random: state?.random ?? true,
-// 				filters: { group: filters.watch },
-// 				limit: 4,
-// 			}
-// 		);
-// 		return res?.map(formatEntry);
-// 	},
-// });
+registerSection("watchList", {
+	title: "Watchlist",
+	type: "list",
+	listenForUpdates: "firebase-table-updated:watchList",
+	resolve: async ({ state }) => {
+		const res = await sourceGet(
+			{ handler: () => queryDb("reader") },
+			{
+				orderBy: "_index,desc",
+				random: state?.random ?? true,
+				filters: { group: filters.watch },
+				limit: 4,
+			}
+		);
+		return res?.map(formatEntry);
+	},
+});
 
 registerSection("readingList", {
 	title: "Reading List",
