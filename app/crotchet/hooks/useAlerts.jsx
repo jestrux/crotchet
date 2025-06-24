@@ -112,7 +112,7 @@ export function AlertsWrapper() {
 					return (
 						<ActionSheet
 							key={alert.id}
-							inset
+							inset={alert.inset ?? true}
 							title={alert.title}
 							noHeading={!alert?.title?.length}
 							onClose={alert.close}

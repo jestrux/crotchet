@@ -1,48 +1,8 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useOnInit } from "@/crotchet/hooks";
 import { Button } from "@/crotchet/components";
-import { randomId } from "@/crotchet/utils";
-
 import FormField from "./FormField";
-
-export const parseFields = (fields, data) => {
-	if (!fields) return;
-
-	return Object.entries(fields).map(([name, value]) => {
-		let { type, label, choices, defaultValue, ...fieldProps } =
-			typeof value == "object" ? value : { type: value };
-
-		let dataValue = data?.[name];
-
-		let computedDefaultValue = dataValue ?? defaultValue;
-
-		if (!computedDefaultValue && type == "date")
-			computedDefaultValue = window.moment(new Date()).format("y-MM-DD");
-
-		// if (
-		// 	choices &&
-		// 	Array.isArray(choices) &&
-		// 	!objectFieldChoices(choices)
-		// 		.map(({ value }) => value)
-		// 		.includes(computedDefaultValue)
-		// )
-		// 	choices.push(computedDefaultValue);
-
-		if (["true", "false", true, false].includes(computedDefaultValue))
-			type = "boolean";
-
-		return {
-			__id: randomId(),
-			name,
-			label: label ?? name,
-			type,
-			choices,
-			defaultValue: computedDefaultValue,
-			value: computedDefaultValue,
-			...fieldProps,
-		};
-	});
-};
+import parseFormFields from "./parseFormFields";
 
 const fieldIsVisible = (field, data) => {
 	if (!field) return false;
@@ -73,7 +33,7 @@ export default function Form({
 		: props.field
 		? { formField: props.field }
 		: {};
-	const [fields] = useState(parseFields(allFields, allData));
+	const [fields] = useState(parseFormFields(allFields, allData));
 	const [data, setData] = useState(
 		Object.entries(allFields).reduce(
 			(agg, [key, { defaultValue, value }]) => ({
@@ -102,6 +62,14 @@ export default function Form({
 
 			if (field.type == "radio" && field.multiple)
 				value = value?.split(",");
+
+			if (field.type == "preferences") {
+				try {
+					value = JSON.parse(value);
+				} catch (error) {
+					value = null;
+				}
+			}
 
 			if (field.type === "authUser") value = [value];
 

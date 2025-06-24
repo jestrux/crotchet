@@ -88,10 +88,13 @@ export default function ActionGrid({
 
 	const handleClick = (action) => {
 		if (selectable) {
+			const isMultiSelect = selectable == "multiple";
+
 			setActions((actions) => {
 				const newActions = actions.map((a) => {
-					if (a.__gridId == action.__gridId) a.selected = !a.selected;
-					else if (selectable != "multiple") a.selected = false;
+					if (a.__gridId == action.__gridId)
+						a.selected = isMultiSelect ? !a.selected : true;
+					else if (!isMultiSelect) a.selected = false;
 					return a;
 				});
 
@@ -207,6 +210,10 @@ export default function ActionGrid({
 										}
 									/>
 								</svg>
+							) : action.trailing ? (
+								<span className="opacity-50">
+									{action.trailing}
+								</span>
 							) : (
 								<svg
 									className={clsx("ml-auto size-5", {

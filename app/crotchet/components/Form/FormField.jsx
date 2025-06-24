@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import clsx from "clsx";
 import { matchSorter } from "match-sorter";
 import ReactTextareaAutosize from "react-autosize-textarea";
+import parseFormFields from "./parseFormFields";
 
 import {
 	camelCaseToSentenceCase,
@@ -283,6 +284,63 @@ const KeyValueEditor = ({
 				</button>
 			</div>
 		</div>
+	);
+};
+
+const PreferencesEditor = ({
+	name,
+	value: data,
+	fields: _fields,
+	onChange,
+}) => {
+	const [gridKey, setGridKey] = useState(randomId());
+	const [fields, setFields] = useState(parseFormFields(_fields, data));
+	const handleFieldClick = async (field) => {
+		let value = data[field.name];
+		let newValue;
+
+		if (field.type == "radio") {
+			newValue = await window.openChoicePicker({
+				choices: objectFieldChoices(field.choices).map((choice) => {
+					choice.selected = field.multiple
+						? value.includes(choice.value)
+						: value == choice.value;
+					return choice;
+				}),
+			});
+		}
+
+		if (!newValue || newValue == value) return;
+
+		const updatedData = {
+			...data,
+			[field.name]: newValue,
+		};
+
+		onChange(updatedData);
+		setFields(parseFormFields(_fields, updatedData));
+
+		setGridKey(randomId());
+	};
+
+	return (
+		<>
+			<input
+				type="hidden"
+				name={name}
+				value={JSON.stringify(data || {})}
+				readOnly
+			/>
+			<ActionGrid
+				type="inline"
+				key={gridKey}
+				data={fields.map((field) => {
+					field.trailing = field.value || "";
+					field.handler = () => handleFieldClick(field);
+					return field;
+				})}
+			/>
+		</>
 	);
 };
 
@@ -600,6 +658,17 @@ const Field = ({ field, value, onChange, __data }) => {
 	const [focused, setFocused] = useState();
 
 	switch (field.type) {
+		case "preferences":
+			return (
+				<PreferencesEditor
+					{...field}
+					{...(field.meta || {})}
+					value={value}
+					onChange={onChange}
+					__data={__data}
+				/>
+			);
+
 		case "keyvalue":
 			return (
 				<KeyValueEditor
@@ -664,7 +733,6 @@ const Field = ({ field, value, onChange, __data }) => {
 							const values = _.filter(choices, "selected").map(
 								({ value }) => value
 							);
-							console.log("New vlaues: ", values);
 							onChange(field.multiple ? values : values?.[0]);
 						}}
 					/>

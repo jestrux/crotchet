@@ -42,7 +42,7 @@ export const useMobileActions = () => {
 
 	const customizeShortcuts = () => {
 		return {
-			label: "Customize Shortcuts",
+			label: "Shortcuts",
 			handler: async () => {
 				const savedShortcuts = await getPreference(
 					"homePageShortcuts",
@@ -53,13 +53,20 @@ export const useMobileActions = () => {
 				window.openAlertForm({
 					title: "Customize Shortcuts",
 					fields: {
-						style: {
-							type: "radio",
-							label: "Shortcut Style",
-							choices: ["grid", "wrap"],
+						shortcutStyle: {
+							type: "preferences",
+							hideLabel: true,
+							fields: {
+								style: {
+									type: "radio",
+									label: "Shortcut Style",
+									choices: ["grid", "wrap"],
+								},
+							},
 						},
-						shortcuts: {
+						shortcutItems: {
 							type: "radio",
+							label: "Shortcuts",
 							multiple: true,
 							sortable: true,
 							choices: _.orderBy(
@@ -78,20 +85,23 @@ export const useMobileActions = () => {
 						},
 					},
 					data: {
-						shortcuts: savedShortcuts,
-						style: await getPreference("homePageShortcutStyle", [
-							"grid",
-						]),
+						shortcutItems: savedShortcuts,
+						shortcutStyle: {
+							style: await getPreference(
+								"homePageShortcutStyle",
+								["grid"]
+							),
+						},
 					},
 					onChange: async (values) =>
 						Promise.all([
 							await savePreference(
-								"homePageShortcuts",
-								values.shortcuts
+								"homePageShortcutStyle",
+								values.shortcutStyle.style
 							),
 							await savePreference(
-								"homePageShortcutStyle",
-								values.style
+								"homePageShortcuts",
+								values.shortcutItems
 							),
 						]).then(() =>
 							window.dispatch("home-page-shortcuts-updated")
@@ -119,11 +129,11 @@ export const useMobileActions = () => {
 					<path
 						strokeLinecap="round"
 						strokeLinejoin="round"
-						d="M4.499 8.248h15m-15 7.501h15"
+						d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z"
 					/>
 				</svg>
 			),
-			label: "Customize Widgets",
+			label: "Widgets",
 			handler: async () => {
 				const homePageContent = await getPreference(
 					"homePageContent",
@@ -146,6 +156,7 @@ export const useMobileActions = () => {
 				);
 
 				window.openChoicePicker({
+					inset: false,
 					title: "Customize Widgets",
 					emptyStateMessage: "No widgets available",
 					sortable: choices.length > 1,
@@ -167,40 +178,114 @@ export const useMobileActions = () => {
 		};
 	};
 
+	const customizeNavigation = () => {
+		return {
+			icon: (
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					fill="none"
+					viewBox="0 0 24 24"
+					strokeWidth={1.5}
+					stroke="currentColor"
+					className="size-6"
+				>
+					<path
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z"
+					/>
+				</svg>
+			),
+			label: "App Navigation",
+			pinned: 1,
+			section: "App",
+			handler: async () => {
+				const [behavior, [leftNavItem, centerNavItem, rightNavItem]] =
+					await Promise.all([
+						await getPreference("appNavBehavior", ["Regular"]),
+						await getPreference("appNavItems", [
+							"Remote",
+							"Search",
+							"Profile",
+						]),
+					]);
+
+				window.openAlertForm({
+					dismissible: true,
+					inset: false,
+					title: "Customize App Navigation",
+					sortable: true,
+					multiple: true,
+					fields: {
+						navigationBehavior: {
+							hideLabel: true,
+							type: "preferences",
+							fields: {
+								behavior: {
+									type: "radio",
+									choices: ["Regular", "Floating"],
+								},
+							},
+						},
+						navigationItems: {
+							hideLabel: true,
+							type: "preferences",
+							fields: {
+								left: {
+									label: "Left Nav Item",
+									type: "radio",
+									choices: ["Remote", "Pages", "Profile"],
+								},
+								center: {
+									label: "Center Nav Item",
+									type: "radio",
+									choices: ["Search", "Home"],
+								},
+								right: {
+									label: "Right Nav Item",
+									type: "radio",
+									choices: ["Remote", "Pages", "Profile"],
+								},
+							},
+						},
+					},
+					data: {
+						navigationBehavior: {
+							behavior,
+						},
+						navigationItems: {
+							left: leftNavItem,
+							center: centerNavItem,
+							right: rightNavItem,
+						},
+					},
+					onChange: async (values) => {
+						await Promise.all([
+							await savePreference(
+								"appNavBehavior",
+								values.navigationBehavior.behavior || "Regular"
+							),
+							await savePreference("appNavItems", [
+								values.navigationItems.left || "Remote",
+								values.navigationItems.center || "Search",
+								values.navigationItems.right || "Profile",
+							]),
+						]);
+
+						dispatch("app-navigation-updated");
+					},
+				});
+			},
+		};
+	};
+
 	const actionSections = sectionedChoices(
 		[
 			...[
 				clipboardAction(),
 				customizeShortcuts(),
 				customizeWidgetsAction(),
-				{
-					icon: (
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							fill="none"
-							viewBox="0 0 24 24"
-							strokeWidth={1.5}
-							stroke="currentColor"
-							className="size-6"
-						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z"
-							/>
-						</svg>
-					),
-					label: "App Navigation",
-					handler: () => {
-						window.openActionSheet({
-							title: "Customize Navigation",
-							content:
-								"Customize Navigation details will go here...",
-						});
-					},
-					pinned: 1,
-					section: "App",
-				},
+				customizeNavigation(),
 			],
 			...(actions || []).reduce((agg, a) => {
 				if (!a.context) {

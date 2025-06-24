@@ -8,7 +8,7 @@ import {
 	IonList,
 	IonToggle,
 } from "@ionic/react";
-import { parseFields } from "./Form";
+import parseFormFields from "./Form/parseFormFields";
 import { useState } from "react";
 
 export function PreferenceEditorItem({ item, onChange = () => {} }) {
@@ -43,7 +43,7 @@ export default function PreferenceEditor({
 	onChange = () => {},
 	onRemove,
 }) {
-	const [fields, setFields] = useState(parseFields(data));
+	const [fields, setFields] = useState(parseFormFields(data));
 	const removeField = (fieldName) => {
 		setFields((fields) =>
 			fields.filter((field) => field.name != fieldName)

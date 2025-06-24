@@ -26,6 +26,7 @@ export default function MutliGestureButton({
 
 	return (
 		<button
+			type="button"
 			{...gestures}
 			onClick={() => {
 				if (recentlyHeld.current) return (recentlyHeld.current = false);

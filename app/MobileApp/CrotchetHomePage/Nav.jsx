@@ -146,14 +146,7 @@ const NavActions = ({ actionSections, searchQuery, onCollapse }) => {
 	);
 };
 
-const getNavItems = async () => {
-	const pinnedItems = await getPreference("pinnedNavItems", [
-		"Remote",
-		// "Pages",
-		// "Home",
-		"Search",
-		"Profile",
-	]);
+const NavItems = ({ expanded, dragging, bottomNavHidden, onExpand }) => {
 	const navItems = [
 		{
 			icon: (
@@ -260,26 +253,63 @@ const getNavItems = async () => {
 		},
 	];
 
-	return navItems.filter((item) => pinnedItems.includes(item.action));
-};
+	const { data } = useDataLoader({
+		handler: async () => {
+			const [floating, pinnedItems] = await Promise.all([
+				(
+					await getPreference("appNavBehavior", "regular")
+				)?.toLowerCase() == "floating",
+				await getPreference("appNavItems", [
+					"Remote",
+					"Search",
+					"Profile",
+				]),
+			]);
 
-const NavItems = ({ expanded, dragging, bottomNavHidden, onExpand }) => {
-	const { data: items } = useDataLoader({
-		handler: getNavItems,
+			const items = pinnedItems.map((item) => {
+				return navItems.find(({ action }) => action == item);
+			});
+
+			return { items, floating };
+		},
+		listenForUpdates: ["app-navigation-updated"],
 	});
 
-	if (!items) return null;
+	if (!data) return null;
+
+	const { items, floating } = data;
+
+	const baseWrapperClassName =
+		"pointer-events-none z-50 fixed inset-x-0 flex items-center justify-center";
+	const baseContainerClassName =
+		"min-w-[260px] border dark:border border-content/5 shadow-sm bg-stone-100/95 dark:bg-card/95 backdrop-blur-sm overflow-hidden";
+	const baseItemClassName =
+		"flex items-center justify-between max-w-sm mx-auto";
+
+	const dynamicWrapperClassName = floating
+		? "bottom-[env(safe-area-inset-bottom)]"
+		: "bottom-0 lg:bottom-8 lg:mb-[env(safe-area-inset-bottom)]";
+	const dynamicContainerClassName = floating
+		? "px-1.5 w-auto rounded-full"
+		: "px-2 lg:px-1.5 w-full lg:w-auto lg:rounded-full";
+	const dynamicItemClassName = floating
+		? "h-14 px-0 pt-0 mb-0 gap-2"
+		: "h-[50px] lg:h-14 px-1 md:px-3 lg:px-0 pt-4 lg:pt-0 mb-[env(safe-area-inset-bottom)] lg:mb-0 gap-4 lg:gap-2";
+
+	const wrapperClassName = `${baseWrapperClassName} ${dynamicWrapperClassName}`;
+	const containerClassName = `${baseContainerClassName} ${dynamicContainerClassName}`;
+	const itemClassName = `${baseItemClassName} ${dynamicItemClassName}`;
 
 	return (
 		<motion.div
-			className="pointer-events-none z-50 fixed inset-x-0 bottom-0 lg:bottom-8 lg:mb-[env(safe-area-inset-bottom)] flex items-center justify-center"
+			className={wrapperClassName}
 			animate={{
 				opacity: expanded || dragging || bottomNavHidden ? 0 : 1,
 				y: expanded || dragging || bottomNavHidden ? "10%" : 0,
 			}}
 		>
-			<div className="border dark:border border-content/5 shadow-sm bg-stone-100/95 dark:bg-card/95 backdrop-blur-sm w-full lg:w-auto min-w-96 px-2 lg:rounded-full overflow-hidden">
-				<div className="h-[50px] lg:h-14 px-1 md:px-3 lg:px-0 pt-4 lg:pt-0 mb-[env(safe-area-inset-bottom)] lg:mb-0 flex items-center justify-between gap-4 lg:gap-2 max-w-sm mx-auto">
+			<div className={containerClassName}>
+				<div className={itemClassName}>
 					{items.map((item, index) => {
 						const isMainAction = ["home", "search"].includes(
 							item.action?.toLowerCase()
