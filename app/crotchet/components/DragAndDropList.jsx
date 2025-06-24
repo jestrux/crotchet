@@ -24,11 +24,11 @@ export default function DragAndDropList({
 					<div className="flex">
 						<SortableKnob>
 							<div
-								className="w-6 bg-neutral-200 rounded-l-lg flex items-center justify-center cursor-grab"
+								className="w-6 flex items-center justify-center cursor-grab"
 								title="Drag to reorder"
 							>
 								<svg
-									className="opacity-50"
+									className="opacity-50 size-5 -mr-2"
 									fill="currentColor"
 									viewBox="0 0 16 16"
 								>

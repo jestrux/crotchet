@@ -8,43 +8,72 @@ import { BottomNavPlaceholder } from "@/crotchet/providers/AppScaffold/Page/Page
 import RemoteController from "@/crotchet/providers/Remote/RemoteController";
 import { useMobileActions } from "./useMobileActions";
 import ActionGrid from "@/crotchet/components/ActionGrid";
-import { getPreference } from "@/crotchet/utils";
+import { getPreference, randomId } from "@/crotchet/utils";
+import { useState } from "react";
 
 const HomePage = () => {
+	const [shortcutsKey, setShortcutsKey] = useState(randomId());
+
 	const { data: shortcuts } = useDataLoader({
-		handler: () => {
-			if (window.globalActions)
-				return window
-					.globalActions()
-					.filter((item) => item.context == "shortcut");
+		handler: async () => {
+			const shortcuts = await getPreference("homePageShortcuts", [
+				"clipboard",
+			]);
 
-			return [];
+			const shortcutStyle = await getPreference(
+				"homePageShortcutStyle",
+				"grid"
+			);
+
+			if (!shortcuts.length || !window.globalActions) return [];
+
+			const mappedShortctuts = shortcuts
+				.reduce((agg, name) => {
+					const action = window.actions[name];
+					if (action) {
+						// eslint-disable-next-line no-unused-vars
+						const { color, ...actionWithoutColor } = action;
+						agg.push(
+							shortcutStyle == "grid"
+								? actionWithoutColor
+								: action
+						);
+					}
+					return agg;
+				}, [])
+				.filter((a) => a);
+
+			setShortcutsKey(randomId());
+
+			return { list: mappedShortctuts, style: shortcutStyle };
 		},
-		listenForUpdates: "app-actions-updated",
+		listenForUpdates: [
+			"app-actions-updated",
+			"home-page-shortcuts-updated",
+		],
 	});
-
-	const { actionSections } = useMobileActions();
 
 	const { data: homePageContent } = useDataLoader({
 		handler: async () => {
 			const content = await getPreference("homePageContent", []);
-			return content
-				.map(({ name }) => {
-					if (name.toString().startsWith("widget") && window.widgets)
-						return {
-							type: "widget",
-							content: window.widgets[name.substring(6)] ?? null,
-						};
-					else if (
-						name.toString().startsWith("section") &&
-						window.sections
-					)
-						return {
-							type: "section",
-							content: window.sections[name.substring(7)] ?? null,
-						};
 
-					return null;
+			return content
+				.map((nameWithType) => {
+					let content;
+					const [type, name] = nameWithType.split("~#~");
+
+					if (type == "widget")
+						content =
+							(window.widgets && window.widgets[name]) ?? null;
+					else if (type == "section")
+						content =
+							(window.sections && window.sections[name]) ?? null;
+
+					return {
+						type,
+						name: nameWithType,
+						content,
+					};
 				})
 				.filter((i) => i.content);
 		},
@@ -54,6 +83,8 @@ const HomePage = () => {
 			"home-page-content-updated",
 		],
 	});
+
+	const { actionSections } = useMobileActions();
 
 	return (
 		<div
@@ -72,6 +103,7 @@ const HomePage = () => {
 					<div className="mt-4 mx-3 flex-1 space-y-4 overflow-auto">
 						{shortcuts && (
 							<ActionGrid
+								key={shortcutsKey}
 								title="Shorcuts"
 								smallTitle
 								data={shortcuts}
@@ -134,7 +166,28 @@ const HomePage = () => {
 					</div>
 
 					{shortcuts && (
-						<PageSection type="actions" data={shortcuts} />
+						<PageSection
+							key={shortcutsKey}
+							type="actions"
+							data={shortcuts.list}
+							meta={{
+								style: shortcuts.style,
+								fallbackIcon: (
+									<svg
+										fill="none"
+										viewBox="0 0 24 24"
+										strokeWidth={1.5}
+										stroke="currentColor"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
+										/>
+									</svg>
+								),
+							}}
+						/>
 					)}
 				</div>
 
@@ -142,12 +195,12 @@ const HomePage = () => {
 					{homePageContent?.map((entry, index) =>
 						entry.type == "section" ? (
 							<PageSection
-								key={entry.content._id + index}
+								key={entry.name + index}
 								{...entry.content}
 							/>
 						) : (
 							<Widget
-								key={entry.content._id + index}
+								key={entry.name + index}
 								{...entry.content}
 							/>
 						)

@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useOnInit } from "@/crotchet/hooks";
 import { Button } from "@/crotchet/components";
-import { objectFieldChoices, randomId } from "@/crotchet/utils";
+import { randomId } from "@/crotchet/utils";
 
 import FormField from "./FormField";
 
@@ -19,14 +19,14 @@ export const parseFields = (fields, data) => {
 		if (!computedDefaultValue && type == "date")
 			computedDefaultValue = window.moment(new Date()).format("y-MM-DD");
 
-		if (
-			choices &&
-			Array.isArray(choices) &&
-			!objectFieldChoices(choices)
-				.map(({ value }) => value)
-				.includes(computedDefaultValue)
-		)
-			choices.push(computedDefaultValue);
+		// if (
+		// 	choices &&
+		// 	Array.isArray(choices) &&
+		// 	!objectFieldChoices(choices)
+		// 		.map(({ value }) => value)
+		// 		.includes(computedDefaultValue)
+		// )
+		// 	choices.push(computedDefaultValue);
 
 		if (["true", "false", true, false].includes(computedDefaultValue))
 			type = "boolean";
@@ -99,6 +99,9 @@ export default function Form({
 			let value = formField.value;
 
 			if (field.type == "boolean") value = formField.checked;
+
+			if (field.type == "radio" && field.multiple)
+				value = value?.split(",");
 
 			if (field.type === "authUser") value = [value];
 

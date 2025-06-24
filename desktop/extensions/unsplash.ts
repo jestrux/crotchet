@@ -29,9 +29,10 @@ const randomUnsplashPic = async () => random(await searchUnsplash());
 
 registerAction("randomUnsplashPic", {
 	label: "Random Pic",
+	color: "#333",
 	icon: UI.svg(
 		"M7.5 6.75V0h9v6.75h-9zm9 3.75H24V24H0V10.5h7.5v6.75h9V10.5z",
-		{ filled: true }
+		{ filled: true, size: 16 }
 	),
 	global: true,
 	context: "shortcut",

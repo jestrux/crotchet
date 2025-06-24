@@ -87,7 +87,13 @@ export const icon = (icon, { size = "18px", ...props } = {}) =>
 
 export function svg(
 	path,
-	{ filled, size, strokeWidth = 1.8, color = "currentColor" } = {}
+	{
+		filled,
+		size,
+		boxSize = 24,
+		strokeWidth = 1.8,
+		color = "currentColor",
+	} = {}
 ) {
 	const fillStroke = filled
 		? {
@@ -102,7 +108,7 @@ export function svg(
 	return (
 		<svg
 			{...(size ? { width: size, height: size } : {})}
-			viewBox="0 0 24 24"
+			viewBox={`0 0 ${boxSize} ${boxSize}`}
 			{...fillStroke}
 		>
 			<path strokeLinecap="round" strokeLinejoin="round" d={path} />

@@ -59,7 +59,9 @@ export default function PageSection({
 				{...sourceProps}
 				{...meta}
 				title={title}
-				type={meta?.inline ? "inline" : "grid"}
+				type={
+					meta.style ? meta.style : meta?.inline ? "inline" : "grid"
+				}
 				data={data}
 				key={dataRef}
 			/>

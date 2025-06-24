@@ -332,6 +332,7 @@ declare var registerAction: (
 		| {
 				shortcut?: String | undefined;
 				icon?: String | undefined;
+				color?: String | undefined;
 				label?: String | undefined;
 				context?: "share" | "shortcut" | undefined;
 				global?: boolean | undefined;

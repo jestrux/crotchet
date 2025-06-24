@@ -7,6 +7,7 @@ import {
 	camelCaseToSentenceCase,
 	loadExternalAsset,
 	objectField,
+	objectFieldChoices,
 	randomId,
 	someTime,
 } from "@/crotchet/utils";
@@ -19,6 +20,7 @@ import {
 } from "@/crotchet/hooks";
 import { Loader, Switch } from "@/crotchet/components";
 import ThemeBg from "@/DesktopApp/ThemeBg";
+import ActionGrid from "../ActionGrid";
 
 function useSearch(data, term) {
 	const throttledTerm = useThrottle(term, 100);
@@ -643,6 +645,32 @@ const Field = ({ field, value, onChange, __data }) => {
 			);
 
 		case "radio": {
+			return (
+				<>
+					<ActionGrid
+						type="inline"
+						smallTitle={true}
+						data={objectFieldChoices(field.choices).map(
+							(choice) => {
+								choice.selected = field.multiple
+									? value.includes(choice.value)
+									: value == choice.value;
+								return choice;
+							}
+						)}
+						sortable={field.sortable}
+						selectable={field.multiple ? "multiple" : "single"}
+						onChange={(choices) => {
+							const values = _.filter(choices, "selected").map(
+								({ value }) => value
+							);
+							console.log("New vlaues: ", values);
+							onChange(field.multiple ? values : values?.[0]);
+						}}
+					/>
+					<input type="hidden" name={field.name} value={value} />
+				</>
+			);
 			if (field.choiceType == "color") {
 				field.renderChoice = (choice, selected) => {
 					return `

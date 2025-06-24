@@ -118,7 +118,7 @@ export function AlertsWrapper() {
 							onClose={alert.close}
 							actions={alert.choices}
 							sortable={alert.sortable}
-							selectable={alert.multiple}
+							selectable={alert.multiple ? "multiple" : false}
 							onChange={alert.onChange}
 							emptyStateMessage={alert.emptyStateMessage}
 						/>
@@ -147,26 +147,29 @@ export function AlertsWrapper() {
 					};
 
 					return (
-						<PageProvider
+						<ActionSheet
 							key={alert.id}
-							page={alert}
+							dismissible={alert.dismissible ?? false}
+							inset={alert.inset ?? false}
+							title={alert.title}
 							onClose={alert.close}
 						>
-							<IonicModal>
-								{({ updateState, dismiss }) => (
-									<div className="mx-px px-4 pt-3 pb-6">
-										<Form
-											data={alert.data}
-											fields={alert.fields}
-											field={alert.field}
-											action={alert.action}
-											onChange={updateState}
-											onSubmit={dismiss}
-										/>
-									</div>
-								)}
-							</IonicModal>
-						</PageProvider>
+							<div className="px-1 5">
+								<Form
+									formId={
+										alert.action?.handler
+											? null
+											: randomId("form")
+									}
+									data={alert.data}
+									fields={alert.fields}
+									field={alert.field}
+									action={alert.action}
+									onChange={alert.onChange}
+									onSubmit={alert.onSubmit}
+								/>
+							</div>
+						</ActionSheet>
 					);
 				}
 

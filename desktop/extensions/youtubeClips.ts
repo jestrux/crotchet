@@ -825,17 +825,12 @@ registerWidget("youtubeClips", {
 	resolve: async ({ state }) => {
 		const res = await sourceGet(
 			{ handler: () => queryDb("youtubeClips") },
-			{ orderBy: "updatedAt,desc", random: state.random, limit: 3 }
+			{ orderBy: "updatedAt,desc", random: true, limit: 3 }
+			// { orderBy: "updatedAt,desc", random: state.random, limit: 3 }
 		);
 		return res?.map((entry) => ({
 			...entry,
-			video: `https://i.ytimg.com/vi/${entry._id}/hqdefault.jpg`,
-			title: entry.name,
-			subtitle: `${[entry.crop?.[0], entry.crop?.[1]]
-				?.map(toHms)
-				.join(", ")} - ${toHms(entry.duration)}`,
-			url: getYoutubeActualUrl(entry),
-			actions: getActions(entry),
+			...mapEntry(entry),
 		}));
 	},
 	content: UI.list,
@@ -880,6 +875,7 @@ registerAction("addToYoutubeClips", {
 registerAction("randomYoutubeClip", {
 	label: "Random Clip",
 	icon: appIcon,
+	color: "#FF0032",
 	global: true,
 	context: "shortcut",
 	tags: ["youtube"],

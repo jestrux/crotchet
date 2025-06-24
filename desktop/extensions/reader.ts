@@ -48,47 +48,47 @@ registerAction("addToReadingList", {
 	},
 });
 
-// registerWidget("readingList", {
-// 	title: "Learning List",
-// 	listenForUpdates: "firebase-table-updated:readingList",
-// 	resolve: async ({ state }) => {
-// 		const res = await sourceGet(
-// 			{ handler: () => queryDb("reader") },
-// 			{
-// 				orderBy: "_index,desc",
-// 				random: state.random,
-// 				filters: { group: "🧪 Learn" },
-// 				limit: 5,
-// 			}
-// 		);
-// 		return res?.map(formatEntry);
-// 	},
-// 	filter: () => {
-// 		return {
-// 			field: "group",
-// 			choices: [
-// 				{ label: "All", value: "" },
-// 				"📺 Watch",
-// 				"🧪 Learn",
-// 				"🎧 Listen",
-// 				"🌎 General",
-// 			],
-// 			defaultValue: "",
-// 		};
-// 	},
-// 	content: UI.list,
-// 	actions: [
-// 		{
-// 			label: "Shuffle",
-// 			icon: UI.icon("shuffle"),
-// 			handler: ({ refetch, setState }) => {
-// 				setState?.("random", true);
-// 				refetch?.();
-// 			},
-// 		},
-// 		// actions: [{ label: "Add Entry", icon: UI.icon("add"), handler: () => {} }],
-// 	],
-// });
+registerWidget("readingList", {
+	title: "Learning List",
+	listenForUpdates: "firebase-table-updated:readingList",
+	resolve: async ({ state }) => {
+		const res = await sourceGet(
+			{ handler: () => queryDb("reader") },
+			{
+				orderBy: "_index,desc",
+				random: state.random,
+				filters: { group: "🧪 Learn" },
+				limit: 5,
+			}
+		);
+		return res?.map(formatEntry);
+	},
+	filter: () => {
+		return {
+			field: "group",
+			choices: [
+				{ label: "All", value: "" },
+				"📺 Watch",
+				"🧪 Learn",
+				"🎧 Listen",
+				"🌎 General",
+			],
+			defaultValue: "",
+		};
+	},
+	content: UI.list,
+	actions: [
+		{
+			label: "Shuffle",
+			icon: UI.icon("shuffle"),
+			handler: ({ refetch, setState }) => {
+				setState?.("random", true);
+				refetch?.();
+			},
+		},
+		// actions: [{ label: "Add Entry", icon: UI.icon("add"), handler: () => {} }],
+	],
+});
 
 registerSection("watchList", {
 	title: "Watchlist",
@@ -128,6 +128,8 @@ registerSection("readingList", {
 
 registerAction("learnNow", {
 	icon: appIcon,
+	// color: `linear-gradient(45deg, #d3ffff, #f2ddb0)`,
+	color: "#3E3215",
 	global: true,
 	context: "shortcut",
 	tags: ["youtube"],

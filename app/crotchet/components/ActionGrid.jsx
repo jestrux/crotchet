@@ -29,10 +29,20 @@ function ActionButton({
 }
 
 const Icon = ({ icon, fallback }) => {
-	if (icon && typeof icon == "string")
-		icon = <div dangerouslySetInnerHTML={{ __html: icon }}></div>;
+	if (icon && typeof icon == "string") {
+		icon =
+			icon.indexOf("<svg") != -1 ? (
+				<svg className="size-7">{icon}</svg>
+			) : (
+				<div dangerouslySetInnerHTML={{ __html: icon }}></div>
+			);
+	}
 
-	return icon ?? fallback;
+	return (
+		<div className="size-4 flex items-center justify-center">
+			{icon ?? fallback}
+		</div>
+	);
 };
 
 export default function ActionGrid({
@@ -81,6 +91,7 @@ export default function ActionGrid({
 			setActions((actions) => {
 				const newActions = actions.map((a) => {
 					if (a.__gridId == action.__gridId) a.selected = !a.selected;
+					else if (selectable != "multiple") a.selected = false;
 					return a;
 				});
 
@@ -149,7 +160,7 @@ export default function ActionGrid({
 					{action.icon && (
 						<div
 							className={clsx(
-								"-ml-2 -mr-1.5 size-7 rounded-full p-1.5",
+								"-ml-2 -mr-1.5 size-7 rounded-full flex items-center justify-center",
 								{
 									"bg-content/5": showDefaultBackground,
 								}
@@ -157,7 +168,7 @@ export default function ActionGrid({
 							style={
 								action.color
 									? {
-											backgroundColor: action.color,
+											background: action.color,
 											color: "white",
 									  }
 									: {}
@@ -178,26 +189,46 @@ export default function ActionGrid({
 						)}
 					</div>
 
-					{(!hideTrailing || action.selected) && (
-						<svg
-							className={clsx("ml-auto size-5", {
-								"opacity-20": !action.selected,
-							})}
-							fill="none"
-							viewBox="0 0 24 24"
-							strokeWidth={1.5}
-							stroke="currentColor"
-						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								d={
-									action.selected
-										? "m4.5 12.75 6 6 9-13.5"
-										: "m8.25 4.5 7.5 7.5-7.5 7.5"
-								}
-							/>
-						</svg>
+					{(!hideTrailing || selectable || action.selected) && (
+						<>
+							{selectable ? (
+								<svg
+									className={clsx("ml-auto size-4", {
+										"opacity-20": !action.selected,
+									})}
+									fill="currentColor"
+									viewBox="0 0 16 16"
+								>
+									<path
+										d={
+											action.selected
+												? "M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"
+												: "M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"
+										}
+									/>
+								</svg>
+							) : (
+								<svg
+									className={clsx("ml-auto size-5", {
+										"opacity-20": !action.selected,
+									})}
+									fill="none"
+									viewBox="0 0 24 24"
+									strokeWidth={1.5}
+									stroke="currentColor"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										d={
+											action.selected
+												? "m4.5 12.75 6 6 9-13.5"
+												: "m8.25 4.5 7.5 7.5-7.5 7.5"
+										}
+									/>
+								</svg>
+							)}
+						</>
 					)}
 				</ActionButton>
 			);
@@ -212,11 +243,11 @@ export default function ActionGrid({
 				>
 					{action.icon && (
 						<div
-							className="size-8 rounded-full p-1.5 bg-content/5"
+							className="size-8 rounded-full flex items-center justify-center bg-content/5"
 							style={
 								action.color
 									? {
-											backgroundColor: action.color,
+											background: action.color,
 											color: "white",
 									  }
 									: {}

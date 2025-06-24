@@ -4,8 +4,10 @@ import tinycolor from "tinycolor2";
 import * as utils from "./crotchet/utils";
 import * as firebaseUtils from "./crotchet/providers/firebase";
 import * as UI from "./crotchet/providers/ui";
-import * as crotchetThings from "./crotchet";
+import * as crotchet from "./crotchet";
 import "./crotchet/providers/socket";
+
+const { __initializeCrotchet, ...crotchetThings } = crotchet;
 
 Object.assign(window, {
 	...utils,
@@ -16,6 +18,8 @@ Object.assign(window, {
 	...firebaseUtils,
 	UI,
 });
+
+__initializeCrotchet();
 
 if (window.onCrotchetReady) {
 	window.onCrotchetReady({

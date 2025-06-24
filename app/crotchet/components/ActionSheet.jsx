@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useDragControls } from "framer-motion";
 import { useState } from "react";
 import { Portal } from "@reach/portal";
 import { useDataLoader } from "@/crotchet/hooks";
@@ -24,12 +24,14 @@ export default function Sheet({
 	showOverlayBg = true,
 	noHeading = false,
 	inset = true,
+	dismissible = true,
 	sortable = false,
 	selectable = false,
 	emptyStateMessage = "No matching actions",
 	onChange = () => {},
 	onClose = () => {},
 }) {
+	const controls = useDragControls();
 	const [preview, setPreview] = useState(_preview);
 	const getShareActions = () => {
 		return window.globalActions({ share: true }).filter((action) => {
@@ -245,7 +247,9 @@ export default function Sheet({
 					transition={{
 						duration: 0.2,
 					}}
-					drag={sortable ? null : "y"}
+					drag="y"
+					dragListener={dismissible && !sortable}
+					dragControls={controls}
 					dragConstraints={{
 						top: 0,
 						bottom: 0.5,
@@ -261,7 +265,13 @@ export default function Sheet({
 					<div className="absolute inset-0 -z-10 dark:bg-content/10 pointer-events-none"></div>
 
 					{!noHeading && (
-						<div className="mb-3 pl-1 flex items-center justify-between gap-2">
+						<div
+							className="mb-3 pl-1 flex items-center justify-between gap-2"
+							onPointerDown={(e) => {
+								if (!dismissible) return;
+								controls.start(e);
+							}}
+						>
 							{contentPreview(preview, title)}
 
 							<button
@@ -301,7 +311,7 @@ export default function Sheet({
 							)}
 
 							{actions && (
-								<div className="max-h-80 overflow-auto">
+								<div className="max-h-[70vh] overflow-auto">
 									<ActionGrid
 										flat={noHeading}
 										key={"preview" + preview?.image}
