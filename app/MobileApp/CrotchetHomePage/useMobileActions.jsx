@@ -152,7 +152,8 @@ export const useMobileActions = () => {
 
 						return agg;
 					}, []),
-					["selected", "idx"]
+					["selected", "idx"],
+					"desc"
 				);
 
 				window.openChoicePicker({

@@ -14,6 +14,7 @@ import ActionGrid from "@/crotchet/components/ActionGrid";
 
 import clsx from "clsx";
 import { getWebsiteInfo } from "../providers/crawler";
+import useKeyboard from "../hooks/useKeyboard";
 
 export default function Sheet({
 	title,
@@ -31,6 +32,7 @@ export default function Sheet({
 	onChange = () => {},
 	onClose = () => {},
 }) {
+	const { KeyboardPlaceholder } = useKeyboard();
 	const controls = useDragControls();
 	const [preview, setPreview] = useState(_preview);
 	const getShareActions = () => {
@@ -328,7 +330,9 @@ export default function Sheet({
 							)}
 						</>
 					)}
+					{!inset && <KeyboardPlaceholder noMargin />}
 				</motion.div>
+				{inset && <KeyboardPlaceholder noMargin />}
 			</div>
 		</Portal>
 	);

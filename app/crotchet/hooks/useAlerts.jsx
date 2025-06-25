@@ -12,6 +12,7 @@ import { useOnInit } from "@/crotchet/hooks";
 import { useIonToast } from "@ionic/react";
 import PageProvider from "@/crotchet/providers/AppScaffold/PageProvider";
 import IonicModal from "../components/IonicModal";
+import clsx from "clsx";
 
 const ToastMessage = ({ message, onClose, duration = 3000 }) => {
 	const toastTimerRef = useRef();
@@ -150,11 +151,15 @@ export function AlertsWrapper() {
 						<ActionSheet
 							key={alert.id}
 							dismissible={alert.dismissible ?? false}
-							inset={alert.inset ?? false}
+							inset={alert.inset ?? alert.field ? true : false}
 							title={alert.title}
 							onClose={alert.close}
 						>
-							<div className="px-1 5">
+							<div
+								className={clsx({
+									"p-1.5": alert.field,
+								})}
+							>
 								<Form
 									formId={
 										alert.action?.handler
@@ -326,6 +331,12 @@ export default function useAlerts() {
 			type: "sheet",
 		});
 
+	const showActionSheetAlert = (message) =>
+		openActionSheet({
+			noHeading: true,
+			emptyStateMessage: message,
+		});
+
 	const openChoicePicker = (props) =>
 		showAlert({
 			...(_.isArray(props) ? { choices: props } : props),
@@ -368,5 +379,6 @@ export default function useAlerts() {
 		openAlertForm,
 		showToast,
 		openModal: showAlert,
+		showActionSheetAlert,
 	};
 }

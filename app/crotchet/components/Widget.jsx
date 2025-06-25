@@ -28,7 +28,9 @@ function ActionButton({ button, propagate = true }) {
 						} focus:outline-none h-[40px] flex items-center justify-center gap-2 text-content/50 hover:text-content/[0.65] transition-colors text-[11px] leading-none uppercase tracking-wider font-bold py-3.5 w-full text-center border border-content/5 hover:border-content/20 bg-content/5 roundeds`}
 						onClick={handleClick}
 					>
-						{icon}
+						<span className="size-4 flex items-center justify-center">
+							{icon}
+						</span>
 						{label}
 					</button>
 
@@ -49,7 +51,9 @@ function ActionButton({ button, propagate = true }) {
 						} focus:outline-none h-[38px] flex items-center justify-center gap-2 text-content/50 hover:text-content/[0.65] transition-colors text-xs leading-none uppercase tracking-wider font-bold py-3.5 w-full text-center border border-content/10 hover:border-content/20 bg-content/5 rounded`}
 						onClick={handleClick}
 					>
-						{icon}
+						<span className="size-4 flex items-center justify-center">
+							{icon}
+						</span>
 						{label}
 					</button>
 
@@ -62,7 +66,7 @@ function ActionButton({ button, propagate = true }) {
 
 export default function Widget({
 	size,
-	title,
+	title: _title,
 	icon,
 	background,
 	color,
@@ -96,6 +100,7 @@ export default function Widget({
 	};
 
 	const context = { data, loading, state, setState, refetch };
+	const title = evaluate(_title, context);
 	const content = evaluate(_content, context);
 	const actions = evaluate(_actions, context, []);
 	const actionButton = evaluate(_actionButton, context, []);
@@ -135,7 +140,6 @@ export default function Widget({
 		>
 			<div
 				className="h-full flex flex-col relative text-content/60"
-				{...(typeof onClick == "function" ? { onClick } : {})}
 				style={{
 					aspectRatio,
 				}}
@@ -209,6 +213,9 @@ export default function Widget({
 				)}
 
 				<div
+					{...(typeof onClick == "function"
+						? { onClick: () => onClick(context) }
+						: {})}
 					className="flex-1 overflow-hidden bg-cover bg-center flex flex-col"
 					style={{
 						background: !background?.length ? "" : background,

@@ -238,7 +238,7 @@ export default function RegularListItem({
 						className={clsx(
 							"mr-2 h-9 relative flex-shrink-0 bg-content/10 border border-content/10 overflow-hidden",
 							meta?.face
-								? "aspect-square rounded-full"
+								? "aspect-[1/1] rounded-full"
 								: "aspect-[1.45/1] rounded"
 						)}
 					>

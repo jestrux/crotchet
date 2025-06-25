@@ -1,8 +1,9 @@
 import RegularListItem from "@/crotchet/components/ListItem";
 import MediaItem from "../components/MediaItem";
-import { useEventListener, useOnInit } from "../hooks";
+import { useEventListener } from "../hooks";
 import { useLayoutEffect, useRef } from "react";
 import { usePageContext } from "./PageProvider";
+import { loadExternalAsset } from "../utils";
 
 export function media({ data } = {}) {
 	if (!data) return null;
@@ -14,6 +15,8 @@ function Component({ data }) {
 	const elementRef = useRef();
 
 	useLayoutEffect(() => {
+		loadAssets();
+
 		if (data.onInit) {
 			data.onInit({
 				$el: elementRef.current,
@@ -25,7 +28,20 @@ function Component({ data }) {
 		};
 	}, []);
 
-	useEventListener("remote-action-" + page._id, (_, payload) => {
+	const loadAssets = async () => {
+		return Promise.all(
+			[
+				...(data?.externalAssets || []),
+				{
+					name: "AlpineJs",
+					url: "https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js",
+					type: "script",
+				},
+			].map((asset) => loadExternalAsset(asset.url || "asset", asset))
+		);
+	};
+
+	useEventListener("remote-action-" + page?._id, (_, payload) => {
 		if (!isOpen) return;
 		if (data.onRemoteAction) data.onRemoteAction(payload);
 	});
@@ -37,6 +53,8 @@ function Component({ data }) {
 
 	return (
 		<div
+			// eslint-disable-next-line react/no-unknown-property
+			x-data="{}"
 			ref={elementRef}
 			className={className}
 			dangerouslySetInnerHTML={{ __html: content }}

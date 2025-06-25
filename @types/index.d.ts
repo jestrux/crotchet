@@ -64,7 +64,10 @@ declare var socketEmit: (event: String, payload?: any) => void;
 
 declare var camelCaseToSentenceCase: (string: String) => string;
 
-declare var getToken: (name: String) => Promise<string | null | undefined>;
+declare var getToken: (
+	name: String,
+	props?: { prompt?: boolean }
+) => Promise<string | null | undefined>;
 
 declare var saveToken: (
 	key: String,
@@ -80,6 +83,10 @@ declare var networkRequest: (
 ) => PromiseLike<any>;
 
 declare var showAlert: (
+	message: String | { title: string; message: string }
+) => Promise<any>;
+
+declare var showActionSheetAlert: (
 	message: String | { title: string; message: string }
 ) => Promise<any>;
 
@@ -198,7 +205,7 @@ declare var UI: {
 			| "search"
 			| "list"
 			| "open-external",
-		props?: { size?: string | number }
+		props?: { size?: string | number; filled?: boolean }
 	) => any;
 	svg: (
 		path: String,
@@ -207,6 +214,7 @@ declare var UI: {
 			opacity?: number;
 			filled?: boolean;
 			strokeWidth?: number;
+			color?: string;
 		}
 	) => any;
 };
@@ -270,10 +278,10 @@ declare var ActionButton:
 			icon?: string | typeof UI.icon;
 			url?: string | null;
 			handler?: (
-				payload?:
-					| typeof WidgetActionContext
-					| { [key: string]: any }
-					| null
+				payload: typeof WidgetActionContext | any
+				// | { [key: string]: any }
+				// | null
+				// | undefined
 			) => any;
 	  }
 	| ((payload: any) => typeof ActionButton | null | undefined);
@@ -362,21 +370,35 @@ declare var registerDataSource: (
 	}
 ) => void;
 
+declare var WidgetPayload: {
+	loading?: boolean;
+	data?: { [key: string]: any } | any;
+};
+
+declare var WidgetContent:
+	| { [key: string]: any }
+	| ((payload: typeof WidgetPayload) => {} | [])
+	| string;
+
 declare var registerWidget: (
 	name: String,
 	widget: {
 		shortcut?: String | undefined;
 		handler?: (payload: any) => PromiseLike<any>;
-		title?: String | undefined;
+		title?:
+			| String
+			| ((payload: typeof WidgetPayload) => String | undefined | null);
 		icon?: String | undefined;
-		actions?: (typeof ActionButton)[] | (() => (typeof ActionButton)[]);
+		actions?:
+			| (typeof ActionButton)[]
+			| ((payload: typeof WidgetPayload) => (typeof ActionButton)[]);
 		supportedSizes?: String | undefined;
 		background?: String | undefined;
 		color?: String | undefined;
 		resolve?: (payload?: any) => PromiseLike<any> | undefined;
 		listenForUpdates?: typeof ListenForUpdates;
 		filter?: { [key: string]: any } | ((payload: any) => {}) | undefined;
-		content?: typeof PageContent;
+		content?: typeof WidgetContent;
 		actionButton?: typeof ActionButton;
 		onSwipe?: (
 			payload: typeof WidgetActionContext & { direction: 1 | -1 }
