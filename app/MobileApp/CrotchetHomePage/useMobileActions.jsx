@@ -109,7 +109,7 @@ export const useMobileActions = () => {
 				});
 			},
 			pinned: 1,
-			section: "Home Page",
+			section: "Quick Actions",
 		};
 	};
 
@@ -175,7 +175,7 @@ export const useMobileActions = () => {
 				});
 			},
 			pinned: 1,
-			section: "Home Page",
+			section: "Quick Actions",
 		};
 	};
 
@@ -199,7 +199,7 @@ export const useMobileActions = () => {
 			),
 			label: "App Navigation",
 			pinned: 1,
-			section: "App",
+			section: "Quick Actions",
 			handler: async () => {
 				const [behavior, [leftNavItem, centerNavItem, rightNavItem]] =
 					await Promise.all([
@@ -283,7 +283,7 @@ export const useMobileActions = () => {
 	const actionSections = sectionedChoices(
 		[
 			...[
-				clipboardAction(),
+				// clipboardAction(),
 				customizeShortcuts(),
 				customizeWidgetsAction(),
 				customizeNavigation(),
@@ -292,6 +292,7 @@ export const useMobileActions = () => {
 				if (!a.context) {
 					agg.push({
 						...a,
+						icon: null,
 						pinned: 0,
 						section: "All Actions",
 					});

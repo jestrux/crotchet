@@ -79,6 +79,71 @@ export const BottomNavButton = ({
 	);
 };
 
+const QuickActions = () => {
+	const colors = ["#3B82F6", "#22C55E", "#EAB308", "#EF4444"];
+	const icon = (
+		<svg fill="currentColor" viewBox="0 0 16 16">
+			<path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5z" />
+			<path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708" />
+		</svg>
+	);
+
+	const menuItems = [
+		{
+			color: colors[0],
+			icon,
+			label: "Clipboard",
+			url: `/modal`,
+		},
+		{
+			color: colors[1],
+			icon: (
+				<svg fill="currentColor" viewBox="0 0 16 16">
+					<path d="M9.828.722a.5.5 0 0 1 .354.146l4.95 4.95a.5.5 0 0 1 0 .707c-.48.48-1.072.588-1.503.588-.177 0-.335-.018-.46-.039l-3.134 3.134a6 6 0 0 1 .16 1.013c.046.702-.032 1.687-.72 2.375a.5.5 0 0 1-.707 0l-2.829-2.828-3.182 3.182c-.195.195-1.219.902-1.414.707s.512-1.22.707-1.414l3.182-3.182-2.828-2.829a.5.5 0 0 1 0-.707c.688-.688 1.673-.767 2.375-.72a6 6 0 0 1 1.013.16l3.134-3.133a3 3 0 0 1-.04-.461c0-.43.108-1.022.589-1.503a.5.5 0 0 1 .353-.146" />
+				</svg>
+			),
+			label: "Pinboard",
+			url: `/modal`,
+		},
+	];
+
+	const menuItem = ({ label, color, colorDark, icon }) => {
+		const colorClasses = [
+			color
+				? `bg-[${color}]/10 text-[${color}] border-[${color}]/5`
+				: "bg-content/5 border-stroke",
+			colorDark
+				? `dark:bg-[${colorDark}]/10 dark:text-[${colorDark}] dark:border-[${colorDark}]/5`
+				: "dark:bg-content/5 dark:text-content dark:border-content/10",
+		];
+
+		return (
+			<div className="relative inline-flex items-center gap-1.5 bg-card dark:bg-content/5 shadow-sm dark:border border-stroke rounded-xl">
+				<div
+					className={clsx(
+						"relative ml-1 my-1 size-8 rounded-lg flex items-center justify-center border",
+						...colorClasses
+					)}
+				>
+					<div className="size-3.5">{icon}</div>
+				</div>
+
+				<div className="relative mr-3 stext-sm text-[10px]/none uppercase font-semibold tracking-widest opacity-75">
+					{label}
+				</div>
+			</div>
+		);
+	};
+
+	return (
+		<div className="mt-4 px-5 pb-1">
+			<div className="sgrid grid-cols-3 flex gap-x-1.5 gap-y-2 flex-wrap justify-start">
+				{menuItems.map(menuItem)}
+			</div>
+		</div>
+	);
+};
+
 const NavActions = ({ actionSections, searchQuery, onCollapse }) => {
 	const { KeyboardPlaceholder } = useKeyboard();
 	const wrapper = useRef(null);
@@ -88,6 +153,8 @@ const NavActions = ({ actionSections, searchQuery, onCollapse }) => {
 	return (
 		<div ref={wrapper} className="overflow-auto">
 			<div onClick={onCollapse}>
+				{!searchQuery?.length && <QuickActions />}
+
 				{!actionSections?.length && searchQuery?.length > 0 && (
 					<div className="rounded relative cursor-default select-none py-8 truncate text-content/30 text-center font-medium">
 						No results
@@ -568,7 +635,7 @@ export default function MobileNav() {
 						}}
 						onClick={(e) => e.stopPropagation()}
 					>
-						<div className="mx-3 relative border dark:border border-stroke shadow-sm rounded-full">
+						<div className="mx-2 relative border dark:border border-stroke shadow-sm rounded-full">
 							<svg
 								className="absolute top-0 left-3 bottom-0 my-auto size-5 opacity-30"
 								viewBox="0 0 24 24"
