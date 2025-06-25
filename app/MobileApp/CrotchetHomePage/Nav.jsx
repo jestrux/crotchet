@@ -654,13 +654,13 @@ export default function MobileNav() {
 					}}
 				>
 					<div
-						className="sticky top-0 pt-2 z-50"
+						className="sticky top-0 p-3 pb-0 z-50"
 						onPointerDown={(e) => {
 							controls.start(e);
 						}}
 						onClick={(e) => e.stopPropagation()}
 					>
-						<div className="mx-2 relative border dark:border border-stroke shadow-sm rounded-full">
+						<div className="relative border dark:border border-stroke shadow-sm rounded-full">
 							<svg
 								className="absolute top-0 left-3 bottom-0 my-auto size-5 opacity-30"
 								viewBox="0 0 24 24"
