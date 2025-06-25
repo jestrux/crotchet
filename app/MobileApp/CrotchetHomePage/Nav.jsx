@@ -663,7 +663,7 @@ export default function MobileNav() {
 					}}
 				>
 					<div
-						className="sticky top-0 pt-3 z-50"
+						className="sticky top-0 pt-2 z-50"
 						onPointerDown={(e) => {
 							controls.start(e);
 						}}

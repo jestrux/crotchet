@@ -182,7 +182,7 @@ export default function ActionGrid({
 					)}
 
 					<div className="flex flex-col flex-1">
-						<div className="first-letter:capitalize text-[15px]">
+						<div className="first-letter:capitalize text-[15px] font-semibold">
 							{action.label || action.title}
 						</div>
 						{action.subtitle && (
