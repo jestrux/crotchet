@@ -4,7 +4,7 @@ const getIp = require("./utils/getIp");
 const { appDir, readDir } = require("./modules/files");
 
 const readFile = (props) => ipcRenderer.invoke("read-file", props);
-
+const fileStats = (props) => ipcRenderer.invoke("file-stats", props);
 const writeFile = (contents) => ipcRenderer.invoke("write-file", contents);
 
 contextBridge.exposeInMainWorld(
@@ -40,13 +40,11 @@ contextBridge.exposeInMainWorld(
 					);
 
 					// Check if we need to update the database
-					const shouldUpdate = true;
-					// const shouldUpdate =
-					// 	!dbExtension ||
-					// 	(dbExtension.updatedAt &&
-					// 		updatedAt &&
-					// 		new Date(updatedAt) >
-					// 			new Date(dbExtension.updatedAt));
+					const shouldUpdate =
+						!dbExtension ||
+						(dbExtension.updatedAt &&
+							new Date(updatedAt).getTime() >
+								dbExtension.updatedAt);
 
 					if (shouldUpdate) {
 						console.log(
@@ -82,25 +80,30 @@ contextBridge.exposeInMainWorld(
 				const extensionPath = appDir("extensions", name + ".ts");
 
 				// Check if file exists and compare timestamps
-				readFile({ path: extensionPath }).then((localFile) => {
-					const shouldUpdate =
-						!localFile ||
-						(localFile.updatedAt &&
-							updatedAt &&
-							new Date(updatedAt) >
-								new Date(localFile.updatedAt));
+				Promise.all([
+					readFile({ path: extensionPath }),
+					fileStats({ path: extensionPath }),
+				]).then(([fileContents, fileStats]) => {
+					const localFileUpdatedAt =
+						fileStats && fileStats.updatedAt
+							? new Date(fileStats.updatedAt).getTime()
+							: null;
+					const shouldUpdate = !fileContents
+						? true
+						: !localFileUpdatedAt
+						? false
+						: updatedAt > localFileUpdatedAt;
 
 					if (shouldUpdate) {
 						console.log(
 							"Updating extension locally: ",
 							name,
-							localFile?.updatedAt,
+							localFileUpdatedAt,
 							updatedAt
 						);
 						writeFile({
 							path: extensionPath,
 							contents: contents,
-							updatedAt: updatedAt,
 						});
 					}
 				});

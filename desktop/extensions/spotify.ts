@@ -332,9 +332,9 @@ registerWidget("randomSpotifyTrack", {
 			className: "size-full relative text-center",
 			content: `
 				<img class="absolute inset-0 size-full ssize-16 rounded-md object-cover" src="${data.image}" />
-				<div class="flex-1 absolute inset-0 bg-black/80 text-white flex flex-col gap-2 items-center justify-center pt-2 px-4">
+				<div class="flex-1 absolute inset-0 bg-black/50 dark:bg-black/80 text-white flex flex-col items-center justify-center pt-2 px-4">
 					<h3 class="text-lg font-bold">${data.title}</h3>
-					<p class="opacity-75">${data.subtitle}</p>
+					<p class="opacity-75 line-clamp-2">${data.subtitle}</p>
 				</div>
 			`,
 		});

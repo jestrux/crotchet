@@ -9,6 +9,7 @@ const {
 	writeFile,
 	getWriteableFile,
 	readNetworkFile,
+	fileStats,
 } = require("./files");
 const getIp = require("../utils/getIp");
 const findLocalDevices = require("local-devices");
@@ -326,6 +327,8 @@ module.exports = function socketServer(server) {
 	ipcMain.handle("get-scripts", () => crotchetApp.getScripts());
 
 	ipcMain.handle("read-file", (_, payload) => readFile(payload));
+	
+	ipcMain.handle("file-stats", (_, payload) => fileStats(payload));
 
 	ipcMain.handle("write-file", (_, payload) => writeFile(payload));
 

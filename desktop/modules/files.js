@@ -1,8 +1,8 @@
 const fs = require("fs");
 const { app, shell, dialog } = require("electron");
 const path = require("path");
-const https = require('https');
-const http = require('http');
+const https = require("https");
+const http = require("http");
 const appDir = (...subPaths) => path.join(__dirname, "../", ...subPaths);
 const buildDir = (...subPaths) => appDir("app", ...subPaths);
 
@@ -14,16 +14,40 @@ const readDir = ({ path: _path, name }) =>
 			if (err) return rej(err);
 
 			Promise.all(
-				files.map((file) =>
-					readFile({ path: path.resolve(actualPath, file) }).then(
-						(contents) => ({
+				files.map((file) => {
+					const filePath = path.resolve(actualPath, file);
+					return Promise.all([
+						readFile({ path: filePath }),
+						fileStats({ path: filePath }),
+					]).then(([contents, stats]) => {
+						return {
+							...(stats || {}),
 							name: file.split(".").at(0),
 							contents,
-						})
-					)
-				)
+						};
+					});
+				})
 			).then(res);
 		});
+	});
+
+const fileStats = ({ path, folder, name }) =>
+	new Promise((res) => {
+		const actualPath = path
+			? path
+			: folder
+			? `${app.getPath(folder)}/${name}`
+			: `${app.getPath("userData")}/Crotchet/${name}`;
+
+		fs.stat(actualPath, (err, data) =>
+			res(
+				err
+					? null
+					: {
+							updatedAt: data.mtime,
+					  }
+			)
+		);
 	});
 
 const readFile = ({ path, folder, name }) =>
@@ -102,24 +126,25 @@ const getWriteableFile = async (path) => {
 };
 
 const readNetworkFile = (url) => {
-    return new Promise((resolve, reject) => {
-        const protocol = url.startsWith('https') ? https : http;
-        
-        protocol.get(url, (res) => {
-            let data = '';
-            
-            res.on('data', (chunk) => {
-                data += chunk;
-            });
-            
-            res.on('end', () => {
-                resolve(data);
-            });
-            
-        }).on('error', (err) => {
-            reject(err);
-        });
-    });
+	return new Promise((resolve, reject) => {
+		const protocol = url.startsWith("https") ? https : http;
+
+		protocol
+			.get(url, (res) => {
+				let data = "";
+
+				res.on("data", (chunk) => {
+					data += chunk;
+				});
+
+				res.on("end", () => {
+					resolve(data);
+				});
+			})
+			.on("error", (err) => {
+				reject(err);
+			});
+	});
 };
 
 module.exports = {
@@ -129,6 +154,7 @@ module.exports = {
 	getWriteableFile,
 	readDir,
 	readFile,
+	fileStats,
 	readNetworkFile,
 	writeFile,
 };
