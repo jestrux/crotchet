@@ -87,12 +87,7 @@ const HomePage = () => {
 	const { actionSections } = useMobileActions();
 
 	return (
-		<div
-			className="flex gap-5 p-6 lg:p-8 fixed inset-0 overflow-auto overscroll-none"
-			style={{
-				marginTop: "env(safe-area-inset-top)",
-			}}
-		>
+		<div className="flex gap-5 p-6 lg:p-8 fixed inset-0 overflow-auto overscroll-none">
 			<div className="hidden lg:block sticky top-0 h-full w-1/3 max-w-[400px] bg-yellow-500 dark:bg-card shadow rounded-2xl overflow-hidden">
 				<div className="h-full flex flex-col relative overflow-hidden">
 					<div className="mt-5 w-full px-4 ml-0.5">
@@ -159,6 +154,14 @@ const HomePage = () => {
 			</div>
 
 			<div className="pt-1 flex-1">
+				<div
+					className="sticky -mx-6 -top-6 z-[999] backdrop-blur-[3px]"
+					style={{
+						height: "env(safe-area-inset-top)",
+						mask: `linear-gradient(black, black, transparent)`,
+					}}
+				></div>
+
 				<div className="lg:hidden mb-6">
 					<div className="mb-5">
 						<h2 className="text-3xl font-bold">Hey Walter,</h2>
