@@ -317,13 +317,8 @@ const NavItems = ({
 
 	const { data } = useDataLoader({
 		handler: async () => {
-			const [floating, hidden, pinnedItems] = await Promise.all([
-				(
-					await getPreference("appNavBehavior", "Regular")
-				)?.toLowerCase() == "floating",
-				(
-					await getPreference("appNavVisibility", "Visible")
-				)?.toLowerCase() == "hidden",
+			const [behavior, pinnedItems] = await Promise.all([
+				await getPreference("appNavBehavior", "Regular"),
 				await getPreference("appNavItems", [
 					"Remote",
 					"Search",
@@ -331,28 +326,31 @@ const NavItems = ({
 				]),
 			]);
 
-			const items = pinnedItems.map((item) => {
-				return navItems.find(({ action }) => action == item);
-			});
-
-			return { items, hidden, floating };
+			return {
+				behavior,
+				items: pinnedItems.map((item) => {
+					return navItems.find(({ action }) => action == item);
+				}),
+			};
 		},
 		listenForUpdates: ["app-navigation-updated"],
 	});
 
 	if (!data) return null;
 
-	const { items, hidden, floating } = data;
-	const minWidth = 260;
+	const { items, behavior } = data;
+	const hidden = behavior?.toLowerCase() == "hidden";
+	const floating = behavior?.toLowerCase() == "floating" || hidden;
+	const minWidth = hidden ? 200 : items[1].action == "Home" ? 220 : 260;
 
 	const baseWrapperClassName =
 		"pointer-events-none z-50 fixed inset-x-0 flex items-center justify-center";
-	const baseContainerClassName = `min-w-[${minWidth}] border dark:border border-content/5 shadow-sm bg-stone-100/95 dark:bg-card/95 backdrop-blur-sm overflow-hidden`;
+	const baseContainerClassName = `min-w-[${minWidth}px] border dark:border border-content/5 shadow-sm bg-stone-100/95 dark:bg-card/95 backdrop-blur-sm overflow-hidden`;
 	const baseItemClassName =
 		"flex items-center justify-between max-w-sm mx-auto";
 
 	const dynamicWrapperClassName = floating
-		? "bottom-[env(safe-area-inset-bottom)]"
+		? "bottom-[env(safe-area-inset-bottom)] mb-8"
 		: "bottom-0 lg:bottom-8 lg:mb-[env(safe-area-inset-bottom)]";
 	const dynamicContainerClassName = floating
 		? "px-1.5 w-auto rounded-full"
@@ -372,12 +370,8 @@ const NavItems = ({
 			<motion.div
 				className="mx-auto fixed pointer-events-auto sbg-blue-500 inset-x-0 z-50"
 				style={{
-					height: hidden ? 56 : 64,
-					width: hidden
-						? minWidth - 60
-						: floating
-						? minWidth + 20
-						: "auto",
+					height: hidden ? 56 : floating ? 90 : 64,
+					width: floating ? minWidth + 20 : "auto",
 					bottom: 0,
 					marginBottom: `env(safe-area-inset-bottom)`,
 				}}
@@ -388,20 +382,17 @@ const NavItems = ({
 					opacity: hideNav ? 0 : 1,
 					y: hideNav ? "10%" : 0,
 				}}
-				onClick={() => (hidden ? null : onExpand())}
+				onClick={onExpand}
 			>
-				{!hidden && (
-					<MutliGestureButton
-						className="size-full"
-						onHold={() => {
-							window.openChoicePicker({
-								title: "Change page",
-								emptyStateMessage:
-									"You haven't created any pages",
-							});
-						}}
-					/>
-				)}
+				<MutliGestureButton
+					className="size-full"
+					onHold={() => {
+						window.openChoicePicker({
+							title: "Change page",
+							emptyStateMessage: "You haven't created any pages",
+						});
+					}}
+				/>
 			</motion.div>
 
 			<motion.div

@@ -312,19 +312,15 @@ export const useMobileActions = () => {
 			pinned: 1,
 			section: "Quick Actions",
 			handler: async () => {
-				const [
-					behavior,
-					visibility,
-					[leftNavItem, centerNavItem, rightNavItem],
-				] = await Promise.all([
-					await getPreference("appNavBehavior", "Regular"),
-					await getPreference("appNavVisibility", "Visible"),
-					await getPreference("appNavItems", [
-						"Remote",
-						"Search",
-						"Profile",
-					]),
-				]);
+				const [behavior, [leftNavItem, centerNavItem, rightNavItem]] =
+					await Promise.all([
+						await getPreference("appNavBehavior", "Regular"),
+						await getPreference("appNavItems", [
+							"Remote",
+							"Search",
+							"Profile",
+						]),
+					]);
 
 				window.openAlertForm({
 					dismissible: true,
@@ -337,13 +333,9 @@ export const useMobileActions = () => {
 							hideLabel: true,
 							type: "preferences",
 							fields: {
-								visibility: {
-									type: "radio",
-									choices: ["Visible", "Hidden"],
-								},
 								behavior: {
 									type: "radio",
-									choices: ["Regular", "Floating"],
+									choices: ["Regular", "Floating", "Hidden"],
 								},
 							},
 						},
@@ -371,7 +363,6 @@ export const useMobileActions = () => {
 					},
 					data: {
 						navigationBehavior: {
-							visibility,
 							behavior,
 						},
 						navigationItems: {
@@ -385,11 +376,6 @@ export const useMobileActions = () => {
 							await savePreference(
 								"appNavBehavior",
 								values.navigationBehavior.behavior || "Regular"
-							),
-							await savePreference(
-								"appNavVisibility",
-								values.navigationBehavior.visibility ||
-									"Visible"
 							),
 							await savePreference("appNavItems", [
 								values.navigationItems.left || "Remote",
