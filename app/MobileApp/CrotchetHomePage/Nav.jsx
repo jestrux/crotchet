@@ -42,9 +42,7 @@ export const BottomNavButton = ({
 					: "gap-1.5 h-11 w-11 lg:w-auto lg:px-3.5",
 				{ "flex-1": selected && action == "Search" },
 				selected ? activeClass : inActiveClass,
-				disabled || ["Search", "Home"].includes(action)
-					? ""
-					: "pointer-events-auto"
+				disabled || selected ? "" : "pointer-events-auto"
 			)}
 			style={
 				action == "Home"
@@ -79,103 +77,7 @@ export const BottomNavButton = ({
 	);
 };
 
-const QuickActions = () => {
-	const menuItems = [
-		{
-			color: "#164e63",
-			colorDark: "#7d959f",
-			icon: (
-				<svg fill="currentColor" viewBox="0 0 16 16">
-					<path d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0" />
-					<path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1z" />
-					<path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0z" />
-				</svg>
-			),
-			label: "Clipboard",
-			url: `/modal`,
-		},
-		{
-			color: "#22C55E",
-			icon: (
-				<svg fill="currentColor" viewBox="0 0 16 16">
-					<path d="M9.828.722a.5.5 0 0 1 .354.146l4.95 4.95a.5.5 0 0 1 0 .707c-.48.48-1.072.588-1.503.588-.177 0-.335-.018-.46-.039l-3.134 3.134a6 6 0 0 1 .16 1.013c.046.702-.032 1.687-.72 2.375a.5.5 0 0 1-.707 0l-2.829-2.828-3.182 3.182c-.195.195-1.219.902-1.414.707s.512-1.22.707-1.414l3.182-3.182-2.828-2.829a.5.5 0 0 1 0-.707c.688-.688 1.673-.767 2.375-.72a6 6 0 0 1 1.013.16l3.134-3.133a3 3 0 0 1-.04-.461c0-.43.108-1.022.589-1.503a.5.5 0 0 1 .353-.146" />
-				</svg>
-			),
-			label: "Pinboard",
-			url: `/modal`,
-		},
-		{
-			color: "#5b21b6",
-			colorDark: "#a56bff",
-			icon: (
-				<svg
-					fill="none"
-					viewBox="0 0 24 24"
-					strokeWidth={1.8}
-					stroke="currentColor"
-				>
-					<path
-						strokeLinecap="round"
-						strokeLinejoin="round"
-						d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.121a6.75 6.75 0 0 1 0-9.546m9.546 0a6.75 6.75 0 0 1 0 9.546M5.106 18.894c-3.808-3.807-3.808-9.98 0-13.788m13.788 0c3.808 3.807 3.808 9.98 0 13.788M12 12h.008v.008H12V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
-					/>
-				</svg>
-			),
-			label: "Remote",
-			url: `/modal`,
-		},
-		{
-			color: "#d97706",
-			colorDark: "#d19652",
-			icon: (
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					strokeWidth={1.5}
-					stroke="currentColor"
-				>
-					<path
-						strokeLinecap="round"
-						strokeLinejoin="round"
-						d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125"
-					/>
-				</svg>
-			),
-			label: "Collections",
-			url: `/modal`,
-		},
-		{
-			color: "#3B82F6",
-			icon: (
-				<svg
-					fill="none"
-					viewBox="0 0 24 24"
-					strokeWidth={1.5}
-					stroke="currentColor"
-				>
-					<path
-						strokeLinecap="round"
-						strokeLinejoin="round"
-						d="M6 6.878V6a2.25 2.25 0 0 1 2.25-2.25h7.5A2.25 2.25 0 0 1 18 6v.878m-12 0c.235-.083.487-.128.75-.128h10.5c.263 0 .515.045.75.128m-12 0A2.25 2.25 0 0 0 4.5 9v.878m13.5-3A2.25 2.25 0 0 1 19.5 9v.878m0 0a2.246 2.246 0 0 0-.75-.128H5.25c-.263 0-.515.045-.75.128m15 0A2.25 2.25 0 0 1 21 12v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6c0-.98.626-1.813 1.5-2.122"
-					/>
-				</svg>
-			),
-			label: "Pages",
-			url: `/modal`,
-		},
-		{
-			color: "#EF4444",
-			icon: (
-				<svg fill="currentColor" viewBox="0 0 16 16">
-					<path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h1A1.5 1.5 0 0 1 5 2.5h4.134a1 1 0 1 1 0 1h-2.01q.269.27.484.605C8.246 5.097 8.5 6.459 8.5 8c0 1.993.257 3.092.713 3.7.356.476.895.721 1.787.784A1.5 1.5 0 0 1 12.5 11h1a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5h-1a1.5 1.5 0 0 1-1.5-1.5H6.866a1 1 0 1 1 0-1h1.711a3 3 0 0 1-.165-.2C7.743 11.407 7.5 10.007 7.5 8c0-1.46-.246-2.597-.733-3.355-.39-.605-.952-1-1.767-1.112A1.5 1.5 0 0 1 3.5 5h-1A1.5 1.5 0 0 1 1 3.5zM2.5 2a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm10 10a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z" />
-				</svg>
-			),
-			label: "Automations",
-			url: `/modal`,
-		},
-	];
-
+const QuickActions = ({ menuItems }) => {
 	const menuItem = ({ label, color, colorDark, icon }) => {
 		const colorClasses = [
 			color
@@ -213,22 +115,39 @@ const QuickActions = () => {
 	);
 };
 
-const NavActions = ({ actionSections, searchQuery, onCollapse }) => {
+const NavActions = ({
+	actionSections,
+	pinnedActions,
+	searchQuery,
+	onCollapse,
+}) => {
 	const { KeyboardPlaceholder } = useKeyboard();
 	const wrapper = useRef(null);
-
-	if (!actionSections?.length) return null;
 
 	return (
 		<div ref={wrapper} className="overflow-auto">
 			<div onClick={onCollapse}>
-				{!searchQuery?.length && <QuickActions />}
+				{!searchQuery?.length && (
+					<QuickActions menuItems={pinnedActions} />
+				)}
 
 				{!actionSections?.length && searchQuery?.length > 0 && (
-					<div className="rounded relative cursor-default select-none py-8 truncate text-content/30 text-center font-medium">
-						No results
+					<div className="flex flex-col items-center justify-center select-none py-12 truncate text-lg text-content/30 text-center font-medium">
+						<svg
+							className="mb-5 size-8 opacity-80"
+							fill="currentColor"
+							viewBox="0 0 16 16"
+						>
+							<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
+						</svg>
+
+						<span>No results found matching </span>
+						<strong className="text-content/70">
+							{searchQuery}
+						</strong>
 					</div>
 				)}
+
 				{actionSections.map(([section, actions], index) => {
 					return (
 						<div
@@ -238,7 +157,7 @@ const NavActions = ({ actionSections, searchQuery, onCollapse }) => {
 							})}
 						>
 							{section && section != "undefined" && (
-								<span className="mt-5 mb-1 uppercase tracking-wide text-xs font-semibold opacity-50 px-7 flex items-center">
+								<span className="mt-5 mb-1.5 uppercase tracking-wide text-xs font-semibold opacity-50 px-7 flex items-center">
 									{section}
 								</span>
 							)}
@@ -276,13 +195,20 @@ const NavActions = ({ actionSections, searchQuery, onCollapse }) => {
 						</div>
 					);
 				})}
+
 				<KeyboardPlaceholder />
 			</div>
 		</div>
 	);
 };
 
-const NavItems = ({ expanded, dragging, bottomNavHidden, onExpand }) => {
+const NavItems = ({
+	expanded,
+	dragging,
+	bottomNavHidden,
+	onExpand,
+	dragControls,
+}) => {
 	const navItems = [
 		{
 			icon: (
@@ -391,10 +317,13 @@ const NavItems = ({ expanded, dragging, bottomNavHidden, onExpand }) => {
 
 	const { data } = useDataLoader({
 		handler: async () => {
-			const [floating, pinnedItems] = await Promise.all([
+			const [floating, hidden, pinnedItems] = await Promise.all([
 				(
-					await getPreference("appNavBehavior", "regular")
+					await getPreference("appNavBehavior", "Regular")
 				)?.toLowerCase() == "floating",
+				(
+					await getPreference("appNavVisibility", "Visible")
+				)?.toLowerCase() == "hidden",
 				await getPreference("appNavItems", [
 					"Remote",
 					"Search",
@@ -406,19 +335,19 @@ const NavItems = ({ expanded, dragging, bottomNavHidden, onExpand }) => {
 				return navItems.find(({ action }) => action == item);
 			});
 
-			return { items, floating };
+			return { items, hidden, floating };
 		},
 		listenForUpdates: ["app-navigation-updated"],
 	});
 
 	if (!data) return null;
 
-	const { items, floating } = data;
+	const { items, hidden, floating } = data;
+	const minWidth = 260;
 
 	const baseWrapperClassName =
 		"pointer-events-none z-50 fixed inset-x-0 flex items-center justify-center";
-	const baseContainerClassName =
-		"min-w-[260px] border dark:border border-content/5 shadow-sm bg-stone-100/95 dark:bg-card/95 backdrop-blur-sm overflow-hidden";
+	const baseContainerClassName = `min-w-[${minWidth}] border dark:border border-content/5 shadow-sm bg-stone-100/95 dark:bg-card/95 backdrop-blur-sm overflow-hidden`;
 	const baseItemClassName =
 		"flex items-center justify-between max-w-sm mx-auto";
 
@@ -436,53 +365,84 @@ const NavItems = ({ expanded, dragging, bottomNavHidden, onExpand }) => {
 	const containerClassName = `${baseContainerClassName} ${dynamicContainerClassName}`;
 	const itemClassName = `${baseItemClassName} ${dynamicItemClassName}`;
 
+	const hideNav = expanded || dragging || bottomNavHidden;
+
 	return (
-		<motion.div
-			className={wrapperClassName}
-			animate={{
-				opacity: expanded || dragging || bottomNavHidden ? 0 : 1,
-				y: expanded || dragging || bottomNavHidden ? "10%" : 0,
-			}}
-		>
-			<div className={containerClassName}>
-				<div className={itemClassName}>
-					{items.map((item, index) => {
-						const isMainAction = ["home", "search"].includes(
-							item.action?.toLowerCase()
-						);
-						return (
-							<BottomNavButton
-								key={item.action + "" + index}
-								{...item}
-								disabled={expanded}
-								selected={isMainAction}
-								// onHold={
-								// 	page == "home" && currentPage == page
-								// 		? () =>
-								// 				openUrl(
-								// 					"crotchet://action/remote"
-								// 				)
-								// 		: null
-								// }
-								onClick={() => {
-									if (isMainAction) onExpand();
-									else if (isValidAction(item))
-										onActionClick(item)();
-									else {
-										window.openActionSheet({
-											title: item.action,
-											content:
-												item.action +
-												" and its details will go here...",
-										});
-									}
-								}}
-							/>
-						);
-					})}
+		<>
+			<motion.div
+				className="mx-auto fixed pointer-events-auto sbg-blue-500 inset-x-0 z-50"
+				style={{
+					height: hidden ? 56 : 64,
+					width: hidden
+						? minWidth - 60
+						: floating
+						? minWidth + 20
+						: "auto",
+					bottom: 0,
+					marginBottom: `env(safe-area-inset-bottom)`,
+				}}
+				onPointerDown={(e) => {
+					dragControls.start(e);
+				}}
+				animate={{
+					opacity: hideNav ? 0 : 1,
+					y: hideNav ? "10%" : 0,
+				}}
+				onClick={() => (hidden ? null : onExpand())}
+			>
+				{!hidden && (
+					<MutliGestureButton
+						className="size-full"
+						onHold={() => {
+							window.openChoicePicker({
+								title: "Change page",
+								emptyStateMessage:
+									"You haven't created any pages",
+							});
+						}}
+					/>
+				)}
+			</motion.div>
+
+			<motion.div
+				className={wrapperClassName}
+				animate={{
+					opacity: hideNav || hidden ? 0 : 1,
+					y: hideNav || hidden ? "10%" : 0,
+				}}
+			>
+				<div className={containerClassName}>
+					<div className={itemClassName}>
+						{items.map((item, index) => {
+							const isMainAction = ["home", "search"].includes(
+								item.action?.toLowerCase()
+							);
+							return (
+								<BottomNavButton
+									key={item.action + "" + index}
+									{...item}
+									disabled={expanded}
+									selected={isMainAction}
+									onClick={() => {
+										if (isMainAction) onExpand();
+										else if (isValidAction(item))
+											onActionClick(item)();
+										else {
+											window.openActionSheet({
+												title: item.action,
+												content:
+													item.action +
+													" and its details will go here...",
+											});
+										}
+									}}
+								/>
+							);
+						})}
+					</div>
 				</div>
-			</div>
-		</motion.div>
+			</motion.div>
+		</>
 	);
 };
 
@@ -492,8 +452,13 @@ export default function MobileNav() {
 	const bottomNavHidden = useHideFloatingUI();
 	const [scope, animate] = useAnimate();
 	const inputRef = useRef(null);
-	const { searchQuery, setSearchQuery, actionSections, refetch } =
-		useMobileActions();
+	const {
+		searchQuery,
+		setSearchQuery,
+		actionSections,
+		pinnedActions,
+		refetch,
+	} = useMobileActions();
 	const [dragging, setDragging] = useState(false);
 	const [expanded, _setExpanded] = useState(false);
 	const y = useMotionValue(0);
@@ -641,7 +606,7 @@ export default function MobileNav() {
 			<motion.div
 				ref={scope}
 				className={clsx(
-					"bottom-nav fixed inset-x-0 mx-auto z-50 overflow-hidden",
+					"pointer-events-none sbg-red-500 bottom-nav fixed inset-x-0 mx-auto z-50 overflow-hidden",
 					{ expanded: expanded },
 					dragging || expanded
 						? "bg-stone-100/95 dark:bg-card/95 backdrop-blur-sm max-w-xl"
@@ -655,7 +620,8 @@ export default function MobileNav() {
 				}}
 				drag="y"
 				dragControls={controls}
-				dragListener={!expanded}
+				// dragListener={!expanded}
+				dragListener={false}
 				dragElastic={{
 					top: expanded ? 0 : 0.5,
 					bottom: !expanded ? 0 : 0.5,
@@ -689,7 +655,6 @@ export default function MobileNav() {
 
 					handleToggle();
 				}}
-				onClick={handleToggle}
 			>
 				<motion.div
 					style={{
@@ -729,7 +694,7 @@ export default function MobileNav() {
 
 							{searchQuery && (
 								<button
-									className="absolute -inset-y-0.5 right-0 aspect-[1/1] flex items-center justify-center"
+									className="pointer-events-auto absolute -inset-y-0.5 right-0 aspect-[1/1] flex items-center justify-center"
 									onClick={handleClear}
 								>
 									<svg
@@ -750,10 +715,21 @@ export default function MobileNav() {
 						</div>
 					</div>
 
-					<div className="sticky top-0 h-[60vh] overscroll-none overflow-auto">
+					<div
+						className={clsx(
+							"sticky top-0 h-[60vh] overscroll-none",
+							{ "pointer-events-auto": expanded },
+							{ "overflow-auto": actionSections?.length }
+						)}
+						onPointerDown={(e) => {
+							if (actionSections?.length) return;
+							controls.start(e);
+						}}
+					>
 						<NavActions
 							{...{
 								actionSections,
+								pinnedActions,
 								searchQuery,
 								onCollapse: handleCollapse,
 							}}
@@ -765,6 +741,7 @@ export default function MobileNav() {
 			<NavItems
 				onExpand={handleExpand}
 				{...{ expanded, dragging, bottomNavHidden }}
+				dragControls={controls}
 			/>
 
 			<FloatingRemote

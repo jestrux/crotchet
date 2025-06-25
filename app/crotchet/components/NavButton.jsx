@@ -21,7 +21,7 @@ export default function NavButton({
 					? "flex-col gap-3"
 					: inShareSheet
 					? "h-14 flex-row-reverse"
-					: "h-12",
+					: "h-11",
 				className
 			)}
 		>
