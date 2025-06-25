@@ -389,9 +389,10 @@ declare var registerWidget: (
 			| String
 			| ((payload: typeof WidgetPayload) => String | undefined | null);
 		icon?: String | undefined;
-		actions?:
+		actions:
 			| (typeof ActionButton)[]
-			| ((payload: typeof WidgetPayload) => (typeof ActionButton)[]);
+			| ((payload: typeof WidgetPayload) => (typeof ActionButton)[])
+			| any;
 		supportedSizes?: String | undefined;
 		background?: String | undefined;
 		color?: String | undefined;
@@ -437,7 +438,15 @@ declare var openForm: (props: typeof Page) => PromiseLike<any>;
 declare var openAlertForm: (props: typeof Page) => PromiseLike<any>;
 
 declare var openChoicePicker: (
-	choices: typeof ChoiceList | { title?: string; choices: typeof ChoiceList }
+	choices:
+		| typeof ChoiceList
+		| {
+				noHeading?: boolean;
+				dismissible?: boolean;
+				inset?: boolean;
+				title?: string | null;
+				choices: typeof ChoiceList;
+		  }
 ) => PromiseLike<any>;
 
 declare var openActionSheet: (props: {

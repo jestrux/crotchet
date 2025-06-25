@@ -163,7 +163,7 @@ const queryTracks = async () =>
 		})
 	);
 
-const widgetResolverContentActions = (dataLoader) => ({
+const widgetResolverContentActions = (dataLoader, { entity = "" } = {}) => ({
 	resolve: async () => {
 		try {
 			const res = await dataLoader();
@@ -189,16 +189,38 @@ const widgetResolverContentActions = (dataLoader) => ({
 
 		return UI.list({ data });
 	},
-	actions: [
-		{
-			label: "Shuffle",
-			icon: UI.icon("shuffle"),
-			handler: ({ refetch, setState }) => {
-				// setState?.("random", true);
-				refetch?.();
+	actions: ({ data, loading }) => {
+		if (loading || !data || data == "no token") return [];
+
+		return [
+			{
+				label: "View",
+				icon: UI.icon("list"),
+				handler: () => {
+					openChoicePicker({
+						title: entity ? `Select ${entity}` : null,
+						inset: false,
+						dismissible: false,
+						noHeading: false,
+						choices: dataLoader().then((res) => {
+							return res.map((item) => ({
+								...item,
+								value: item,
+							}));
+						}),
+					}).then((res) => {
+						if (!res) return res;
+						openUrl(res.url);
+					});
+				},
 			},
-		},
-	],
+			{
+				label: "Shuffle",
+				icon: UI.icon("shuffle"),
+				handler: ({ refetch }) => refetch?.(),
+			},
+		];
+	},
 });
 
 const registerRandomSpotifyAction = (name, loader, { label = "" } = {}) => {
@@ -246,25 +268,33 @@ registerRandomSpotifyAction("randomSpotifyTrack", queryTracks);
 registerWidget("spotifyPlaylists", {
 	title: "Saved Spotify Playlists",
 	listenForUpdates: [connectionChangedEvent],
-	...widgetResolverContentActions(queryPlaylists),
+	...widgetResolverContentActions(queryPlaylists, {
+		entity: "Playlists",
+	}),
 });
 
 registerWidget("spotifyArtists", {
 	title: "Saved Spotify Artists",
 	listenForUpdates: [connectionChangedEvent],
-	...widgetResolverContentActions(queryArtists),
+	...widgetResolverContentActions(queryArtists, {
+		entity: "Artists",
+	}),
 });
 
 registerWidget("spotifyTracks", {
 	title: "Saved Spotify Tracks",
 	listenForUpdates: [connectionChangedEvent],
-	...widgetResolverContentActions(queryTracks),
+	...widgetResolverContentActions(queryTracks, {
+		entity: "Tracks",
+	}),
 });
 
 registerWidget("spotifyAlbums", {
 	title: "Saved Spotify Albums",
 	listenForUpdates: [connectionChangedEvent],
-	...widgetResolverContentActions(queryAlbums),
+	...widgetResolverContentActions(queryAlbums, {
+		entity: "Albums",
+	}),
 });
 
 registerWidget("randomSpotifyTrack", {
