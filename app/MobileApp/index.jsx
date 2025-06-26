@@ -8,7 +8,7 @@ import { openUrl } from "@/crotchet";
 import { SendIntent } from "send-intent";
 import { getLinksFromText, isValidUrl, objectIsEmpty } from "@/crotchet/utils";
 import { useCrotchetApp } from "@/crotchet/providers/AppProvider";
-import { Loader } from "@/crotchet/components";
+// import { Loader } from "@/crotchet/components";
 
 import CrotchetHomePage from "./CrotchetHomePage";
 // import AppScaffold from "@/crotchet/providers/AppScaffold";
@@ -203,13 +203,7 @@ export default function MobileApp() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	if (initializing) {
-		return (
-			<div className="py-12">
-				<Loader fillParent />
-			</div>
-		);
-	}
+	// if (initializing) return <div className="py-12" />;
 
 	// if (app?.homePage)
 	// 	return <AppScaffold key={app?.homePage._id} rootPage={app?.homePage} />;

@@ -3,12 +3,11 @@ import useSourceGet from "./useSourceGet";
 
 export default function useDataLoader({
 	handler,
-	delayLoader = false,
 	onSuccess = () => {},
 	onUpdate = () => {},
 	listenForUpdates,
 } = {}) {
-	const { data, error, loading, refetch } = useSourceGet(
+	const { data, error, loading, showLoader, refetch } = useSourceGet(
 		async ({ fromRefetch } = {}) => {
 			let res;
 			try {
@@ -23,8 +22,7 @@ export default function useDataLoader({
 			}
 
 			return res;
-		},
-		{ delayLoader }
+		}
 	);
 
 	const listenForEvents = (events) => {
@@ -66,5 +64,6 @@ export default function useDataLoader({
 		loading,
 		error,
 		refetch,
+		showLoader,
 	};
 }

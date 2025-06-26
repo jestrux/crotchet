@@ -5,8 +5,22 @@ const searchUnsplash = async (searchQuery = "") => {
 	const clientId = "IPA5vpUYCbI5PWvpcEyNJZPov3L-Nc2qlGj3UctYCS4";
 	if (!clientId) return null;
 
-	const page = random([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+	const page = searchQuery?.length ? 1 : random([1, 2, 3, 4]);
 	let url = `https://api.unsplash.com/photos?client_id=${clientId}&page=${page}&per_page=30`;
+
+	if (!searchQuery?.length)
+		searchQuery = random([
+			// "girl",
+			// "face",
+			"spring",
+			"wilderness",
+			"serene",
+			"beach",
+			"mountains",
+			"retro",
+			"interior design",
+			"concert",
+		]);
 
 	if (searchQuery?.length)
 		url = `https://api.unsplash.com/search/photos?query=${searchQuery}&client_id=${clientId}`;
@@ -21,7 +35,8 @@ const searchUnsplash = async (searchQuery = "") => {
 		subtitle: entry.user?.name || entry.description,
 		image: entry.urls.regular,
 		href: entry.links.html,
-		url: `crotchet://copy/${entry.urls.regular}`,
+		url: entry.links.html,
+		// url: `crotchet://copy/${entry.urls.regular}`,
 	}));
 };
 
@@ -93,7 +108,13 @@ registerAction("randomUnsplashPic", {
 					const res = random(images);
 
 					window.openActionSheet({
-						preview: _.pick(res, ["image", "title", "subtitle"]),
+						fullScreen: true,
+						preview: _.pick(res, [
+							"url",
+							"image",
+							"title",
+							"subtitle",
+						]),
 						actions: [
 							{
 								label: "Copy",
@@ -133,6 +154,16 @@ registerWidget("randomUnsplashPic", {
 			url: entry.href,
 			actions: [
 				{
+					label: "Share",
+					icon: UI.icon("share"),
+					handler: () => shareImage(entry.image),
+				},
+				{
+					label: "Open",
+					icon: UI.icon("open-external"),
+					url: entry.href,
+				},
+				{
 					label: "Shuffle",
 					icon: UI.icon("shuffle"),
 					handler: () => dispatch("refetch-random-unsplash-widget"),
@@ -141,4 +172,5 @@ registerWidget("randomUnsplashPic", {
 		};
 	},
 	content: UI.media,
+	actions: [],
 });

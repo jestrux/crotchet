@@ -10,7 +10,8 @@ export default function GridListItem({
 	image,
 	video,
 	url,
-	title,
+	label,
+	title: _title,
 	subtitle,
 	color,
 	// aspectRatio = "16/9",
@@ -21,6 +22,7 @@ export default function GridListItem({
 	onHold,
 	onDoubleClick,
 }) {
+	const title = _title || label;
 	const aspectRatio = "2/1.3";
 	const inset = meta?.inset;
 	const imagePlaceholder = meta?.imagePlaceholder;

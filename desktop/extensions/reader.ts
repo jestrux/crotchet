@@ -79,6 +79,31 @@ registerWidget("readingList", {
 	content: UI.list,
 	actions: [
 		{
+			label: "Search",
+			icon: UI.icon("search"),
+			handler: () => {
+				openChoicePicker({
+					// title: "Reading List",
+					fullScreen: true,
+					inset: false,
+					dismissible: false,
+					noHeading: false,
+					choices: async () => {
+						const res = await sourceGet(
+							{ handler: () => queryDb("reader") },
+							{
+								orderBy: "_index,desc",
+							}
+						);
+						return res?.map(formatEntry);
+					},
+				}).then((res) => {
+					if (!res) return res;
+					openUrl(res.url);
+				});
+			},
+		},
+		{
 			label: "Shuffle",
 			icon: UI.icon("shuffle"),
 			handler: ({ refetch, setState }) => {
@@ -151,7 +176,9 @@ registerAction("learnNow", {
 					const entry = formatEntry(res);
 
 					window.openActionSheet({
+						fullScreen: true,
 						preview: _.pick(entry, [
+							"url",
 							"image",
 							"video",
 							"title",

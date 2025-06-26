@@ -31,7 +31,8 @@ const mapEntry = (entry) => ({
 	subtitle: `${[entry.crop?.[0], entry.crop?.[1]]
 		?.map(toHms)
 		.join(", ")} - ${toHms(entry.duration)}`,
-	url: getYoutubeClipUrl(entry),
+	// url: getYoutubeClipUrl(entry),
+	url: getYoutubeActualUrl(entry),
 });
 
 const openOnDesktop = (clip) =>
@@ -807,6 +808,7 @@ registerWidget("randomYoutubeClip", {
 		};
 	},
 	content: UI.media,
+	actions: [],
 });
 
 const formatVideo = (entry) => ({
@@ -835,6 +837,36 @@ registerWidget("youtubeClips", {
 	},
 	content: UI.list,
 	actions: [
+		{
+			label: "Search",
+			icon: UI.icon("search"),
+			handler: () => {
+				openChoicePicker({
+					// title: "Youtube Clips",
+					layout: "grid",
+					fullScreen: true,
+					inset: false,
+					dismissible: false,
+					noHeading: false,
+					choices: async () => {
+						const res = await sourceGet(
+							{ handler: () => queryDb("youtubeClips") },
+							{ orderBy: "name" }
+						);
+
+						return res.map((item) => ({
+							...mapEntry(item),
+							label: item.title,
+							value: item,
+							url: getYoutubeActualUrl(item),
+						}));
+					},
+				}).then((res) => {
+					if (!res) return res;
+					openUrl(res.url);
+				});
+			},
+		},
 		{
 			label: "Shuffle",
 			icon: UI.icon("shuffle"),
@@ -923,7 +955,9 @@ registerAction("randomYoutubeClip", {
 					const entry = formatVideo(res);
 
 					window.openActionSheet({
+						fullScreen: true,
 						preview: _.pick(entry, [
+							"url",
 							"image",
 							"video",
 							"title",

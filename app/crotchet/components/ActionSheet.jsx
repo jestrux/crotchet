@@ -216,9 +216,12 @@ export default function Sheet({
 
 				<motion.div
 					className={clsx(
-						"bg-stone-100/95 dark:bg-canvas backdrop-blur-sm relative z-10 w-full max-w-lg mx-auto group text-content border dark:border-content/10 shadow-2xl overflow-hidden",
+						"bg-stone-100/95 dark:bg-canvas backdrop-blur-sm relative z-10 mx-auto group text-content border dark:border-content/10 shadow-2xl overflow-hidden",
 						{ "p-3": !noHeading },
-						onlg ? "rounded-xl" : "rounded-3xl"
+						onlg ? "rounded-xl" : "rounded-3xl",
+						inset && noHeading
+							? "w-[max-content] min-w-[200px] mb-8 flex items-center justify-center"
+							: "w-full max-w-lg"
 					)}
 					style={{
 						paddingBottom: inset

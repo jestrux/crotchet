@@ -345,7 +345,11 @@ const NavItems = ({
 
 	const baseWrapperClassName =
 		"pointer-events-none z-50 fixed inset-x-0 flex items-center justify-center";
-	const baseContainerClassName = `min-w-[${minWidth}px] border dark:border border-content/5 shadow-sm bg-stone-100/95 dark:bg-card/95 backdrop-blur-sm overflow-hidden`;
+	const baseContainerClassName = `min-w-[${minWidth}px] overflow-hidden shadow-sm ${
+		floating
+			? ""
+			: "bg-stone-100/95 dark:bg-card/95 backdrop-blur-sm ring-[1px] ring-content/20 dark:ring-content/30"
+	}`;
 	const baseItemClassName =
 		"flex items-center justify-between max-w-sm mx-auto";
 
@@ -370,7 +374,7 @@ const NavItems = ({
 			<motion.div
 				className="mx-auto fixed pointer-events-auto sbg-blue-500 inset-x-0 z-50"
 				style={{
-					height: hidden ? 56 : floating ? 90 : 64,
+					height: hidden ? 72 : floating ? 90 : 64,
 					width: floating ? minWidth + 20 : "auto",
 					bottom: 0,
 					marginBottom: `env(safe-area-inset-bottom)`,
@@ -402,8 +406,27 @@ const NavItems = ({
 					y: hideNav || hidden ? "10%" : 0,
 				}}
 			>
-				<div className={containerClassName}>
-					<div className={itemClassName}>
+				<div
+					className={containerClassName}
+					style={{
+						position: "relative",
+						boxShadow: floating
+							? `0 0 15px rgb(0 0 0 / 0.3)`
+							: `0 0 1px rgb(var(--content-color) / 0.3)`,
+						overflow: "visible",
+					}}
+				>
+					{floating && (
+						<>
+							<div className="hidden dark:block absolute -inset-0.5 rounded-full bg-content/20 backdrop-blur-xl"></div>
+							<div className="absolute inset-0 rounded-full bg-card/80 backdrop-blur-lg dark:backdrop-blur-none"></div>
+						</>
+					)}
+
+					<div
+						className={itemClassName}
+						style={{ position: "relative" }}
+					>
 						{items.map((item, index) => {
 							const isMainAction = ["home", "search"].includes(
 								item.action?.toLowerCase()

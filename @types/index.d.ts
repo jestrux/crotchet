@@ -441,6 +441,8 @@ declare var openChoicePicker: (
 	choices:
 		| typeof ChoiceList
 		| {
+				layout?: "list" | "grid" | "masonry";
+				fullScreen?: boolean;
 				noHeading?: boolean;
 				dismissible?: boolean;
 				inset?: boolean;
@@ -450,6 +452,7 @@ declare var openChoicePicker: (
 ) => PromiseLike<any>;
 
 declare var openActionSheet: (props: {
+	fullScreen?: boolean | null;
 	noHeading?: boolean | null;
 	title?: String;
 	inset?: boolean;

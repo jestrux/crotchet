@@ -91,11 +91,12 @@ export const sourceGet = async (source, props = {}) => {
 
 export default function useSourceGet(
 	source,
-	{ delayLoader = true, shuffle, single, ...props } = {}
+	{ delayLoader = 500, shuffle, single, ...props } = {}
 ) {
 	const loadingRef = useRef();
 	const [res, setRes] = useState({
 		loading: false,
+		showLoader: false,
 		data: null,
 		error: null,
 		refetch: () => doFetch(true),
@@ -111,21 +112,16 @@ export default function useSourceGet(
 	const doFetch = async (fromRefetch) => {
 		if (!source) return;
 
-		// if (res.loading) return null;
-
 		onChange({
 			error: null,
-			// data: null,
+			loading: !fromRefetch,
 		});
 
-		loadingRef.current = setTimeout(
-			() => {
-				onChange({
-					loading: !fromRefetch,
-				});
-			},
-			delayLoader ? 1500 : 0
-		);
+		loadingRef.current = setTimeout(() => {
+			onChange({
+				showLoader: !fromRefetch,
+			});
+		}, delayLoader);
 
 		try {
 			const data = await sourceGet(source, {
@@ -135,12 +131,14 @@ export default function useSourceGet(
 				...props,
 			});
 			onChange({
+				showLoader: false,
 				loading: false,
 				data,
 			});
 		} catch (error) {
 			// console.log("Fetch error: ", error);
 			onChange({
+				showLoader: false,
 				loading: false,
 				error: error.toString(),
 			});

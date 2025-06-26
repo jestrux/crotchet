@@ -179,7 +179,8 @@ export default function RegularListItem({
 	icon,
 	video,
 	image,
-	title,
+	label,
+	title: _title,
 	subtitle,
 	url,
 	status,
@@ -194,6 +195,7 @@ export default function RegularListItem({
 	onHold,
 	onDoubleClick,
 }) {
+	const title = _title || label;
 	const gestures = useLongPress(() => {
 		if (!_.isFunction(onHold) && !share && !actions?.length) return;
 

@@ -13,6 +13,7 @@ import { useIonToast } from "@ionic/react";
 import PageProvider from "@/crotchet/providers/AppScaffold/PageProvider";
 import IonicModal from "../components/IonicModal";
 import clsx from "clsx";
+import ModalPage from "../components/ModalPage";
 
 const ToastMessage = ({ message, onClose, duration = 3000 }) => {
 	const toastTimerRef = useRef();
@@ -91,6 +92,18 @@ export function AlertsWrapper() {
 				}
 
 				if (alert.type == "sheet") {
+					if (alert.fullScreen) {
+						return (
+							<ModalPage
+								key={alert.id}
+								preview={alert.preview}
+								actions={alert.actions}
+								onClose={alert.close}
+								emptyStateMessage={alert.emptyStateMessage}
+							/>
+						);
+					}
+
 					return (
 						<ActionSheet
 							key={alert.id}
@@ -110,6 +123,23 @@ export function AlertsWrapper() {
 				}
 
 				if (alert.type == "choice-picker") {
+					if (alert.fullScreen) {
+						return (
+							<ModalPage
+								key={alert.id}
+								layout={alert.layout}
+								title={alert.title}
+								resolve={alert.choices}
+								searchable={alert.searchable ?? true}
+								sortable={alert.sortable}
+								selectable={alert.multiple ? "multiple" : false}
+								onClose={alert.close}
+								onChange={alert.onChange}
+								emptyStateMessage={alert.emptyStateMessage}
+							/>
+						);
+					}
+
 					return (
 						<ActionSheet
 							key={alert.id}
@@ -118,6 +148,9 @@ export function AlertsWrapper() {
 							noHeading={!alert?.title?.length}
 							onClose={alert.close}
 							actions={alert.choices}
+							fullScreen={alert.fullScreen}
+							searchable={alert.searchable}
+							dismissible={alert.dismissible}
 							sortable={alert.sortable}
 							selectable={alert.multiple ? "multiple" : false}
 							onChange={alert.onChange}
@@ -147,6 +180,41 @@ export function AlertsWrapper() {
 						alert.close(values);
 					};
 
+					const form = (
+						<div
+							className={clsx({
+								"p-1.5": alert.field,
+							})}
+						>
+							<Form
+								formId={
+									alert.action?.handler
+										? null
+										: randomId("form")
+								}
+								data={alert.data}
+								fields={alert.fields}
+								field={alert.field}
+								action={alert.action}
+								onChange={alert.onChange}
+								onSubmit={alert.onSubmit}
+							/>
+						</div>
+					);
+
+					if (alert.fullScreen) {
+						return (
+							<ModalPage
+								key={alert.id}
+								title={alert.title}
+								resolve={alert.resolve}
+								onClose={alert.close}
+							>
+								{form}
+							</ModalPage>
+						);
+					}
+
 					return (
 						<ActionSheet
 							key={alert.id}
@@ -155,28 +223,19 @@ export function AlertsWrapper() {
 							title={alert.title}
 							onClose={alert.close}
 						>
-							<div
-								className={clsx({
-									"p-1.5": alert.field,
-								})}
-							>
-								<Form
-									formId={
-										alert.action?.handler
-											? null
-											: randomId("form")
-									}
-									data={alert.data}
-									fields={alert.fields}
-									field={alert.field}
-									action={alert.action}
-									onChange={alert.onChange}
-									onSubmit={alert.onSubmit}
-								/>
-							</div>
+							{form}
 						</ActionSheet>
 					);
 				}
+
+				if (alert.type == "page")
+					return (
+						<ModalPage
+							key={alert.id}
+							{...alert}
+							onClose={alert.close}
+						/>
+					);
 
 				if (alert.content) {
 					if (window.onDesktop()) {
@@ -245,6 +304,8 @@ export default function useAlerts() {
 	};
 
 	const hideAlert = (alertId) => {
+		if (!alertId) alertId = alerts.at(-1)?.id;
+
 		setAlerts((alerts) => {
 			const newValue = alerts.filter(({ id }) => id !== alertId);
 			notifyParent(newValue, alertId, false);

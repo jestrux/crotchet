@@ -82,10 +82,24 @@ export default function useAppPages() {
 		popPage(pages.at(-1)?._id, data)
 	);
 
-	window.closePage = (data) => dispatch("close-page", data);
+	window.closePage = (data) => {
+		if (!onDesktop()) return window.hideAlert();
+
+		dispatch("close-page", data);
+	};
 
 	// window.openPage = (page) => dispatch("open-page", page);
-	window.openPage = (page) => pushPage(page);
+	window.openPage = (page) => {
+		if (!onDesktop()) {
+			return window.showAlert({
+				...(page || {}),
+				type: page?.type == "form" ? "form" : "page",
+				fullScreen: true,
+			});
+		}
+
+		pushPage(page);
+	};
 
 	// window.openPage = (page) => pushPage(page);
 	// window.openForm = (page) => pushPage({ ...page, type: "form" });

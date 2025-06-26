@@ -81,7 +81,8 @@ window.promptConnectSpotify = promptConnectSpotify;
 
 const openShareSheet = (entry) => {
 	window.openActionSheet({
-		preview: _.pick(entry, ["image", "title", "subtitle"]),
+		fullScreen: true,
+		preview: _.pick(entry, ["url", "image", "title", "subtitle"]),
 		actions: [
 			{
 				label: "Open",
@@ -190,15 +191,18 @@ const widgetResolverContentActions = (dataLoader, { entity = "" } = {}) => ({
 		return UI.list({ data });
 	},
 	actions: ({ data, loading }) => {
-		if (loading || !data || data == "no token") return [];
+		// if (loading || !data || data == "no token") return [];
+		if (loading || data == "no token") return [];
 
 		return [
 			{
 				label: "View",
-				icon: UI.icon("list"),
+				icon: UI.icon("search"),
 				handler: () => {
 					openChoicePicker({
-						title: entity ? `Select ${entity}` : null,
+						fullScreen: true,
+						// title: entity ? `Select ${entity}` : null,
+						// title: entity,
 						inset: false,
 						dismissible: false,
 						noHeading: false,

@@ -26,14 +26,15 @@ export default function MediaItem({
 
 		if (actions?.length) {
 			return window.openActionSheet({
+				fullScreen: true,
 				preview: {
 					image,
 					video,
 					title,
 					subtitle,
 				},
-				title: "Actions",
 				actions,
+				noHeading: true,
 			});
 		}
 
