@@ -196,7 +196,7 @@ export default function ActionGrid({
 						<>
 							{selectable ? (
 								<svg
-									className={clsx("ml-auto size-4", {
+									className={clsx("-mr-2.5 ml-auto size-4", {
 										"opacity-20": !action.selected,
 									})}
 									fill="currentColor"
@@ -391,7 +391,9 @@ export default function ActionGrid({
 							getId={(item) => item.__gridId}
 							onReorder={handleReorder}
 							renderItem={(action) => (
-								<ActionItem action={action} />
+								<div className="w-full -ml-3">
+									<ActionItem action={action} />
+								</div>
 							)}
 						/>
 					)}
