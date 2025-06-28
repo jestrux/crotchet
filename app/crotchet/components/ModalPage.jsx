@@ -259,12 +259,13 @@ export default function ModalPage({
 								paddingTop: "env(safe-area-inset-top)",
 							}}
 						>
-							<div
-								className="absolute inset-0 -bottom-4 bg-stone-100/95 dark:bg-card/95 backdrop-blur-[6px]"
+							{/* <div
+								className="absolute inset-0 -sbottom-4 bg-stone-100/80 dark:bg-card/80 backdrop-blur-lg"
 								style={{
 									mask: `linear-gradient(black, black 90%, transparent)`,
 								}}
-							/>
+							/> */}
+							<div className="absolute inset-0 bg-stone-100/95 dark:bg-card/95 backdrop-blur-[6px]" />
 
 							<div className="relative h-14 px-4 flex items-center justify-between gap-2">
 								<h3 className="text-xl truncate font-bold first-letter:uppercase">
