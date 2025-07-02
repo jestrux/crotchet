@@ -31,22 +31,68 @@ const formatEntry = (item) => {
 	};
 };
 
-registerAction("addToReadingList", {
-	label: "Add to reading list",
-	context: "share",
-	match: ({ url }) => url?.toString().length,
-	handler: async (payload) => {
-		showAlert(`${JSON.stringify(payload)} - reading list!!!`);
-		// return withLoader(async () => {
-		// 	// successMessage,
-		// 	// errorMessage,
-		// 	await someTime(200);
-		// 	setTimeout(() => {
-		// 		alert(`${JSON.stringify(payload)} Added to reading list!!!`);
-		// 	}, 300);
-		// });
+const formFields = {
+	group: {
+		type: "radio",
+		choices: ["📺 Watch", "🧪 Learn", "🎧 Listen", "🌎 General"],
+		defaultValue: "🌎 General",
 	},
+	image: "image",
+	title: "text",
+	description: "text",
+	url: "text",
+};
+
+const addItem = async (item) =>
+	window.openForm({
+		title: "Add to reading list",
+		data: item
+			? {
+					// group: (await Preferences.get({ key: "groupFilter" })).value ?? "",
+					group: item.group || "🌎 General",
+					image: item.image,
+					title: item.title,
+					description: item.description || item.subtitle,
+					url: item.url,
+			  }
+			: null,
+		fields: formFields,
+		action: {
+			label: "Save",
+			handler: (data) =>
+				window.withLoader(
+					window.dataSources.reader.insertRow(data),
+					"Added to reading list"
+				),
+		},
+	});
+
+registerAction("addToReadingList", {
+	context: "share",
+	icon: appIcon,
+	match: "url",
+	handler: async ({ preview, url }) =>
+		addItem({
+			...(preview?.image ? preview : await crawlUrl(url)),
+			url,
+			group: "🧪 Learn",
+		}),
 });
+
+// registerAction("addToWatchList", {
+// 	context: "share",
+// 	icon: appIcon,
+// 	match: "url",
+// 	handler: async ({ preview, url }) =>
+// 		addItem(
+// 			{
+// 				...(preview?.image ? preview : await window.crawlUrl(url)),
+// 				url,
+// 				group: "📺 Watch",
+// 			},
+// 			window
+// 		),
+// });
 
 registerWidget("readingList", {
 	title: "Learning List",

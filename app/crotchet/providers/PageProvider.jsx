@@ -411,16 +411,36 @@ export default function PageProvider({
 					onClick,
 					onOpenActionMenu,
 					onSearch: async (query) => {
+						let searchResults = [];
+
 						if (page?.onSearch) {
 							setLoadingFromSearch(true);
 							const results = await page?.onSearch(query);
 							setLoadingFromSearch(false);
-							return results;
+							searchResults = results;
+						} else {
+							searchResults = sectionedChoices(
+								pageData || [],
+								query,
+								{
+									valuesOnly: true,
+								}
+							);
 						}
 
-						return sectionedChoices(pageData || [], query, {
-							valuesOnly: true,
-						});
+						if (
+							!searchResults.length &&
+							page?.fallbackSearchResults
+						) {
+							searchResults = (
+								page.fallbackSearchResults(query) || []
+							).map((result) => ({
+								...result,
+								section: `Use "${query}" with...`,
+							}));
+						}
+
+						return searchResults;
 					},
 					onChangeFilter,
 					onFilterChanged,

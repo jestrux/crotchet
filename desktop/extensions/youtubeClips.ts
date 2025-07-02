@@ -17,6 +17,11 @@ const getYoutubeActualUrl = (props) => {
 	return `https://youtube.com/watch?v=${props?._id}&t=${start.toFixed(0)}`;
 };
 
+const getEmbedUrl = (url, start = 0, end = 0) =>
+	`https://www.youtube.com/embed/${getYoutubeId(url)}${
+		start ? `?start=${start}&` : ""
+	}${end ? `end=${end}` : ""}`;
+
 const appIcon = UI.svg(
 	"M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z",
 	{
@@ -189,6 +194,7 @@ const getActions = (payload) => {
 			  }),
 	};
 
+	// @ts-ignore
 	return Object.entries(actions).reduce((agg, [name, action]) => {
 		return [
 			...agg,
@@ -201,16 +207,309 @@ const getActions = (payload) => {
 	}, []);
 };
 
+// const addClip = async ({ url }) => {
+// 	return openPage({
+// 		title: "Add youtube Clip",
+// 		// resolve: () => getYoutubeVideoDetails(url),
+// 		// handler: saveVideo,
+// 	});
+// };
+
+const editVideo = async ({ title, resolve, openForm, handler }) => {
+	return openForm({
+		title: title
+			? title
+			: ({ pageData: video }) =>
+					`${video?._rowId ? "Edit" : "Add"} Youtube Clip`,
+		liveUpdate: false,
+		resolve: async () => {
+			const payload =
+				typeof resolve == "function" ? await resolve() : resolve;
+			return {
+				...payload,
+				title: payload.title || payload.name,
+				start: payload.crop?.at(0) || 0,
+				end: payload.crop?.at(1) || payload.duration,
+			};
+		},
+		externalAssets: [
+			{
+				type: "script",
+				name: "youtubeIframeApi",
+				url: "https://www.youtube.com/iframe_api",
+			},
+		],
+		preview({ pageData: video }) {
+			if (!video) return null;
+
+			// return getPlayClipPage(video).content();
+			return UI.component({
+				content: `
+					<div x-data="{
+						get start() {
+							return this.crop[0];
+						},
+						get end() {
+							return this.crop[1];
+						},
+						get startTime() {
+							return window.toHms(this.start);
+						},
+						get endTime() {
+							return window.toHms(this.end);
+						},
+						get src () {
+							const src = [
+								'https://www.youtube-nocookie.com/embed/',
+								this.videoId,
+								'?autoplay=1&enablejsapi=1&controls=1&start=',
+								this.start.toFixed(0),
+								'&end=',
+								this.end.toFixed(0),
+							].join('')
+
+							return src;
+						},
+						get youtubeUrl () {
+							return [
+								'https://youtube.com/watch?v=',
+								this.videoId,
+								'&t=',
+								this.start.toFixed(0),
+							].join('')
+						},
+						formatCropTime(time) {
+							return Number(Number(time).toFixed(3))
+						},
+						init() {
+							this.videoId = this.$pageData._id;
+							this.crop = [this.$pageData.start, this.$pageData.end].map(this.formatCropTime);
+							
+							this.$onPageDataChanged((data) => {
+								this.crop = [data.start, data.end].map(this.formatCropTime);
+								this.restartVideo();
+							});
+							
+							if(!window.YT?.Player) {
+								this.loadPlayer();
+								return console.log('Player not loaded!!!');
+							}
+
+							this.initPlayer();
+						},
+						loadPlayer() {
+							window.onYouTubeIframeAPIReady = () => {
+								console.log('Iframe ready...');
+								this.initPlayer();
+							};
+						},
+						initPlayer() {
+							console.log('Init youtube player', window.YT.Player);
+							this.player = new window.YT.Player('youtube-player', {
+								events: {
+									onReady: () => {
+										console.log('On player ready...');
+										window.addEventListener('message', (e) => this.listenForTime(e));
+									},
+								},
+							});
+						},
+						seekTo(time, skipCheck){
+							if(!skipCheck) {
+								const [start, end] = this.crop;
+								if (time >= end || time >= this.duration || time <= start) time = 0;
+							}
+							this.currentTime = time;
+							this.player.seekTo(time);
+							this.player.playVideo();
+						},
+						restartVideo(){
+							const [start] = this.crop;
+							this.seekTo(this.cropEnabled ? start : 0, true);
+						},
+						listenForTime(event){
+							this.lastTimeUpdate = 0;
+
+							const data = JSON.parse(event.data);
+
+							if (
+								data.event === 'infoDelivery' &&
+								data.info &&
+								data.info.currentTime
+							) {
+								const time = this.formatCropTime(data.info.currentTime);
+								this.currentTime = time;
+
+								if (time == this.lastTimeUpdate) return;
+
+								this.lastTimeUpdate = time;
+
+								let [start, end] = this.crop;
+
+								if(!this.cropEnabled) {
+									start = 0;
+									end = this.duration;
+								}
+
+								if (time < end && time > start) return;
+
+								this.restartVideo();
+							}
+						}
+					}">
+						<iframe
+							id="youtube-player"
+							class="spointer-events-none w-full"
+							style="aspect-ratio: 16/9"
+							src="${getEmbedUrl(video.url, video.start, video.end)}" 
+							x-bind:src="src"
+							allow="autoplay; encrypted-media"
+							allowfullscreen
+						>
+						</iframe>
+						<div class="mt-2 divide-y">
+							<div class="flex items-center justify-between gap-2 py-2 px-4">
+								<span>Start</span>
+								<span x-text="startTime"></span>
+							</div>
+							<div class="flex items-center justify-between gap-2 py-2 px-4">
+								<span>End</span>
+								<span x-text="endTime"></span>
+							</div>
+						</div>
+					</div>
+				`,
+			});
+		},
+		fields: {
+			title: "text",
+			poster: "image",
+			start: "text",
+			end: "text",
+			duration: "text",
+		},
+		action: {
+			label: "Save Clip",
+			successMessage: "Clip Saved",
+			handler: (res) => {
+				if (!res) return null;
+
+				const { start, end, ...video } = res;
+
+				const payload = {
+					...(video ?? {}),
+					name: video.title,
+					crop: [start, end],
+				};
+
+				if (typeof handler == "function") return handler(payload);
+
+				return payload;
+			},
+		},
+	});
+};
+
 const addClip = async ({ url }) => {
-	return openPage({
-		title: "Add youtube Clip",
-		// resolve: () => getYoutubeVideoDetails(url),
-		// handler: saveVideo,
+	const saveVideo = (video) => {
+		var id = video?.rowId || video?._id || video.id;
+
+		if (!id) return;
+
+		if (video._rowId)
+			return dataSources.youtubeClips.updateRow(video._rowId, video);
+
+		return dataSources.youtubeClips.insertRow({
+			...video,
+			_rowId: id,
+		});
+	};
+
+	url =
+		url ||
+		(await openForm({
+			title: "Add Youtube Clip",
+			field: {
+				label: "Video URL",
+				defaultValue: await readClipboard().then(({ value } = {}) =>
+					getYoutubeId(value) ? value : ""
+				),
+			},
+			action: {
+				handler: async (url) => {
+					if (!url?.length) throw "Video URL is required";
+
+					const videoId = getYoutubeId(url);
+					if (!videoId) throw `${url} is not a vaild Youtube URL`;
+
+					return getYoutubeActualUrl({
+						_id: videoId,
+					});
+				},
+			},
+		}));
+
+	if (!url || !getYoutubeId(url)) return;
+	// url = getYoutubeActualUrl({ _id: getYoutubeId(url) });
+
+	return editVideo({
+		title: "Add Youtube Clip",
+		// resolve: async () => await getYoutubeVideoDetails(url),
+		resolve: async () => {
+			const existingClip = await queryDb("youtubeClips", {
+				rowId: getYoutubeId(url),
+			});
+
+			if (existingClip) return existingClip;
+
+			const res = await crawlUrl(getEmbedUrl(url));
+			const data = res.data;
+			const indexOfDuration = data.indexOf("videoDurationSeconds");
+			const object = data.substring(
+				indexOfDuration,
+				indexOfDuration + 120
+			);
+			const end = object.indexOf(",");
+			let duration = object
+				.substring(0, end)
+				.replace("videoDurationSeconds", "")
+				.replace(/\\|"|:/g, "");
+
+			if (isNaN(Number(duration))) return null;
+
+			let start = 0;
+			const params = new URLSearchParams(url);
+			const startParam = (params.get("t") || params.get("start") || "")
+				.toString()
+				.trim()
+				.replace("s", "");
+			if (startParam && !isNaN(Number(startParam)))
+				start = Number(startParam);
+
+			duration = Number(duration);
+
+			res.meta = res.meta || {};
+
+			const payload = {
+				...res.meta,
+				_id: getYoutubeId(url),
+				url,
+				poster: res.meta.image,
+				duration,
+				start,
+				end: duration,
+				crop: [start, duration],
+			};
+
+			return payload;
+		},
+		openForm,
+		handler: saveVideo,
 	});
 };
 
 const createInterval = (callback, interval) => {
-	let rafId = null;
+	let rafId;
 	let lastTime = performance.now();
 
 	const tick = (currentTime) => {
@@ -224,9 +523,9 @@ const createInterval = (callback, interval) => {
 	rafId = requestAnimationFrame(tick);
 
 	return () => {
-		if (rafId !== null) {
+		if (rafId ?? null !== null) {
 			cancelAnimationFrame(rafId);
-			rafId = null;
+			rafId = undefined;
 			console.log("Clean looper...");
 		}
 	};
@@ -287,6 +586,7 @@ const getPlayClipPage = (clip, external = false) => {
 	const initPlayer = () => {
 		let script = document.querySelector("#youtube-player-iframe");
 		const connectJS = () => {
+			// @ts-ignore
 			player = new window.YT.Player("youtube-player");
 			// , {
 			// 	events: {
@@ -303,11 +603,14 @@ const getPlayClipPage = (clip, external = false) => {
 		if (!script) {
 			script = document.createElement("script");
 			script.id = "youtube-player-iframe";
+			// @ts-ignore
 			script.src = "https://www.youtube.com/iframe_api";
 			document.body.appendChild(script);
 		}
 
+		// @ts-ignore
 		if (window.YT?.Player) connectJS();
+		// @ts-ignore
 		else window.onYouTubeIframeAPIReady = () => connectJS();
 	};
 

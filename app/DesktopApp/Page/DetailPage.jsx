@@ -2,33 +2,107 @@ import { useRef } from "react";
 import PageFilters from "./components/PageFilters";
 import { usePageContext } from "@/crotchet/providers/PageProvider";
 import PageContent from "./components/PageContent";
+import { Form } from "@/crotchet/components";
+import { randomId, dispatch, withLoader } from "@/crotchet/utils";
 // import ActionPage from "./ActionPage";
-// import FormPage from "./FormPage";
 
 export default function DetailPage() {
-	const { page, title, content, pageResolving, onOpen, onClose } = usePageContext();
+	const {
+		page,
+		title,
+		content,
+		pageResolving,
+		pageData,
+		setMainAction,
+		mainAction,
+		onOpen,
+		onClose,
+		preview,
+	} = usePageContext();
+	const formId = useRef(randomId("form"));
 	const popoverTitleRef = useRef(null);
+	const pageHasFields =
+		[typeof page.fields, typeof page.field].includes("function") ||
+		Object.keys(page.fields ?? {}).length > 0 ||
+		page.field;
 
 	onOpen(() => {
 		setTimeout(() => {
-			if (page?.type == "form") {
+			if (pageHasFields) {
 				const firstInput = document.querySelector(
 					"#popoverContent input, #popoverContent textarea"
 				);
 				if (firstInput) firstInput.focus();
+
+				let action = page?.action;
+				if (typeof action == "function")
+					action = action({ page, pageData });
+
+				setMainAction({
+					...(action
+						? {
+								...action,
+								__originalHandler: action.handler,
+						  }
+						: {}),
+
+					handler: () => {
+						document
+							.querySelector(`#${formId.current} [type="submit"]`)
+							?.click();
+					},
+				});
 			}
 		}, 20);
 	});
 
 	const renderPage = () => {
-		// const pageHasFields =
-		// 	[typeof page.fields, typeof page.field].includes("function") ||
-		// 	Object.keys(page.fields ?? {}).length > 0 ||
-		// 	page.field;
-
 		// let content = _content();
 		// if (pageHasFields) content = <FormPage page={page} />;
 		// return <ActionPage page={page}>{content}</ActionPage>;
+
+		if (pageHasFields) {
+			const horizontalLayout = !preview && !page?.fullWidth;
+			return (
+				<div className="p-4">
+					<Form
+						{...page}
+						horizontalLayout={horizontalLayout}
+						data={pageData}
+						formId={formId.current}
+						onChange={(data) => {
+							dispatch("page-data-changed-" + page?._id, data);
+							if (page.onChange) page.onChange(data);
+						}}
+						onSubmit={async (values) => {
+							values = _.keys(values).includes("formField")
+								? values.formField
+								: values;
+
+							const pageAction = mainAction();
+							let res = values;
+							if (
+								typeof pageAction.__originalHandler ==
+								"function"
+							) {
+								res = await withLoader(
+									() => pageAction.__originalHandler(values),
+									{
+										successMessage:
+											pageAction.successMessage,
+										errorMessage: pageAction.errorMessage,
+									}
+								);
+
+								if (!res) return;
+							}
+
+							onClose(res);
+						}}
+					/>
+				</div>
+			);
+		}
 
 		return content;
 	};
@@ -62,9 +136,7 @@ export default function DetailPage() {
 					</button>
 				)}
 
-				<span className="w-full text-base font-bold">
-					{title}
-				</span>
+				<span className="w-full text-base font-bold">{title}</span>
 
 				{!pageResolving && <PageFilters />}
 			</div>

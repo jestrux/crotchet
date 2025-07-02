@@ -102,7 +102,7 @@ export default function useAppPages() {
 	};
 
 	// window.openPage = (page) => pushPage(page);
-	// window.openForm = (page) => pushPage({ ...page, type: "form" });
+	window.openForm = (page) => window.openPage({ ...page, type: "form" });
 
 	const notifyRemoteOnPageClose = (pageId) => {
 		if (onDesktop()) {

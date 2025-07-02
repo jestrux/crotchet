@@ -82,7 +82,15 @@ export default function SearchPage() {
 	const containerRef = useRef(null);
 	const inputRef = useRef(null);
 	const { grid, aspectRatio, columns, masonry } = layoutDetails(page);
-	const [searchResults, setSearchResults] = useState([]);
+	const resultsRef = useRef([]);
+	const [searchResults, _setSearchResults] = useState([]);
+	const setSearchResults = (results) => {
+		resultsRef.current = results;
+		_setSearchResults(results);
+		navigateToStart();
+		// setTimeout(() => navigateToStart(), 300);
+	};
+
 	const choices = pageData || [];
 	const choiceSections = searchResults.length
 		? sectionedChoices(searchResults, "")
@@ -90,7 +98,7 @@ export default function SearchPage() {
 
 	const getContainer = () => containerRef.current;
 
-	const getActionForValue = (value) => {
+	const getActionForValue = (value, choices) => {
 		const choice = objectFieldChoices(choices).find(
 			(choice) => choice.value == value
 		);
@@ -116,7 +124,10 @@ export default function SearchPage() {
 	};
 
 	const handleSelect = (value) => {
-		const [action] = getActionForValue(value);
+		const [action] = getActionForValue(
+			value,
+			resultsRef.current.length ? resultsRef.current : choices
+		);
 		onActionClick(action)();
 		navigate(value);
 	};
@@ -126,7 +137,10 @@ export default function SearchPage() {
 
 		activeChoiceIndexRef.current = index;
 
-		const [action, actions] = getActionForValue(value);
+		const [action, actions] = getActionForValue(
+			value,
+			resultsRef.current.length ? resultsRef.current : choices
+		);
 		setMainAction(action);
 		setActions(actions);
 	};
@@ -246,7 +260,6 @@ export default function SearchPage() {
 
 		onSearch(query).then((results) => {
 			setSearchResults(results);
-			navigateToStart();
 		});
 	};
 
@@ -335,7 +348,7 @@ export default function SearchPage() {
 				{!pageResolving && (
 					<>
 						{!choiceSections?.length && query?.length > 0 && (
-							<div className="absolute inset-0 flex flex-col items-center justify-center select-none truncate text-lg text-content/30 text-center font-medium">
+							<div className="absolute inset-0 pb-12 flex flex-col items-center justify-center select-none truncate text-lg text-content/30 text-center font-medium">
 								<svg
 									className="mb-5 size-8 opacity-80"
 									fill="currentColor"

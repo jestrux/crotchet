@@ -12,7 +12,10 @@ declare var actions: { [key: string]: any };
 
 declare var dataSources: { [key: string]: any };
 
-declare var copyToClipboard: (content: string, message?: string) => Promise<any>;
+declare var copyToClipboard: (
+	content: string,
+	message?: string
+) => Promise<any>;
 
 declare var copyImage: (url: string, message?: string) => Promise<any>;
 
@@ -35,6 +38,8 @@ declare var objectToQueryParams: (obj: { [key: string]: any }) => string;
 declare var urlQueryParamsAsObject: (path: string) => { [key: string]: any };
 
 declare var toHms: (number: Number) => string | null;
+
+declare var crawlUrl: (url: string, matcher?: string) => Promise<any>;
 
 declare var queryDb: (
 	name: String,
@@ -176,6 +181,7 @@ declare var UI: {
 		content?: string | null | (() => string | null);
 		onInit?: (({ $el }) => void) | null;
 		onRemoteAction?: ((GenericObject) => void) | null;
+		onPageDataChanged?: ((GenericObject) => void) | null;
 		onDestroy?: (({}) => void) | null;
 	}) => [];
 	media: (payload: {
@@ -330,7 +336,7 @@ declare var Page: {
 	filters?: (typeof ChoiceItem)[];
 
 	// form details
-	data?: { [key: string]: any };
+	data?: { [key: string]: any } | null;
 	fields?: { [key: string]: any };
 	field?: { [key: string]: any };
 };
@@ -348,7 +354,10 @@ declare var registerAction: (
 				global?: boolean | undefined;
 				mobileOnly?: boolean | undefined;
 				desktopOnly?: boolean | undefined;
-				match?: (payload: any) => boolean | null | undefined;
+				match?:
+					| "url"
+					| "text"
+					| ((payload: any) => boolean | null | undefined);
 				actions?:
 					| (typeof ActionButton)[]
 					| (() => (typeof ActionButton)[]);

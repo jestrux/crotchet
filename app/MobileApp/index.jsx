@@ -77,6 +77,9 @@ registerPlatformUtils({
 			// window.showToast("Read file failed: " + error);
 		}
 	},
+	// readNetworkFile: async (url) => {
+	// 	window.socketEmit("read-network-file", { url });
+	// },
 	writeFile: async (props = {}, contents, { folder, open } = {}) => {
 		try {
 			return await Filesystem.writeFile({

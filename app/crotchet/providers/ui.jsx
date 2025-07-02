@@ -1,7 +1,7 @@
 import RegularListItem from "@/crotchet/components/ListItem";
 import MediaItem from "../components/MediaItem";
 import { useEventListener } from "../hooks";
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { usePageContext } from "./PageProvider";
 import { loadExternalAsset } from "../utils";
 
@@ -11,11 +11,27 @@ export function media({ data } = {}) {
 }
 
 function Component({ data }) {
-	const { page, isOpen } = usePageContext();
+	const { page, pageData, isOpen } = usePageContext();
+	const [initialized, setInitialized] = useState(false);
 	const elementRef = useRef();
+	const pageDataChangedHandler = useRef();
 
 	useLayoutEffect(() => {
-		loadAssets();
+		elementRef.current.setAttribute(
+			"x-data",
+			`{
+				$page: ${JSON.stringify(page)},
+				$pageData: ${JSON.stringify(pageData || {})}
+			}`
+		);
+
+		loadAssets().then(() => {
+			window.Alpine.magic("onPageDataChanged", () => (callback) => {
+				pageDataChangedHandler.current = callback;
+			});
+
+			setTimeout(() => setInitialized(true));
+		});
 
 		if (data.onInit) {
 			data.onInit({
@@ -41,9 +57,12 @@ function Component({ data }) {
 		);
 	};
 
-	useEventListener("remote-action-" + page?._id, (_, payload) => {
+	useEventListener("page-data-changed-" + page?._id, (_, payload) => {
 		if (!isOpen) return;
-		if (data.onRemoteAction) data.onRemoteAction(payload);
+		if (data.onPageDataChanged) data.onPageDataChanged(payload);
+
+		if (typeof pageDataChangedHandler.current == "function")
+			pageDataChangedHandler.current(payload);
 	});
 
 	const content =
@@ -57,7 +76,7 @@ function Component({ data }) {
 			x-data="{}"
 			ref={elementRef}
 			className={className}
-			dangerouslySetInnerHTML={{ __html: content }}
+			dangerouslySetInnerHTML={{ __html: initialized ? content : "" }}
 		></div>
 	);
 }

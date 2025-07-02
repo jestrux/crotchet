@@ -6,6 +6,7 @@ import * as firebaseUtils from "./crotchet/providers/firebase";
 import * as UI from "./crotchet/providers/ui";
 import * as crotchet from "./crotchet";
 import "./crotchet/providers/socket";
+import { crawlUrl } from "./crotchet/providers/crawler";
 
 const { __initializeCrotchet, ...crotchetThings } = crotchet;
 
@@ -16,6 +17,7 @@ Object.assign(window, {
 	tinycolor,
 	...crotchetThings,
 	...firebaseUtils,
+	crawlUrl,
 	UI,
 });
 

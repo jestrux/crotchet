@@ -4,6 +4,8 @@ import {
 	dispatch,
 	getPreference,
 	savePreference,
+	processShareData,
+	objectIsEmpty,
 } from "@/crotchet/utils";
 import { useAppContext } from "@/crotchet/providers/AppProvider";
 
@@ -131,6 +133,84 @@ const getCommands = async () => {
 	];
 };
 
+const getShareActions = (content = {}, actions, mainActionNames = []) => {
+	const {
+		image,
+		file,
+		url,
+		text,
+		download,
+		incoming,
+		fromClipboard,
+		scheme,
+		sheet,
+		state = {},
+	} = content;
+
+	return Object.entries((actions || window.actions) ?? {}).reduce(
+		(agg, [name, action]) => {
+			if (
+				name == "share" ||
+				action.context != "share" ||
+				action.mobileOnly
+			)
+				return agg;
+
+			if (
+				scheme?.length &&
+				![action.scheme, action.sheet].includes(scheme)
+			)
+				return agg;
+
+			let matches =
+				!objectIsEmpty({ image, url, file, text }) ||
+				(scheme?.length && !objectIsEmpty(state));
+
+			const match = action.match;
+
+			if (_.isFunction(match)) {
+				matches = match({
+					image,
+					file,
+					url,
+					text,
+					download,
+					scheme,
+					sheet,
+					state,
+					fromClipboard,
+				});
+			} else if (
+				["image", "file", "url", "text", "download"].includes(match)
+			) {
+				matches = {
+					image,
+					file,
+					url,
+					text,
+					download,
+				}[match]?.length;
+			}
+
+			if (!matches) return agg;
+
+			const isMain = mainActionNames.includes(name);
+
+			if (isMain && incoming) return agg;
+
+			return [
+				...agg,
+				{
+					name,
+					...action,
+					main: isMain,
+				},
+			];
+		},
+		[]
+	);
+};
+
 export default function AppContent() {
 	const { pages, popPage } = useAppContext();
 	const rootPage = {
@@ -138,6 +218,65 @@ export default function AppContent() {
 		_id: "root",
 		type: "search",
 		resolve: getCommands,
+		fallbackSearchResults: (searchQuery) => {
+			const payload = {
+				...((processShareData(searchQuery) || {}).payload || {}),
+				fromClipboard: true,
+			};
+
+			return getShareActions(payload).map((item) => {
+				// const ranking = rankingRef.current;
+
+				return {
+					// pinned: ranking[item.name] ?? -1,
+					...item,
+					name: item.name,
+					label: item.label,
+					value: item.label,
+					trailing: "Action",
+					action: {
+						label: "Select action",
+						handler: () => {
+							// updateCommandRanking(item.name).then(
+							// 	(newPosition) =>
+							// 		(ranking[item.name] = newPosition)
+							// );
+							return item.handler(payload);
+						},
+					},
+					actions: (...payload) => [
+						...(typeof item.actions == "function"
+							? item.actions(...payload)
+							: item.actions
+							? item.actions
+							: []),
+						// {
+						// 	label: "Reset Ranking",
+						// 	handler: () => {
+						// 		window.withLoader(
+						// 			async () => {
+						// 				await updateCommandRanking(
+						// 					item.name,
+						// 					-1
+						// 				);
+						// 				dispatch("app-commands-updated");
+						// 			},
+						// 			{
+						// 				successMessage: "Ranking reset",
+						// 			}
+						// 		);
+						// 	},
+						// },
+					],
+					preview: () =>
+						typeof item.preview == "function"
+							? item.preview(searchQuery)
+							: item.preview
+							? item.preview
+							: null,
+				};
+			});
+		},
 		listenForUpdates: ["app-commands-updated", "app-actions-updated"],
 	};
 
