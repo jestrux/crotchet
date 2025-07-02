@@ -3,10 +3,15 @@ import { Clipboard } from "@capacitor/clipboard";
 import { Share } from "@capacitor/share";
 import { Directory, Encoding, Filesystem } from "@capacitor/filesystem";
 import { App as CapacitorApp } from "@capacitor/app";
-import registerPlatformUtils from "@/crotchet/registerUtils";
+import registerPlatformUtils from "@/crotchet/registerPlatformUtils";
 import { openUrl } from "@/crotchet";
 import { SendIntent } from "send-intent";
-import { getLinksFromText, isValidUrl, objectIsEmpty } from "@/crotchet/utils";
+import {
+	fetchImage,
+	getLinksFromText,
+	isValidUrl,
+	objectIsEmpty,
+} from "@/crotchet/utils";
 import { useCrotchetApp } from "@/crotchet/providers/AppProvider";
 // import { Loader } from "@/crotchet/components";
 
@@ -22,6 +27,22 @@ registerPlatformUtils({
 			await Clipboard.write({
 				string: content,
 				url: content,
+			});
+
+			window.showToast(message);
+		} catch (error) {
+			console.log("Error copying text: ", error);
+			throw "Failed to copy!";
+		}
+	},
+	copyImage: async (content, message = "Copied") => {
+		if (!content?.length) return console.log("Nothing to copy: ", content);
+
+		try {
+			const image = await fetchImage(content);
+
+			await Clipboard.write({
+				image,
 			});
 
 			window.showToast(message);

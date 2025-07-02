@@ -1,4 +1,3 @@
-import { useDebounce } from "@/crotchet/hooks";
 import { forwardRef, useEffect, useRef, useState } from "react";
 
 const Input = forwardRef(function Input(
@@ -7,40 +6,50 @@ const Input = forwardRef(function Input(
 ) {
 	const focusRef = useRef();
 	const [_value, _setValue] = useState(value);
-	const debouncedValue = useDebounce(_value, debounce ?? 500);
-	const setValue = (newValue) => {
-		_setValue(newValue);
-		if (!debounce) onChange(newValue);
-	};
+	const timeoutRef = useRef(null);
 
-	useEffect(() => {
-		if (value == _value) return;
-
-		_setValue(value);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [value]);
-
-	useEffect(() => {
-		if (debounce && debouncedValue != value) onChange(debouncedValue);
-	}, [debouncedValue, debounce, value, onChange]);
+	// Update internal state when external value changes
+	useEffect(() => _setValue(value), [value]);
 
 	const handleKeyDown = (e) => {
 		if (e.key == "Enter" && typeof onEnter == "function") onEnter(e);
 		if (e.key == "Escape" && typeof onEscape == "function") onEscape(e);
 	};
 
+	// Handle input changes
 	const handleChange = (e) => {
-		const value = e.target.value;
-		// showToast("On change:" + JSON.stringify(value), {
-		// 	position: "center",
-		// });
-		setValue(value);
+		const newValue = e.target.value;
+		_setValue(newValue);
+
+		// Clear existing timeout
+		if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+		// If debounce is enabled, delay the onChange call
+		if (debounce > 0) {
+			timeoutRef.current = setTimeout(
+				() => onChange?.(newValue),
+				debounce
+			);
+			return;
+		}
+
+		// Call onChange immediately if no debounce
+		onChange?.(newValue, e);
 	};
+
+	// Cleanup timeout on unmount
+	useEffect(() => {
+		return () => {
+			if (timeoutRef.current) {
+				clearTimeout(timeoutRef.current);
+			}
+		};
+	}, []);
 
 	return (
 		<input
-			ref={ref}
 			{...props}
+			ref={ref}
 			value={_value}
 			onChange={handleChange}
 			onKeyDown={handleKeyDown}

@@ -2,6 +2,7 @@ import SpotlightListItem from "./PageListItem";
 import clsx from "clsx";
 
 export default function PageGrid({
+	masonry,
 	aspectRatio,
 	choices = [],
 	columns = 4,
@@ -15,8 +16,17 @@ export default function PageGrid({
 
 	return (
 		<div
-			className="grid mt-0.5 pt-2 pr-2"
-			style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
+			className={clsx(
+				"mt-0.5 pt-2 pr-2",
+				masonry
+					? `columns-[${columns}] gap-0`
+					: `grid grid-cols-${columns}`
+			)}
+			style={{
+				gridTemplateColumns: masonry
+					? `repeat(${columns}, 1fr)`
+					: `repeat(${columns}, 1fr)`,
+			}}
 		>
 			{choices.map((entry) => (
 				<SpotlightListItem
@@ -47,7 +57,7 @@ export default function PageGrid({
 								{icon?.length ? (
 									<div
 										className="flex items-center justify-center rounded-md"
-										style={{ aspectRatio }}
+										style={masonry ? {} : { aspectRatio }}
 										dangerouslySetInnerHTML={{
 											__html: icon,
 										}}
@@ -55,7 +65,7 @@ export default function PageGrid({
 								) : (
 									<div
 										className="spotlight-grid-item-preview relative flex-shrink-0 bg-content/10 border border-stroke rounded-md overflow-hidden w-full"
-										style={{ aspectRatio }}
+										style={masonry ? {} : { aspectRatio }}
 									>
 										{(image?.length || video?.length) && (
 											<>
@@ -77,9 +87,12 @@ export default function PageGrid({
 													</div>
 												) : (
 													<img
-														className={
-															"absolute size-full object-cover pointer-events-none"
-														}
+														className={clsx(
+															"object-cover pointer-events-none",
+															masonry
+																? "w-full max-h-[calc(100vh-130px)]"
+																: "absolute size-full"
+														)}
 														src={
 															image?.length
 																? image
@@ -111,7 +124,7 @@ export default function PageGrid({
 									</div>
 								)}
 
-								{!previewOnly && (
+								{!previewOnly && !masonry && (
 									<div
 										className={clsx(
 											"flex-1 min-w-0 space-y-1",

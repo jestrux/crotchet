@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Portal } from "@reach/portal";
-import { useDataLoader } from "@/crotchet/hooks";
+import { useDataLoader, useEventListener } from "@/crotchet/hooks";
 import Loader from "@/crotchet/components/Loader";
 
 import clsx from "clsx";
@@ -21,8 +21,10 @@ export default function ModalPage({
 	searchable = false,
 	title: _title,
 	content: _content,
+	placeholder = "Search...",
 	emptyStateMessage = "Nothing in here",
 	onClose = () => {},
+	onSearch,
 }) {
 	const inputRef = useRef(null);
 	const scrollViewRef = useRef(null);
@@ -33,33 +35,60 @@ export default function ModalPage({
 		}, delay);
 	};
 
+	const blurSearchInput = () => {
+		inputRef.current?.blur();
+	};
+
 	const handleClear = () => {
 		setSearchQuery("");
-
-		const input = inputRef.current;
-
-		if (input?.getAttribute("is-focused")) inputRef.current?.focus();
+		handleSearch("");
+		if (inputRef.current?.getAttribute("is-focused")) focusSearchInput(0);
 	};
 
 	const [searchQuery, setSearchQuery] = useState("");
+	const [canDrag, setCanDrag] = useState(false);
+	const [loadingFromSearch, setLoadingFromSearch] = useState(false);
+	const [data, setData] = useState([]);
 	const { KeyboardPlaceholder } = useKeyboard();
 	const {
 		data: _data,
 		showLoader,
-		loading,
+		loading: _loading,
 	} = useDataLoader({
 		delayLoader: true,
 		handler: resolve,
+		onSuccess: (res) => {
+			setData(res);
+		},
 	});
-	const data = matchSorter(_data || [], searchQuery, {
-		keys: ["title", "label", "subtitle", "tags"],
-	});
+
+	const handleSearch = (value) => {
+		setSearchQuery(value);
+		scrollViewRef.current.scrollTop = 0;
+
+		if (onSearch) {
+			if (!value.length) return setData(_data || []);
+
+			setLoadingFromSearch(true);
+			return onSearch(value).then((res) => {
+				setData(res);
+				setLoadingFromSearch(false);
+			});
+		}
+
+		setData(
+			matchSorter(_data || [], searchQuery, {
+				keys: ["title", "label", "subtitle", "tags"],
+			})
+		);
+	};
 
 	const evaluate = (item, payload, defaultValue) => {
 		if (!item) return defaultValue;
 		return typeof item == "function" ? item(payload) ?? defaultValue : item;
 	};
 
+	const loading = loadingFromSearch || _loading;
 	const context = { data, loading, showLoader };
 	const title = evaluate(_title, context);
 	const content = evaluate(_content, context);
@@ -68,7 +97,16 @@ export default function ModalPage({
 
 	useLayoutEffect(() => {
 		focusSearchInput();
+		setTimeout(() => {
+			setCanDrag(
+				scrollViewRef.current?.scrollHeight <= window.innerHeight
+			);
+		}, 1000);
 	}, []);
+
+	useEventListener("alerts-changed", () => {
+		blurSearchInput();
+	});
 
 	const searchInput = () => {
 		return (
@@ -90,15 +128,11 @@ export default function ModalPage({
 				<Input
 					ref={inputRef}
 					className="h-9 pl-9 w-full text-lg font-medium border-none dark:border border-stroke shadow dark:shadow-sm bg-card/80 dark:bg-content/5 text-content/80 ring-transparent focus:ring-0 rounded-lg placeholder:text-content/30 focus:outline-none"
-					placeholder="Search..."
+					placeholder={placeholder}
 					value={searchQuery}
-					onEnter={() => {
-						inputRef.current.blur();
-					}}
-					onChange={(value) => {
-						setSearchQuery(value);
-						scrollViewRef.current.scrollTop = 0;
-					}}
+					debounce={onSearch ? 500 : 0}
+					onEnter={blurSearchInput}
+					onChange={handleSearch}
 				/>
 
 				{searchQuery && (
@@ -139,9 +173,13 @@ export default function ModalPage({
 		if (data?.length) {
 			return (
 				<>
-					{layout == "grid" ? (
+					{["grid", "masonry"].includes(layout) ? (
 						<div className="w-full overflow-x-hidden py-1 px-2">
-							<GridList data={data} gap="0.5rem" />
+							<GridList
+								data={data}
+								gap="0.5rem"
+								masonry={layout == "masonry"}
+							/>
 						</div>
 					) : (
 						<div className="w-full overflow-x-hidden py-1 px-4">
@@ -154,24 +192,16 @@ export default function ModalPage({
 
 		return (
 			<>
-				<motion.div
+				<div
 					className="mt-auto w-full px-6 flex flex-col"
-					drag="y"
-					dragConstraints={{
-						top: 0,
-						bottom: 0.2,
-					}}
-					dragElastic={{
-						top: 0,
-						bottom: 0.2,
-					}}
-					onDragEnd={(_, info) => {
-						if (info.offset.y > 0) onClose();
+					style={{
+						paddingBottom:
+							"calc(env(safe-area-inset-bottom) + 4rem)",
 					}}
 				>
 					{preview || actions ? (
 						<motion.div
-							className="flex flex-col gap-6"
+							className="flex flex-col gap-2"
 							initial={{
 								y: "20%",
 								opacity: 0,
@@ -179,6 +209,19 @@ export default function ModalPage({
 							animate={{
 								y: 0,
 								opacity: 1,
+							}}
+							drag="y"
+							dragListener={canDrag}
+							dragConstraints={{
+								top: 0,
+								bottom: 0.2,
+							}}
+							dragElastic={{
+								top: 0,
+								bottom: 0.2,
+							}}
+							onDragEnd={(_, info) => {
+								if (info.offset.y > 0) onClose();
 							}}
 						>
 							{preview && <PreviewCard {...preview} />}
@@ -194,36 +237,38 @@ export default function ModalPage({
 						</div>
 					)}
 
-					<motion.button
-						className="mt-12 mb-8 mx-auto size-12 border border-content/20 rounded-lg flex gap-1 items-center justify-center"
-						onClick={() => onClose()}
-						initial={{
-							opacity: 0,
-							scale: 0.5,
-						}}
-						animate={{
-							opacity: 1,
-							scale: 1,
-						}}
-						transition={{
-							delay: 0.06,
-						}}
-					>
-						<svg
-							className="size-8 opacity-70"
-							fill="none"
-							viewBox="0 0 24 24"
-							strokeWidth={2}
-							stroke="currentColor"
+					{
+						<motion.button
+							className="bg-stone-100/80 dark:bg-card/80 backdrop-blur dark:backdrop-blur-lg fixed bottom-0 inset-x-0 mt-6 mb-8 mx-auto size-12 border border-content/20 rounded-lg flex gap-1 items-center justify-center"
+							onClick={() => onClose()}
+							initial={{
+								opacity: 0,
+								scale: 0.5,
+							}}
+							animate={{
+								opacity: 1,
+								scale: 1,
+							}}
+							transition={{
+								delay: 0.06,
+							}}
 						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								d="M6 18 18 6M6 6l12 12"
-							></path>
-						</svg>
-					</motion.button>
-				</motion.div>
+							<svg
+								className="size-8 opacity-70"
+								fill="none"
+								viewBox="0 0 24 24"
+								strokeWidth={2}
+								stroke="currentColor"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									d="M6 18 18 6M6 6l12 12"
+								></path>
+							</svg>
+						</motion.button>
+					}
+				</div>
 			</>
 		);
 	};
@@ -297,12 +342,10 @@ export default function ModalPage({
 
 				<div
 					ref={scrollViewRef}
-					className={clsx("fixed inset-0", {
-						"overflow-y-auto": !noContent,
-					})}
+					className="fixed inset-0 overflow-y-auto"
 					style={{
-						paddingTop: "env(safe-area-inset-top)",
-						paddingBottom: "env(safe-area-inset-bottom)",
+						paddingTop: noContent ? "" : "env(safe-area-inset-top)",
+						paddingBottom: "env(safe-area-inset-bottom",
 					}}
 				>
 					<div

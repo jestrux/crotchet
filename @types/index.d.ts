@@ -12,9 +12,9 @@ declare var actions: { [key: string]: any };
 
 declare var dataSources: { [key: string]: any };
 
-declare var copyToClipboard: (any) => any;
+declare var copyToClipboard: (content: string, message?: string) => Promise<any>;
 
-declare var copyFromUrl: (url?: string) => Promise<any>;
+declare var copyImage: (url: string, message?: string) => Promise<any>;
 
 declare var shareImage: (url?: string) => Promise<any>;
 
@@ -292,6 +292,8 @@ declare var Page: {
 	type?: string | ((payload: typeof PageContext) => string);
 	resolve?: Function;
 	title?: typeof PageTitle;
+	layout?: "list" | "grid" | "masonry";
+	onSearch?: (value?: string) => PromiseLike<any>;
 	fullScreen?: boolean | ((payload: typeof PageContext) => boolean);
 	condensingTitle?: boolean | ((payload: typeof PageContext) => boolean);
 	placeholder?: string;
@@ -442,12 +444,14 @@ declare var openChoicePicker: (
 		| typeof ChoiceList
 		| {
 				layout?: "list" | "grid" | "masonry";
+				placeholder?: string;
 				fullScreen?: boolean;
 				noHeading?: boolean;
 				dismissible?: boolean;
 				inset?: boolean;
 				title?: string | null;
 				choices: typeof ChoiceList;
+				onSearch?: (value: string) => PromiseLike<typeof ChoiceList>;
 		  }
 ) => PromiseLike<any>;
 

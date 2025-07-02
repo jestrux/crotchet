@@ -178,11 +178,6 @@ export const shareImage = async (url) =>
 		files: [await fetchImage(encodeURI(url))],
 	});
 
-export const copyFromUrl = async (url) =>
-	window.copyToClipboard(
-		await fetch(url).then((response) => response.text())
-	);
-
 export const getUserPreferences = async (fromSave) => {
 	try {
 		let res = await window.readFile({ name: "__crotchetPreferences.json" });
@@ -247,7 +242,7 @@ export const loadExternalAsset = async (url, { name, type, defer } = {}) => {
 			asset.setAttribute("data-external-asset", name);
 			document.querySelector("head").appendChild(asset);
 		} catch (error) {
-			return await new Promise((resolve, reject) => {
+			return await new Promise((resolve) => {
 				const asset = document.createElement(
 					isCss ? "style" : "script"
 				);
@@ -509,6 +504,16 @@ export const sectionedChoices = (choices = [], query, { valuesOnly } = {}) => {
 				keys: ["label", "sectionTag"],
 		  });
 
+	if (query?.length) {
+		formattedChoices = formattedChoices.map((choice) => {
+			return {
+				...choice,
+				pinned: false,
+				section: "Results",
+			};
+		});
+	}
+
 	formattedChoices = Object.entries(
 		_.groupBy(_.orderBy(formattedChoices, "pinned", "desc"), "section")
 	).filter(([, choices]) => choices.length);
@@ -598,12 +603,17 @@ export const toHms = (number) => {
 
 export const withLoader = async (action, props) => {
 	const {
+		loadingMessage = "Loading...",
 		successMessage = "Success!",
 		errorMessage = "Unknown Error!",
 		onChange = () => {},
 	} = typeof props == "string" ? { successMessage: props } : props || {};
 	const handleChange = async (status, payload) => {
-		let message = { success: successMessage, error: errorMessage }[status];
+		let message = {
+			success: successMessage,
+			error: errorMessage,
+			loading: loadingMessage,
+		}[status];
 
 		if (typeof message == "function") message = message(payload);
 		else if (status == "error" && typeof payload == "string")

@@ -15,7 +15,7 @@ export default function GridList({ source, data, isLoading, ...props }) {
 		...props,
 	};
 
-	const { entryActions, entryAction } = {
+	const { entryActions, entryAction, masonry } = {
 		...(source || {}),
 		...props,
 	};
@@ -44,6 +44,8 @@ export default function GridList({ source, data, isLoading, ...props }) {
 						: typeof entryActions == "function"
 						? () =>
 								window.openActionSheet({
+									fullScreen: true,
+									title: entry.title,
 									actions: entryActions(entry),
 									preview: _.pick(entry, [
 										"icon",
@@ -60,6 +62,8 @@ export default function GridList({ source, data, isLoading, ...props }) {
 				<GridListItem
 					key={_id}
 					{...entryProps}
+					masonry={masonry}
+					gap={gap}
 					aspectRatio={aspectRatio}
 					meta={meta}
 				/>
@@ -94,7 +98,11 @@ export default function GridList({ source, data, isLoading, ...props }) {
 		content = (
 			<div className="@container px-1">
 				<div
-					className={clsx("pb-2 grid", columnClasses)}
+					className={clsx(
+						"pb-2",
+						columnClasses,
+						masonry ? `columns-2 gap-[${gap}]` : "grid"
+					)}
 					style={{
 						gap,
 					}}

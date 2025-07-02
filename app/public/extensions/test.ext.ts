@@ -49,7 +49,7 @@ registerAction("testPic", {
 					label: "Copy",
 					icon: UI.icon("copy"),
 					handler: () => {
-						copyFromUrl(imageUrl);
+						copyImage(imageUrl);
 						showToast("Image copied");
 					},
 				},

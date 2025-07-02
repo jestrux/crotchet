@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { useDataLoader, useEventListener } from "@/crotchet/hooks";
-import { someTime, randomId } from "@/crotchet/utils";
+import { someTime, randomId, sectionedChoices } from "@/crotchet/utils";
 import { sourceGet } from "../hooks/useSourceGet";
 
 const PageContext = createContext({
@@ -43,6 +43,7 @@ const PageContext = createContext({
 	onClick: () => {},
 	onMainActionClick: () => {},
 	onOpenActionMenu: () => {},
+	onSearch: null,
 	onChangeFilter: () => {},
 	onFilterChanged: () => {},
 	onSecondaryActionClick: () => {},
@@ -118,6 +119,7 @@ export default function PageProvider({
 	const navigateUpHandler = useRef(() => {});
 	const onNavigateUp = (callback) => (navigateUpHandler.current = callback);
 
+	const [loadingFromSearch, setLoadingFromSearch] = useState(false);
 	const { refetch, loading } = useDataLoader({
 		handler: async () => {
 			const filter = filterRef.current;
@@ -298,7 +300,7 @@ export default function PageProvider({
 					setPageData,
 					formData,
 					setFormData,
-					pageResolving: loading,
+					pageResolving: loading || loadingFromSearch,
 					pageStatus,
 					onOpen,
 					onBlur,
@@ -408,6 +410,18 @@ export default function PageProvider({
 					setActions,
 					onClick,
 					onOpenActionMenu,
+					onSearch: async (query) => {
+						if (page?.onSearch) {
+							setLoadingFromSearch(true);
+							const results = await page?.onSearch(query);
+							setLoadingFromSearch(false);
+							return results;
+						}
+
+						return sectionedChoices(pageData || [], query, {
+							valuesOnly: true,
+						});
+					},
 					onChangeFilter,
 					onFilterChanged,
 					onSecondaryActionClick,

@@ -21,7 +21,7 @@ export default function PreviewCard({
 		return (
 			<div
 				className={clsx(
-					"bg-card/90 rounded-xl overflow-hidden w-full space-y-1 bg-card border border-content/10 shadow-lg",
+					"bg-card/90 rounded-xl overflow-hidden w-full bg-card border border-content/10 shadow-lg",
 					icon?.length > 0 ? "items-center" : "items-start"
 				)}
 			>
@@ -33,7 +33,7 @@ export default function PreviewCard({
 					<div
 						className="mb-1 relative flex-shrink-0 overflow-hidden w-full bg-content/10"
 						style={{
-							aspectRatio,
+							// aspectRatio,
 							...(color
 								? {
 										backgroundColor: color,
@@ -45,7 +45,12 @@ export default function PreviewCard({
 						{(image || video) && (
 							<>
 								{image == "placeholder" ? (
-									<div className="h-full flex items-center justify-center">
+									<div
+										className="w-full flex items-center justify-center"
+										style={{
+											aspectRatio,
+										}}
+									>
 										<svg
 											className="size-8"
 											viewBox="0 0 24 24"
@@ -63,8 +68,12 @@ export default function PreviewCard({
 								) : (
 									<img
 										className={
-											"absolute size-full object-cover pointer-events-none"
+											"w-full object-cover pointer-events-none"
 										}
+										style={{
+											maxHeight:
+												"calc(100vh - 360px - env(safe-area-inset-top) - env(safe-area-inset-bottom))",
+										}}
 										src={image ? image : video}
 										alt=""
 									/>
@@ -89,14 +98,16 @@ export default function PreviewCard({
 				)}
 
 				{(title || subtitle) && (
-					<div className="pt-1.5 pb-2.5 px-4">
+					<div className="pt-1 pb-2 px-3">
 						{title?.length > 0 && (
-							<h5 className="truncate text-content font-semibold first-letter:capitalize">
+							<h5 className="text-sm text-content font-semibold first-letter:capitalize">
 								{title}
 							</h5>
 						)}
 						{subtitle?.toString().length > 0 && (
-							<p className="truncate opacity-75">{subtitle}</p>
+							<p className="text-sm line-clamp-1 opacity-75">
+								{subtitle}
+							</p>
 						)}
 					</div>
 				)}

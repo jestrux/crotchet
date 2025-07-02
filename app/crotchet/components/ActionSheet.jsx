@@ -219,8 +219,11 @@ export default function Sheet({
 						"bg-stone-100/95 dark:bg-canvas backdrop-blur-sm relative z-10 mx-auto group text-content border dark:border-content/10 shadow-2xl overflow-hidden",
 						{ "p-3": !noHeading },
 						onlg ? "rounded-xl" : "rounded-3xl",
+						inset &&
+							noHeading &&
+							(loadingShareActions ? "" : "min-w-[200px]"),
 						inset && noHeading
-							? "w-[max-content] min-w-[200px] mb-8 flex items-center justify-center"
+							? "w-[max-content] mb-8"
 							: "w-full max-w-lg"
 					)}
 					style={{
@@ -301,7 +304,12 @@ export default function Sheet({
 					)}
 
 					{loadingShareActions ? (
-						<div className="flex justify-center py-4">
+						<div
+							className={clsx(
+								"flex justify-center",
+								inset && noHeading ? "" : "py-4"
+							)}
+						>
 							<Loader size={40} />
 							{/* {showLoader && <Loader size={40} />} */}
 						</div>

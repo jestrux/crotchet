@@ -11,6 +11,7 @@ import {
 import PageGrid from "./components/PageGrid";
 import PageListItem from "./components/PageListItem";
 import { onActionClick } from "@/crotchet/hooks/useActionClick";
+import { Input } from "@/crotchet/components";
 
 const layoutDetails = (page) => {
 	const {
@@ -18,7 +19,7 @@ const layoutDetails = (page) => {
 		columns: columnString = 3,
 		aspectRatio = "1/1",
 	} = {
-		...(page?.layoutProps || {}),
+		...(page?.layoutProps || { layout: page.layout }),
 	};
 	const columnMap = columnString
 		.toString()
@@ -47,6 +48,7 @@ const layoutDetails = (page) => {
 
 	return {
 		grid,
+		masonry: layout == "masonry",
 		aspectRatio,
 		columns,
 	};
@@ -57,6 +59,7 @@ export default function SearchPage() {
 		isOpen,
 		page,
 		pageData,
+		pageResolving,
 		pageDataVersion,
 		setMainAction,
 		setActions,
@@ -70,6 +73,7 @@ export default function SearchPage() {
 		onEscape,
 		onNavigateDown,
 		onNavigateUp,
+		onSearch,
 	} = usePageContext();
 	const commandMatchedRef = useRef(false);
 	const activeChoiceIndexRef = useRef(null);
@@ -77,9 +81,12 @@ export default function SearchPage() {
 	const [query, setQuery] = useState("");
 	const containerRef = useRef(null);
 	const inputRef = useRef(null);
-	const { grid, aspectRatio, columns } = layoutDetails(page);
+	const { grid, aspectRatio, columns, masonry } = layoutDetails(page);
+	const [searchResults, setSearchResults] = useState([]);
 	const choices = pageData || [];
-	const choiceSections = sectionedChoices(choices, query);
+	const choiceSections = searchResults.length
+		? sectionedChoices(searchResults, "")
+		: sectionedChoices(choices, query);
 
 	const getContainer = () => containerRef.current;
 
@@ -135,6 +142,7 @@ export default function SearchPage() {
 	const clearSearchQuery = () => {
 		inputRef.current.value = "";
 		setQuery("");
+		setSearchResults([]);
 	};
 
 	const navigateToStart = (focus) => {
@@ -232,6 +240,16 @@ export default function SearchPage() {
 		onClose({ popAll });
 	};
 
+	const handleSearch = (query) => {
+		setSearchResults([]);
+		setQuery(query);
+
+		onSearch(query).then((results) => {
+			setSearchResults(results);
+			navigateToStart();
+		});
+	};
+
 	onBlur(() => {
 		if (inputRef.current) inputRef.current.blur();
 	});
@@ -289,20 +307,20 @@ export default function SearchPage() {
 					</button>
 				)}
 
-				<input
+				<Input
 					type="text"
 					ref={inputRef}
 					className="popover-input bg-transparent h-full flex-1 border-none shadow-none px-0 py-3 text-xl focus:outline-none placeholder-content/30"
 					placeholder={page?.placeholder || "Type to search actions"}
+					debounce={page?.onSearch ? 500 : 0}
 					value={query}
-					onChange={(e) => {
+					onChange={(query) => {
 						if (commandMatchedRef.current)
 							return (commandMatchedRef.current = false);
 
 						if (!isOpen) return;
 
-						setQuery(e.target.value);
-						navigateToStart();
+						handleSearch(query);
 					}}
 				/>
 
@@ -314,111 +332,132 @@ export default function SearchPage() {
 				className="relative overflow-auto"
 				style={{ height: "calc(100vh - 100px)" }}
 			>
-				{!choiceSections?.length && query?.length > 0 && (
-					<div className="rounded relative cursor-default select-none py-2 truncate text-[14px] text-content/30 text-center font-medium">
-						No results
-					</div>
-				)}
-				{choiceSections.map(([section, choices], idx) => {
-					if (grid) {
-						return (
-							<PageGrid
-								key={section + "" + idx + pageDataVersion}
-								aspectRatio={aspectRatio}
-								columns={columns}
-								choices={choices}
-								selected={activeChoice}
-								onSelect={handleSelect}
-							/>
-						);
-					}
+				{!pageResolving && (
+					<>
+						{!choiceSections?.length && query?.length > 0 && (
+							<div className="absolute inset-0 flex flex-col items-center justify-center select-none truncate text-lg text-content/30 text-center font-medium">
+								<svg
+									className="mb-5 size-8 opacity-80"
+									fill="currentColor"
+									viewBox="0 0 16 16"
+								>
+									<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
+								</svg>
 
-					return (
-						<div
-							key={section + "" + idx}
-							className={clsx({
-								"border-b border-content/5":
-									idx != choiceSections.length - 1,
-							})}
-						>
-							{section && section != "undefined" && (
-								<span className="mt-5 mb-1 uppercase tracking-wide text-xs font-semibold opacity-50 px-4 flex items-center">
-									{section}
-								</span>
-							)}
-
-							{choices.map((choice) => {
-								const { icon, image, video, trailing } = choice;
-
+								<span>No results found matching </span>
+								<strong className="text-content/70">
+									{query}
+								</strong>
+							</div>
+						)}
+						{choiceSections.map(([section, choices], idx) => {
+							if (grid) {
 								return (
-									<PageListItem
-										key={choice.__id}
-										className="cursor-default"
-										trailing={
-											trailing?.length ? (
-												<div
-													className="mr-2"
-													dangerouslySetInnerHTML={{
-														__html: trailing,
-													}}
-												/>
-											) : icon?.length ? (
-												<div
-													className="mr-2"
-													dangerouslySetInnerHTML={{
-														__html: icon,
-													}}
-												/>
-											) : (
-												(image?.length ||
-													video?.length) && (
-													<div className="mr-2 h-8 relative flex-shrink-0 bg-content/10 border border-content/10 overflow-hidden aspect-[1.3/1] rounded">
-														<img
-															className={
-																"absolute size-full object-cover"
-															}
-															src={
-																image?.length
-																	? image
-																	: video
-															}
-															alt=""
-														/>
-
-														{video?.length && (
-															<div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-																<div className="relative size-3 flex items-center justify-center rounded-full overflow-hidden bg-card">
-																	<div className="absolute inset-0 bg-content/60"></div>
-																	<svg
-																		className="size-3 ml-0.5 relative text-canvas"
-																		viewBox="0 0 24 24"
-																		fill="currentColor"
-																	>
-																		<path
-																			strokeLinecap="round"
-																			strokeLinejoin="round"
-																			d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"
-																		/>
-																	</svg>
-																</div>
-															</div>
-														)}
-													</div>
-												)
-											)
+									<PageGrid
+										key={
+											section + "" + idx + pageDataVersion
 										}
-										label={choice.label}
-										value={choice.value}
-										focused={activeChoice == choice.value}
-										onClick={() =>
-											handleSelect(choice.value)
-										}
+										aspectRatio={aspectRatio}
+										masonry={masonry}
+										columns={columns}
+										choices={choices}
+										selected={activeChoice}
+										onSelect={handleSelect}
 									/>
 								);
-							})}
-						</div>
-					);
-				})}
+							}
+
+							return (
+								<div
+									key={section + "" + idx}
+									className={clsx({
+										"border-b border-content/5":
+											idx != choiceSections.length - 1,
+									})}
+								>
+									{section && section != "undefined" && (
+										<span className="mt-5 mb-1 uppercase tracking-wide text-xs font-semibold opacity-50 px-4 flex items-center">
+											{section}
+										</span>
+									)}
+
+									{choices.map((choice) => {
+										const { icon, image, video, trailing } =
+											choice;
+
+										return (
+											<PageListItem
+												key={choice.__id}
+												className="cursor-default"
+												trailing={
+													trailing?.length ? (
+														<div
+															className="mr-2"
+															dangerouslySetInnerHTML={{
+																__html: trailing,
+															}}
+														/>
+													) : icon?.length ? (
+														<div
+															className="mr-2"
+															dangerouslySetInnerHTML={{
+																__html: icon,
+															}}
+														/>
+													) : (
+														(image?.length ||
+															video?.length) && (
+															<div className="mr-2 h-8 relative flex-shrink-0 bg-content/10 border border-content/10 overflow-hidden aspect-[1.3/1] rounded">
+																<img
+																	className={
+																		"absolute size-full object-cover"
+																	}
+																	src={
+																		image?.length
+																			? image
+																			: video
+																	}
+																	alt=""
+																/>
+
+																{video?.length && (
+																	<div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+																		<div className="relative size-3 flex items-center justify-center rounded-full overflow-hidden bg-card">
+																			<div className="absolute inset-0 bg-content/60"></div>
+																			<svg
+																				className="size-3 ml-0.5 relative text-canvas"
+																				viewBox="0 0 24 24"
+																				fill="currentColor"
+																			>
+																				<path
+																					strokeLinecap="round"
+																					strokeLinejoin="round"
+																					d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"
+																				/>
+																			</svg>
+																		</div>
+																	</div>
+																)}
+															</div>
+														)
+													)
+												}
+												label={choice.label}
+												value={choice.value}
+												focused={
+													activeChoice == choice.value
+												}
+												onClick={() =>
+													handleSelect(choice.value)
+												}
+											/>
+										);
+									})}
+								</div>
+							);
+						})}
+					</>
+				)}
 			</div>
 		</div>
 	);

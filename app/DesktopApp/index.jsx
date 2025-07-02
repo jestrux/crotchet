@@ -1,8 +1,13 @@
 import { useRef, useState } from "react";
 import { useDataLoader, useEventListener } from "@/crotchet/hooks";
-import { dispatch, hideApp, onDesktopInitialize } from "@/crotchet/utils";
+import {
+	dispatch,
+	fetchImage,
+	hideApp,
+	onDesktopInitialize,
+} from "@/crotchet/utils";
 import AppContent from "./AppContent";
-import registerPlatformUtils from "@/crotchet/registerUtils";
+import registerPlatformUtils from "@/crotchet/registerPlatformUtils";
 import ThemeBg from "@/DesktopApp/ThemeBg";
 import { useAppContext } from "@/crotchet/providers/AppProvider";
 import { onActionClick } from "@/crotchet/hooks/useActionClick";
@@ -21,11 +26,37 @@ registerPlatformUtils({
 		window.desktop.showToast(text);
 	},
 	readClipboard: () => {},
-	copyToClipboard: (content, message = "Copied") => {
+	copyToClipboard: async (content, message = "Copied") =>
+		window.withLoader(navigator.clipboard.writeText(content), message),
+	copyImage: async (content, message = "Copied") => {
 		if (!content?.length) return console.log("Nothing to copy: ", content);
 
-		window.socketEmit("copy", content);
-		window.showToast(message);
+		window.withLoader(
+			new Promise((resolve) => {
+				const canvas = document.createElement("canvas");
+				const ctx = canvas.getContext("2d");
+				fetchImage(content).then((src) => {
+					const img = new Image();
+					img.onload = () => {
+						canvas.width = img.width;
+						canvas.height = img.height;
+						ctx.drawImage(img, 0, 0);
+						canvas.toBlob((blob) => {
+							navigator.clipboard.write([
+								new ClipboardItem({ "image/png": blob }),
+							]);
+							resolve();
+						});
+					};
+					img.src = src;
+				});
+			}),
+			{
+				loadingMessage: "Copying image...",
+				successMessage: message,
+				errorMessage: "Failed to copy image",
+			}
+		);
 	},
 	getFile: ({ read } = {}) => {
 		const key = "getFile" + window.randomId();

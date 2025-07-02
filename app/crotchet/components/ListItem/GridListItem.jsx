@@ -4,6 +4,7 @@ import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import openUrl from "@/crotchet/open-url";
 
 export default function GridListItem({
+	gap = "0.5rem",
 	masonry,
 	previewOnly,
 	icon,
@@ -31,11 +32,18 @@ export default function GridListItem({
 
 		Haptics.impact({ style: ImpactStyle.Medium });
 
-		if (_.isFunction(onHold)) return onHold();
+		// if (_.isFunction(onHold)) return onHold();
 
 		if (actions?.length) {
 			return window.openActionSheet({
-				noHeading: true,
+				fullScreen: true,
+				preview: {
+					image: image,
+					video: video,
+					title: title,
+					subtitle: subtitle,
+					actions: actions,
+				},
 				actions,
 			});
 		}
@@ -51,11 +59,13 @@ export default function GridListItem({
 	const content = () => {
 		if (masonry) {
 			return (
-				<div className="w-full relative">
+				<div
+					className={`w-full relative pb-[${gap}] pointer-events-none`}
+				>
 					{(image?.length || video?.length) && (
 						<div
 							className="relative flex-shrink-0 bg-content/10 border border-stroke rounded overflow-hidden w-full"
-							style={{ aspectRatio, backgroundColor: color }}
+							style={{ backgroundColor: color }}
 						>
 							<img
 								className="w-full"
@@ -204,10 +214,7 @@ export default function GridListItem({
 			{...gestures}
 			onClick={handleClick}
 			onDoubleClick={onDoubleClick}
-			className={clsx(
-				"lg:group w-full text-left flex items-center relative",
-				masonry && "py-2"
-			)}
+			className="lg:group w-full text-left flex items-center relative"
 		>
 			{content()}
 		</a>

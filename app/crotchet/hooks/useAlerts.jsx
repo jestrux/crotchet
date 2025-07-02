@@ -96,10 +96,8 @@ export function AlertsWrapper() {
 						return (
 							<ModalPage
 								key={alert.id}
-								preview={alert.preview}
-								actions={alert.actions}
+								{...alert}
 								onClose={alert.close}
-								emptyStateMessage={alert.emptyStateMessage}
 							/>
 						);
 					}
@@ -127,15 +125,12 @@ export function AlertsWrapper() {
 						return (
 							<ModalPage
 								key={alert.id}
-								layout={alert.layout}
-								title={alert.title}
-								resolve={alert.choices}
+								{...alert}
+								resolve={alert.resolve || alert.choices}
 								searchable={alert.searchable ?? true}
-								sortable={alert.sortable}
 								selectable={alert.multiple ? "multiple" : false}
 								onClose={alert.close}
 								onChange={alert.onChange}
-								emptyStateMessage={alert.emptyStateMessage}
 							/>
 						);
 					}
@@ -206,8 +201,7 @@ export function AlertsWrapper() {
 						return (
 							<ModalPage
 								key={alert.id}
-								title={alert.title}
-								resolve={alert.resolve}
+								{...alert}
 								onClose={alert.close}
 							>
 								{form}
@@ -427,6 +421,18 @@ export default function useAlerts() {
 			translucent: true,
 		});
 	};
+
+	if (!window.onDesktop()) {
+		window.openPage = (props) =>
+			openChoicePicker({
+				fullScreen: true,
+				inset: false,
+				dismissible: false,
+				noHeading: false,
+				...props,
+				choices: props.resolve,
+			});
+	}
 
 	return {
 		alerts,
