@@ -43,7 +43,16 @@ export default function PageGrid({
 					onClick={() => handleSelect(entry.value)}
 				>
 					{() => {
-						const { icon, image, video, title, subtitle } = entry;
+						const {
+							icon,
+							image,
+							color,
+							video,
+							title,
+							subtitle,
+							width,
+							height,
+						} = entry;
 
 						return (
 							<div
@@ -65,7 +74,19 @@ export default function PageGrid({
 								) : (
 									<div
 										className="spotlight-grid-item-preview relative flex-shrink-0 bg-content/10 border border-stroke rounded-md overflow-hidden w-full"
-										style={masonry ? {} : { aspectRatio }}
+										style={{
+											...(masonry
+												? width && height
+													? {
+															aspectRatio:
+																width / height,
+															maxHeight:
+																"calc(100vh-130px)",
+													  }
+													: {}
+												: { aspectRatio }),
+											backgroundColor: color,
+										}}
 									>
 										{(image?.length || video?.length) && (
 											<>
@@ -89,7 +110,9 @@ export default function PageGrid({
 													<img
 														className={clsx(
 															"object-cover pointer-events-none",
-															masonry
+															masonry &&
+																(!width ||
+																	!height)
 																? "w-full max-h-[calc(100vh-130px)]"
 																: "absolute size-full"
 														)}

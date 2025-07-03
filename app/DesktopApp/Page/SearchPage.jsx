@@ -239,19 +239,14 @@ export default function SearchPage() {
 		}
 	};
 
-	const handleEscape = ({ popAll } = {}) => {
-		if (!isOpen) return;
-
+	const handleEscape = () => {
 		if (query.length) {
 			clearSearchQuery();
 			navigateToStart();
-
-			if (popAll && typeof onPopAll == "function") onClose({ popAll });
-
 			return;
 		}
 
-		onClose({ popAll });
+		onClose();
 	};
 
 	const handleSearch = (query) => {

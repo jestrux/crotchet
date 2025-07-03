@@ -16,6 +16,8 @@ export default function GridListItem({
 	subtitle,
 	color,
 	// aspectRatio = "16/9",
+	width,
+	height,
 	share,
 	meta = {},
 	actions,
@@ -65,10 +67,20 @@ export default function GridListItem({
 					{(image?.length || video?.length) && (
 						<div
 							className="relative flex-shrink-0 bg-content/10 border border-stroke rounded overflow-hidden w-full"
-							style={{ backgroundColor: color }}
+							style={{
+								...(width && height
+									? {
+											aspectRatio: width / height,
+									  }
+									: {}),
+								backgroundColor: color,
+							}}
 						>
 							<img
-								className="w-full"
+								className={clsx("w-full", {
+									"absolute inset-0 size-full":
+										!width || !height,
+								})}
 								src={image?.length ? image : video}
 								alt=""
 							/>

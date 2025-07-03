@@ -63,7 +63,7 @@ export default function useAppPages() {
 			status: "idle",
 		});
 
-		setPages([...pages, newPage]);
+		setPages((pages) => [...pages, newPage]);
 
 		dispatch(`blur-${window.currentPageId}`);
 
@@ -85,7 +85,7 @@ export default function useAppPages() {
 	window.closePage = (data) => {
 		if (!onDesktop()) return window.hideAlert();
 
-		dispatch("close-page", data);
+		popPage(pages.at(-1)?._id, data);
 	};
 
 	// window.openPage = (page) => dispatch("open-page", page);
@@ -98,7 +98,7 @@ export default function useAppPages() {
 			});
 		}
 
-		pushPage(page);
+		return pushPage(page);
 	};
 
 	// window.openPage = (page) => pushPage(page);
@@ -124,7 +124,7 @@ export default function useAppPages() {
 
 		notifyRemoteOnPageClose(pageId);
 
-		setPages(() => {
+		setPages((pages) => {
 			const newPages = pages.filter((p) => p.id != pageId);
 
 			window.currentPageId = newPages.at(-1)?.id || "root";

@@ -37,6 +37,7 @@ const PageContext = createContext({
 	onCommandMatched: () => {},
 	onBlur: () => {},
 	onClose: () => {},
+	onPopToRoot: () => {},
 	onReady: () => {},
 	onDataUpdated: () => {},
 	onEscape: () => {},
@@ -61,6 +62,7 @@ export default function PageProvider({
 	page,
 	children,
 	onClose = () => {},
+	onPopToRoot = () => {},
 }) {
 	const pageStatusResetTimeoutRef = useRef(null);
 	const pageWrapperRef = useRef(null);
@@ -211,7 +213,9 @@ export default function PageProvider({
 			if (["error", "success"].includes(pageStatus?.status))
 				setPageStatus({ status: "idle" });
 
-			escapeHandler.current(payload);
+			if (payload?.popAll) return onPopToRoot();
+
+			escapeHandler.current();
 		})
 	);
 
@@ -280,6 +284,7 @@ export default function PageProvider({
 		formData,
 		pageFilter,
 		closePage: (payload) => onClose(payload),
+		popToRoot: onPopToRoot,
 	};
 
 	return (
@@ -305,6 +310,7 @@ export default function PageProvider({
 					onOpen,
 					onBlur,
 					onClose,
+					onPopToRoot,
 					onCommandMatched,
 					onReady,
 					onDataUpdated,

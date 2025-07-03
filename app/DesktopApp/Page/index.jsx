@@ -94,13 +94,14 @@ const PageContentWrapper = () => {
 
 export default function Page({ isOpen, page, onClose = () => {} }) {
 	const { popToRoot } = useAppContext();
-	const handleClose = ({ popAll } = {}) => {
-		if (popAll) return popToRoot();
-		onClose();
-	};
 
 	return (
-		<PageProvider isOpen={isOpen} page={page} onClose={handleClose}>
+		<PageProvider
+			isOpen={isOpen}
+			page={page}
+			onClose={onClose}
+			onPopToRoot={popToRoot}
+		>
 			<ErrorBoundary
 				className="p-6"
 				style={{ marginTop: "env(safe-area-inset-top)" }}
