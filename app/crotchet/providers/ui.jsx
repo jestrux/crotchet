@@ -30,14 +30,16 @@ function Component({ data }) {
 				pageDataChangedHandler.current = callback;
 			});
 
-			setTimeout(() => setInitialized(true));
-		});
+			setTimeout(() => {
+				setInitialized(true);
 
-		if (data.onInit) {
-			data.onInit({
-				$el: elementRef.current,
+				if (data.onInit) {
+					data.onInit({
+						$el: elementRef.current,
+					});
+				}
 			});
-		}
+		});
 
 		return () => {
 			if (data.onDestroy) data.onDestroy();

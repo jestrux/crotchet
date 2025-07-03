@@ -388,6 +388,44 @@ export const networkRequest = async (
 	return withLoader(handler, { quiet: true });
 };
 
+export const exportContent = async function (
+	content,
+	fileName = "download",
+	type = "txt"
+) {
+	// if (onDesktop())
+	// 	return saveFile(`${fileName}.${type}`, content, {
+	// 		folder: "downloads",
+	// 		open: true,
+	// 	});
+
+	return clickToDownload(
+		// encodeURI(`data:text/${type};charset=utf-8,${content}`),
+		content,
+		`${fileName}.${type}`
+	);
+};
+
+export const clickToDownload = async function (url, fileName = "download") {
+	let newUrl;
+
+	try {
+		newUrl = await fetch(url)
+			.then((response) => response.blob())
+			.then((blob) => URL.createObjectURL(blob));
+	} catch (error) {
+		console.log("Failed to blob: ", error);
+		newUrl = url;
+	}
+
+	var link = document.createElement("a");
+	link.setAttribute("download", fileName);
+	link.setAttribute("href", newUrl);
+	link.setAttribute("target", "_blank");
+	link.click();
+	link.remove();
+};
+
 export const cleanObject = (obj = {}) => {
 	const isValid = (value) =>
 		(value ?? "").toString().length &&
@@ -701,6 +739,37 @@ export const processShareData = (value, type = "text", meta = {}) => {
 		payload,
 		preview: !objectIsEmpty(preview) ? preview : null,
 	};
+};
+
+export const getShareUrl = (content, type = "text") => {
+	if (!content) return "";
+
+	if (type != "object" && !_.isObject(content)) {
+		if (!content?.length) return "";
+
+		if (type == "text") return `crotchet://share-url/${content}`;
+
+		return `crotchet://share-${type}/${content}`;
+	}
+
+	if (content.sheet) {
+		return `crotchet://action-sheet/${content.sheet}/?${objectToQueryParams(
+			{
+				...content,
+				previewImage: content.preview || content.video,
+				preview: {
+					video: content.video,
+					image: content.preview,
+					title: content.title,
+					description: content.subtitle || content.url,
+				},
+			}
+		)}`;
+	}
+
+	return `crotchet://share-object/${encodeURIComponent(
+		JSON.stringify(content)
+	)}`;
 };
 
 export const extractHtmlFromComponent = (component, options = {}) => {

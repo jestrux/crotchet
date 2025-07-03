@@ -1,7 +1,11 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { useDataLoader, useEventListener } from "@/crotchet/hooks";
-import { someTime, randomId, sectionedChoices } from "@/crotchet/utils";
+import {
+	randomId,
+	sectionedChoices,
+	loadExternalAsset,
+} from "@/crotchet/utils";
 import { sourceGet } from "../hooks/useSourceGet";
 
 const PageContext = createContext({
@@ -64,6 +68,7 @@ export default function PageProvider({
 	onClose = () => {},
 	onPopToRoot = () => {},
 }) {
+	const alertsRef = useRef(window.alerts || []);
 	const pageStatusResetTimeoutRef = useRef(null);
 	const pageWrapperRef = useRef(null);
 	const [pageDataVersion, setPageDataVersion] = useState(
@@ -125,7 +130,24 @@ export default function PageProvider({
 	const { refetch, loading } = useDataLoader({
 		handler: async () => {
 			const filter = filterRef.current;
-			await someTime(5);
+			// await someTime(5);
+			await Promise.all(
+				[
+					{
+						name: "AlpineJs",
+						url: "https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js",
+						type: "script",
+						defer: true,
+					},
+					...(page?.externalAssets || []),
+				].map((asset) =>
+					loadExternalAsset(asset.url, {
+						name: asset.name,
+						type: asset.type,
+						defer: asset.defer,
+					})
+				)
+			);
 			if (!page?.resolve) return true;
 
 			return sourceGet(page.resolve, {
@@ -168,6 +190,8 @@ export default function PageProvider({
 	const pageInFocus = (callback) => {
 		return (...args) => {
 			if (!isOpen) return;
+
+			if (alertsRef.current.length) return;
 
 			if (hasClass("menu-open-") || hasClass("alert-open-")) return;
 
@@ -223,6 +247,12 @@ export default function PageProvider({
 		"menu-closed-" + page?._id,
 		pageInFocus(openHandler.current)
 	);
+
+	useEventListener("alerts-changed", () => {
+		setTimeout(() => {
+			alertsRef.current = window.alerts;
+		}, 200);
+	});
 
 	useEventListener(
 		"alert-closed-" + page?._id,

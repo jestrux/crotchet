@@ -25,7 +25,17 @@ registerPlatformUtils({
 
 		window.desktop.showToast(text);
 	},
-	readClipboard: () => {},
+	readClipboard: () => {
+		return new Promise((res) => {
+			try {
+				navigator.clipboard.readText().then((value) => {
+					res({ value });
+				});
+			} catch (error) {
+				res(null);
+			}
+		});
+	},
 	copyToClipboard: async (content, message = "Copied") =>
 		window.withLoader(navigator.clipboard.writeText(content), message),
 	copyImage: async (content, message = "Copied") => {

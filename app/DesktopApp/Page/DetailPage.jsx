@@ -64,7 +64,11 @@ export default function DetailPage() {
 		if (pageHasFields) {
 			const horizontalLayout = !preview && !page?.fullWidth;
 			return (
-				<div className="p-4">
+				<div
+					className={
+						page?.noPadding ? "" : horizontalLayout ? "p-8" : "p-4"
+					}
+				>
 					<Form
 						{...page}
 						horizontalLayout={horizontalLayout}

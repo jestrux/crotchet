@@ -12,6 +12,7 @@ import PageGrid from "./components/PageGrid";
 import PageListItem from "./components/PageListItem";
 import { onActionClick } from "@/crotchet/hooks/useActionClick";
 import { Input } from "@/crotchet/components";
+import PageContent from "./components/PageContent";
 
 const layoutDetails = (page) => {
 	const {
@@ -59,9 +60,9 @@ export default function SearchPage() {
 		isOpen,
 		page,
 		pageData,
-		pageResolving,
 		pageDataVersion,
 		setMainAction,
+		setPreview,
 		setActions,
 		onOpen,
 		onBlur,
@@ -102,7 +103,7 @@ export default function SearchPage() {
 		const choice = objectFieldChoices(choices).find(
 			(choice) => choice.value == value
 		);
-		let action, actions;
+		let action, actions, preview;
 
 		if (choice) {
 			action = choice.action
@@ -118,13 +119,21 @@ export default function SearchPage() {
 				: typeof page.entryActions == "function"
 				? page.entryActions(choice)
 				: null;
+
+			preview = choice.preview
+				? typeof choice.preview == "function"
+					? choice.preview(choice)
+					: choice.preview
+				: typeof page.entryPreview == "function"
+				? page.entryPreview(choice)
+				: null;
 		}
 
-		return [action, actions];
+		return { action, actions, preview };
 	};
 
 	const handleSelect = (value) => {
-		const [action] = getActionForValue(
+		const { action } = getActionForValue(
 			value,
 			resultsRef.current.length ? resultsRef.current : choices
 		);
@@ -137,12 +146,14 @@ export default function SearchPage() {
 
 		activeChoiceIndexRef.current = index;
 
-		const [action, actions] = getActionForValue(
+		const { action, actions, preview } = getActionForValue(
 			value,
 			resultsRef.current.length ? resultsRef.current : choices
 		);
 		setMainAction(action);
 		setActions(actions);
+
+		setPreview(preview);
 	};
 
 	onClick(() => {
@@ -335,138 +346,128 @@ export default function SearchPage() {
 				<PageFilters />
 			</div>
 
-			<div
-				id="scrollArea"
-				className="relative overflow-auto"
-				style={{ height: "calc(100vh - 100px)" }}
-			>
-				{!pageResolving && (
-					<>
-						{!choiceSections?.length && query?.length > 0 && (
-							<div className="absolute inset-0 pb-12 flex flex-col items-center justify-center select-none truncate text-lg text-content/30 text-center font-medium">
-								<svg
-									className="mb-5 size-8 opacity-80"
-									fill="currentColor"
-									viewBox="0 0 16 16"
-								>
-									<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
-								</svg>
+			<PageContent>
+				<>
+					{!choiceSections?.length && query?.length > 0 && (
+						<div className="absolute inset-0 pb-12 flex flex-col items-center justify-center select-none truncate text-lg text-content/30 text-center font-medium">
+							<svg
+								className="mb-5 size-8 opacity-80"
+								fill="currentColor"
+								viewBox="0 0 16 16"
+							>
+								<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
+							</svg>
 
-								<span>No results found matching </span>
-								<strong className="text-content/70">
-									{query}
-								</strong>
-							</div>
-						)}
-						{choiceSections.map(([section, choices], idx) => {
-							if (grid) {
-								return (
-									<PageGrid
-										key={
-											section + "" + idx + pageDataVersion
-										}
-										aspectRatio={aspectRatio}
-										masonry={masonry}
-										columns={columns}
-										choices={choices}
-										selected={activeChoice}
-										onSelect={handleSelect}
-									/>
-								);
-							}
-
+							<span>No results found matching </span>
+							<strong className="text-content/70">{query}</strong>
+						</div>
+					)}
+					{choiceSections.map(([section, choices], idx) => {
+						if (grid) {
 							return (
-								<div
-									key={section + "" + idx}
-									className={clsx({
-										"border-b border-content/5":
-											idx != choiceSections.length - 1,
-									})}
-								>
-									{section && section != "undefined" && (
-										<span className="mt-5 mb-1 uppercase tracking-wide text-xs font-semibold opacity-50 px-4 flex items-center">
-											{section}
-										</span>
-									)}
-
-									{choices.map((choice) => {
-										const { icon, image, video, trailing } =
-											choice;
-
-										return (
-											<PageListItem
-												key={choice.__id}
-												className="cursor-default"
-												trailing={
-													trailing?.length ? (
-														<div
-															className="mr-2"
-															dangerouslySetInnerHTML={{
-																__html: trailing,
-															}}
-														/>
-													) : icon?.length ? (
-														<div
-															className="mr-2"
-															dangerouslySetInnerHTML={{
-																__html: icon,
-															}}
-														/>
-													) : (
-														(image?.length ||
-															video?.length) && (
-															<div className="mr-2 h-8 relative flex-shrink-0 bg-content/10 border border-content/10 overflow-hidden aspect-[1.3/1] rounded">
-																<img
-																	className={
-																		"absolute size-full object-cover"
-																	}
-																	src={
-																		image?.length
-																			? image
-																			: video
-																	}
-																	alt=""
-																/>
-
-																{video?.length && (
-																	<div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-																		<div className="relative size-3 flex items-center justify-center rounded-full overflow-hidden bg-card">
-																			<div className="absolute inset-0 bg-content/60"></div>
-																			<svg
-																				className="size-3 ml-0.5 relative text-canvas"
-																				viewBox="0 0 24 24"
-																				fill="currentColor"
-																			>
-																				<path
-																					strokeLinecap="round"
-																					strokeLinejoin="round"
-																					d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"
-																				/>
-																			</svg>
-																		</div>
-																	</div>
-																)}
-															</div>
-														)
-													)
-												}
-												label={choice.label}
-												value={choice.value}
-												focused={
-													activeChoice == choice.value
-												}
-												onClick={() =>
-													handleSelect(choice.value)
-												}
-											/>
-										);
-									})}
-								</div>
+								<PageGrid
+									key={section + "" + idx + pageDataVersion}
+									aspectRatio={aspectRatio}
+									masonry={masonry}
+									columns={columns}
+									choices={choices}
+									selected={activeChoice}
+									onSelect={handleSelect}
+								/>
 							);
-						})}
-					</>
-				)}
-			</div>
+						}
+
+						return (
+							<div
+								key={section + "" + idx}
+								className={clsx({
+									"border-b border-content/5":
+										idx != choiceSections.length - 1,
+								})}
+							>
+								{section && section != "undefined" && (
+									<span className="mt-3.5 mb-1 text-sm suppercase stracking-wide stext-xs sfont-semibold opacity-50 px-4 flex items-center">
+										{section}
+									</span>
+								)}
+
+								{choices.map((choice) => {
+									const { icon, image, video, trailing } =
+										choice;
+
+									return (
+										<PageListItem
+											key={choice.__id}
+											className="cursor-default"
+											trailing={
+												trailing?.length ? (
+													<div
+														className="mr-2"
+														dangerouslySetInnerHTML={{
+															__html: trailing,
+														}}
+													/>
+												) : icon?.length ? (
+													<div
+														className="mr-2"
+														dangerouslySetInnerHTML={{
+															__html: icon,
+														}}
+													/>
+												) : (
+													(image?.length ||
+														video?.length) && (
+														<div className="mr-2 h-8 relative flex-shrink-0 bg-content/10 border border-content/10 overflow-hidden aspect-[1.3/1] rounded">
+															<img
+																className={
+																	"absolute size-full object-cover"
+																}
+																src={
+																	image?.length
+																		? image
+																		: video
+																}
+																alt=""
+															/>
+
+															{video?.length && (
+																<div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+																	<div className="relative size-3 flex items-center justify-center rounded-full overflow-hidden bg-card">
+																		<div className="absolute inset-0 bg-content/60"></div>
+																		<svg
+																			className="size-3 ml-0.5 relative text-canvas"
+																			viewBox="0 0 24 24"
+																			fill="currentColor"
+																		>
+																			<path
+																				strokeLinecap="round"
+																				strokeLinejoin="round"
+																				d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"
+																			/>
+																		</svg>
+																	</div>
+																</div>
+															)}
+														</div>
+													)
+												)
+											}
+											label={choice.label}
+											value={choice.value}
+											focused={
+												activeChoice == choice.value
+											}
+											onClick={() =>
+												handleSelect(choice.value)
+											}
+										/>
+									);
+								})}
+							</div>
+						);
+					})}
+				</>
+			</PageContent>
 		</div>
 	);
 }

@@ -339,6 +339,13 @@ declare var Page: {
 	data?: { [key: string]: any } | null;
 	fields?: { [key: string]: any };
 	field?: { [key: string]: any };
+
+	externalAssets?: {
+		type?: string;
+		name?: string;
+		url: string;
+		handler?: (payload: any) => PromiseLike<any>;
+	}[];
 };
 
 declare var registerAction: (
@@ -361,6 +368,7 @@ declare var registerAction: (
 				actions?:
 					| (typeof ActionButton)[]
 					| (() => (typeof ActionButton)[]);
+				preview?: (() => any) | any;
 				handler?: (payload: any) => PromiseLike<any> | void;
 				url?: String | undefined;
 				tags?: string[];

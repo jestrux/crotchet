@@ -277,3 +277,12 @@ export const uploadStringAsFile = async (
 
 	return await getDownloadURL(res.ref);
 };
+
+export const uploadDataUrl = async (content) => {
+	const { ref: fileRef } = await uploadString(
+		ref(storage, "crotchet-uploads/file-" + randomId()),
+		content,
+		"data_url"
+	);
+	return await getDownloadURL(fileRef);
+};

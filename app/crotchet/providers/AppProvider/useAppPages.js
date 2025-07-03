@@ -39,6 +39,7 @@ export default function useAppPages() {
 				secondaryAction: actualSource.entrySecondaryAction,
 				entryAction: actualSource.entryAction,
 				entryActions: actualSource.entryActions,
+				entryPreview: actualSource.entryPreview,
 			};
 		}
 

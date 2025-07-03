@@ -8,6 +8,7 @@ import {
 } from "./utils";
 
 import openUrl from "./open-url";
+import internalExtensions from "./internalExtensions";
 
 Object.assign(window, {
 	__crotchetApp: {
@@ -209,35 +210,5 @@ export const registerWidget = (name, widget) => {
 };
 
 export const __initializeCrotchet = () => {
-	registerAction("clipboard", {
-		color: "#2498F5",
-		icon: (
-			<svg fill="currentColor" viewBox="0 0 16 16">
-				<path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5z" />
-				<path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708" />
-			</svg>
-		),
-		// global: true,
-		mobileOnly: true,
-		handler: async () => {
-			try {
-				const { type, value } = await window.readClipboard();
-				const { payload, preview } =
-					window.processShareData(value, type, {
-						fromClipboard: true,
-					}) || {};
-
-				if (!payload) return window.showToast("Nothing in clipboard");
-
-				return window.openActionSheet({
-					title: "Select an action",
-					payload,
-					preview,
-				});
-			} catch (error) {
-				window.showToast(error);
-				// console.log("Clipboard error: ", error);
-			}
-		},
-	});
+	internalExtensions();
 };

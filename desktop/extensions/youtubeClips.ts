@@ -73,6 +73,8 @@ const getActions = (payload) => {
 							"M19 7h-8v6h8V7zm2-4H3c-1.1 0-2 .9-2 2v14c0 1.1.9 1.98 2 1.98h18c1.1 0 2-.88 2-1.98V5c0-1.1-.9-2-2-2zm0 16.01H3V4.98h18v14.03z",
 							{ size: "18px", filled: true }
 						),
+						pinned: true,
+						section: "Play",
 						handler: () =>
 							openOnDesktop({
 								...payload,
@@ -103,6 +105,7 @@ const getActions = (payload) => {
 			icon: appIcon,
 			url: getYoutubeActualUrl(payload),
 			section: "Play",
+			pinned: true,
 		},
 		// shareVideo: {
 		// 	icon: appIcon,
@@ -116,58 +119,74 @@ const getActions = (payload) => {
 						icon: appIcon,
 						label: "Edit Video",
 						section: "Edit",
+						pinned: false,
 						handler: async () => {
-							// return editVideo({
-							// 	title: "Edit Youtube Clip",
-							// 	resolve: payload,
-							// 	openForm,
-							// 	handler: (editedVideo) => {
-							// 		if (!editedVideo) return;
-							// 		return dataSources.youtubeClips.updateRow(
-							// 			payload._id,
-							// 			editedVideo
-							// 		);
-							// 	},
-							// });
+							return editVideo({
+								title: "Edit Youtube Clip",
+								resolve: async () => payload,
+								handler: (editedVideo) => {
+									if (!editedVideo) return;
+									return dataSources.youtubeClips.updateRow(
+										payload._id,
+										editedVideo
+									);
+								},
+							});
 						},
 					},
 					editYoutubeClipSource: {
 						icon: appIcon,
 						label: "Change Source",
 						section: "Edit",
-						handler: () => showToast("Change Clip Source"),
-						// handler: async () => {
-						// 	const url = await openForm({
-						// 		title: "Change Clip Source",
-						// 		field: {
-						// 			label: "URL",
-						// 			url: "text",
-						// 			defaultValue: payload.url,
-						// 		},
-						// 	});
+						pinned: false,
+						// handler: () => showToast("Change Clip Source"),
+						handler: async () => {
+							const url = await openForm({
+								title: "Change Clip Source",
+								field: {
+									label: "URL",
+									url: "text",
+									defaultValue: await readClipboard().then(
+										({ value } = {}) =>
+											getYoutubeId(value) ? value : ""
+									),
+								},
+							});
 
-						// 	if (!url) return;
+							if (!url) return;
 
-						// 	const res = await getYoutubeVideoEditor(url, openPage, {
-						// 		crop: payload.crop,
-						// 	});
+							console.log("URL: ", url);
 
-						// 	await dataSources.youtubeClips.deleteRow(payload._id);
+							return editVideo({
+								title: "Change Clip Source",
+								resolve: async () => getVideoDetails(url),
+								handler: async (res) => {
+									if (!res) return;
 
-						// 	const video = await dataSources.youtubeClips.insertRow({
-						// 		...(res ?? {}),
-						// 		_rowId: res.id,
-						// 	});
+									await dataSources.youtubeClips.deleteRow(
+										payload._id
+									);
 
-						// 	showToast("Clip Source Updated");
+									const video =
+										await dataSources.youtubeClips.insertRow(
+											{
+												...(res ?? {}),
+												_rowId: res._id,
+											}
+										);
 
-						// 	return video;
-						// },
+									showToast("Clip Source Updated");
+
+									return video;
+								},
+							});
+						},
 					},
 			  }),
 		deleteYoutubeClip: {
 			icon: appIcon,
 			label: "Delete Video",
+			pinned: false,
 			destructive: true,
 			handler: async () => {
 				const confirmed = await confirmDangerousAction();
@@ -188,8 +207,10 @@ const getActions = (payload) => {
 			: {
 					addClip: {
 						label: "Add Clip",
-						// handler: addClip,
-						handler: () => showToast("Add Clip"),
+						pinned: false,
+						section: "Add",
+						handler: () => addClip(),
+						// handler: () => showToast("Add Clip"),
 					},
 			  }),
 	};
@@ -215,16 +236,16 @@ const getActions = (payload) => {
 // 	});
 // };
 
-const editVideo = async ({ title, resolve, openForm, handler }) => {
+const editVideo = async ({ title, resolve, handler }) => {
 	return openForm({
 		title: title
 			? title
 			: ({ pageData: video }) =>
 					`${video?._rowId ? "Edit" : "Add"} Youtube Clip`,
-		liveUpdate: false,
 		resolve: async () => {
-			const payload =
-				typeof resolve == "function" ? await resolve() : resolve;
+			// const payload =
+			// 	typeof resolve == "function" ? await resolve() : resolve;
+			const payload = await resolve();
 			return {
 				...payload,
 				title: payload.title || payload.name,
@@ -390,7 +411,8 @@ const editVideo = async ({ title, resolve, openForm, handler }) => {
 		},
 		action: {
 			label: "Save Clip",
-			successMessage: "Clip Saved",
+			// loadingMessage: "Saving Clip...",
+			// successMessage: "Clip Saved",
 			handler: (res) => {
 				if (!res) return null;
 
@@ -410,7 +432,52 @@ const editVideo = async ({ title, resolve, openForm, handler }) => {
 	});
 };
 
-const addClip = async ({ url }) => {
+const getVideoDetails = async (url) => {
+	const existingClip = await queryDb("youtubeClips", {
+		rowId: getYoutubeId(url),
+	});
+
+	if (existingClip) return existingClip;
+
+	const res = await crawlUrl(getEmbedUrl(url));
+	const data = res.data;
+	const indexOfDuration = data.indexOf("videoDurationSeconds");
+	const object = data.substring(indexOfDuration, indexOfDuration + 120);
+	const end = object.indexOf(",");
+	let duration = object
+		.substring(0, end)
+		.replace("videoDurationSeconds", "")
+		.replace(/\\|"|:/g, "");
+
+	if (isNaN(Number(duration))) return null;
+
+	let start = 0;
+	const params = new URLSearchParams(url);
+	const startParam = (params.get("t") || params.get("start") || "")
+		.toString()
+		.trim()
+		.replace("s", "");
+	if (startParam && !isNaN(Number(startParam))) start = Number(startParam);
+
+	duration = Number(duration);
+
+	res.meta = res.meta || {};
+
+	const payload = {
+		...res.meta,
+		_id: getYoutubeId(url),
+		url,
+		poster: res.meta.image,
+		duration,
+		start,
+		end: duration,
+		crop: [start, duration],
+	};
+
+	return payload;
+};
+
+const addClip = async ({ url = "" } = {}) => {
 	const saveVideo = (video) => {
 		var id = video?.rowId || video?._id || video.id;
 
@@ -455,55 +522,7 @@ const addClip = async ({ url }) => {
 	return editVideo({
 		title: "Add Youtube Clip",
 		// resolve: async () => await getYoutubeVideoDetails(url),
-		resolve: async () => {
-			const existingClip = await queryDb("youtubeClips", {
-				rowId: getYoutubeId(url),
-			});
-
-			if (existingClip) return existingClip;
-
-			const res = await crawlUrl(getEmbedUrl(url));
-			const data = res.data;
-			const indexOfDuration = data.indexOf("videoDurationSeconds");
-			const object = data.substring(
-				indexOfDuration,
-				indexOfDuration + 120
-			);
-			const end = object.indexOf(",");
-			let duration = object
-				.substring(0, end)
-				.replace("videoDurationSeconds", "")
-				.replace(/\\|"|:/g, "");
-
-			if (isNaN(Number(duration))) return null;
-
-			let start = 0;
-			const params = new URLSearchParams(url);
-			const startParam = (params.get("t") || params.get("start") || "")
-				.toString()
-				.trim()
-				.replace("s", "");
-			if (startParam && !isNaN(Number(startParam)))
-				start = Number(startParam);
-
-			duration = Number(duration);
-
-			res.meta = res.meta || {};
-
-			const payload = {
-				...res.meta,
-				_id: getYoutubeId(url),
-				url,
-				poster: res.meta.image,
-				duration,
-				start,
-				end: duration,
-				crop: [start, duration],
-			};
-
-			return payload;
-		},
-		openForm,
+		resolve: async () => await getVideoDetails(url),
 		handler: saveVideo,
 	});
 };
@@ -1205,6 +1224,16 @@ registerAction("addToYoutubeClips", {
 	context: "share",
 	match: ({ url }) => url?.toString().length && getYoutubeId(url),
 	handler: addClip,
+	preview: (url) => {
+		return UI.component({
+			content: `
+				<iframe src="https://www.youtube.com/embed/${getYoutubeId(
+					url
+				)}" class="w-full aspect-[16/9]">
+				</iframe>
+			`,
+		});
+	},
 });
 
 registerAction("randomYoutubeClip", {

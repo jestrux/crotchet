@@ -10,9 +10,6 @@ const writeFile = (contents) => ipcRenderer.invoke("write-file", contents);
 contextBridge.exposeInMainWorld(
 	"onCrotchetReady",
 	async ({ queryDb, dbInsert }) => {
-		const dbExtensions = await queryDb("__crotchetExtensions");
-		const devExtensions = await queryDb("__crotchetDevExtensions");
-
 		const installExtension = ({ name, contents }) => {
 			const asset = document.createElement("script");
 			asset.innerHTML = `
@@ -22,11 +19,97 @@ contextBridge.exposeInMainWorld(
 			document.body.appendChild(asset);
 		};
 
-		if (devExtensions?.length) {
-			devExtensions.forEach(({ name, contents }) =>
-				installExtension({ name, contents })
-			);
-		}
+		const localExtensions = [];
+
+		const syncExtensions = async () => {
+			const dbExtensions = await queryDb("__crotchetExtensions");
+			const devExtensions = await queryDb("__crotchetDevExtensions");
+
+			if (devExtensions?.length) {
+				devExtensions.forEach(({ name, contents }) =>
+					installExtension({ name, contents })
+				);
+			}
+
+			localExtensions.forEach(({ name, contents, updatedAt }) => {
+				const dbExtension = dbExtensions.find(
+					(dbExtension) => dbExtension.name === name
+				);
+
+				// Check if we need to update the database
+				const shouldUpdate =
+					!dbExtension ||
+					(dbExtension.updatedAt &&
+						new Date(updatedAt).getTime() > dbExtension.updatedAt);
+
+				if (shouldUpdate) {
+					console.log(
+						"Updating extension in DB: ",
+						name,
+						updatedAt,
+						dbExtension?.updatedAt
+					);
+					dbInsert(
+						"__crotchetExtensions",
+						{
+							name,
+							contents,
+							updatedAt,
+						},
+						{
+							rowId: name,
+						}
+					);
+				}
+			});
+
+			// Sync extensions from Firebase to local filesystem
+			if (dbExtensions?.length) {
+				dbExtensions.forEach(
+					({ name, contents, isLocal, updatedAt }) => {
+						if (isLocal)
+							return console.log(
+								`Don't sync ${name}, it's a local extension under app/public/extensions`
+							);
+
+						const extensionPath = appDir(
+							"extensions",
+							name + ".ts"
+						);
+
+						// Check if file exists and compare timestamps
+						Promise.all([
+							readFile({ path: extensionPath }),
+							fileStats({ path: extensionPath }),
+						]).then(([fileContents, fileStats]) => {
+							const localFileUpdatedAt =
+								fileStats && fileStats.updatedAt
+									? new Date(fileStats.updatedAt).getTime()
+									: null;
+							// const shouldUpdate = !fileContents
+							// 	? true
+							// 	: !localFileUpdatedAt
+							// 	? false
+							// 	: updatedAt > localFileUpdatedAt;
+							const shouldUpdate = false;
+
+							if (shouldUpdate) {
+								console.log(
+									"Updating extension locally: ",
+									name,
+									localFileUpdatedAt,
+									updatedAt
+								);
+								writeFile({
+									path: extensionPath,
+									contents: contents,
+								});
+							}
+						});
+					}
+				);
+			}
+		};
 
 		readDir({ path: appDir("extensions") }).then((res) => {
 			if (res) {
@@ -34,81 +117,12 @@ contextBridge.exposeInMainWorld(
 					(res) => res?.name?.length && res?.contents?.length
 				).forEach(({ name, contents, updatedAt }) => {
 					installExtension({ name, contents });
-
-					const dbExtension = dbExtensions.find(
-						(dbExtension) => dbExtension.name === name
-					);
-
-					// Check if we need to update the database
-					const shouldUpdate =
-						!dbExtension ||
-						(dbExtension.updatedAt &&
-							new Date(updatedAt).getTime() >
-								dbExtension.updatedAt);
-
-					if (shouldUpdate) {
-						console.log(
-							"Updating extension in DB: ",
-							name,
-							updatedAt,
-							dbExtension?.updatedAt
-						);
-						dbInsert(
-							"__crotchetExtensions",
-							{
-								name,
-								contents,
-								updatedAt,
-							},
-							{
-								rowId: name,
-							}
-						);
-					}
+					localExtensions.push({ name, contents, updatedAt });
 				});
+
+				syncExtensions();
 			}
 		});
-
-		// Sync extensions from Firebase to local filesystem
-		if (dbExtensions?.length) {
-			dbExtensions.forEach(({ name, contents, isLocal, updatedAt }) => {
-				if (isLocal)
-					return console.log(
-						`Don't sync ${name}, it's a local extension under app/public/extensions`
-					);
-
-				const extensionPath = appDir("extensions", name + ".ts");
-
-				// Check if file exists and compare timestamps
-				Promise.all([
-					readFile({ path: extensionPath }),
-					fileStats({ path: extensionPath }),
-				]).then(([fileContents, fileStats]) => {
-					const localFileUpdatedAt =
-						fileStats && fileStats.updatedAt
-							? new Date(fileStats.updatedAt).getTime()
-							: null;
-					const shouldUpdate = !fileContents
-						? true
-						: !localFileUpdatedAt
-						? false
-						: updatedAt > localFileUpdatedAt;
-
-					if (shouldUpdate) {
-						console.log(
-							"Updating extension locally: ",
-							name,
-							localFileUpdatedAt,
-							updatedAt
-						);
-						writeFile({
-							path: extensionPath,
-							contents: contents,
-						});
-					}
-				});
-			});
-		}
 	}
 );
 
