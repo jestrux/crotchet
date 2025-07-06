@@ -235,6 +235,7 @@ registerAction("appTheme", {
 
 registerAction("searchHeroIcons", {
 	global: true,
+	desktopOnly: true,
 	shortcut: "Shift+Alt+H",
 	url: `crotchet://search/heroIcons`,
 	tags: ["svg", "icon", "search"],
@@ -242,6 +243,7 @@ registerAction("searchHeroIcons", {
 
 registerAction("samsungRemote", {
 	global: true,
+	desktopOnly: true,
 	handler: async () => {
 		const tvIp = await openPage({
 			resolve: async () => {
@@ -337,6 +339,7 @@ registerAction("samsungRemote", {
 
 registerAction("editIpfApp", {
 	global: true,
+	desktopOnly: true,
 	handler: async () => {
 		const url =
 			"https://firebasestorage.googleapis.com/v0/b/letterplace-c103c.appspot.com/o/crotchet-uploads%2Ffile-ipf-os-app.json?alt=media&token=5670f9c6-417f-4c1a-a3cd-471815050659";

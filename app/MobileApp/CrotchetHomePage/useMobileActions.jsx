@@ -161,12 +161,16 @@ export const useMobileActions = () => {
 							sortable: true,
 							choices: _.orderBy(
 								[
-									"clipboard",
-									..._.map(allShortcuts, "name"),
-								].map((name) => ({
+									{ name: "clipboard" },
+									{ name: "pinboard" },
+									..._.map(allShortcuts, (c) =>
+										_.pick(c, ["label", "name"])
+									),
+								].map(({ label, name }) => ({
 									selected: savedShortcuts.includes(name),
 									idx: savedShortcuts.indexOf(name),
-									label: camelCaseToSentenceCase(name),
+									label:
+										label || camelCaseToSentenceCase(name),
 									value: name,
 								})),
 								["selected", "idx"],
@@ -302,7 +306,6 @@ export const useMobileActions = () => {
 					]);
 
 				window.openAlertForm({
-					dismissible: true,
 					inset: false,
 					title: "Customize App Navigation",
 					sortable: true,

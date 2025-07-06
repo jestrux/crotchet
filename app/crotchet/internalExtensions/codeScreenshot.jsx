@@ -20,6 +20,7 @@ export default function codeScreenshot() {
 	registerAction("codeImage", {
 		label: "Code Image",
 		global: true,
+		desktopOnly: true,
 		// context: "share",
 		icon,
 		// match: ({ text, url, image, file } = {}) =>

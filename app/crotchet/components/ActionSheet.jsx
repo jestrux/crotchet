@@ -276,7 +276,6 @@ export default function Sheet({
 						<div
 							className="mb-3 pl-1 flex items-center justify-between gap-2"
 							onPointerDown={(e) => {
-								if (!dismissible) return;
 								controls.start(e);
 							}}
 						>
@@ -314,7 +313,9 @@ export default function Sheet({
 							{/* {showLoader && <Loader size={40} />} */}
 						</div>
 					) : children ? (
-						children
+						<div className="max-h-[80vh] soverflow-auto">
+							{children}
+						</div>
 					) : (
 						<>
 							{!actions?.length && (
@@ -324,7 +325,7 @@ export default function Sheet({
 							)}
 
 							{actions && (
-								<div className="max-h-[70vh] overflow-auto">
+								<div className="max-h-[80vh] overflow-auto">
 									<ActionGrid
 										flat={noHeading}
 										key={"preview" + preview?.image}

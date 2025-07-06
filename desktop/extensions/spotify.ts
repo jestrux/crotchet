@@ -263,11 +263,11 @@ const registerRandomSpotifyAction = (name, loader, { label = "" } = {}) => {
 
 registerRandomSpotifyAction("randomSpotifyPlaylist", queryPlaylists);
 
-registerRandomSpotifyAction("randomSpotifyArtist", queryArtists);
+// registerRandomSpotifyAction("randomSpotifyArtist", queryArtists);
 
 registerRandomSpotifyAction("randomSpotifyAlbum", queryAlbums);
 
-registerRandomSpotifyAction("randomSpotifyTrack", queryTracks);
+// registerRandomSpotifyAction("randomSpotifyTrack", queryTracks);
 
 registerWidget("spotifyPlaylists", {
 	title: "Saved Spotify Playlists",

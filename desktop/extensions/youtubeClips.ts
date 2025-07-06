@@ -38,6 +38,7 @@ const mapEntry = (entry) => ({
 		.join(", ")} - ${toHms(entry.duration)}`,
 	// url: getYoutubeClipUrl(entry),
 	url: getYoutubeActualUrl(entry),
+	actions: getActions(entry),
 });
 
 const openOnDesktop = (clip) =>
@@ -64,6 +65,12 @@ const getActions = (payload) => {
 		// 	url: clipUrl,
 		// 	section: "Play",
 		// },
+		playOnYoutube: {
+			icon: appIcon,
+			url: getYoutubeActualUrl(payload),
+			section: "Play",
+			pinned: true,
+		},
 		...(onDesktop()
 			? {
 					playPictureinPicture: {
@@ -101,12 +108,6 @@ const getActions = (payload) => {
 							}),
 					},
 			  }),
-		playOnYoutube: {
-			icon: appIcon,
-			url: getYoutubeActualUrl(payload),
-			section: "Play",
-			pinned: true,
-		},
 		// shareVideo: {
 		// 	icon: appIcon,
 		// 	label: "Share",
@@ -184,7 +185,7 @@ const getActions = (payload) => {
 					},
 			  }),
 		deleteYoutubeClip: {
-			icon: appIcon,
+			icon: UI.icon("delete"),
 			label: "Delete Video",
 			pinned: false,
 			destructive: true,

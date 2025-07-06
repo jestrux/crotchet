@@ -235,7 +235,11 @@ export default function ModalPage({
 							{preview && <PreviewCard {...preview} />}
 							{actions && (
 								<div className={clsx({ "scale-90": preview })}>
-									<ActionGrid type="inline" data={actions} />
+									<ActionGrid
+										hideTrailing
+										type="inline"
+										data={actions}
+									/>
 								</div>
 							)}
 						</motion.div>

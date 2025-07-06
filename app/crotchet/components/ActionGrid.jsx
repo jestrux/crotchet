@@ -106,11 +106,16 @@ export default function ActionGrid({
 			return;
 		}
 
-		if (typeof entryAction == "function")
-			action.handler = entryAction(action);
-		const onClick = onActionClick(action);
+		if (!action.handler) {
+			if (typeof entryAction == "function")
+				action.handler = entryAction(action);
+			const onClick = onActionClick(action);
 
-		if (onClick) return onClick();
+			if (onClick) {
+				onClose(action?.handler ? null : action?.value || action);
+				return onClick();
+			}
+		}
 
 		onClose(action?.handler ? null : action?.value || action);
 		action?.handler?.(payload);
