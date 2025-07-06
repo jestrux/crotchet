@@ -16,6 +16,8 @@ import ActionGrid from "./ActionGrid";
 export default function ModalPage({
 	preview,
 	actions,
+	entryActions,
+	entryAction,
 	layout,
 	resolve,
 	searchable = false,
@@ -179,11 +181,17 @@ export default function ModalPage({
 								data={data}
 								gap="0.5rem"
 								masonry={layout == "masonry"}
+								entryActions={entryActions}
+								entryAction={entryAction}
 							/>
 						</div>
 					) : (
 						<div className="w-full overflow-x-hidden py-1 px-4">
-							<ListView data={data} />
+							<ListView
+								data={data}
+								entryActions={entryActions}
+								entryAction={entryAction}
+							/>
 						</div>
 					)}
 				</>

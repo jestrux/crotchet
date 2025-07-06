@@ -1,5 +1,10 @@
 import { useState, Children, cloneElement, useRef } from "react";
-import { dispatch, randomId, isReactComponent } from "@/crotchet/utils";
+import {
+	dispatch,
+	randomId,
+	isReactComponent,
+	camelCaseToSentenceCase,
+} from "@/crotchet/utils";
 import {
 	Modal,
 	MessageModal,
@@ -423,15 +428,45 @@ export default function useAlerts() {
 	};
 
 	if (!window.onDesktop()) {
-		window.openPage = (props) =>
-			openChoicePicker({
+		window.openPage = (props) => {
+			props = {
 				fullScreen: true,
 				inset: false,
 				dismissible: false,
 				noHeading: false,
 				...props,
 				choices: props.resolve,
-			});
+			};
+
+			if (props.source) {
+				const source = props.source;
+				const actualSource = source?._id
+					? source
+					: window.dataSources[source];
+
+				if (!actualSource)
+					return window.showToast(`Invalid data source ${source}`);
+
+				props = {
+					...props,
+					layoutProps: actualSource.layoutProps,
+					type: "search",
+					placeholder: actualSource.name
+						? `Search ${camelCaseToSentenceCase(
+								actualSource.name
+						  )}...`
+						: "",
+					resolve: actualSource.get,
+					onDataChange: actualSource.listenForUpdates,
+					secondaryAction: actualSource.entrySecondaryAction,
+					entryAction: actualSource.entryAction,
+					entryActions: actualSource.entryActions,
+					entryPreview: actualSource.entryPreview,
+				};
+			}
+
+			return openChoicePicker(props);
+		};
 	}
 
 	return {

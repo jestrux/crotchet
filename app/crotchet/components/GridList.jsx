@@ -32,29 +32,12 @@ export default function GridList({ source, data, isLoading, ...props }) {
 			const entryProps = {
 				_id,
 				...entry,
+				actions: entryActions ? entryActions(entry) : entry.actions,
 				onClick:
 					typeof entry.onClick == "function"
 						? entry.onClick
 						: typeof entryAction == "function"
 						? () => entryAction(entry)
-						: null,
-				onHold:
-					typeof entry.onHold == "function"
-						? entry.onHold
-						: typeof entryActions == "function"
-						? () =>
-								window.openActionSheet({
-									fullScreen: true,
-									title: entry.title,
-									actions: entryActions(entry),
-									preview: _.pick(entry, [
-										"icon",
-										"image",
-										"video",
-										"title",
-										"subtitle",
-									]),
-								})
 						: null,
 			};
 

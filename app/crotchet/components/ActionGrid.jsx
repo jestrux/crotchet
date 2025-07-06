@@ -4,6 +4,7 @@ import { MutliGestureButton } from "@/crotchet/components";
 import { useState } from "react";
 import { randomId } from "@/crotchet/utils";
 import DragAndDropList from "./DragAndDropList";
+import { onActionClick } from "@/crotchet/hooks/useActionClick";
 
 function ActionButton({
 	action,
@@ -104,12 +105,10 @@ export default function ActionGrid({
 			});
 			return;
 		}
-		const onClick =
-			typeof action.onClick == "function"
-				? action.onClick
-				: typeof entryAction == "function"
-				? () => entryAction(action)
-				: null;
+
+		if (typeof entryAction == "function")
+			action.handler = entryAction(action);
+		const onClick = onActionClick(action);
 
 		if (onClick) return onClick();
 
@@ -158,7 +157,10 @@ export default function ActionGrid({
 					action={action}
 					onClick={() => handleClick(action)}
 					onHold={onHold}
-					className="w-full h-12 text-left flex items-center gap-3 pl-4 pr-2.5"
+					className={`
+						w-full h-12 text-left flex items-center gap-3 pl-4 pr-2.5
+						${action.destructive ? "text-red-500" : ""}
+					`}
 				>
 					{action.icon && (
 						<div

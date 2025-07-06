@@ -77,10 +77,11 @@ export default function pinnedItems() {
 		orderBy: "updatedAt,desc",
 		mapEntry: (entry) => ({
 			...entry,
+			title: entry.text || entry.title || entry.url,
 			label: entry.text || entry.title || entry.url,
 			text: entry.text || entry.title || entry.url,
+			subtitle: entry.url == entry.text ? null : entry.url,
 			url: entry.url || "crotchet://copy/" + (entry.text || entry.title),
-			// image: entry.image || "placeholder",
 			image: entry.image,
 			share: getShareUrl({
 				scheme: "pinnedItems",
@@ -97,6 +98,12 @@ export default function pinnedItems() {
 		entryActions: (entry) => {
 			return [
 				{
+					icon: window.UI.icon("open-external"),
+					label: "Open",
+					url: entry.url,
+				},
+				{
+					icon: window.UI.icon("edit"),
 					label: "Edit",
 					handler: () => {
 						window.openPage({
@@ -118,6 +125,7 @@ export default function pinnedItems() {
 					},
 				},
 				{
+					icon: window.UI.icon("delete"),
 					label: "Delete",
 					destructive: true,
 					handler: async () =>
@@ -130,7 +138,6 @@ export default function pinnedItems() {
 							}
 						),
 				},
-				getAddToPinnedItemsAction(),
 			];
 		},
 		entryPreview: (entry) => {

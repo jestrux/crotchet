@@ -2,7 +2,14 @@ import { randomId } from "@/crotchet/utils";
 import { Loader } from "@/crotchet/components";
 import RegularListItem from "./ListItem";
 
-export default function ListView({ source, data, isLoading, ...props }) {
+export default function ListView({
+	source,
+	data,
+	isLoading,
+	entryActions,
+	entryAction,
+	...props
+}) {
 	const { gap = "0.8rem", meta } = {
 		...(source?.layoutProps || props.layoutProps || {}),
 		...props,
@@ -17,6 +24,13 @@ export default function ListView({ source, data, isLoading, ...props }) {
 	if (!isLoading && data) {
 		const items = data.map((entry) => {
 			const _id = entry._id || randomId();
+			entry.actions = entryActions ? entryActions(entry) : entry.actions;
+			entry.onClick =
+				typeof entry.onClick == "function"
+					? entry.onClick
+					: typeof entryAction == "function"
+					? () => entryAction(entry)
+					: null;
 			return <RegularListItem key={_id} {...{ _id, meta, ...entry }} />;
 		});
 

@@ -78,7 +78,7 @@ export const BottomNavButton = ({
 };
 
 const QuickActions = ({ menuItems }) => {
-	const menuItem = ({ label, color, colorDark, icon }) => {
+	const menuItem = ({ label, color, colorDark, icon, ...action }) => {
 		const colorClasses = [
 			color
 				? `bg-[${color}]/10 text-[${color}] border-[${color}]/5`
@@ -89,7 +89,10 @@ const QuickActions = ({ menuItems }) => {
 		];
 
 		return (
-			<div className="relative inline-flex items-center gap-1.5 bg-card dark:bg-content/5 shadow-sm dark:border border-stroke rounded-xl">
+			<div
+				className="relative inline-flex items-center gap-1.5 bg-card dark:bg-content/5 shadow-sm dark:border border-stroke rounded-xl"
+				onClick={onActionClick(action)}
+			>
 				<div
 					className={clsx(
 						"relative ml-1 my-1 size-8 rounded-lg flex items-center justify-center border",
