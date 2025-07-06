@@ -147,7 +147,7 @@ export default function Widget({
 				{(icon || title?.length > 0) && (
 					<div className="rounded-t-2xl relative z-10 flex-shrink-0 h-10 flex items-center gap-1.5 px-3.5 bg-content/5">
 						{icon && (
-							<span className="-ml-1.5 w-6 h-6 bg-content/10 rounded-full flex items-center justify-center">
+							<span className="-ml-1.5 size-6 bg-content/10 rounded-full flex items-center justify-center">
 								{icon}
 							</span>
 						)}
@@ -159,9 +159,9 @@ export default function Widget({
 				)}
 
 				{actions?.length > 0 && (
-					<div className="absolute right-2 top-2 z-10 flex items-center gap-2">
+					<div className="absolute right-1.5 top-1 z-10">
 						<div
-							className="flex items-center gap-2.5"
+							className="flex items-center gap-1"
 							style={{ color: color?.length ? color : "" }}
 						>
 							{actions.map((action, index) => {
@@ -170,12 +170,12 @@ export default function Widget({
 										title={action.label}
 										key={index}
 										className={clsx(
-											"relative focus:outline-none w-6 h-6 transition-colors rounded-full flex items-center justify-center",
-											"ring-1 ring-white/5",
-											{
-												"bg-content/[0.08] dark:bg-content/15 border border-content/10":
-													!color?.length,
-											},
+											"relative focus:outline-none size-7 transition-colors rounded-full flex items-center justify-center",
+											// "ring-1 ring-white/5",
+											// {
+											// 	"bg-content/[0.08] dark:bg-content/15 border border-content/10":
+											// 		!color?.length,
+											// },
 											action.className || ""
 										)}
 										onClick={() =>
@@ -202,7 +202,7 @@ export default function Widget({
 											></span>
 										)}
 
-										<span className="relative">
+										<span className="relative size-4 flex items-center justify-center">
 											{action.icon}
 										</span>
 									</button>
