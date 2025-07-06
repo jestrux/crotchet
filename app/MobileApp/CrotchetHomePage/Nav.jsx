@@ -77,7 +77,7 @@ export const BottomNavButton = ({
 	);
 };
 
-const QuickActions = ({ menuItems }) => {
+const QuickActions = ({ menuItems, onCollapse }) => {
 	const menuItem = ({ label, color, colorDark, icon, ...action }) => {
 		const colorClasses = [
 			color
@@ -91,7 +91,10 @@ const QuickActions = ({ menuItems }) => {
 		return (
 			<div
 				className="relative inline-flex items-center gap-1.5 bg-card dark:bg-content/5 shadow-sm dark:border border-stroke rounded-xl"
-				onClick={onActionClick(action)}
+				onClick={() => {
+					onCollapse();
+					onActionClick(action)();
+				}}
 			>
 				<div
 					className={clsx(
@@ -131,7 +134,10 @@ const NavActions = ({
 		<div ref={wrapper} className="overflow-auto">
 			<div onClick={onCollapse}>
 				{!searchQuery?.length && (
-					<QuickActions menuItems={pinnedActions} />
+					<QuickActions
+						onCollapse={onCollapse}
+						menuItems={pinnedActions}
+					/>
 				)}
 
 				{!actionSections?.length && searchQuery?.length > 0 && (
