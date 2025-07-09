@@ -264,13 +264,21 @@ const registerRandomSpotifyAction = (name, loader, { label = "" } = {}) => {
 	});
 };
 
-registerRandomSpotifyAction("randomSpotifyPlaylist", queryPlaylists);
+registerRandomSpotifyAction("randomSpotifyPlaylist", queryPlaylists, {
+	label: "Random Playlist",
+});
 
-// registerRandomSpotifyAction("randomSpotifyArtist", queryArtists);
+registerRandomSpotifyAction("randomSpotifyArtist", queryArtists, {
+	label: "Random Artist",
+});
 
-registerRandomSpotifyAction("randomSpotifyAlbum", queryAlbums);
+registerRandomSpotifyAction("randomSpotifyAlbum", queryAlbums, {
+	label: "Random Album",
+});
 
-// registerRandomSpotifyAction("randomSpotifyTrack", queryTracks);
+registerRandomSpotifyAction("randomSpotifyTrack", queryTracks, {
+	label: "Random Track",
+});
 
 registerWidget("spotifyPlaylists", {
 	title: "Saved Spotify Playlists",
