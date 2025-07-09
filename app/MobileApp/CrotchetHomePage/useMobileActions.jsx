@@ -295,15 +295,19 @@ export const useMobileActions = () => {
 			pinned: 1,
 			section: "Quick Actions",
 			handler: async () => {
-				const [behavior, [leftNavItem, centerNavItem, rightNavItem]] =
-					await Promise.all([
-						await getPreference("appNavBehavior", "Regular"),
-						await getPreference("appNavItems", [
-							"Remote",
-							"Search",
-							"Profile",
-						]),
-					]);
+				const [
+					behavior,
+					[leftNavItem, centerNavItem, rightNavItem],
+					appNavHoldAction,
+				] = await Promise.all([
+					await getPreference("appNavBehavior", "Regular"),
+					await getPreference("appNavItems", [
+						"Remote",
+						"Search",
+						"Profile",
+					]),
+					await getPreference("appNavHoldAction", "changeAppPage"),
+				]);
 
 				window.openAlertForm({
 					inset: false,
@@ -318,6 +322,33 @@ export const useMobileActions = () => {
 								behavior: {
 									type: "radio",
 									choices: ["Regular", "Floating", "Hidden"],
+								},
+							},
+						},
+						appNavHoldAction: {
+							hideLabel: true,
+							type: "preferences",
+							fields: {
+								action: {
+									label: "Long Press Home Action",
+									type: "radio",
+									choices: [
+										{ name: "clipboard" },
+										{ name: "pinboard" },
+										{
+											label: "Change Page",
+											name: "changeAppPage",
+										},
+										..._.map(window.globalActions(), (c) =>
+											_.pick(c, ["label", "name"])
+										),
+									].map(({ label, name }) => ({
+										selected: appNavHoldAction == name,
+										label:
+											label ||
+											camelCaseToSentenceCase(name),
+										value: name,
+									})),
 								},
 							},
 						},
@@ -347,6 +378,9 @@ export const useMobileActions = () => {
 						navigationBehavior: {
 							behavior,
 						},
+						appNavHoldAction: {
+							action: appNavHoldAction,
+						},
 						navigationItems: {
 							left: leftNavItem,
 							center: centerNavItem,
@@ -364,6 +398,11 @@ export const useMobileActions = () => {
 								values.navigationItems.center || "Search",
 								values.navigationItems.right || "Profile",
 							]),
+							await savePreference(
+								"appNavHoldAction",
+								values.appNavHoldAction.action ||
+									"changeAppPage"
+							),
 						]);
 
 						dispatch("app-navigation-updated");

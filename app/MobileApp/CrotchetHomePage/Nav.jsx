@@ -326,16 +326,20 @@ const NavItems = ({
 
 	const { data } = useDataLoader({
 		handler: async () => {
-			const [behavior, pinnedItems] = await Promise.all([
-				await getPreference("appNavBehavior", "Regular"),
-				await getPreference("appNavItems", [
-					"Remote",
-					"Search",
-					"Profile",
-				]),
-			]);
+			const [behavior, pinnedItems, appNavHoldAction] = await Promise.all(
+				[
+					await getPreference("appNavBehavior", "Regular"),
+					await getPreference("appNavItems", [
+						"Remote",
+						"Search",
+						"Profile",
+					]),
+					await getPreference("appNavHoldAction", "changeAppPage"),
+				]
+			);
 
 			return {
+				appNavHoldAction,
 				behavior,
 				items: pinnedItems.map((item) => {
 					return navItems.find(({ action }) => action == item);
@@ -347,7 +351,7 @@ const NavItems = ({
 
 	if (!data) return null;
 
-	const { items, behavior } = data;
+	const { items, behavior, appNavHoldAction } = data;
 	const hidden = behavior?.toLowerCase() == "hidden";
 	const floating = behavior?.toLowerCase() == "floating" || hidden;
 	const minWidth = hidden ? 200 : items[1].action == "Home" ? 220 : 260;
@@ -399,12 +403,7 @@ const NavItems = ({
 			>
 				<MutliGestureButton
 					className="size-full"
-					onHold={() => {
-						window.openChoicePicker({
-							title: "Change page",
-							emptyStateMessage: "You haven't created any pages",
-						});
-					}}
+					onHold={window.actions[appNavHoldAction]?.handler}
 				/>
 			</motion.div>
 

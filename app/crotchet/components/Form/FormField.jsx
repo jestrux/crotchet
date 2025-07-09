@@ -335,7 +335,13 @@ const PreferencesEditor = ({
 				type="inline"
 				key={gridKey}
 				data={fields.map((field) => {
-					field.trailing = field.value || "";
+					let trailing = field.value;
+					const selectedChoice = field.choices?.find(
+						(c) => c.value == field.value
+					);
+					if (selectedChoice) trailing = selectedChoice.label;
+
+					field.trailing = trailing;
 					field.handler = () => handleFieldClick(field);
 					return field;
 				})}
