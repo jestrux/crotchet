@@ -58,14 +58,17 @@ const connectSpotify = async () => {
 const promptConnectSpotify = (callback) => {
 	window
 		.openChoicePicker({
-			title: "Connect Spotify?",
 			choices: [
-				"Connect",
 				{
-					label: "Open Token Page",
+					icon: appIcon,
+					label: "Connect Spotify",
+					handler: () => connectSpotify(),
+				},
+				{
+					icon: UI.icon("open-external"),
+					label: "Get Access Token",
 					handler: () => openUrl("https://developer.spotify.com/"),
 				},
-				{ label: "Cancel", value: false },
 			],
 		})
 		.then((res) => {
