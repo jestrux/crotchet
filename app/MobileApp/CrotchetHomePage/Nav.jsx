@@ -5,16 +5,18 @@ import useKeyboard from "@/crotchet/hooks/useKeyboard";
 import { dispatch, getPreference, isValidAction } from "@/crotchet/utils";
 import clsx from "clsx";
 import {
+	AnimatePresence,
 	motion,
 	useAnimate,
 	useDragControls,
 	useMotionValue,
 	useTransform,
 } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import FloatingRemote from "../FloatingRemote";
 import { useMobileActions } from "./useMobileActions";
 import { icon as UiICon } from "@/crotchet/providers/ui";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
 
 export const BottomNavButton = ({
 	disabled,
@@ -130,7 +132,31 @@ const NavActions = ({
 }) => {
 	const { KeyboardPlaceholder } = useKeyboard();
 	const wrapper = useRef(null);
+	const initializedRef = useRef(null);
 	const searching = searchQuery?.length > 0;
+
+	useLayoutEffect(() => {
+		if (searchQuery && actionSections.length) {
+			if (initializedRef.current) return;
+			initializedRef.current = true;
+
+			const firstAction = actionSections[0][1][0];
+			const onClick = onActionClick(firstAction);
+			if (onClick) {
+				Haptics.impact({
+					style: ImpactStyle.Light,
+				});
+			}
+		} else initializedRef.current = false;
+	}, [searchQuery, actionSections]);
+
+	const selectedActionTransition = (enter) => {
+		if (initializedRef.current) return null;
+		return {
+			opacity: enter ? 1 : 0.5,
+			scaleX: enter ? 1 : 0.9,
+		};
+	};
 
 	return (
 		<div ref={wrapper} className="overflow-auto">
@@ -159,7 +185,7 @@ const NavActions = ({
 					</div>
 				)}
 
-				<div className={clsx(searching ? "px-3.5" : "px-6")}>
+				<div className={clsx(searching ? "px-6" : "px-6")}>
 					{actionSections.map(([section, actions], index) => {
 						return (
 							<div
@@ -169,7 +195,7 @@ const NavActions = ({
 								})}
 							>
 								{section && section != "undefined" && (
-									<span className="mt-5 mb-1.5 uppercase tracking-wide text-xs font-semibold opacity-50 px-1 flex items-center">
+									<span className="mt-5 mb-1.5 uppercase tracking-wide text-xs font-semibold opacity-30 px-1 flex items-center">
 										{section}
 									</span>
 								)}
@@ -203,9 +229,24 @@ const NavActions = ({
 											}
 											className="relative"
 										>
-											{searching && index == 0 && (
-												<div className="absolute -mx-1.5 inset-0 z-1 bg-content/5 rounded-lg"></div>
-											)}
+											<AnimatePresence>
+												{searching && (
+													<motion.div
+														className="absolute -mx-2 inset-0 -z-1 bg-content/5 rounded-lg"
+														style={{
+															background:
+																index == 0
+																	? ""
+																	: "transparent",
+														}}
+														initial={selectedActionTransition()}
+														animate={selectedActionTransition(
+															true
+														)}
+														exit={selectedActionTransition()}
+													/>
+												)}
+											</AnimatePresence>
 
 											<NavButton
 												className="gap-[11px]"
@@ -726,11 +767,8 @@ export default function MobileNav() {
 								placeholder="Search..."
 								value={searchQuery}
 								onChange={setSearchQuery}
-								onEnter={(e) => {
-									if (
-										e.target.value.length &&
-										actionSections.length
-									) {
+								onEnter={() => {
+									if (searchQuery && actionSections.length) {
 										const firstAction =
 											actionSections[0][1][0];
 										const onClick =
