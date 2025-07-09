@@ -106,9 +106,17 @@ export const getToken = async (key, { prompt } = {}) => {
 
 	if (!token && prompt) {
 		const newToken = await window.openAlertForm({
+			inset: false,
+			// noHeading: false,
 			title: `Enter ${camelCaseToSentenceCase(key)}`,
 			field: {
+				placeholder: `Enter ${camelCaseToSentenceCase(key)}`,
+				// placeholder: "Enter token here...",
 				hideLabel: true,
+				meta: {
+					flat: true,
+					bold: true,
+				},
 			},
 		});
 

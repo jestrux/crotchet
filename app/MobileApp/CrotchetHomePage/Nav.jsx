@@ -14,6 +14,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import FloatingRemote from "../FloatingRemote";
 import { useMobileActions } from "./useMobileActions";
+import { icon as UiICon } from "@/crotchet/providers/ui";
 
 export const BottomNavButton = ({
 	disabled,
@@ -129,18 +130,19 @@ const NavActions = ({
 }) => {
 	const { KeyboardPlaceholder } = useKeyboard();
 	const wrapper = useRef(null);
+	const searching = searchQuery?.length > 0;
 
 	return (
 		<div ref={wrapper} className="overflow-auto">
 			<div onClick={onCollapse}>
-				{!searchQuery?.length && (
+				{!searching && (
 					<QuickActions
 						onCollapse={onCollapse}
 						menuItems={pinnedActions}
 					/>
 				)}
 
-				{!actionSections?.length && searchQuery?.length > 0 && (
+				{!actionSections?.length && searching && (
 					<div className="flex flex-col items-center justify-center select-none py-12 truncate text-lg text-content/30 text-center font-medium">
 						<svg
 							className="mb-5 size-8 opacity-80"
@@ -157,53 +159,65 @@ const NavActions = ({
 					</div>
 				)}
 
-				{actionSections.map(([section, actions], index) => {
-					return (
-						<div
-							key={"section" + index}
-							className={clsx({
-								"mb-4": index != actionSections.length - 1,
-							})}
-						>
-							{section && section != "undefined" && (
-								<span className="mt-5 mb-1.5 uppercase tracking-wide text-xs font-semibold opacity-50 px-7 flex items-center">
-									{section}
-								</span>
-							)}
+				<div className={clsx(searching ? "px-3.5" : "px-6")}>
+					{actionSections.map(([section, actions], index) => {
+						return (
+							<div
+								key={"section" + index}
+								className={clsx({
+									"mb-4": index != actionSections.length - 1,
+								})}
+							>
+								{section && section != "undefined" && (
+									<span className="mt-5 mb-1.5 uppercase tracking-wide text-xs font-semibold opacity-50 px-1 flex items-center">
+										{section}
+									</span>
+								)}
 
-							{actions.map((action) => {
-								action.icon = (
-									<svg
-										className="size-[18px] opacity-80"
-										fill="none"
-										viewBox="0 0 24 24"
-										strokeWidth={1.5}
-										stroke="currentColor"
-									>
-										{action.icon || (
-											<path
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
+								{actions.map((action, index) => {
+									action.icon = (
+										<svg
+											className="size-[18px] opacity-80"
+											fill="none"
+											viewBox="0 0 24 24"
+										>
+											{(typeof action.icon == "string"
+												? UiICon[action.icon]
+												: action.icon) || (
+												<path
+													strokeLinecap="round"
+													strokeLinejoin="round"
+													strokeWidth={1.5}
+													stroke="currentColor"
+													d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
+												/>
+											)}
+										</svg>
+									);
+
+									return (
+										<div
+											key={
+												action._id ||
+												action.__id + "action-" + index
+											}
+											className="relative"
+										>
+											{searching && index == 0 && (
+												<div className="absolute -mx-1.5 inset-0 z-1 bg-content/5 rounded-lg"></div>
+											)}
+
+											<NavButton
+												className="gap-[11px]"
+												action={action}
 											/>
-										)}
-									</svg>
-								);
-
-								return (
-									<NavButton
-										className="px-6 gap-[11px]"
-										key={
-											action._id ||
-											action.__id + "action-" + index
-										}
-										action={action}
-									/>
-								);
-							})}
-						</div>
-					);
-				})}
+										</div>
+									);
+								})}
+							</div>
+						);
+					})}
+				</div>
 
 				<KeyboardPlaceholder />
 			</div>
@@ -712,6 +726,20 @@ export default function MobileNav() {
 								placeholder="Search..."
 								value={searchQuery}
 								onChange={setSearchQuery}
+								onEnter={(e) => {
+									if (
+										e.target.value.length &&
+										actionSections.length
+									) {
+										const firstAction =
+											actionSections[0][1][0];
+										const onClick =
+											onActionClick(firstAction);
+										if (onClick) onClick();
+									}
+
+									handleCollapse(true);
+								}}
 							/>
 
 							{searchQuery && (

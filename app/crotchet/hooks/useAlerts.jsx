@@ -184,9 +184,11 @@ export function AlertsWrapper() {
 
 					const form = (
 						<div
-							className={clsx({
-								"p-1.5": alert.field,
-							})}
+							className={clsx(
+								alert.field && !(alert.noHeading ?? true)
+									? "-mx-2 -mt-2 pb-1"
+									: "py-2 px-1"
+							)}
 						>
 							<Form
 								formId={
@@ -219,9 +221,13 @@ export function AlertsWrapper() {
 
 					return (
 						<ActionSheet
+							ignoreSafeArea={alert.field}
 							key={alert.id}
 							dismissible={alert.dismissible ?? false}
 							inset={alert.inset ?? alert.field ? true : false}
+							noHeading={
+								alert.noHeading ?? alert.field ? true : false
+							}
 							title={alert.title}
 							onClose={alert.close}
 						>

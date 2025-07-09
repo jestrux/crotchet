@@ -22,6 +22,7 @@ export default function Sheet({
 	preview: _preview,
 	actions: _actions,
 	children,
+	ignoreSafeArea = false,
 	showOverlayBg = true,
 	noHeading = false,
 	inset = true,
@@ -199,9 +200,12 @@ export default function Sheet({
 				className={clsx(
 					"fixed z-[999]",
 					{ "top-0 flex items-center justify-center": onlg },
+					inset ? "inset-x-3" : "inset-x-0",
 					inset
-						? "inset-x-3 mb-[env(safe-area-inset-bottom)]"
-						: "inset-x-0"
+						? !ignoreSafeArea
+							? "mb-[env(safe-area-inset-bottom)]"
+							: "mb-3"
+						: ""
 				)}
 				style={{
 					bottom: inset
@@ -227,7 +231,9 @@ export default function Sheet({
 							: "w-full max-w-lg"
 					)}
 					style={{
-						paddingBottom: inset
+						paddingBottom: ignoreSafeArea
+							? 0
+							: inset
 							? noHeading
 								? 0
 								: 12

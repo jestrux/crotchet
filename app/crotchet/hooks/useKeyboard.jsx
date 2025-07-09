@@ -1,5 +1,6 @@
 import { Capacitor } from "@capacitor/core";
 import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 // import { Keyboard } from "@capacitor/keyboard";
 
 export default function useKeyboard({ mode = "none" } = {}) {
@@ -38,12 +39,23 @@ export default function useKeyboard({ mode = "none" } = {}) {
 				mode,
 			});
 
-			Keyboard.addListener("keyboardDidShow", (info) => {
+			Keyboard.addListener("keyboardWillShow", (info) => {
 				setKeyboardHeight(Number(info.keyboardHeight));
 			});
+			// Keyboard.addListener("keyboardDidShow", (info) => {
+			// 	setKeyboardHeight(Number(info.keyboardHeight));
+			// });
 
-			Keyboard.addListener("keyboardDidHide", () => {
+			Keyboard.addListener("keyboardWillHide", () => {
 				setKeyboardHeight(0);
+			});
+
+			// Keyboard.addListener("keyboardDidHide", () => {
+			// 	setKeyboardHeight(0);
+			// });
+
+			Keyboard.setAccessoryBarVisible({
+				isVisible: false,
 			});
 		} catch (error) {
 			//
@@ -51,15 +63,26 @@ export default function useKeyboard({ mode = "none" } = {}) {
 	};
 
 	const KeyboardPlaceholder = ({ noMargin = false }) => (
-		<div
+		<motion.div
 			className="h-16"
 			style={{
-				height: `${keyboardHeight}px`,
+				// height: `${keyboardHeight}px`,
 				marginBottom: noMargin ? 0 : "env(safe-area-inset-bottom)",
+			}}
+			initial={{
+				height: keyboardHeight * 0.75,
+			}}
+			animate={{
+				height: keyboardHeight,
+			}}
+			transition={{
+				type: "keyframes",
+				ease: "easeOut",
+				duration: 0.2,
 			}}
 		>
 			&nbsp;
-		</div>
+		</motion.div>
 	);
 
 	return { keyboardHeight, KeyboardPlaceholder };

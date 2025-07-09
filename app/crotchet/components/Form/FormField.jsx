@@ -916,9 +916,21 @@ const Field = ({ field, value, onChange, __data }) => {
 				);
 			}
 
+			const meta = field.meta || {};
+
 			return (
 				<input
-					className="block bg-transparent placeholder:text-content/20"
+					className={clsx(
+						"block bg-transparent",
+						meta?.flat
+							? "border-none shadow-none text-lg placeholder:text-content/25"
+							: "placeholder:text-content/20",
+						meta.bold
+							? "font-semibold"
+							: meta.flat
+							? "font-medium"
+							: ""
+					)}
 					id={field.name}
 					placeholder={field.placeholder}
 					type={fieldType}
@@ -927,6 +939,14 @@ const Field = ({ field, value, onChange, __data }) => {
 					value={value}
 					onChange={onChange}
 					required={!field.optional}
+					style={
+						!field.meta?.flat
+							? {}
+							: {
+									border: "none",
+									boxShadow: "none",
+							  }
+					}
 				/>
 			);
 		}
