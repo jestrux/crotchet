@@ -20,6 +20,7 @@ import useOnInit from "./useOnInit";
 
 export const sourceGet = async (source, props = {}) => {
 	if (typeof source == "function") source = { handler: source };
+	if (typeof source == "string") source = window.dataSources[source];
 
 	const payload = _.omit(props, getterFields);
 	let {

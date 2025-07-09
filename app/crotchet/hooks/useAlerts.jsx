@@ -102,6 +102,7 @@ export function AlertsWrapper() {
 							<ModalPage
 								key={alert.id}
 								{...alert}
+								type={alert.pageType}
 								onClose={alert.close}
 							/>
 						);
@@ -131,6 +132,7 @@ export function AlertsWrapper() {
 							<ModalPage
 								key={alert.id}
 								{...alert}
+								type={alert.pageType}
 								resolve={alert.resolve || alert.choices}
 								searchable={alert.searchable ?? true}
 								selectable={alert.multiple ? "multiple" : false}
@@ -207,6 +209,7 @@ export function AlertsWrapper() {
 							<ModalPage
 								key={alert.id}
 								{...alert}
+								type={alert.pageType}
 								onClose={alert.close}
 							>
 								{form}
@@ -232,6 +235,7 @@ export function AlertsWrapper() {
 						<ModalPage
 							key={alert.id}
 							{...alert}
+							type={alert.pageType}
 							onClose={alert.close}
 						/>
 					);
@@ -436,6 +440,7 @@ export default function useAlerts() {
 				noHeading: false,
 				...props,
 				choices: props.resolve,
+				pageType: props.type || "search",
 			};
 
 			if (props.source) {
@@ -450,7 +455,7 @@ export default function useAlerts() {
 				props = {
 					...props,
 					layoutProps: actualSource.layoutProps,
-					type: "search",
+					layout: actualSource.layoutProps?.layout,
 					placeholder: actualSource.name
 						? `Search ${camelCaseToSentenceCase(
 								actualSource.name

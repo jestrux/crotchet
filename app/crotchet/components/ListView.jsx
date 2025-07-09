@@ -24,7 +24,11 @@ export default function ListView({
 	if (!isLoading && data) {
 		const items = data.map((entry) => {
 			const _id = entry._id || randomId();
-			entry.actions = entryActions ? entryActions(entry) : entry.actions;
+			entry.actions = entry.actions
+				? entry.actions
+				: entryActions
+				? entryActions(entry)
+				: [];
 			entry.onClick =
 				typeof entry.onClick == "function"
 					? entry.onClick

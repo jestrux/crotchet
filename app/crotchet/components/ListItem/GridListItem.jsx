@@ -15,7 +15,7 @@ export default function GridListItem({
 	title: _title,
 	subtitle,
 	color,
-	// aspectRatio = "16/9",
+	aspectRatio = "2/1.3",
 	width,
 	height,
 	share,
@@ -26,7 +26,7 @@ export default function GridListItem({
 	onDoubleClick,
 }) {
 	const title = _title || label;
-	const aspectRatio = "2/1.3";
+	// const aspectRatio = "2/1.3";
 	const inset = meta?.inset;
 	const imagePlaceholder = meta?.imagePlaceholder;
 	const gestures = useLongPress(() => {
@@ -68,11 +68,7 @@ export default function GridListItem({
 						<div
 							className="relative flex-shrink-0 bg-content/10 border border-stroke rounded overflow-hidden w-full"
 							style={{
-								...(width && height
-									? {
-											aspectRatio: width / height,
-									  }
-									: {}),
+								aspectRatio,
 								backgroundColor: color,
 							}}
 						>

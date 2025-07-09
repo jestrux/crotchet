@@ -5,6 +5,7 @@ import { useState } from "react";
 import { randomId } from "@/crotchet/utils";
 import DragAndDropList from "./DragAndDropList";
 import { onActionClick } from "@/crotchet/hooks/useActionClick";
+import { icon as UIicon } from "@/crotchet/providers/ui";
 
 function ActionButton({
 	action,
@@ -144,7 +145,7 @@ export default function ActionGrid({
 								"subtitle",
 							]),
 						});
-
+		if (typeof action.icon == "string") action.icon = UIicon(action.icon);
 		action.icon = action.icon || fallbackIcon;
 
 		const colorClasses = [

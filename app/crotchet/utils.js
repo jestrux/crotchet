@@ -772,6 +772,27 @@ export const getShareUrl = (content, type = "text") => {
 	)}`;
 };
 
+export const getPreviewUrl = (content) => {
+	if (!content) return "";
+
+	if (!_.isObject(content)) return "";
+
+	const url = `crotchet://preview/${encodeURIComponent(
+		JSON.stringify({
+			preview: _.pick(content, [
+				"image",
+				"video",
+				"title",
+				"subtitle",
+				"aspectRatio",
+			]),
+			actions: content.actions,
+		})
+	)}`;
+
+	return url;
+};
+
 export const extractHtmlFromComponent = (component, options = {}) => {
 	const { pretty = false, staticMarkup = false } = options;
 

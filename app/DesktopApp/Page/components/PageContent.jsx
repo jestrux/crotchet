@@ -1,32 +1,44 @@
 import { usePageContext } from "@/crotchet/providers/PageProvider";
 import ThemeBg from "@/DesktopApp/ThemeBg";
 import clsx from "clsx";
+import { objectIsEmpty } from "@/crotchet/utils";
 
 export default function PageContent({ children }) {
-	const { preview, isOpen, fullScreen, pageResolving } = usePageContext();
+	const {
+		preview: _preview,
+		isOpen,
+		fullScreen,
+		pageResolving,
+		page,
+		pageData,
+	} = usePageContext();
+	const isPreviewPage = page.type == "preview";
+	const previewContent = _.pick(pageData || {}, ["title", "subtitle"]);
+	let preview = _preview;
+
+	if (isPreviewPage && !objectIsEmpty(previewContent)) {
+		preview = (
+			<div className="p-4 space-y-2">
+				<h1 className="font-medium">{previewContent.title}</h1>
+				<p className="text-sm text-content/50">
+					{previewContent.subtitle}
+				</p>
+			</div>
+		);
+	}
 
 	return (
-		<div
-			id="scrollArea"
-			className="relative overflow-auto"
-			style={{ height: "calc(100vh - 100px)" }}
-		>
-			{!pageResolving && isOpen && (
-				<>
-					{preview ? (
-						<div
-							className={clsx("h-full", {
-								"fixed inset-0 z-[999]": fullScreen,
-							})}
-						>
-							<ThemeBg className="grid grid-cols-12 h-full">
-								<div className="col-span-5 ">{children}</div>
-								<div className="col-span-7 overflow-hidden p-0.5 relative border-l border-content/10 overflow-y-auto">
-									{preview}
-								</div>
-							</ThemeBg>
-						</div>
-					) : (
+		<ThemeBg className="relative" style={{ height: "calc(100vh - 100px)" }}>
+			<div
+				id="scrollArea"
+				className={clsx(
+					"relative overflow-auto",
+					preview ? (isPreviewPage ? "w-1/2" : "w-5/12") : ""
+				)}
+				style={{ height: "calc(100vh - 100px)" }}
+			>
+				{!pageResolving && isOpen && (
+					<>
 						<div
 							className={clsx("h-full", {
 								"fixed inset-0 z-[999]": fullScreen,
@@ -34,9 +46,22 @@ export default function PageContent({ children }) {
 						>
 							<ThemeBg className="h-full">{children}</ThemeBg>
 						</div>
-					)}
-				</>
-			)}
-		</div>
+
+						{preview && (
+							<div
+								className={clsx(
+									"fixed top-14 bottom-11 right-0 overflow-hidden border-l border-content/10 overflow-y-auto",
+									isPreviewPage ? "w-1/2" : "w-7/12"
+								)}
+							>
+								<div className="relative size-full">
+									{preview}
+								</div>
+							</div>
+						)}
+					</>
+				)}
+			</div>
+		</ThemeBg>
 	);
 }

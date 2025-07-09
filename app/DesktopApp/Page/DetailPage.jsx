@@ -4,6 +4,7 @@ import { usePageContext } from "@/crotchet/providers/PageProvider";
 import PageContent from "./components/PageContent";
 import { Form } from "@/crotchet/components";
 import { randomId, dispatch, withLoader } from "@/crotchet/utils";
+import MediaItem from "@/crotchet/components/MediaItem";
 // import ActionPage from "./ActionPage";
 
 export default function DetailPage() {
@@ -108,6 +109,8 @@ export default function DetailPage() {
 			);
 		}
 
+		if (page.type == "preview") return <MediaItem {...(pageData || {})} />;
+
 		return content;
 	};
 
@@ -140,7 +143,9 @@ export default function DetailPage() {
 					</button>
 				)}
 
-				<span className="w-full text-base font-bold">{title}</span>
+				<span className="w-full text-base font-bold truncate">
+					{title}
+				</span>
 
 				{!pageResolving && <PageFilters />}
 			</div>

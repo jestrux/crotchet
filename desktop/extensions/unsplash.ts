@@ -132,73 +132,21 @@ registerAction("randomUnsplashPic", {
 		{ filled: true, size: 16 }
 	),
 	global: true,
-	context: "shortcut",
+	// context: "shortcut",
 	tags: ["image"],
 	handler: async () => {
-		if (onDesktop()) {
-			try {
-				return openPage({
-					type: "detail",
-					title: ({ pageData }) => pageData?.title || null,
-					resolve: randomUnsplashPic,
-					content: ({ pageData }) => {
-						if (!pageData) return null;
-
-						return UI.component({
-							className:
-								"absolute inset-0 bg-black flex items-center justify-center",
-							content: !pageData
-								? ""
-								: `<img class="max-w-full h-full" src="${pageData.image}" />`,
-						});
-					},
-					action: ({ pageData }) =>
-						!pageData
-							? null
-							: {
-									label: "Open",
-									handler: () => openUrl(pageData.href),
-							  },
-					actions: ({ pageData }) =>
-						!pageData
-							? null
-							: [
-									{
-										label: "Copy",
-										handler: () => {
-											copyToClipboard(pageData.image);
-											showToast("Image copied");
-										},
-									},
-							  ],
-				});
-			} catch (error) {
-				showToast("Failed to get clip");
-			}
-
-			return;
-		}
-
-		window.openActionSheet({
-			noHeading: true,
-			actions: async () => {
-				try {
-					const res = await randomUnsplashPic();
-
-					window.openActionSheet({
-						fullScreen: true,
-						preview: _.pick(res, [
-							"url",
-							"image",
-							"title",
-							"subtitle",
-						]),
-						actions: getImageActions(res, { search: true }),
-					});
-				} catch (error) {
-					showToast("Failed to get image");
-				}
-			},
+		return openPage({
+			type: "preview",
+			resolve: randomUnsplashPic,
+			action: ({ pageData }) =>
+				!pageData
+					? null
+					: {
+							label: "Open",
+							handler: () => openUrl(pageData.href),
+					  },
+			actions: ({ pageData }) =>
+				!pageData ? null : getImageActions(pageData),
 		});
 	},
 });

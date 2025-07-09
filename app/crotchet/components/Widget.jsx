@@ -71,6 +71,8 @@ export default function Widget({
 	background,
 	color,
 	actions: _actions,
+	entryAction,
+	entryActions,
 	children,
 	resolve,
 	content: _content,
@@ -99,7 +101,15 @@ export default function Widget({
 		return typeof item == "function" ? item(payload) ?? defaultValue : item;
 	};
 
-	const context = { data, loading, state, setState, refetch };
+	const context = {
+		data,
+		loading,
+		state,
+		setState,
+		refetch,
+		entryAction,
+		entryActions,
+	};
 	const title = evaluate(_title, context);
 	const content = evaluate(_content, context);
 	const actions = evaluate(_actions, context, []);

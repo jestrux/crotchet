@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import { randomId } from "@/crotchet/utils";
 import { Loader } from "@/crotchet/components";
+import { onActionClick } from "@/crotchet/hooks/useActionClick";
 import GridListItem from "./ListItem/GridListItem";
 
 export default function GridList({ source, data, isLoading, ...props }) {
@@ -29,17 +30,27 @@ export default function GridList({ source, data, isLoading, ...props }) {
 	if (!isLoading && data) {
 		const items = data.map((entry) => {
 			const _id = entry._id || randomId();
+			const onClick = onActionClick(entry);
 			const entryProps = {
 				_id,
 				...entry,
-				actions: entryActions ? entryActions(entry) : entry.actions,
-				onClick:
-					typeof entry.onClick == "function"
-						? entry.onClick
-						: typeof entryAction == "function"
-						? () => entryAction(entry)
-						: null,
+				actions: entry.actions
+					? entry.actions
+					: entryActions
+					? entryActions(entry)
+					: [],
+				onClick: onClick
+					? onClick
+					: typeof entryAction == "function"
+					? () => entryAction(entry)
+					: null,
 			};
+
+			const _aspectRatio = entry.aspectRatio
+				? entry.aspectRatio.replace(":", "/")
+				: entry.width && entry.height
+				? entry.width / entry.height
+				: aspectRatio;
 
 			return (
 				<GridListItem
@@ -47,7 +58,7 @@ export default function GridList({ source, data, isLoading, ...props }) {
 					{...entryProps}
 					masonry={masonry}
 					gap={gap}
-					aspectRatio={aspectRatio}
+					aspectRatio={_aspectRatio}
 					meta={meta}
 				/>
 			);

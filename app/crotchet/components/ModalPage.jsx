@@ -14,8 +14,9 @@ import PreviewCard from "./PreviewCard";
 import ActionGrid from "./ActionGrid";
 
 export default function ModalPage({
+	type,
 	preview,
-	actions,
+	actions: _actions,
 	entryActions,
 	entryAction,
 	layout,
@@ -57,7 +58,7 @@ export default function ModalPage({
 		showLoader,
 		loading: _loading,
 	} = useDataLoader({
-		delayLoader: true,
+		// delayLoader: true,
 		handler: resolve,
 		onSuccess: (res) => {
 			setData(res);
@@ -91,11 +92,18 @@ export default function ModalPage({
 	};
 
 	const loading = loadingFromSearch || _loading;
-	const context = { data, loading, showLoader };
+	const context = {
+		data,
+		pageData: data,
+		pageResolving: loading,
+		loading,
+		showLoader,
+	};
 	const title = evaluate(_title, context);
 	const content = evaluate(_content, context);
-
-	const noContent = !content && !loading && !data?.length;
+	const actions = evaluate(_actions, context);
+	const isPreview = type == "preview";
+	const noContent = isPreview || (!content && !loading && !data?.length);
 
 	useLayoutEffect(() => {
 		focusSearchInput();
@@ -162,7 +170,7 @@ export default function ModalPage({
 	};
 
 	const pageContent = () => {
-		if (loading) {
+		if (loading && !isPreview) {
 			return (
 				<div className="flex justify-center py-4">
 					{showLoader && <Loader size={40} />}
@@ -170,9 +178,9 @@ export default function ModalPage({
 			);
 		}
 
-		if (content) return content;
+		if (content && !isPreview) return content;
 
-		if (data?.length) {
+		if (data?.length && !isPreview) {
 			return (
 				<>
 					{["grid", "masonry"].includes(layout) ? (
@@ -197,6 +205,8 @@ export default function ModalPage({
 				</>
 			);
 		}
+
+		if (isPreview) preview = data;
 
 		return (
 			<>
@@ -232,7 +242,9 @@ export default function ModalPage({
 								if (info.offset.y > 0) onClose();
 							}}
 						>
-							{preview && <PreviewCard {...preview} />}
+							{preview && (
+								<PreviewCard loading={loading} {...preview} />
+							)}
 							{actions && (
 								<div className={clsx({ "scale-90": preview })}>
 									<ActionGrid
@@ -249,6 +261,7 @@ export default function ModalPage({
 						</div>
 					)}
 
+					<div className="h-8"></div>
 					{
 						<motion.button
 							className="bg-stone-100/80 dark:bg-card/80 backdrop-blur dark:backdrop-blur-lg fixed bottom-0 inset-x-0 mt-6 mb-8 mx-auto size-12 border border-content/20 rounded-lg flex gap-1 items-center justify-center"

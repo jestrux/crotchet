@@ -1,4 +1,4 @@
-import { dispatch, onDesktop, showApp } from "./utils";
+import { cleanObject, dispatch, onDesktop, showApp } from "./utils";
 
 const urlQueryParamsAsObject = (path) => {
 	const url = new URL(
@@ -70,6 +70,16 @@ export default async function openUrl(path) {
 
 	if (path.startsWith("crotchet://copy"))
 		return window.copyToClipboard(path.replace("crotchet://copy/", ""));
+
+	if (path.startsWith("crotchet://preview/")) {
+		const { preview, actions } = cleanObject(
+			JSON.parse(
+				decodeURIComponent(path.replace("crotchet://preview/", ""))
+			)
+		);
+
+		return window.openPage({ preview, actions });
+	}
 
 	if (path.startsWith("crotchet://share/")) {
 		const { args } = processSchemeUrl("share", path);

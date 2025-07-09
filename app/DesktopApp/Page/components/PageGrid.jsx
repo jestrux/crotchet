@@ -54,6 +54,14 @@ export default function PageGrid({
 							height,
 						} = entry;
 
+						if (masonry) {
+							aspectRatio = entry.aspectRatio
+								? entry.aspectRatio.replace(":", "/")
+								: width && height
+								? width / height
+								: aspectRatio;
+						}
+
 						return (
 							<div
 								className={clsx(
@@ -75,16 +83,7 @@ export default function PageGrid({
 									<div
 										className="spotlight-grid-item-preview relative flex-shrink-0 bg-content/10 border border-stroke rounded-md overflow-hidden w-full"
 										style={{
-											...(masonry
-												? width && height
-													? {
-															aspectRatio:
-																width / height,
-															maxHeight:
-																"calc(100vh-130px)",
-													  }
-													: {}
-												: { aspectRatio }),
+											aspectRatio,
 											backgroundColor: color,
 										}}
 									>

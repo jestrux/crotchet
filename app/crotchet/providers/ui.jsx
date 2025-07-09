@@ -1,9 +1,12 @@
 import RegularListItem from "@/crotchet/components/ListItem";
 import MediaItem from "../components/MediaItem";
-import { useEventListener } from "../hooks";
+import { useEventListener, useLongPress } from "../hooks";
 import { useLayoutEffect, useRef, useState } from "react";
 import { usePageContext } from "./PageProvider";
 import { loadExternalAsset } from "../utils";
+import clsx from "clsx";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import openUrl from "../open-url";
 
 export function media({ data } = {}) {
 	if (!data) return null;
@@ -92,6 +95,116 @@ export function list({ data } = {}) {
 			{data.map((item) => (
 				<RegularListItem key={item._id} {...item} />
 			))}
+		</div>
+	);
+}
+
+const GridItem = ({ item }) => {
+	const { image, video, title, subtitle, meta, actions, share } = item;
+	const gestures = useLongPress(() => {
+		if (!actions?.length && !share) return;
+
+		Haptics.impact({ style: ImpactStyle.Medium });
+
+		if (actions?.length) {
+			return window.openActionSheet({
+				fullScreen: true,
+				preview: {
+					image: image,
+					video: video,
+					title: title,
+					subtitle: subtitle,
+					actions: actions,
+				},
+				actions,
+			});
+		}
+
+		if (share) openUrl(share);
+	});
+
+	const handleClick = () => {
+		if (typeof item.handler == "function") item.handler();
+		else if (item.url) openUrl(item.url);
+	};
+
+	return (
+		<div
+			key={item._id}
+			{...gestures}
+			onDoubleClick={() => {}}
+			onClick={() => handleClick()}
+		>
+			<div
+				className="pointer-events-none rounded-md relative flex-shrink-0 overflow-hidden size-full flex items-center justify-center"
+				style={{
+					aspectRatio: item.aspectRatio || "2/1.3",
+				}}
+			>
+				<div
+					className={clsx(
+						"h-full relative bg-content/10 border border-content/10 overflow-hidden",
+						meta?.face
+							? "aspect-[1/1] rounded-full"
+							: "w-full rounded"
+					)}
+					style={{
+						...(item.color
+							? {
+									backgroundColor: item.color,
+									color: "white",
+							  }
+							: {}),
+					}}
+				>
+					{(image?.length || video?.length) && (
+						<>
+							<img
+								className={"absolute size-full object-cover"}
+								src={image?.length ? image : video}
+								alt=""
+							/>
+							{video?.length && (
+								<div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+									<svg
+										className="ml-px size-4 relative text-white/90"
+										viewBox="0 0 24 24"
+										fill="currentColor"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"
+										/>
+									</svg>
+								</div>
+							)}
+						</>
+					)}
+				</div>
+			</div>
+		</div>
+	);
+};
+
+export function grid({ data, entryActions, entryAction } = {}) {
+	if (!data?.length) return null;
+	return (
+		<div className="pt-1.5 px-3 relative size-full grid grid-cols-4 gap-1.5">
+			{data.map((item) => {
+				item.actions = item.actions
+					? item.actions
+					: entryActions
+					? entryActions(item)
+					: [];
+
+				item.handler =
+					typeof entryAction == "function"
+						? () => entryAction(item)
+						: null;
+
+				return <GridItem key={item._id} item={item} />;
+			})}
 		</div>
 	);
 }

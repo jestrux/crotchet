@@ -39,6 +39,8 @@ declare var urlQueryParamsAsObject: (path: string) => { [key: string]: any };
 
 declare var toHms: (number: Number) => string | null;
 
+declare var getPreviewUrl: (payload: any) => string;
+
 declare var crawlUrl: (url: string, matcher?: string) => Promise<any>;
 
 declare var queryDb: (
@@ -118,7 +120,7 @@ declare var processShareData: (
 } | null;
 
 declare var sourceGet: (
-	source: { handler: () => PromiseLike<any> },
+	source: string | { handler: () => PromiseLike<any> },
 	props: {
 		orderBy?: String;
 		single?: boolean;
@@ -189,6 +191,7 @@ declare var UI: {
 		loading?: boolean;
 	}) => [];
 	list: (payload: { data?: []; loading?: boolean }) => [];
+	grid: (payload: { data?: []; loading?: boolean }) => [];
 	icon: (
 		icon?:
 			| "default"
@@ -292,10 +295,12 @@ declare var ActionButton:
 	  }
 	| ((payload: any) => typeof ActionButton | null | undefined);
 
+declare var PageType: "search" | "preview" | "detail" | "form";
+
 declare var Page: {
 	listenForUpdates?: typeof ListenForUpdates;
 	external?: boolean | null;
-	type?: string | ((payload: typeof PageContext) => string);
+	type?: PageType | ((payload: typeof PageContext) => PageType);
 	resolve?: Function;
 	title?: typeof PageTitle;
 	layout?: "list" | "grid" | "masonry";
@@ -424,6 +429,8 @@ declare var registerWidget: (
 			payload: typeof WidgetActionContext & { direction: 1 | -1 }
 		) => any;
 		onClick?: { [key: string]: any } | undefined;
+		entryAction?: (payload: any) => any;
+		entryActions?: (payload: any) => (typeof ActionButton)[];
 	}
 ) => void;
 
