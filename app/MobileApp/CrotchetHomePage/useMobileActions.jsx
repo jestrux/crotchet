@@ -15,6 +15,21 @@ export const useMobileActions = () => {
 		listenForUpdates: "extensions-updated",
 	});
 
+	const actionChoices = (selected) =>
+		_.map(
+			[...window.globalActions(), ...window.internalActions()],
+			(action) => ({
+				..._.pick(action, ["icon", "label", "name"]),
+				idx: selected?.indexOf(action.name),
+				icon: action.icon || window.UI.icon("bolt"),
+				label: action.label || camelCaseToSentenceCase(action.name),
+				value: action.name,
+				selected: Array.isArray(selected)
+					? selected.includes(action.name)
+					: selected == action.name,
+			})
+		);
+
 	const pinnedActions = [
 		{
 			color: "#164e63",
@@ -138,7 +153,6 @@ export const useMobileActions = () => {
 					"homePageShortcuts",
 					["clipboard"]
 				);
-				const allShortcuts = window.globalActions?.() ?? [];
 
 				window.openAlertForm({
 					title: "Customize Shortcuts",
@@ -160,19 +174,7 @@ export const useMobileActions = () => {
 							multiple: true,
 							sortable: true,
 							choices: _.orderBy(
-								[
-									{ name: "clipboard" },
-									{ name: "pinboard" },
-									..._.map(allShortcuts, (c) =>
-										_.pick(c, ["label", "name"])
-									),
-								].map(({ label, name }) => ({
-									selected: savedShortcuts.includes(name),
-									idx: savedShortcuts.indexOf(name),
-									label:
-										label || camelCaseToSentenceCase(name),
-									value: name,
-								})),
+								actionChoices(savedShortcuts),
 								["selected", "idx"],
 								"desc"
 							),
@@ -332,23 +334,7 @@ export const useMobileActions = () => {
 								action: {
 									label: "Long Press Home Action",
 									type: "radio",
-									choices: [
-										{ name: "clipboard" },
-										{ name: "pinboard" },
-										{
-											label: "Change Page",
-											name: "changeAppPage",
-										},
-										..._.map(window.globalActions(), (c) =>
-											_.pick(c, ["label", "name"])
-										),
-									].map(({ label, name }) => ({
-										selected: appNavHoldAction == name,
-										label:
-											label ||
-											camelCaseToSentenceCase(name),
-										value: name,
-									})),
+									choices: actionChoices(appNavHoldAction),
 								},
 							},
 						},

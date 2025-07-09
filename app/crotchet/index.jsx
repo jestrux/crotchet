@@ -135,6 +135,11 @@ export const setCrotchetApp = (newProps = {}) => {
 	}, 400);
 };
 
+export const internalActions = () =>
+	["clipboard", "pinboard", "changeAppPage"].map(
+		(name) => window.actions[name]
+	);
+
 export const globalActions = ({ share = false, desktopShortcuts } = {}) =>
 	Object.entries(window.actions ?? {})
 		.filter(([, action]) => {
