@@ -44,7 +44,9 @@ registerDataSource("db", "promptFun", {
 });
 
 registerWidget("promptFun", {
+	icon: appIcon,
 	title: "Prompt Fun",
+	label: "Recent Prompts",
 	resolve: () =>
 		sourceGet("promptFun", {
 			orderBy: "_index,desc",

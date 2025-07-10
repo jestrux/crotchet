@@ -95,6 +95,7 @@ registerAction("addToReadingList", {
 // });
 
 registerWidget("readingList", {
+	icon: appIcon,
 	title: "Learning List",
 	listenForUpdates: "firebase-table-updated:readingList",
 	resolve: async ({ state }) => {

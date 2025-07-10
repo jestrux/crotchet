@@ -154,7 +154,7 @@ export default function Widget({
 					aspectRatio,
 				}}
 			>
-				{(icon || title?.length > 0) && (
+				{title?.length > 0 && (
 					<div className="rounded-t-2xl relative z-10 flex-shrink-0 h-10 flex items-center gap-1.5 px-3.5 bg-content/5">
 						{icon && (
 							<span className="-ml-1.5 size-6 bg-content/10 rounded-full flex items-center justify-center">

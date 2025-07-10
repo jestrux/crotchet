@@ -164,7 +164,10 @@ export const useMobileActions = () => {
 								style: {
 									type: "radio",
 									label: "Shortcut Style",
-									choices: ["grid", "wrap"],
+									choices: [
+										{ label: "Grid", value: "grid" },
+										{ label: "Wrap", value: "wrap" },
+									],
 								},
 							},
 						},
@@ -173,6 +176,7 @@ export const useMobileActions = () => {
 							label: "Shortcuts",
 							multiple: true,
 							sortable: true,
+							editable: true,
 							choices: _.orderBy(
 								actionChoices(savedShortcuts),
 								["selected", "idx"],
@@ -238,9 +242,12 @@ export const useMobileActions = () => {
 				const choices = _.orderBy(
 					_.keys(window.widgets).reduce((agg, item) => {
 						const key = "widget~#~" + item;
+						const widget = window.widgets[item] || {};
 
 						agg.push({
-							label: camelCaseToSentenceCase(item),
+							icon: widget.icon || window.UI.icon("card"),
+							label:
+								widget.label || camelCaseToSentenceCase(item),
 							value: key,
 							selected: homePageContent.includes(key),
 							idx: homePageContent.indexOf(key),
@@ -257,6 +264,7 @@ export const useMobileActions = () => {
 					title: "Customize Widgets",
 					emptyStateMessage: "No widgets available",
 					sortable: choices.length > 1,
+					editable: true,
 					multiple: true,
 					choices,
 					onChange: async (values) => {
@@ -335,6 +343,9 @@ export const useMobileActions = () => {
 									label: "Long Press Home Action",
 									type: "radio",
 									choices: actionChoices(appNavHoldAction),
+									meta: {
+										inset: false,
+									},
 								},
 							},
 						},

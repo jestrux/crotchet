@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import { useDataLoader, useActionClick } from "@/crotchet/hooks";
 import { MutliGestureButton } from "@/crotchet/components";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { randomId } from "@/crotchet/utils";
 import DragAndDropList from "./DragAndDropList";
 import { onActionClick } from "@/crotchet/hooks/useActionClick";
@@ -41,7 +41,7 @@ const Icon = ({ icon, fallback }) => {
 	}
 
 	return (
-		<div className="size-4 flex items-center justify-center">
+		<div className="size-[18px] flex items-center justify-center">
 			{icon ?? fallback}
 		</div>
 	);
@@ -64,39 +64,101 @@ export default function ActionGrid({
 	showDefaultBackground = false,
 	sortable = false,
 	selectable = false,
+	editable = false,
 	onChange = () => {},
 	onClose = () => {},
 }) {
+	const allActions = useRef([]);
 	const [actions, setActions] = useState([]);
 	const { loading } = useDataLoader({
 		handler: data,
-		onSuccess: (v) =>
-			setActions(
-				v.map((action) => {
-					return {
-						__gridId: randomId("gridAction"),
-						...action,
-					};
-				})
-			),
+		onSuccess: (v) => {
+			const actions = v.map((action) => {
+				return {
+					__gridId: randomId("gridAction"),
+					...action,
+				};
+			});
+
+			allActions.current = actions;
+
+			return setActions(
+				!editable ? actions : actions.filter((a) => a.selected)
+			);
+		},
 	});
+
+	const handleAdd = async () => {
+		window.openChoicePicker({
+			title: title
+				? `Add${title ? ` ${title}` : ""}`
+				: "Select one or more",
+			noHeading: false,
+			inset: false,
+			selectable: "multiple",
+			choices: allActions.current.filter((a) => !a.selected),
+			// .map((a) => {
+			// 	a.value = a.__gridId;
+			// 	return a;
+			// }),
+			onChange: (choices) => {
+				const selectedActions = _.map(
+					_.filter(choices, "selected"),
+					"value"
+				);
+
+				allActions.current = allActions.current.map((a) => {
+					if (selectedActions.includes(a.value)) a.selected = true;
+					return a;
+				});
+
+				const newActions = _.filter(allActions.current, "selected");
+
+				setActions(() => {
+					onChange(newActions);
+					return newActions;
+				});
+			},
+		});
+	};
 
 	const handleReorder = (newActions) => {
 		setActions(() => {
 			onChange(newActions);
+			allActions.current = [
+				...newActions,
+				...allActions.current.filter((a) => !a.selected),
+			];
 			return newActions;
 		});
 	};
 
 	const handleClick = (action) => {
+		if (editable) {
+			allActions.current = allActions.current.map((a) => {
+				if (a.__gridId == action.__gridId) a.selected = false;
+				return a;
+			});
+
+			const newActions = _.filter(allActions.current, "selected");
+			onChange(newActions);
+			setActions(newActions);
+
+			return;
+		}
+
 		if (selectable) {
 			const isMultiSelect = selectable == "multiple";
 
 			setActions((actions) => {
 				const newActions = actions.map((a) => {
-					if (a.__gridId == action.__gridId)
-						a.selected = isMultiSelect ? !a.selected : true;
-					else if (!isMultiSelect) a.selected = false;
+					if (a.__gridId == action.__gridId) {
+						a.selected = editable
+							? false
+							: isMultiSelect
+							? !a.selected
+							: true;
+					} else if (!isMultiSelect) a.selected = false;
 					return a;
 				});
 
@@ -104,6 +166,7 @@ export default function ActionGrid({
 
 				return newActions;
 			});
+
 			return;
 		}
 
@@ -200,11 +263,22 @@ export default function ActionGrid({
 						)}
 					</div>
 
-					{(!hideTrailing || selectable || action.selected) && (
+					{(!hideTrailing ||
+						editable ||
+						selectable ||
+						action.selected) && (
 						<>
-							{selectable ? (
+							{editable ? (
 								<svg
-									className={clsx("-mr-2.5 ml-auto size-4", {
+									className="ml-auto size-[18px] text-red-500"
+									fill="currentColor"
+									viewBox="0 0 16 16"
+								>
+									<path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M4.5 7.5a.5.5 0 0 0 0 1h7a.5.5 0 0 0 0-1z" />
+								</svg>
+							) : selectable ? (
+								<svg
+									className={clsx("ml-auto size-[18px]", {
 										"opacity-20": !action.selected,
 									})}
 									fill="currentColor"
@@ -328,20 +402,62 @@ export default function ActionGrid({
 
 	if (loading) return null;
 
-	if (!actions?.length) return null;
+	if (!actions?.length) {
+		if (editable) {
+			return (
+				<button
+					type="button"
+					className="w-full rounded-2xl bg-card text-content/50 border border-content/2 h-12 flex items-center justify-center gap-1"
+					onClick={handleAdd}
+				>
+					<svg
+						className="size-6"
+						fill="currentColor"
+						viewBox="0 0 16 16"
+					>
+						<path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+					</svg>
+					<span>Add{title ? ` ${title}` : ""}</span>
+				</button>
+			);
+		}
+		return null;
+	}
 
 	return (
-		<div>
+		<div className="relative">
 			{title && (
-				<div
-					className={clsx(
-						"font-semibold px-1.5 mb-1 flex items-center",
-						!smallTitle
-							? "text-xl"
-							: "uppercase tracking-wide text-xs opacity-50"
+				<div className="flex items-center justify-between">
+					<div
+						className={clsx(
+							"flex items-center",
+							{ "font-semibold px-1.5 mb-1": !editable },
+							editable
+								? "opacity-50"
+								: !smallTitle
+								? "text-xl"
+								: "uppercase tracking-wide text-xs opacity-50"
+						)}
+					>
+						{title}
+					</div>
+
+					{editable && (
+						<button
+							type="button"
+							className="sabsolute -top-6 right-0 h-6 px-1.5 flex items-center justify-center text-sm font-medium opacity-50"
+							onClick={handleAdd}
+						>
+							<svg
+								className="size-5"
+								fill="currentColor"
+								viewBox="0 0 16 16"
+							>
+								<path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+							</svg>
+							Add
+						</button>
 					)}
-				>
-					{title}
 				</div>
 			)}
 
@@ -378,11 +494,11 @@ export default function ActionGrid({
 							: typeInline
 							? flat
 								? "rounded-lg overflow-hidden divide-y divide-content/[0.03]"
-								: "bg-card border border-content/2 rounded-lg overflow-hidden divide-y divide-content/5"
+								: "rounded-2xl bg-card border border-content/2 overflow-hidden divide-y divide-content/5"
 							: "grid grid-cols-3 gap-2"
 					}
 				>
-					{!sortable && (
+					{!sortable && !editable && (
 						<>
 							{actions.map((action, index) => (
 								<ActionItem
@@ -393,19 +509,36 @@ export default function ActionGrid({
 						</>
 					)}
 
-					{sortable && (
+					{(sortable || editable) && (
 						<DragAndDropList
 							items={actions}
 							getId={(item) => item.__gridId}
 							onReorder={handleReorder}
 							renderItem={(action) => (
-								<div className="w-full -ml-3">
+								<div className="-ml-3">
 									<ActionItem action={action} />
 								</div>
 							)}
 						/>
 					)}
 				</div>
+			)}
+
+			{!title && editable && (
+				<button
+					type="button"
+					className="h-9 w-full px-1.5 flex items-center justify-center font-medium opacity-50"
+					onClick={handleAdd}
+				>
+					<svg
+						className="size-6"
+						fill="currentColor"
+						viewBox="0 0 16 16"
+					>
+						<path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+					</svg>
+					Add
+				</button>
 			)}
 		</div>
 	);

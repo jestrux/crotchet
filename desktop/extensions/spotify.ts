@@ -281,6 +281,8 @@ registerRandomSpotifyAction("randomSpotifyTrack", queryTracks, {
 });
 
 registerWidget("spotifyPlaylists", {
+	icon: appIcon,
+	label: "Recent Playlists",
 	title: "Saved Spotify Playlists",
 	listenForUpdates: [connectionChangedEvent],
 	...widgetResolverContentActions(queryPlaylists, {
@@ -289,7 +291,9 @@ registerWidget("spotifyPlaylists", {
 });
 
 registerWidget("spotifyArtists", {
-	title: "Saved Spotify Artists",
+	icon: appIcon,
+	label: "Saved Artists",
+	title: "Top Artists",
 	listenForUpdates: [connectionChangedEvent],
 	...widgetResolverContentActions(queryArtists, {
 		entity: "Artists",
@@ -297,7 +301,9 @@ registerWidget("spotifyArtists", {
 });
 
 registerWidget("spotifyTracks", {
-	title: "Saved Spotify Tracks",
+	icon: appIcon,
+	label: "Recent Tracks",
+	title: "Top Tracks",
 	listenForUpdates: [connectionChangedEvent],
 	...widgetResolverContentActions(queryTracks, {
 		entity: "Tracks",
@@ -305,7 +311,9 @@ registerWidget("spotifyTracks", {
 });
 
 registerWidget("spotifyAlbums", {
-	title: "Saved Spotify Albums",
+	icon: appIcon,
+	label: "Recent Albums",
+	title: "Top Albums",
 	listenForUpdates: [connectionChangedEvent],
 	...widgetResolverContentActions(queryAlbums, {
 		entity: "Albums",
@@ -313,6 +321,8 @@ registerWidget("spotifyAlbums", {
 });
 
 registerWidget("randomSpotifyTrack", {
+	icon: appIcon,
+	label: "Random Track",
 	listenForUpdates: [connectionChangedEvent],
 	resolve: async () => {
 		try {

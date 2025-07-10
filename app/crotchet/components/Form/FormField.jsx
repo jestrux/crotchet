@@ -300,7 +300,11 @@ const PreferencesEditor = ({
 		let newValue;
 
 		if (field.type == "radio") {
+			const inset = field.meta?.inset ?? true;
 			newValue = await window.openChoicePicker({
+				title: field.label,
+				noHeading: inset,
+				inset,
 				choices: objectFieldChoices(field.choices).map((choice) => {
 					choice.selected = field.multiple
 						? value.includes(choice.value)
@@ -724,7 +728,7 @@ const Field = ({ field, value, onChange, __data }) => {
 				<>
 					<ActionGrid
 						type="inline"
-						smallTitle={true}
+						title={field.editable ? field.label : ""}
 						data={objectFieldChoices(field.choices).map(
 							(choice) => {
 								choice.selected = field.multiple
@@ -734,12 +738,17 @@ const Field = ({ field, value, onChange, __data }) => {
 							}
 						)}
 						sortable={field.sortable}
+						editable={field.editable}
 						selectable={field.multiple ? "multiple" : "single"}
 						onChange={(choices) => {
 							const values = _.filter(choices, "selected").map(
 								({ value }) => value
 							);
-							onChange(field.multiple ? values : values?.[0]);
+							onChange(
+								field.multiple || field.editable
+									? values
+									: values?.[0]
+							);
 						}}
 					/>
 					<input type="hidden" name={field.name} value={value} />
@@ -993,18 +1002,22 @@ export default function FormField({
 				}`}
 			>
 				{horizontal && <div className="col-span-1"></div>}
-				{field.type !== "boolean" && !field.hideLabel && (
-					<label
-						className={`inline-block first-letter:capitalize ${
-							horizontal
-								? "col-span-3 text-right text-sm leading-tight"
-								: ""
-						}`}
-						htmlFor={field.name}
-					>
-						{camelCaseToSentenceCase(field.label)}
-					</label>
-				)}
+				{field.type !== "boolean" &&
+					!field.hideLabel &&
+					!(field.type == "radio" && field.editable) && (
+						<label
+							className={clsx(
+								"inline-block first-letter:capitalize",
+								{
+									"col-span-3 text-right text-sm leading-tight":
+										horizontal,
+								}
+							)}
+							htmlFor={field.name}
+						>
+							{camelCaseToSentenceCase(field.label)}
+						</label>
+					)}
 
 				<div className="col-span-6">
 					<Field

@@ -1,5 +1,10 @@
 import "../../@types/index";
 
+const appIcon = UI.svg(
+	"M7.5 6.75V0h9v6.75h-9zm9 3.75H24V24H0V10.5h7.5v6.75h9V10.5z",
+	{ filled: true, size: 16 }
+);
+
 const searchUnsplash = async (
 	searchQuery = "",
 	{ per_page = 30, page = 1 } = {}
@@ -115,10 +120,7 @@ const getImageActions = (res, { shuffle = false, search = false } = {}) => {
 registerAction("searchUnsplash", {
 	label: "Search Unsplash",
 	color: "#333",
-	icon: UI.svg(
-		"M7.5 6.75V0h9v6.75h-9zm9 3.75H24V24H0V10.5h7.5v6.75h9V10.5z",
-		{ filled: true, size: 16 }
-	),
+	icon: appIcon,
 	global: true,
 	tags: ["image"],
 	handler: openSearchUnsplash,
@@ -127,10 +129,7 @@ registerAction("searchUnsplash", {
 registerAction("randomUnsplashPic", {
 	label: "Random Pic",
 	color: "#333",
-	icon: UI.svg(
-		"M7.5 6.75V0h9v6.75h-9zm9 3.75H24V24H0V10.5h7.5v6.75h9V10.5z",
-		{ filled: true, size: 16 }
-	),
+	icon: appIcon,
 	global: true,
 	// context: "shortcut",
 	tags: ["image"],
@@ -152,6 +151,8 @@ registerAction("randomUnsplashPic", {
 });
 
 registerWidget("randomUnsplashPic", {
+	icon: appIcon,
+	label: "Random Pic",
 	listenForUpdates: "refetch-random-unsplash-widget",
 	// onSwipe: ({ refetch }) => refetch(),
 	resolve: async () => {

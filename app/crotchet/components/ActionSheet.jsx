@@ -29,6 +29,7 @@ export default function Sheet({
 	dismissible = true,
 	sortable = false,
 	selectable = false,
+	editable = false,
 	emptyStateMessage = "No matching actions",
 	onChange = () => {},
 	onClose = () => {},
@@ -172,27 +173,36 @@ export default function Sheet({
 		}
 
 		return (
-			<div className="flex gap-2 pr-3">
+			<div className="w-full flex gap-2 pr-3">
 				{media}
 
-				<div className="flex-1 flex flex-col -mt-px">
-					{(preview?.title || title) && (
-						<h3 className="-mb-1 truncate font-bold first-letter:uppercase">
-							{preview?.title || title}
-						</h3>
-					)}
+				{preview ? (
+					<div className="flex-1 flex flex-col -mt-px">
+						{(preview?.title || title) && (
+							<h3 className="-mb-1 truncate font-bold first-letter:uppercase">
+								{preview?.title || title}
+							</h3>
+						)}
 
-					{preview?.subtitle && (
-						<p className="truncate opacity-50">
-							{preview.subtitle}
-						</p>
-					)}
-				</div>
+						{preview?.subtitle && (
+							<p className="truncate opacity-50">
+								{preview.subtitle}
+							</p>
+						)}
+					</div>
+				) : title ? (
+					<div className="-mt-px flex-1 flex items-center justify-center">
+						<h3 className="truncate text-lg font-bold first-letter:uppercase text-center">
+							{title}
+						</h3>
+					</div>
+				) : null}
 			</div>
 		);
 	};
 
 	const onlg = onScreenSize("lg");
+	const isMultiSelect = selectable == "multiple";
 
 	return (
 		<Portal>
@@ -220,8 +230,7 @@ export default function Sheet({
 
 				<motion.div
 					className={clsx(
-						"bg-stone-100/95 dark:bg-canvas backdrop-blur-sm relative z-10 mx-auto group text-content border dark:border-content/10 shadow-2xl overflow-hidden",
-						{ "p-3": !noHeading },
+						"overflow-hidden bg-stone-100/95 dark:bg-canvas backdrop-blur-sm relative z-10 mx-auto group text-content border dark:border-content/10 shadow-2xl",
 						onlg ? "rounded-xl" : "rounded-3xl",
 						inset &&
 							noHeading &&
@@ -262,7 +271,12 @@ export default function Sheet({
 						duration: 0.2,
 					}}
 					drag="y"
-					dragListener={dismissible && !sortable}
+					dragListener={
+						dismissible &&
+						!sortable &&
+						!isMultiSelect &&
+						!(inset || !noHeading)
+					}
 					dragControls={controls}
 					dragConstraints={{
 						top: 0,
@@ -280,7 +294,14 @@ export default function Sheet({
 
 					{!noHeading && (
 						<div
-							className="mb-3 pl-1 flex items-center justify-between gap-2"
+							className={clsx(
+								"p-3 flex items-center justify-between gap-2",
+								preview
+									? "pl-4"
+									: isMultiSelect
+									? "pl-14"
+									: "pl-11"
+							)}
 							onPointerDown={(e) => {
 								controls.start(e);
 							}}
@@ -288,67 +309,101 @@ export default function Sheet({
 							{contentPreview(preview, title)}
 
 							<button
-								className="flex-shrink-0 ml-auto bg-content/5 border border-content/5 size-7 flex items-center justify-center rounded-full"
+								className={clsx(
+									"flex-shrink-0 ml-auto flex items-center justify-center",
+									isMultiSelect
+										? "h-7 w-10 text-content/70 -translate-x-1"
+										: "bg-content/5 text-content/50 border-content/5 size-7 rounded-full"
+								)}
 								onClick={() => onClose()}
 							>
-								<svg
-									className="w-5"
-									fill="none"
-									viewBox="0 0 24 24"
-									strokeWidth="1.5"
-									stroke="currentColor"
-								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										d="M6 18 18 6M6 6l12 12"
-									></path>
-								</svg>
+								{isMultiSelect ? (
+									"Done"
+								) : (
+									<svg
+										className="w-5"
+										fill="none"
+										viewBox="0 0 24 24"
+										strokeWidth="1.5"
+										stroke="currentColor"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											d="M6 18 18 6M6 6l12 12"
+										></path>
+									</svg>
+								)}
 							</button>
 						</div>
 					)}
 
-					{loadingShareActions ? (
-						<div
-							className={clsx(
-								"flex justify-center",
-								inset && noHeading ? "" : "py-4"
-							)}
-						>
-							<Loader size={40} />
-							{/* {showLoader && <Loader size={40} />} */}
-						</div>
-					) : children ? (
-						<div className="max-h-[80vh] soverflow-auto">
-							{children}
-						</div>
-					) : (
-						<>
-							{!actions?.length && (
-								<div className="pb-4 flex h-full items-center justify-center opacity-50">
-									{emptyStateMessage}
-								</div>
-							)}
+					<div
+						className={clsx("max-h-[60vh] overflow-auto", {
+							"p-3 pt-0": !noHeading,
+						})}
+						style={{
+							marginBottom: ignoreSafeArea
+								? 0
+								: inset
+								? noHeading
+									? 0
+									: -12
+								: "calc(-8px - env(safe-area-inset-bottom))",
+							paddingBottom: ignoreSafeArea
+								? 0
+								: inset
+								? noHeading
+									? 0
+									: 12
+								: "calc(8px + env(safe-area-inset-bottom))",
+						}}
+					>
+						{loadingShareActions ? (
+							<div
+								className={clsx(
+									"flex justify-center",
+									inset && noHeading ? "" : "py-4"
+								)}
+							>
+								<Loader size={40} />
+								{/* {showLoader && <Loader size={40} />} */}
+							</div>
+						) : children ? (
+							<div className="max-h-[80vh] soverflow-auto">
+								{children}
+							</div>
+						) : (
+							<>
+								{!actions?.length && (
+									<div className="pb-4 flex h-full items-center justify-center opacity-50">
+										{emptyStateMessage}
+									</div>
+								)}
 
-							{actions && (
-								<div className="max-h-[80vh] overflow-auto">
-									<ActionGrid
-										flat={noHeading}
-										key={"preview" + preview?.image}
-										type="inline"
-										data={actions}
-										hideTrailing
-										selectable={selectable}
-										sortable={sortable}
-										onChange={onChange}
-										onClose={selectable ? null : onClose}
-										payload={{ ...payload, preview }}
-									/>
-								</div>
-							)}
-						</>
-					)}
-					{!inset && <KeyboardPlaceholder noMargin />}
+								{actions && (
+									<div>
+										<ActionGrid
+											flat={noHeading}
+											key={"preview" + preview?.image}
+											type="inline"
+											data={actions}
+											hideTrailing
+											selectable={selectable}
+											sortable={sortable}
+											editable={editable}
+											onChange={onChange}
+											onClose={
+												selectable ? null : onClose
+											}
+											payload={{ ...payload, preview }}
+										/>
+									</div>
+								)}
+							</>
+						)}
+						{!inset && <KeyboardPlaceholder noMargin />}
+					</div>
 				</motion.div>
 				{inset && <KeyboardPlaceholder noMargin />}
 			</div>

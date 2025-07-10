@@ -993,14 +993,11 @@ const getPlayClipPage = (clip, external = false) => {
 const getRandomClip = async () => {
 	try {
 		const res = await withLoader(
-			sourceGet(
-				{ handler: () => queryDb("youtubeClips") },
-				{
-					orderBy: "updatedAt,desc",
-					random: true,
-					single: true,
-				}
-			)
+			sourceGet("youtubeClips", {
+				orderBy: "updatedAt,desc",
+				random: true,
+				single: true,
+			})
 		);
 
 		if (!res) {
@@ -1070,6 +1067,8 @@ registerDataSource("db", "youtubeClips", {
 });
 
 registerWidget("randomYoutubeClip", {
+	icon: appIcon,
+	label: "Random Clip",
 	listenForUpdates: "refetch-random-youtube-clip-widget",
 	onSwipe: ({ refetch }) => refetch(),
 	resolve: async () => {
@@ -1146,7 +1145,9 @@ const formatVideo = (entry) => ({
 });
 
 registerWidget("youtubeClips", {
+	icon: appIcon,
 	title: "Youtube Clips",
+	label: "Recent Clips",
 	resolve: async ({ state }) => {
 		const res = await sourceGet(
 			{ handler: () => queryDb("youtubeClips") },
@@ -1265,6 +1266,38 @@ registerAction("randomYoutubeClip", {
 			if (clip) playClip(clip);
 			return;
 		}
+
+		return window.openPage({
+			type: "preview",
+			resolve: getRandomClip,
+			actions: ({ pageData: entry, pageResolving }) =>
+				!entry?._id || pageResolving
+					? []
+					: [
+							{
+								label: "Play On Desktop",
+								icon: UI.icon("open-external"),
+								handler: () => openOnDesktop(entry),
+							},
+							{
+								label: "Play PIP On Desktop",
+								icon: UI.svg(
+									"M19 7h-8v6h8V7zm2-4H3c-1.1 0-2 .9-2 2v14c0 1.1.9 1.98 2 1.98h18c1.1 0 2-.88 2-1.98V5c0-1.1-.9-2-2-2zm0 16.01H3V4.98h18v14.03z",
+									{ size: "18px", filled: true }
+								),
+								handler: () =>
+									openOnDesktop({
+										...entry,
+										external: true,
+									}),
+							},
+							{
+								label: "Play On Youtube",
+								icon: appIcon,
+								url: getYoutubeActualUrl(entry),
+							},
+					  ],
+		});
 
 		window.openActionSheet({
 			noHeading: true,

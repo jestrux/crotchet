@@ -9,10 +9,13 @@ const DragItem = ({ item, index, renderItem, getId }) => {
 			value={item}
 			dragListener={false}
 			dragControls={controls}
+			transition={{
+				duration: 0,
+			}}
 		>
 			<div className="flex w-full">
 				<div
-					className="w-8 sbg-content/5 flex items-center justify-center cursor-grab"
+					className="w-9 sbg-content/5 flex items-center justify-center cursor-grab"
 					onPointerDown={(e) => controls.start(e)}
 				>
 					<svg

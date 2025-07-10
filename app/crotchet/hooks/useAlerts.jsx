@@ -135,7 +135,13 @@ export function AlertsWrapper() {
 								type={alert.pageType}
 								resolve={alert.resolve || alert.choices}
 								searchable={alert.searchable ?? true}
-								selectable={alert.multiple ? "multiple" : false}
+								selectable={
+									alert.selectable
+										? alert.selectable
+										: alert.multiple
+										? "multiple"
+										: false
+								}
 								onClose={alert.close}
 								onChange={alert.onChange}
 							/>
@@ -145,18 +151,18 @@ export function AlertsWrapper() {
 					return (
 						<ActionSheet
 							key={alert.id}
+							{...alert}
 							inset={alert.inset ?? true}
-							title={alert.title}
-							noHeading={!alert?.title?.length}
+							noHeading={alert.noHeading ?? !alert?.title?.length}
 							onClose={alert.close}
+							selectable={
+								alert.selectable
+									? alert.selectable
+									: alert.multiple
+									? "multiple"
+									: false
+							}
 							actions={alert.choices}
-							fullScreen={alert.fullScreen}
-							searchable={alert.searchable}
-							dismissible={alert.dismissible}
-							sortable={alert.sortable}
-							selectable={alert.multiple ? "multiple" : false}
-							onChange={alert.onChange}
-							emptyStateMessage={alert.emptyStateMessage}
 						/>
 					);
 				}

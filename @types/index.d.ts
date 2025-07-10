@@ -409,6 +409,7 @@ declare var registerWidget: (
 	widget: {
 		shortcut?: String | undefined;
 		handler?: (payload: any) => PromiseLike<any>;
+		label?: String | undefined;
 		title?:
 			| String
 			| ((payload: typeof WidgetPayload) => String | undefined | null);
