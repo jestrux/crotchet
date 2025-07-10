@@ -13,6 +13,24 @@ import { useState } from "react";
 
 const HomePage = () => {
 	const [shortcutsKey, setShortcutsKey] = useState(randomId());
+	const { data: homePage } = useDataLoader({
+		handler: async () => {
+			const defaultPreferences = {
+				wallpaper: "none",
+				headerAlignment: "left",
+				shortcutStyle: "grid",
+			};
+
+			return {
+				...defaultPreferences,
+				...(await getPreference(
+					"homePagePreferences",
+					defaultPreferences
+				)),
+			};
+		},
+		listenForUpdates: ["home-page-preferences-updated"],
+	});
 
 	const { data: shortcuts } = useDataLoader({
 		handler: async () => {
@@ -85,6 +103,9 @@ const HomePage = () => {
 	});
 
 	const { actionSections } = useMobileActions();
+	const headerAlignment = homePage?.headerAlignment;
+	const showWallpaper = homePage?.wallpaper !== "none";
+	const shortcutStyle = homePage?.shortcutStyle;
 
 	return (
 		<div className="flex gap-5 p-6 lg:p-8 fixed inset-0 overflow-auto overscroll-none">
@@ -153,7 +174,37 @@ const HomePage = () => {
 				</div>
 			</div>
 
-			<div className="pt-1 flex-1">
+			<div className="flex-1 pt-6">
+				{showWallpaper && (
+					<div className="-mx-6 lg:-mx-8 relative">
+						<div
+							style={{
+								height: "100px",
+							}}
+						/>
+
+						{showWallpaper && (
+							<div
+								className="absolute inset-x-0 -top-32 -bottom-56"
+								style={{
+									mask: `linear-gradient(black, black, transparent)`,
+								}}
+							>
+								<img
+									className="w-full h-full dark:hidden"
+									src="https://images.unsplash.com/photo-1624847706671-a7bf2f92ede0?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NjR8fGxpZ2h0JTIwbW9kZSUyMHdhbGxwYXBlcnxlbnwwfHwwfHx8MA%3D%3D"
+									alt=""
+								/>
+								<img
+									className="w-full h-full hidden dark:block"
+									src="https://images.unsplash.com/photo-1622482607282-fffed5a93942?q=80&w=985&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+									alt=""
+								/>
+							</div>
+						)}
+					</div>
+				)}
+
 				<div
 					className="sticky -mx-6 -top-6 z-[999] backdrop-blur-[3px]"
 					style={{
@@ -162,8 +213,14 @@ const HomePage = () => {
 					}}
 				></div>
 
-				<div className="lg:hidden mb-6">
-					<div className="mb-5">
+				<div className="relative lg:hidden mb-6">
+					<div
+						className="mb-5"
+						style={{
+							textAlign: headerAlignment,
+							marginTop: "-env(safe-area-inset-top)",
+						}}
+					>
 						<h2 className="text-3xl font-bold">Hey Walter,</h2>
 						<p>Here's how things are looking</p>
 					</div>
@@ -174,7 +231,9 @@ const HomePage = () => {
 							type="actions"
 							data={shortcuts.list}
 							meta={{
-								style: shortcuts.style,
+								alignment: headerAlignment,
+								style: shortcutStyle,
+								disableIconColor: shortcutStyle != "wrap",
 								fallbackIcon: (
 									<svg
 										fill="none"

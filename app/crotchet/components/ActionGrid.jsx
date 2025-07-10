@@ -61,12 +61,13 @@ export default function ActionGrid({
 	entryActions,
 	hideTrailing = false,
 	payload,
-	showDefaultBackground = false,
+	showDefaultBackground,
 	sortable = false,
 	selectable = false,
 	editable = false,
 	onChange = () => {},
 	onClose = () => {},
+	alignment,
 }) {
 	const allActions = useRef([]);
 	const [actions, setActions] = useState([]);
@@ -211,14 +212,22 @@ export default function ActionGrid({
 		if (typeof action.icon == "string") action.icon = UIicon(action.icon);
 		action.icon = action.icon || fallbackIcon;
 
-		const colorClasses = [
-			color
-				? `bg-[${color}]/10 text-[${color}] border-[${color}]/5`
-				: "bg-content/5 border-stroke",
-			colorDark
-				? `dark:bg-[${colorDark}]/10 dark:text-[${colorDark}] dark:border-[${colorDark}]/5`
-				: "dark:bg-content/5 dark:text-content dark:border-content/10",
-		];
+		showDefaultBackground = showDefaultBackground ?? !typeWrap;
+		const colorClasses = showDefaultBackground
+			? []
+			: !action.color
+			? [
+					"bg-content/5 border-stroke",
+					"dark:bg-content/5 dark:border-content/10",
+			  ]
+			: [
+					color
+						? `bg-[${color}]/10 text-[${color}] border-[${color}]/5`
+						: "bg-content/5 border-stroke",
+					colorDark
+						? `dark:bg-[${colorDark}]/10 dark:text-[${colorDark}] dark:border-[${colorDark}]/5`
+						: "dark:bg-content/5 dark:text-content dark:border-content/10",
+			  ];
 
 		if (typeInline)
 			return (
@@ -235,20 +244,19 @@ export default function ActionGrid({
 						<div
 							className={clsx(
 								"-ml-2 -mr-1.5 size-7 rounded-full flex items-center justify-center",
-								{
-									"bg-content/5": showDefaultBackground,
-								}
+								...colorClasses
 							)}
-							style={
-								action.color
-									? {
-											background: action.color,
-											color: "white",
-									  }
-									: {}
-							}
 						>
-							<Icon icon={action.icon} />
+							<div
+								className={clsx(
+									"flex items-center justify-center",
+									!showDefaultBackground
+										? "size-3.5"
+										: "size-[18px]"
+								)}
+							>
+								<Icon icon={action.icon} />
+							</div>
 						</div>
 					)}
 
@@ -328,21 +336,25 @@ export default function ActionGrid({
 					action={action}
 					onHold={onHold}
 					onClick={() => handleClick(action)}
-					className="bg-card border border-content/10 rounded-lg py-2 px-3 flex flex-col gap-1.5 items-start"
+					className="bg-card border border-content/10 rounded-lg py-2 px-3 flex flex-col gap-1 items-start"
 				>
 					{action.icon && (
 						<div
-							className="size-8 rounded-full flex items-center justify-center bg-content/5"
-							style={
-								action.color
-									? {
-											background: action.color,
-											color: "white",
-									  }
-									: {}
-							}
+							className={clsx(
+								"size-8 rounded-full flex items-center justify-center",
+								...colorClasses
+							)}
 						>
-							<Icon icon={action.icon} />
+							<div
+								className={clsx(
+									"flex items-center justify-center",
+									!showDefaultBackground
+										? "size-3.5"
+										: "-ml-1.5 size-[18px]"
+								)}
+							>
+								<Icon icon={action.icon} />
+							</div>
 						</div>
 					)}
 
@@ -365,7 +377,7 @@ export default function ActionGrid({
 							...colorClasses
 						)}
 					>
-						<div className="size-4">
+						<div className="size-4 flex items-center justify-center">
 							<Icon icon={action.icon} />
 						</div>
 					</div>
@@ -488,15 +500,18 @@ export default function ActionGrid({
 				</div>
 			) : (
 				<div
-					className={
-						typeWrap
-							? "flex gap-x-1.5 gap-y-2 flex-wrap justify-start"
-							: typeInline
+					className={clsx(
+						{ "flex gap-x-1.5 gap-y-2 flex-wrap": typeWrap },
+						typeWrap && alignment == "center"
+							? "justify-center"
+							: "justify-start",
+						typeInline
 							? flat
 								? "rounded-lg overflow-hidden divide-y divide-content/[0.03]"
 								: "rounded-2xl bg-card border border-content/2 overflow-hidden divide-y divide-content/5"
-							: "grid grid-cols-3 gap-2"
-					}
+							: "",
+						{ "grid grid-cols-3 gap-1.5": !typeWrap && !typeInline }
+					)}
 				>
 					{!sortable && !editable && (
 						<>

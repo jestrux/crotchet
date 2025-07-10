@@ -376,6 +376,8 @@ registerWidget("randomSpotifyTrack", {
 	actions: ({ loading, data }) => {
 		if (loading || !data || data == "no token") return [];
 
+		return [];
+
 		return [
 			{
 				label: "Shuffle",

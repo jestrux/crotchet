@@ -130,6 +130,106 @@ export const useMobileActions = () => {
 		},
 	];
 
+	const customizeHomePage = () => {
+		return {
+			icon: window.UI.svg(
+				"m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
+			),
+			label: "Home Page",
+			handler: async () => {
+				const defaultPreferences = {
+					wallpaper: "none",
+					headerAlignment: "left",
+					shortcutStyle: "grid",
+				};
+
+				const { wallpaper, headerAlignment, shortcutStyle } = {
+					...defaultPreferences,
+					...(await getPreference(
+						"homePagePreferences",
+						defaultPreferences
+					)),
+				};
+
+				window.openAlertForm({
+					title: "Customize Home Page",
+					fields: {
+						wallpaper: {
+							type: "preferences",
+							hideLabel: true,
+							fields: {
+								enabled: {
+									label: "Wallpaper",
+									type: "radio",
+									choices: [
+										{ label: "None", value: "none" },
+										{ label: "Auto", value: "auto" },
+									],
+								},
+							},
+						},
+						headerAlignment: {
+							type: "preferences",
+							hideLabel: true,
+							fields: {
+								alignment: {
+									type: "radio",
+									label: "Header Alignment",
+									choices: [
+										{ label: "Left", value: "left" },
+										{ label: "Center", value: "center" },
+									],
+								},
+							},
+						},
+						shortcutStyle: {
+							type: "preferences",
+							hideLabel: true,
+							fields: {
+								style: {
+									type: "radio",
+									label: "Shortcut Style",
+									choices: [
+										{ label: "Grid", value: "grid" },
+										{ label: "Pill", value: "wrap" },
+										{ label: "List", value: "inline" },
+									],
+								},
+							},
+						},
+					},
+					data: {
+						wallpaper: {
+							enabled: wallpaper,
+						},
+						headerAlignment: {
+							alignment: headerAlignment,
+						},
+						shortcutStyle: {
+							style: shortcutStyle,
+						},
+					},
+					onChange: async (values) => {
+						if (!values) return;
+
+						await savePreference("homePagePreferences", {
+							// wallpaper: values.wallpaper.enabled
+							// 	? "auto"
+							// 	: "none",
+							wallpaper: values.wallpaper.enabled,
+							headerAlignment: values.headerAlignment.alignment,
+							shortcutStyle: values.shortcutStyle.style,
+						});
+
+						window.dispatch("home-page-preferences-updated");
+					},
+				});
+			},
+			pinned: 1,
+			section: "Quick Actions",
+		};
+	};
+
 	const customizeShortcuts = () => {
 		return {
 			icon: (
@@ -154,58 +254,30 @@ export const useMobileActions = () => {
 					["clipboard"]
 				);
 
-				window.openAlertForm({
+				window.openChoicePicker({
 					title: "Customize Shortcuts",
-					fields: {
-						shortcutStyle: {
-							type: "preferences",
-							hideLabel: true,
-							fields: {
-								style: {
-									type: "radio",
-									label: "Shortcut Style",
-									choices: [
-										{ label: "Grid", value: "grid" },
-										{ label: "Wrap", value: "wrap" },
-									],
-								},
-							},
-						},
-						shortcutItems: {
-							type: "radio",
-							label: "Shortcuts",
-							multiple: true,
-							sortable: true,
-							editable: true,
-							choices: _.orderBy(
-								actionChoices(savedShortcuts),
-								["selected", "idx"],
-								"desc"
-							),
-						},
+					multiple: true,
+					sortable: true,
+					editable: true,
+					choices: _.orderBy(
+						actionChoices(savedShortcuts),
+						["selected", "idx"],
+						"desc"
+					),
+					onChange: async (values) => {
+						if (!values) return;
+
+						const homePageShortcuts = values
+							.filter((v) => v.selected)
+							.map(({ value }) => value);
+
+						await savePreference(
+							"homePageShortcuts",
+							homePageShortcuts
+						);
+
+						window.dispatch("home-page-shortcuts-updated");
 					},
-					data: {
-						shortcutItems: savedShortcuts,
-						shortcutStyle: {
-							style: await getPreference(
-								"homePageShortcutStyle",
-								["grid"]
-							),
-						},
-					},
-					onChange: async (values) =>
-						Promise.all([
-							await savePreference(
-								"homePageShortcutStyle",
-								values.shortcutStyle.style
-							),
-							await savePreference(
-								"homePageShortcuts",
-								values.shortcutItems
-							),
-						]).then(() =>
-							window.dispatch("home-page-shortcuts-updated")
-						),
 				});
 			},
 			pinned: 1,
@@ -413,6 +485,7 @@ export const useMobileActions = () => {
 		[
 			...(searchQuery?.length ? pinnedActions : []),
 			...[
+				customizeHomePage(),
 				customizeShortcuts(),
 				customizeWidgetsAction(),
 				customizeNavigation(),
