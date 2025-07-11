@@ -135,15 +135,10 @@ const GridItem = ({ item }) => {
 			onDoubleClick={() => {}}
 			onClick={() => handleClick()}
 		>
-			<div
-				className="pointer-events-none rounded-md relative flex-shrink-0 overflow-hidden size-full flex items-center justify-center"
-				style={{
-					aspectRatio: item.aspectRatio || "2/1.3",
-				}}
-			>
+			<div className="aspect-[2/1.45] border border-content/10 pointer-events-none rounded-md relative flex-shrink-0 overflow-hidden size-full flex items-center justify-center">
 				<div
 					className={clsx(
-						"h-full relative bg-content/10 border border-content/10 overflow-hidden",
+						"h-full relative bg-content/10 overflow-hidden",
 						meta?.face
 							? "aspect-[1/1] rounded-full"
 							: "w-full rounded"
@@ -190,7 +185,7 @@ const GridItem = ({ item }) => {
 export function grid({ data, entryActions, entryAction } = {}) {
 	if (!data?.length) return null;
 	return (
-		<div className="pt-1.5 px-3 relative size-full grid grid-cols-4 gap-1.5">
+		<div className="py-3 px-3 relative ssize-full grid grid-cols-4 gap-2.5">
 			{data.map((item) => {
 				item.actions = item.actions
 					? item.actions

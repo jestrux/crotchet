@@ -417,20 +417,39 @@ export default function ActionGrid({
 	if (!actions?.length) {
 		if (editable) {
 			return (
-				<button
-					type="button"
-					className="w-full rounded-2xl bg-card text-content/50 border border-content/2 h-12 flex items-center justify-center gap-1"
-					onClick={handleAdd}
-				>
-					<svg
-						className="size-6"
-						fill="currentColor"
-						viewBox="0 0 16 16"
+				<>
+					{title && (
+						<div
+							className={clsx(
+								"flex items-center",
+								{
+									"font-semibold px-1.5 mb-1":
+										!editable && !smallTitle,
+								},
+								editable || smallTitle
+									? "opacity-50 px-1"
+									: "text-xl"
+							)}
+						>
+							{title}
+						</div>
+					)}
+
+					<button
+						type="button"
+						className="w-full rounded-2xl bg-card text-content/50 border border-content/2 h-12 flex items-center justify-center gap-1"
+						onClick={handleAdd}
 					>
-						<path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-					</svg>
-					<span>Add{title ? ` ${title}` : ""}</span>
-				</button>
+						<svg
+							className="size-6"
+							fill="currentColor"
+							viewBox="0 0 16 16"
+						>
+							<path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+						</svg>
+						<span>Add{title ? ` ${title}` : ""}</span>
+					</button>
+				</>
 			);
 		}
 		return null;
@@ -443,12 +462,9 @@ export default function ActionGrid({
 					<div
 						className={clsx(
 							"flex items-center",
-							{ "font-semibold px-1.5 mb-1": !editable },
-							editable
-								? "opacity-50"
-								: !smallTitle
-								? "text-xl"
-								: "uppercase tracking-wide text-xs opacity-50"
+							editable || smallTitle
+								? "opacity-50 px-1"
+								: "font-semibold px-1.5 mb-1"
 						)}
 					>
 						{title}

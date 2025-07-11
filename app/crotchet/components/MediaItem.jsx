@@ -2,7 +2,6 @@ import { Loader } from "@/crotchet/components";
 import { useActionClick, useLongPress } from "@/crotchet/hooks";
 import openUrl from "@/crotchet/open-url";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
-import clsx from "clsx";
 
 export default function MediaItem({
 	video,
@@ -52,11 +51,7 @@ export default function MediaItem({
 			onDoubleClick={onDoubleClick}
 			className="size-full relative"
 		>
-			<div
-				className={clsx(
-					"pointer-events-none bg-content/10 border border-content/10 overflow-hidden"
-				)}
-			>
+			<div className="pointer-events-none bg-content/10">
 				<img
 					className={"absolute size-full object-cover"}
 					src={image?.length ? image : video}

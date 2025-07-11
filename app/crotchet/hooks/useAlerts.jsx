@@ -193,7 +193,8 @@ export function AlertsWrapper() {
 							className={clsx(
 								alert.field && !(alert.noHeading ?? true)
 									? "-mx-2 -mt-2 pb-1"
-									: "py-2 px-1"
+									: "py-2 px-1",
+								{ "pb-12": !alert.field }
 							)}
 						>
 							<Form

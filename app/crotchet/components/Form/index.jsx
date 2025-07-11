@@ -60,7 +60,7 @@ export default function Form({
 
 			if (field.type == "boolean") value = formField.checked;
 
-			if (field.type == "radio" && field.multiple)
+			if (field.type == "radio" && (field.multiple || field.editable))
 				value = value?.split(",");
 
 			if (field.type == "preferences") {

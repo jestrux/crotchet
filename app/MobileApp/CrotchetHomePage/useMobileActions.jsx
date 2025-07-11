@@ -151,167 +151,17 @@ export const useMobileActions = () => {
 					)),
 				};
 
-				window.openAlertForm({
-					title: "Customize Home Page",
-					fields: {
-						wallpaper: {
-							type: "preferences",
-							hideLabel: true,
-							fields: {
-								enabled: {
-									label: "Wallpaper",
-									type: "radio",
-									choices: [
-										{ label: "None", value: "none" },
-										{ label: "Auto", value: "auto" },
-									],
-								},
-							},
-						},
-						headerAlignment: {
-							type: "preferences",
-							hideLabel: true,
-							fields: {
-								alignment: {
-									type: "radio",
-									label: "Header Alignment",
-									choices: [
-										{ label: "Left", value: "left" },
-										{ label: "Center", value: "center" },
-									],
-								},
-							},
-						},
-						shortcutStyle: {
-							type: "preferences",
-							hideLabel: true,
-							fields: {
-								style: {
-									type: "radio",
-									label: "Shortcut Style",
-									choices: [
-										{ label: "Grid", value: "grid" },
-										{ label: "Pill", value: "wrap" },
-										{ label: "List", value: "inline" },
-									],
-								},
-							},
-						},
-					},
-					data: {
-						wallpaper: {
-							enabled: wallpaper,
-						},
-						headerAlignment: {
-							alignment: headerAlignment,
-						},
-						shortcutStyle: {
-							style: shortcutStyle,
-						},
-					},
-					onChange: async (values) => {
-						if (!values) return;
-
-						await savePreference("homePagePreferences", {
-							// wallpaper: values.wallpaper.enabled
-							// 	? "auto"
-							// 	: "none",
-							wallpaper: values.wallpaper.enabled,
-							headerAlignment: values.headerAlignment.alignment,
-							shortcutStyle: values.shortcutStyle.style,
-						});
-
-						window.dispatch("home-page-preferences-updated");
-					},
-				});
-			},
-			pinned: 1,
-			section: "Quick Actions",
-		};
-	};
-
-	const customizeShortcuts = () => {
-		return {
-			icon: (
-				<svg
-					fill="none"
-					viewBox="0 0 24 24"
-					strokeWidth={1.5}
-					stroke="currentColor"
-					className="size-6"
-				>
-					<path
-						strokeLinecap="round"
-						strokeLinejoin="round"
-						d="M3 8.689c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 0 1 0 1.954l-7.108 4.061A1.125 1.125 0 0 1 3 16.811V8.69ZM12.75 8.689c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 0 1 0 1.954l-7.108 4.061a1.125 1.125 0 0 1-1.683-.977V8.69Z"
-					/>
-				</svg>
-			),
-			label: "Shortcuts",
-			handler: async () => {
 				const savedShortcuts = await getPreference(
 					"homePageShortcuts",
 					["clipboard"]
 				);
 
-				window.openChoicePicker({
-					title: "Customize Shortcuts",
-					multiple: true,
-					sortable: true,
-					editable: true,
-					choices: _.orderBy(
-						actionChoices(savedShortcuts),
-						["selected", "idx"],
-						"desc"
-					),
-					onChange: async (values) => {
-						if (!values) return;
-
-						const homePageShortcuts = values
-							.filter((v) => v.selected)
-							.map(({ value }) => value);
-
-						await savePreference(
-							"homePageShortcuts",
-							homePageShortcuts
-						);
-
-						window.dispatch("home-page-shortcuts-updated");
-					},
-				});
-			},
-			pinned: 1,
-			section: "Quick Actions",
-		};
-	};
-
-	const customizeWidgetsAction = () => {
-		const preferenceKey = "homePageContent";
-
-		return {
-			icon: (
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					strokeWidth={1.5}
-					stroke="currentColor"
-					className="size-6"
-				>
-					<path
-						strokeLinecap="round"
-						strokeLinejoin="round"
-						d="M2.25 7.125C2.25 6.504 2.754 6 3.375 6h6c.621 0 1.125.504 1.125 1.125v3.75c0 .621-.504 1.125-1.125 1.125h-6a1.125 1.125 0 0 1-1.125-1.125v-3.75ZM14.25 8.625c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v8.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 0 1-1.125-1.125v-8.25ZM3.75 16.125c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 0 1-1.125-1.125v-2.25Z"
-					/>
-				</svg>
-			),
-			label: "Widgets",
-			handler: async () => {
 				const homePageContent = await getPreference(
 					"homePageContent",
 					[]
 				);
-				const choices = _.orderBy(
+
+				const widgetChoices = _.orderBy(
 					_.keys(window.widgets).reduce((agg, item) => {
 						const key = "widget~#~" + item;
 						const widget = window.widgets[item] || {};
@@ -331,27 +181,102 @@ export const useMobileActions = () => {
 					"desc"
 				);
 
-				window.openChoicePicker({
-					inset: false,
-					title: "Customize Widgets",
-					emptyStateMessage: "No widgets available",
-					sortable: choices.length > 1,
-					editable: true,
-					multiple: true,
-					choices,
+				console.log(
+					"Home page content: ",
+					savedShortcuts,
+					homePageContent
+					// widgetChoices
+				);
+
+				window.openAlertForm({
+					title: "Customize Home Page",
+					fields: {
+						header: {
+							type: "preferences",
+							fields: {
+								wallpaper: {
+									icon: window.UI.svg(
+										"m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
+									),
+									label: "Wallpaper",
+									type: "radio",
+									choices: [
+										{ label: "None", value: "none" },
+										{ label: "Auto", value: "auto" },
+									],
+								},
+								alignment: {
+									icon: window.UI.svg(
+										"M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5 5.25 5.25"
+									),
+									type: "radio",
+									choices: [
+										{ label: "Left", value: "left" },
+										{ label: "Center", value: "center" },
+									],
+								},
+								shortcutStyle: {
+									icon: window.UI.svg(
+										"M3 8.689c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 0 1 0 1.954l-7.108 4.061A1.125 1.125 0 0 1 3 16.811V8.69ZM12.75 8.689c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 0 1 0 1.954l-7.108 4.061a1.125 1.125 0 0 1-1.683-.977V8.69Z"
+									),
+									type: "radio",
+									choices: [
+										{ label: "Grid", value: "grid" },
+										{ label: "Pill", value: "wrap" },
+										{ label: "List", value: "inline" },
+									],
+								},
+							},
+						},
+						shortcuts: {
+							type: "radio",
+							editable: true,
+							choices: actionChoices(savedShortcuts),
+						},
+						widgets: {
+							type: "radio",
+							editable: true,
+							choices: widgetChoices,
+						},
+					},
+					data: {
+						header: {
+							wallpaper,
+							alignment: headerAlignment,
+							shortcutStyle,
+						},
+						shortcuts: savedShortcuts,
+						widgets: homePageContent,
+					},
 					onChange: async (values) => {
-						const homePageContent = values
-							.filter((v) => v.selected)
-							.map(({ value }) => value);
+						if (!values) return;
 
-						await savePreference(preferenceKey, homePageContent);
-
-						dispatch("home-page-content-updated");
+						await Promise.all([
+							await savePreference("homePagePreferences", {
+								wallpaper: values.header.wallpaper,
+								headerAlignment: values.header.alignment,
+								shortcutStyle: values.header.shortcutStyle,
+							}).then(() =>
+								window.dispatch("home-page-preferences-updated")
+							),
+							await savePreference(
+								"homePageShortcuts",
+								values.shortcuts
+							).then(() =>
+								window.dispatch("home-page-shortcuts-updated")
+							),
+							await savePreference(
+								"homePageContent",
+								values.widgets
+							).then(() =>
+								window.dispatch("home-page-content-updated")
+							),
+						]);
 					},
 				});
 			},
 			pinned: 1,
-			section: "Quick Actions",
+			section: "Customize",
 		};
 	};
 
@@ -375,7 +300,7 @@ export const useMobileActions = () => {
 			),
 			label: "Navbar",
 			pinned: 1,
-			section: "Quick Actions",
+			section: "Customize",
 			handler: async () => {
 				const [
 					behavior,
@@ -484,12 +409,7 @@ export const useMobileActions = () => {
 	const actionSections = sectionedChoices(
 		[
 			...(searchQuery?.length ? pinnedActions : []),
-			...[
-				customizeHomePage(),
-				customizeShortcuts(),
-				customizeWidgetsAction(),
-				customizeNavigation(),
-			],
+			...[customizeHomePage(), customizeNavigation()],
 			...(actions || []).reduce((agg, a) => {
 				if (!a.context) {
 					agg.push({

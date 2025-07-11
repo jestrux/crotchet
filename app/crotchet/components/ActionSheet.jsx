@@ -295,7 +295,7 @@ export default function Sheet({
 					{!noHeading && (
 						<div
 							className={clsx(
-								"p-3 flex items-center justify-between gap-2",
+								"h-12 p-3 flex items-center justify-between gap-2",
 								preview
 									? "pl-4"
 									: isMultiSelect
@@ -339,10 +339,11 @@ export default function Sheet({
 					)}
 
 					<div
-						className={clsx("max-h-[60vh] overflow-auto", {
+						className={clsx("overflow-auto", {
 							"p-3 pt-0": !noHeading,
 						})}
 						style={{
+							maxHeight: `calc(100vh - 48px - env(safe-area-inset-top))`,
 							marginBottom: ignoreSafeArea
 								? 0
 								: inset

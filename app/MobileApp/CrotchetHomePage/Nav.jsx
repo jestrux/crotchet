@@ -805,7 +805,7 @@ export default function MobileNav() {
 
 					<div
 						className={clsx(
-							"sticky top-0 h-[60vh] overscroll-none",
+							"sticky top-0 h-[60vh]",
 							{ "pointer-events-auto": expanded },
 							{ "overflow-auto": actionSections?.length }
 						)}

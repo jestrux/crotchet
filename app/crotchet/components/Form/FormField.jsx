@@ -292,6 +292,7 @@ const PreferencesEditor = ({
 	value: data,
 	fields: _fields,
 	onChange,
+	...field
 }) => {
 	const [gridKey, setGridKey] = useState(randomId());
 	const [fields, setFields] = useState(parseFormFields(_fields, data));
@@ -337,6 +338,8 @@ const PreferencesEditor = ({
 			/>
 			<ActionGrid
 				type="inline"
+				smallTitle
+				title={!field.hideLabel && field.label}
 				key={gridKey}
 				data={fields.map((field) => {
 					let trailing = field.value;
@@ -731,9 +734,10 @@ const Field = ({ field, value, onChange, __data }) => {
 						title={field.editable ? field.label : ""}
 						data={objectFieldChoices(field.choices).map(
 							(choice) => {
-								choice.selected = field.multiple
-									? value.includes(choice.value)
-									: value == choice.value;
+								choice.selected =
+									field.multiple || field.editable
+										? value.includes(choice.value)
+										: value == choice.value;
 								return choice;
 							}
 						)}
@@ -1004,7 +1008,8 @@ export default function FormField({
 				{horizontal && <div className="col-span-1"></div>}
 				{field.type !== "boolean" &&
 					!field.hideLabel &&
-					!(field.type == "radio" && field.editable) && (
+					!(field.type == "radio" && field.editable) &&
+					field.type != "preferences" && (
 						<label
 							className={clsx(
 								"inline-block first-letter:capitalize",
