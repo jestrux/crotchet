@@ -22,9 +22,11 @@
 		"dev:app": "yarn --cwd app dev",
 		"dev:desktop": "yarn --cwd desktop dev",
 		"dev:ios": "cd mobile && npx cap open ios",
-		"start": "concurrently \"yarn dev:config\" \"yarn dev:app\" && wait-on http://localhost:5170 && npm run dev:desktop"
+		"start": "concurrently \"yarn dev:config\" \"yarn dev:app\" && wait-on http://localhost:5170 && npm run dev:desktop",
+		"dev:hybrid-desktop": "cd hybrid/desktop && npm run dev"
 	},
 	"devDependencies": {
+		"canvas": "^3.1.2",
 		"concurrently": "^9.1.2",
 		"wait-on": "^8.0.3"
 	}

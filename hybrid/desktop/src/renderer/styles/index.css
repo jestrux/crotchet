@@ -1,0 +1,70 @@
+/* Light theme (default) */
+:root {
+  --canvas: #ffffff;
+  --card: #f8f9fa;
+  --content: #212529;
+  --content-inverted: #ffffff;
+  --primary: #007bff;
+  --primary-light: #66b3ff;
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+  --canvas: #121212;
+  --card: #1e1e1e;
+  --content: #ffffff;
+  --content-inverted: #212529;
+  --primary: #66b3ff;
+  --primary-light: #99ccff;
+}
+
+/* Auto theme based on system preference */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --canvas: #121212;
+    --card: #1e1e1e;
+    --content: #ffffff;
+    --content-inverted: #212529;
+    --primary: #66b3ff;
+    --primary-light: #99ccff;
+  }
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--content);
+  font-family: -apple-system, system-ui, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+h1 {
+  font-size: 18px;
+  margin: 0 0 8px 0;
+  color: var(--content);
+}
+
+.card {
+  background: var(--card);
+  border-radius: 8px;
+  padding: 16px;
+  transition: background-color 0.2s ease;
+}
+
+.button-primary {
+  background: var(--primary);
+  color: var(--content-inverted);
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.button-primary:hover {
+  background: var(--primary-light);
+}

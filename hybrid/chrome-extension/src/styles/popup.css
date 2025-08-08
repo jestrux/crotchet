@@ -1,0 +1,77 @@
+/* Light theme (default) */
+:root {
+  --canvas: #ffffff;
+  --card: #f8f9fa;
+  --content: #212529;
+  --content-inverted: #ffffff;
+  --primary: #007bff;
+  --primary-light: #66b3ff;
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+  --canvas: #121212;
+  --card: #1e1e1e;
+  --content: #ffffff;
+  --content-inverted: #212529;
+  --primary: #66b3ff;
+  --primary-light: #99ccff;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--canvas);
+  color: var(--content);
+  font-family: -apple-system, system-ui, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial;
+  width: 300px;
+  min-height: 200px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+#app {
+  padding: 16px;
+}
+
+h1 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+}
+
+.controls {
+  margin-bottom: 16px;
+}
+
+.theme-toggle {
+  background: var(--card);
+  border: 1px solid var(--content);
+  border-radius: 4px;
+  color: var(--content);
+  padding: 4px 8px;
+  margin-right: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-toggle:hover {
+  background: var(--primary-light);
+}
+
+button {
+  background: var(--primary);
+  color: var(--content-inverted);
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+button:hover:not([disabled]) {
+  background: var(--primary-light);
+}
+
+button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
