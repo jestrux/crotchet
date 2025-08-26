@@ -100,7 +100,7 @@ export default async function openUrl(path) {
 	}
 
 	if (path.startsWith("crotchet://search")) {
-		const { scheme } = processSchemeUrl("socket", path);
+		const { scheme } = processSchemeUrl("search", path);
 		return window.openPage({ type: "search", source: scheme });
 	}
 
