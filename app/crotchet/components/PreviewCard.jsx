@@ -42,7 +42,7 @@ export default function PreviewCard({
 		return (
 			<div className="bg-card/90 rounded-xl overflow-hidden w-full bg-card border border-content/10 shadow-lg">
 				<div
-					className="mb-1 relative flex-shrink-0 overflow-hidden w-full bg-content/10"
+					className="relative flex-shrink-0 overflow-hidden w-full bg-content/10"
 					style={{
 						// aspectRatio,
 						...(color
@@ -86,7 +86,7 @@ export default function PreviewCard({
 				</div>
 
 				{(title || subtitle) && (
-					<div className="pt-1 pb-2 px-3">
+					<div className="py-2 px-3">
 						{title?.length > 0 && (
 							<h5 className="text-sm text-content font-semibold first-letter:capitalize">
 								{title}
