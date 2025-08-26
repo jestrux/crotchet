@@ -286,6 +286,7 @@ declare var ActionButton:
 			label?: string;
 			icon?: string | typeof UI.icon;
 			url?: string | null;
+			destructive?: boolean,
 			handler?: (
 				payload: typeof WidgetActionContext | any
 				// | { [key: string]: any }
