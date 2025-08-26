@@ -1,5 +1,5 @@
 import { useAppContext } from "@/crotchet/providers/AppProvider";
-import { useDataLoader } from "@/crotchet/hooks";
+import { useDataLoader, useLongPress } from "@/crotchet/hooks";
 import { Widget } from "@/crotchet/components";
 import MobileNav from "./Nav";
 import Page from "./Page";
@@ -8,27 +8,15 @@ import { BottomNavPlaceholder } from "@/crotchet/providers/AppScaffold/Page/Page
 import RemoteController from "@/crotchet/providers/Remote/RemoteController";
 import { useMobileActions } from "./useMobileActions";
 import ActionGrid from "@/crotchet/components/ActionGrid";
-import { getPreference, randomId } from "@/crotchet/utils";
+import { getPreference, randomId, savePreference } from "@/crotchet/utils";
 import { useState } from "react";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { getHomePagePreferences } from "@/crotchet/userPreferences";
 
 const HomePage = () => {
 	const [shortcutsKey, setShortcutsKey] = useState(randomId());
 	const { data: homePage } = useDataLoader({
-		handler: async () => {
-			const defaultPreferences = {
-				wallpaper: "none",
-				headerAlignment: "left",
-				shortcutStyle: "grid",
-			};
-
-			return {
-				...defaultPreferences,
-				...(await getPreference(
-					"homePagePreferences",
-					defaultPreferences
-				)),
-			};
-		},
+		handler: getHomePagePreferences,
 		listenForUpdates: ["home-page-preferences-updated"],
 	});
 
@@ -104,8 +92,104 @@ const HomePage = () => {
 
 	const { actionSections } = useMobileActions();
 	const headerAlignment = homePage?.headerAlignment;
-	const showWallpaper = homePage?.wallpaper !== "none";
+	const wallpaper = homePage?.wallpaper ?? "none";
+	const showWallpaper = wallpaper !== "none";
+	const customWallpaper = ["auto", "none"].includes(wallpaper)
+		? null
+		: wallpaper;
 	const shortcutStyle = homePage?.shortcutStyle;
+	const lightModeWallpaper = customWallpaper
+		? customWallpaper
+		: "https://images.unsplash.com/photo-1624847706671-a7bf2f92ede0?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NjR8fGxpZ2h0JTIwbW9kZSUyMHdhbGxwYXBlcnxlbnwwfHwwfHx8MA%3D%3D";
+	const darkModeWallpaper = customWallpaper
+		? customWallpaper
+		: "https://images.unsplash.com/photo-1622482607282-fffed5a93942?q=80&w=985&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+
+	const wallpaperGestures = useLongPress(() => {
+		Haptics.impact({ style: ImpactStyle.Medium });
+		const inDarkMode =
+			window.matchMedia &&
+			window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+		const saveWallpaper = async (wallpaper) => {
+			const prefs = await getHomePagePreferences();
+			savePreference("homePagePreferences", {
+				...prefs,
+				wallpaper,
+			}).then(() => window.dispatch("home-page-preferences-updated"));
+		};
+
+		const previewWallpaper = (value) => {
+			window.openActionSheet({
+				fullScreen: true,
+				preview: {
+					image: value,
+				},
+				actions: [
+					{
+						icon: window.UI.icon("check"),
+						label: "Save Wallpaper",
+						handler: () => saveWallpaper(value),
+					},
+				],
+			});
+		};
+
+		const actions = [
+			{
+				icon: window.UI.icon("search"),
+				label: "Search Wallpapers",
+				handler: () => {
+					window
+						.openPage({
+							source: "unsplash",
+							title: "Select Wallpaper",
+							placeholder: "Search wallpapers...",
+							selectable: true,
+						})
+						.then((res) => {
+							if (!res?.image) return;
+							previewWallpaper(res.image);
+						});
+				},
+			},
+			{
+				icon: window.UI.icon("copy"),
+				label: "Paste Wallpaper",
+				handler: async () => {
+					const res = await window.readClipboard();
+
+					if (!res || !res.value || !window.isValidUrl(res.value))
+						return window.showActionSheetAlert(
+							"Clipboard doesn't contain a valid url",
+							res.value
+						);
+
+					previewWallpaper(res.value);
+				},
+			},
+			{
+				icon: window.UI.icon("restore"),
+				label: "Reset Wallpaper",
+				handler: () => saveWallpaper("auto"),
+			},
+			{
+				icon: window.UI.icon("close"),
+				label: "Remove Wallpaper",
+				handler: () => saveWallpaper("none"),
+				destructive: true,
+			},
+		];
+
+		window.openActionSheet({
+			fullScreen: true,
+			preview: {
+				image: inDarkMode ? darkModeWallpaper : lightModeWallpaper,
+				actions,
+			},
+			actions,
+		});
+	});
 
 	return (
 		<div className="flex gap-5 p-6 lg:p-8 fixed inset-0 overflow-auto overscroll-none">
@@ -176,32 +260,35 @@ const HomePage = () => {
 
 			<div className="flex-1 pt-6">
 				{showWallpaper && (
-					<div className="-mx-6 lg:-mx-8 relative">
+					<div
+						className="-mx-6 lg:-mx-8 relative"
+						{...wallpaperGestures}
+					>
 						<div
 							style={{
 								height: "100px",
 							}}
 						/>
 
-						{showWallpaper && (
-							<div
-								className="absolute inset-x-0 -top-32 -bottom-56"
-								style={{
-									mask: `linear-gradient(black, black, transparent)`,
-								}}
-							>
-								<img
-									className="w-full h-full dark:hidden"
-									src="https://images.unsplash.com/photo-1624847706671-a7bf2f92ede0?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NjR8fGxpZ2h0JTIwbW9kZSUyMHdhbGxwYXBlcnxlbnwwfHwwfHx8MA%3D%3D"
-									alt=""
-								/>
-								<img
-									className="w-full h-full hidden dark:block"
-									src="https://images.unsplash.com/photo-1622482607282-fffed5a93942?q=80&w=985&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-									alt=""
-								/>
-							</div>
-						)}
+						<div
+							className="absolute inset-x-0 -top-32 -bottom-56"
+							// className="fixed inset-x-0 -top-20"
+							style={{
+								// height: "462px",
+								mask: `linear-gradient(black, black, transparent)`,
+							}}
+						>
+							<img
+								className="object-cover pointer-events-none w-full h-full dark:hidden"
+								src={lightModeWallpaper}
+								alt=""
+							/>
+							<img
+								className="object-cover pointer-events-none w-full h-full hidden dark:block"
+								src={darkModeWallpaper}
+								alt=""
+							/>
+						</div>
 					</div>
 				)}
 

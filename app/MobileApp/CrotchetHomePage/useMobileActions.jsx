@@ -1,4 +1,5 @@
 import { useDataLoader } from "@/crotchet/hooks";
+import { getHomePagePreferences } from "@/crotchet/userPreferences";
 import {
 	camelCaseToSentenceCase,
 	dispatch,
@@ -137,19 +138,8 @@ export const useMobileActions = () => {
 			),
 			label: "Home Page",
 			handler: async () => {
-				const defaultPreferences = {
-					wallpaper: "none",
-					headerAlignment: "left",
-					shortcutStyle: "grid",
-				};
-
-				const { wallpaper, headerAlignment, shortcutStyle } = {
-					...defaultPreferences,
-					...(await getPreference(
-						"homePagePreferences",
-						defaultPreferences
-					)),
-				};
+				const { wallpaper, headerAlignment, shortcutStyle } =
+					await getHomePagePreferences();
 
 				const savedShortcuts = await getPreference(
 					"homePageShortcuts",
@@ -241,7 +231,9 @@ export const useMobileActions = () => {
 					},
 					data: {
 						header: {
-							wallpaper,
+							wallpaper: !["auto", "none"].includes(wallpaper)
+								? "Custom"
+								: wallpaper,
 							alignment: headerAlignment,
 							shortcutStyle,
 						},
@@ -251,9 +243,13 @@ export const useMobileActions = () => {
 					onChange: async (values) => {
 						if (!values) return;
 
+						let wallpaperValue = values.header.wallpaper;
+						if (wallpaperValue == "Custom")
+							wallpaperValue = wallpaper;
+
 						await Promise.all([
 							await savePreference("homePagePreferences", {
-								wallpaper: values.header.wallpaper,
+								wallpaper: wallpaperValue,
 								headerAlignment: values.header.alignment,
 								shortcutStyle: values.header.shortcutStyle,
 							}).then(() =>

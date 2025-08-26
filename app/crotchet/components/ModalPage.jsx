@@ -21,6 +21,7 @@ export default function ModalPage({
 	entryAction,
 	layout,
 	resolve,
+	selectable = false,
 	searchable = false,
 	title: _title,
 	content: _content,
@@ -104,6 +105,7 @@ export default function ModalPage({
 	const actions = evaluate(_actions, context);
 	const isPreview = type == "preview";
 	const noContent = isPreview || (!content && !loading && !data?.length);
+	const titleAndSearch = title?.length && searchable;
 
 	useLayoutEffect(() => {
 		focusSearchInput();
@@ -191,6 +193,9 @@ export default function ModalPage({
 								masonry={layout == "masonry"}
 								entryActions={entryActions}
 								entryAction={entryAction}
+								onSelect={
+									selectable ? (data) => onClose(data) : null
+								}
 							/>
 						</div>
 					) : (
@@ -199,6 +204,9 @@ export default function ModalPage({
 								data={data}
 								entryActions={entryActions}
 								entryAction={entryAction}
+								onSelect={
+									selectable ? (data) => onClose(data) : null
+								}
 							/>
 						</div>
 					)}
@@ -327,6 +335,7 @@ export default function ModalPage({
 							className="relative"
 							style={{
 								paddingTop: "env(safe-area-inset-top)",
+								paddingBottom: titleAndSearch ? "1px" : "",
 							}}
 						>
 							{/* <div
@@ -356,7 +365,7 @@ export default function ModalPage({
 								</button>
 							</div>
 
-							{title?.length && searchable && (
+							{titleAndSearch && (
 								<div className="relative px-3 -mx-px -mt-2 mb-2.5">
 									{searchInput()}
 								</div>
@@ -375,7 +384,7 @@ export default function ModalPage({
 				>
 					<div
 						className={clsx(
-							searchable && title?.length ? "pt-[84px]" : "pt-14",
+							titleAndSearch ? "pt-[90px]" : "pt-14",
 							{
 								"h-full flex items-center justify-center":
 									noContent,

@@ -410,7 +410,8 @@ export default function useAlerts() {
 
 	const showActionSheetAlert = (message) =>
 		openActionSheet({
-			noHeading: true,
+			noHeading: false,
+			inset: false,
 			emptyStateMessage: message,
 		});
 

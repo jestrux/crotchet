@@ -196,6 +196,8 @@ declare var UI: {
 		icon?:
 			| "default"
 			| "bolt"
+			| "restore"
+			| "check"
 			| "clear"
 			| "close"
 			| "copy"

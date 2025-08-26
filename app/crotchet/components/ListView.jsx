@@ -30,7 +30,9 @@ export default function ListView({
 				? entryActions(entry)
 				: [];
 			entry.onClick =
-				typeof entry.onClick == "function"
+				typeof props.onSelect == "function"
+					? () => props.onSelect(entry)
+					: typeof entry.onClick == "function"
 					? entry.onClick
 					: typeof entryAction == "function"
 					? () => entryAction(entry)

@@ -72,14 +72,15 @@ const randomUnsplashPic = async () => {
 const getImageActions = (res, { shuffle = false, search = false } = {}) => {
 	return [
 		{
+			label: "Copy Image Url",
+			icon: UI.icon("copy"),
+			handler: () =>
+				copyToClipboard(res.urls.regular, "Image URL copied"),
+		},
+		{
 			label: "Copy Image",
 			icon: UI.icon("copy"),
 			handler: () => copyImage(res.image, "Image copied"),
-		},
-		{
-			label: "Copy Link",
-			icon: UI.icon("copy"),
-			handler: () => copyToClipboard(res.url, "Link copied"),
 		},
 		{
 			label: "Share",
@@ -87,7 +88,12 @@ const getImageActions = (res, { shuffle = false, search = false } = {}) => {
 			handler: () => shareImage(res.image),
 		},
 		{
-			label: "Open",
+			label: "Copy Unsplash Link",
+			icon: UI.icon("copy"),
+			handler: () => copyToClipboard(res.links.html, "Link copied"),
+		},
+		{
+			label: "Open on Unsplash",
 			icon: UI.icon("open-external"),
 			url: res.url,
 		},

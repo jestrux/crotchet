@@ -30,7 +30,10 @@ export default function GridList({ source, data, isLoading, ...props }) {
 	if (!isLoading && data) {
 		const items = data.map((entry) => {
 			const _id = entry._id || randomId();
-			const onClick = onActionClick(entry);
+			const onClick =
+				typeof props.onSelect == "function"
+					? () => props.onSelect(entry)
+					: onActionClick(entry);
 			const entryProps = {
 				_id,
 				...entry,
