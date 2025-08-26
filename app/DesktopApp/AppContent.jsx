@@ -126,6 +126,7 @@ const getCommands = async () => {
 						filter: source.filter,
 						filters: source.filters,
 						listenForUpdates: source.listenForUpdates,
+						onSearch: source.search
 					}),
 			},
 			...commandProps(source, "Data Source", favorites),

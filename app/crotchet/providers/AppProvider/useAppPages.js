@@ -35,6 +35,7 @@ export default function useAppPages() {
 					: "",
 				searchQuery: q ?? query,
 				resolve: actualSource.get,
+				onSearch: actualSource.search,
 				onDataChange: source.listenForUpdates,
 				secondaryAction: actualSource.entrySecondaryAction,
 				entryAction: actualSource.entryAction,

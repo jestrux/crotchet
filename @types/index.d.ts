@@ -300,7 +300,7 @@ declare var PageType: "search" | "preview" | "detail" | "form";
 declare var Page: {
 	listenForUpdates?: typeof ListenForUpdates;
 	external?: boolean | null;
-	type?: PageType | ((payload: typeof PageContext) => PageType);
+	type?: typeof PageType | ((payload: typeof PageContext) => typeof PageType);
 	resolve?: Function;
 	title?: typeof PageTitle;
 	layout?: "list" | "grid" | "masonry";
@@ -421,6 +421,7 @@ declare var registerWidget: (
 		supportedSizes?: String | undefined;
 		background?: String | undefined;
 		color?: String | undefined;
+		source?: String | undefined;
 		resolve?: (payload?: any) => PromiseLike<any> | undefined;
 		listenForUpdates?: typeof ListenForUpdates;
 		filter?: { [key: string]: any } | ((payload: any) => {}) | undefined;

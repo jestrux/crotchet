@@ -4,6 +4,7 @@ import Loader from "./Loader";
 import { onActionClick } from "@/crotchet/hooks/useActionClick";
 import { useRef } from "react";
 import { motion } from "framer-motion";
+import { sourceGet } from "../hooks/useSourceGet";
 
 function ActionButton({ button, propagate = true }) {
 	const { loading, onClick } = useActionClick(button, {
@@ -75,6 +76,7 @@ export default function Widget({
 	entryActions,
 	children,
 	resolve,
+	source,
 	content: _content,
 	actionButton: _actionButton,
 	onClick,
@@ -89,6 +91,8 @@ export default function Widget({
 		handler: async () => {
 			const res = await (typeof resolve == "function"
 				? resolve({ state: state.current, setState })
+				: source
+				? sourceGet(source)
 				: Promise.resolve(true));
 
 			return res;

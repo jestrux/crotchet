@@ -475,6 +475,7 @@ export default function useAlerts() {
 						  )}...`
 						: "",
 					resolve: actualSource.get,
+					onSearch: actualSource.search,
 					onDataChange: actualSource.listenForUpdates,
 					secondaryAction: actualSource.entrySecondaryAction,
 					entryAction: actualSource.entryAction,

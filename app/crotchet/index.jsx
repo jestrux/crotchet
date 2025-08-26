@@ -179,6 +179,7 @@ export const registerSection = (name, section) => {
 export const registerWidget = (name, widget) => {
 	const {
 		resolve,
+		source,
 		supportedSizes = "*",
 		background,
 		color,
@@ -200,6 +201,7 @@ export const registerWidget = (name, widget) => {
 	window.widgets[name] = {
 		_id: randomId(),
 		resolve,
+		source,
 		supportedSizes,
 		background,
 		color,

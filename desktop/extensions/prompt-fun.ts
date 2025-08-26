@@ -22,7 +22,7 @@ registerDataSource("db", "promptFun", {
 		aspectRatio: entry.meta?.aspectRatio,
 		label: entry.title,
 		subtitle: entry.prompt,
-		url: getPreviewUrl(entry),
+		url: onDesktop() ? entry?.meta.gridUrl : getPreviewUrl(entry),
 		share: getPreviewUrl(entry),
 	}),
 	actions: [],

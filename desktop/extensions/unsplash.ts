@@ -5,6 +5,12 @@ const appIcon = UI.svg(
 	{ filled: true }
 );
 
+const searchAction = {
+	label: "Search Unsplash",
+	icon: UI.icon("search"),
+	url: "crotchet://search/unsplash",
+};
+
 const searchUnsplash = async (
 	searchQuery = "",
 	{ per_page = 30, page = 1 } = {}
@@ -34,9 +40,9 @@ const searchUnsplash = async (
 		};
 
 		entry.action = {
-			label: "Open",
+			label: "Copy",
 			icon: UI.icon("open-external"),
-			url: entry.links.html,
+			url: `crotchet://copy/${entry.urls.regular}`,
 		};
 
 		entry.actions = getImageActions(entry);
@@ -61,16 +67,6 @@ const randomUnsplashPic = async () => {
 	]);
 
 	return random(await searchUnsplash(searchQuery, { page }));
-};
-
-const openSearchUnsplash = async () => {
-	return openPage({
-		type: "search",
-		layout: "masonry",
-		placeholder: "Search Unsplash...",
-		resolve: searchUnsplash,
-		onSearch: searchUnsplash,
-	});
 };
 
 const getImageActions = (res, { shuffle = false, search = false } = {}) => {
@@ -105,25 +101,51 @@ const getImageActions = (res, { shuffle = false, search = false } = {}) => {
 					},
 			  ]
 			: []),
-		...(search
-			? [
-					{
-						label: "Search Unsplash",
-						icon: UI.icon("search"),
-						handler: openSearchUnsplash,
-					},
-			  ]
-			: []),
+		...(search ? [searchAction] : []),
 	];
 };
+
+const previewImage = async (image = null) => {
+	return openPage({
+		type: "preview",
+		resolve: image ? () => image : randomUnsplashPic,
+		action: ({ pageData }) =>
+			!pageData
+				? null
+				: {
+						label: "Open",
+						handler: () => openUrl(pageData.href),
+				  },
+		actions: ({ pageData }) =>
+			!pageData ? null : getImageActions(pageData),
+	});
+};
+
+registerDataSource("custom", "unsplash", {
+	listenForUpdates: "tokens-updated",
+	fetch: () => {
+		// TODO: Add caching logic
+		return searchUnsplash();
+	},
+	search: searchUnsplash,
+	// orderBy: "first",
+	// mapEntry(item) {},
+	layoutProps: {
+		layout: "masonry",
+	},
+	// actions: () => [],
+	// entryActions: getImageActions,
+	// entryAction: previewImage,
+});
 
 registerAction("searchUnsplash", {
 	label: "Search Unsplash",
 	color: "#333",
 	icon: appIcon,
 	global: true,
+	mobileOnly: true,
 	tags: ["image"],
-	handler: openSearchUnsplash,
+	url: "crotchet://search/unsplash",
 });
 
 registerAction("randomUnsplashPic", {
@@ -133,21 +155,7 @@ registerAction("randomUnsplashPic", {
 	global: true,
 	// context: "shortcut",
 	tags: ["image"],
-	handler: async () => {
-		return openPage({
-			type: "preview",
-			resolve: randomUnsplashPic,
-			action: ({ pageData }) =>
-				!pageData
-					? null
-					: {
-							label: "Open",
-							handler: () => openUrl(pageData.href),
-					  },
-			actions: ({ pageData }) =>
-				!pageData ? null : getImageActions(pageData),
-		});
-	},
+	handler: async () => previewImage(),
 });
 
 registerWidget("randomUnsplashPic", {
@@ -168,4 +176,13 @@ registerWidget("randomUnsplashPic", {
 	},
 	content: UI.media,
 	actions: [],
+});
+
+registerWidget("unsplash", {
+	icon: appIcon,
+	label: "Daily Pics",
+	title: "Daily Pics",
+	source: "unsplash",
+	content: UI.grid,
+	actions: [searchAction],
 });
