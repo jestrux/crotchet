@@ -129,9 +129,6 @@ export const getWebsiteInfo = async (url, name) => {
 			// baseUrl = window.desktopUrl;
 			if (window.remoteSocketAction) {
 				const res = await window.remoteSocketAction("crawl", url);
-				// .then((data) => {
-				// 	alert(JSON.stringify({ meta: data?.meta }));
-				// });
 				return formatResponse(res);
 			}
 		} catch (error) {

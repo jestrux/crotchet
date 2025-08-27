@@ -801,6 +801,88 @@ export const getPreviewUrl = (content) => {
 	return url;
 };
 
+export const getShareActions = (
+	content = {},
+	actions,
+	mainActionNames = []
+) => {
+	const {
+		image,
+		file,
+		url,
+		text,
+		download,
+		incoming,
+		fromClipboard,
+		scheme,
+		sheet,
+		state = {},
+	} = content;
+
+	return Object.entries((actions || window.actions) ?? {}).reduce(
+		(agg, [name, action]) => {
+			if (
+				name == "share" ||
+				action.context != "share" ||
+				action.mobileOnly
+			)
+				return agg;
+
+			if (
+				scheme?.length &&
+				![action.scheme, action.sheet].includes(scheme)
+			)
+				return agg;
+
+			let matches =
+				!objectIsEmpty({ image, url, file, text }) ||
+				(scheme?.length && !objectIsEmpty(state));
+
+			const match = action.match;
+
+			if (_.isFunction(match)) {
+				matches = match({
+					image,
+					file,
+					url,
+					text,
+					download,
+					scheme,
+					sheet,
+					state,
+					fromClipboard,
+				});
+			} else if (
+				["image", "file", "url", "text", "download"].includes(match)
+			) {
+				matches = {
+					image,
+					file,
+					url,
+					text,
+					download,
+				}[match]?.length;
+			}
+
+			if (!matches) return agg;
+
+			const isMain = mainActionNames.includes(name);
+
+			if (isMain && incoming) return agg;
+
+			return [
+				...agg,
+				{
+					name,
+					...action,
+					main: isMain,
+				},
+			];
+		},
+		[]
+	);
+};
+
 export const extractHtmlFromComponent = (component, options = {}) => {
 	const { pretty = false, staticMarkup = false } = options;
 

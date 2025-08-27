@@ -86,14 +86,23 @@ export default function PreviewCard({
 				</div>
 
 				{(title || subtitle) && (
-					<div className="py-2 px-3">
+					<div
+						className={clsx(
+							title && subtitle ? "py-2 px-3" : "p-3"
+						)}
+					>
 						{title?.length > 0 && (
 							<h5 className="text-sm text-content font-semibold first-letter:capitalize">
 								{title}
 							</h5>
 						)}
 						{subtitle?.toString().length > 0 && (
-							<p className="text-sm line-clamp-1 opacity-75">
+							<p
+								className={clsx(
+									"text-sm opacity-75",
+									title ? "line-clamp-1" : "line-clamp-2"
+								)}
+							>
 								{subtitle}
 							</p>
 						)}

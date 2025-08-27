@@ -43,9 +43,12 @@ const urlQueryParamsAsObject = (path) => {
 	return Object.fromEntries(params);
 };
 
-const processSchemeUrl = (schemeName, path) => {
+export const processSchemeUrl = (path, schemeName) => {
 	const url = new URL(
-		path.replace(`crotchet://${schemeName}/`, "https://crotchet.app/")
+		path.replace(
+			`crotchet://${schemeName ? schemeName + "/" : ""}`,
+			"https://crotchet.app/"
+		)
 	);
 	const [scheme, slug = "get"] = [
 		...url.pathname.substring(1).split("/"),
@@ -82,14 +85,14 @@ export default async function openUrl(path) {
 	}
 
 	if (path.startsWith("crotchet://share/")) {
-		const { args } = processSchemeUrl("share", path);
+		const { args } = processSchemeUrl(path, "share");
 		return window.share(args);
 	}
 
 	if (path.startsWith("crotchet://data-source/")) {
 		const { scheme: name, slug = "get" } = processSchemeUrl(
-			"data-source",
-			path
+			path,
+			"data-source"
 		);
 		const actualSource = window.dataSources[name];
 
@@ -100,12 +103,12 @@ export default async function openUrl(path) {
 	}
 
 	if (path.startsWith("crotchet://search")) {
-		const { scheme } = processSchemeUrl("search", path);
+		const { scheme } = processSchemeUrl(path, "search");
 		return window.openPage({ type: "search", source: scheme });
 	}
 
 	if (path.startsWith("crotchet://action/")) {
-		const { scheme, args } = processSchemeUrl("action", path);
+		const { scheme, args } = processSchemeUrl(path, "action");
 		const action = window.actions[scheme];
 		if (action?.handler) return await action.handler(args);
 
@@ -113,7 +116,7 @@ export default async function openUrl(path) {
 	}
 
 	if (path.startsWith("crotchet://socket/")) {
-		const { scheme, args } = processSchemeUrl("socket", path);
+		const { scheme, args } = processSchemeUrl(path, "socket");
 		return window.socketEmit(scheme, args);
 	}
 

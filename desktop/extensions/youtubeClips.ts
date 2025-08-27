@@ -1222,6 +1222,7 @@ registerSection("recentYoutubeClips", {
 registerAction("playYoutubeClip", playClip);
 
 registerAction("addToYoutubeClips", {
+	icon: appIcon,
 	label: "Add to Youtube Clips",
 	context: "share",
 	match: ({ url }) => url?.toString().length && getYoutubeId(url),

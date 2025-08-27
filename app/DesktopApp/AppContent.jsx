@@ -5,7 +5,7 @@ import {
 	getPreference,
 	savePreference,
 	processShareData,
-	objectIsEmpty,
+	getShareActions,
 } from "@/crotchet/utils";
 import { useAppContext } from "@/crotchet/providers/AppProvider";
 
@@ -126,90 +126,12 @@ const getCommands = async () => {
 						filter: source.filter,
 						filters: source.filters,
 						listenForUpdates: source.listenForUpdates,
-						onSearch: source.search
+						onSearch: source.search,
 					}),
 			},
 			...commandProps(source, "Data Source", favorites),
 		})),
 	];
-};
-
-const getShareActions = (content = {}, actions, mainActionNames = []) => {
-	const {
-		image,
-		file,
-		url,
-		text,
-		download,
-		incoming,
-		fromClipboard,
-		scheme,
-		sheet,
-		state = {},
-	} = content;
-
-	return Object.entries((actions || window.actions) ?? {}).reduce(
-		(agg, [name, action]) => {
-			if (
-				name == "share" ||
-				action.context != "share" ||
-				action.mobileOnly
-			)
-				return agg;
-
-			if (
-				scheme?.length &&
-				![action.scheme, action.sheet].includes(scheme)
-			)
-				return agg;
-
-			let matches =
-				!objectIsEmpty({ image, url, file, text }) ||
-				(scheme?.length && !objectIsEmpty(state));
-
-			const match = action.match;
-
-			if (_.isFunction(match)) {
-				matches = match({
-					image,
-					file,
-					url,
-					text,
-					download,
-					scheme,
-					sheet,
-					state,
-					fromClipboard,
-				});
-			} else if (
-				["image", "file", "url", "text", "download"].includes(match)
-			) {
-				matches = {
-					image,
-					file,
-					url,
-					text,
-					download,
-				}[match]?.length;
-			}
-
-			if (!matches) return agg;
-
-			const isMain = mainActionNames.includes(name);
-
-			if (isMain && incoming) return agg;
-
-			return [
-				...agg,
-				{
-					name,
-					...action,
-					main: isMain,
-				},
-			];
-		},
-		[]
-	);
 };
 
 export default function AppContent() {

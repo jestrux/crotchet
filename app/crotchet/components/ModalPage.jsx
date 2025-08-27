@@ -25,6 +25,7 @@ export default function ModalPage({
 	searchable = false,
 	title: _title,
 	content: _content,
+	actionsTitle,
 	placeholder = "Search...",
 	emptyStateMessage = "Nothing in here",
 	onClose = () => {},
@@ -254,8 +255,23 @@ export default function ModalPage({
 								<PreviewCard loading={loading} {...preview} />
 							)}
 							{actions && (
-								<div className={clsx({ "scale-90": preview })}>
+								<div
+									className={clsx(
+										{
+											"scale-90":
+												preview && !actionsTitle,
+										},
+										{ "mt-6": actionsTitle }
+									)}
+								>
 									<ActionGrid
+										key={
+											actions &&
+											JSON.stringify(
+												actions.map((a) => a.name)
+											)
+										}
+										title={actionsTitle}
 										hideTrailing
 										type="inline"
 										data={actions}
@@ -272,7 +288,10 @@ export default function ModalPage({
 					<div className="h-8"></div>
 					{
 						<motion.button
-							className="bg-stone-100/80 dark:bg-card/80 backdrop-blur dark:backdrop-blur-lg fixed bottom-0 inset-x-0 mt-6 mb-8 mx-auto size-12 border border-content/20 rounded-lg flex gap-1 items-center justify-center"
+							className={clsx(
+								"bg-stone-100/80 dark:bg-card/80 backdrop-blur dark:backdrop-blur-lg fixed bottom-0 inset-x-0 mt-6 mx-auto size-12 border border-content/20 rounded-lg flex gap-1 items-center justify-center",
+								!actionsTitle ? "mb-8" : "mb-12"
+							)}
 							onClick={() => onClose()}
 							initial={{
 								opacity: 0,

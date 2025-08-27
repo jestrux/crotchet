@@ -4,6 +4,7 @@ import useSourceGet from "./useSourceGet";
 export default function useDataLoader({
 	handler,
 	onSuccess = () => {},
+	onError = () => {},
 	onUpdate = () => {},
 	listenForUpdates,
 } = {}) {
@@ -18,6 +19,7 @@ export default function useDataLoader({
 				if (!fromRefetch) onSuccess(res);
 				else onUpdate(res);
 			} catch (error) {
+				onError(error || "Unkown error!")
 				throw Error(error || "Unkown error!");
 			}
 

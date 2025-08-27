@@ -44,7 +44,7 @@ const updateDataSourceWidget = async (name, key, value) => {
 				ofKind: "CrotchetWidget",
 			});
 		} catch (error) {
-			// alert(error);
+			//
 		}
 
 		return;

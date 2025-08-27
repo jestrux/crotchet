@@ -1,21 +1,13 @@
-import { useEffect } from "react";
 import { Clipboard } from "@capacitor/clipboard";
 import { Share } from "@capacitor/share";
-import { Directory, Encoding, Filesystem } from "@capacitor/filesystem";
 import { App as CapacitorApp } from "@capacitor/app";
+import { Directory, Encoding, Filesystem } from "@capacitor/filesystem";
 import registerPlatformUtils from "@/crotchet/registerPlatformUtils";
-import { openUrl } from "@/crotchet";
-import { SendIntent } from "send-intent";
-import {
-	fetchImage,
-	getLinksFromText,
-	isValidUrl,
-	objectIsEmpty,
-} from "@/crotchet/utils";
-import { useCrotchetApp } from "@/crotchet/providers/AppProvider";
+import { dispatch, fetchImage } from "@/crotchet/utils";
 // import { Loader } from "@/crotchet/components";
 
 import CrotchetHomePage from "./CrotchetHomePage";
+import { processSchemeUrl } from "@/crotchet/open-url";
 // import AppScaffold from "@/crotchet/providers/AppScaffold";
 
 registerPlatformUtils({
@@ -97,135 +89,39 @@ registerPlatformUtils({
 	share: (payload) => Share.share(payload),
 });
 
-export default function MobileApp() {
-	const { initializing } = useCrotchetApp();
-	const handleShareIntent = async (result, fromOpen) => {
-		// window.showAlert(
-		// 	"Handle share: " + JSON.stringify({ result, fromOpen })
-		// );
-
-		if (window.shareTimeout) {
-			clearTimeout(window.shareTimeout);
-			window.shareTimeout = null;
+const setupLaunchListener = () => {
+	CapacitorApp.addListener("appUrlOpen", async (event) => {
+		if (window.appUrlOpenHandlerTimeout) {
+			clearTimeout(window.appUrlOpenHandlerTimeout);
+			window.appUrlOpenHandlerTimeout = null;
 		}
 
-		try {
-			if (!fromOpen) {
-				result = await SendIntent.checkSendIntentReceived();
+		window.appUrlOpenHandlerTimeout = setTimeout(() => {
+			const args = processSchemeUrl(event?.url)?.args;
+			window.appLaunchArgs = null;
+			if (!args) return;
 
-				if (!result.url?.length && !result.title?.length) {
-					if (window.openTimeout) {
-						clearTimeout(window.openTimeout);
-						window.openTimeout = null;
-					}
-
-					return;
-				}
-			}
-
-			let resultUrl = decodeURIComponent(result.url || result.title);
-			let [, resultType] = decodeURIComponent(result.type).split("/");
-			let payload = {
-				incoming: true,
-				type: resultType,
-			};
-			let preview = {
-				image: null,
-				title: null,
-				subtitle: null,
-			};
-
-			if (resultType == "plain") {
-				preview.subtitle = resultUrl;
-
-				if (isValidUrl(resultUrl)) payload.url = resultUrl;
-				else {
-					payload.text = resultUrl;
-					payload.url = getLinksFromText(resultUrl, true);
-				}
-			} else if (["jpg", "png"].includes(resultType)) {
-				preview.title = resultUrl.split("/").at(-1).split(".").at(0);
-				preview.subtitle = `image/${resultType}`;
-				preview.type = `image/${resultType}`;
-				var file = await Filesystem.readFile({
-					path: resultUrl,
-				}).then(
-					async (content) =>
-						`data:image/${resultType};base64,${content.data}`
-				);
-				payload.file = file;
-				preview.image = file;
-			} else if (["pdf"].includes(resultType)) {
-				preview.title = resultUrl.split("/").at(-1).split(".").at(0);
-				preview.subtitle = `document/${resultType}`;
-				payload.type = `document/${resultType}`;
-				payload.file = await Filesystem.readFile({
-					path: resultUrl,
-				}).then(
-					async (content) =>
-						`data:application/${resultType};base64,${content.data}`
-				);
-			}
-
-			if (
-				objectIsEmpty(_.pick(payload, ["text", "image", "url", "file"]))
-			)
-				return;
+			window.appLaunchArgs = args;
 
 			setTimeout(() => {
-				window.openActionSheet({
-					title: "Select an action",
-					payload,
-					preview: !objectIsEmpty(preview) ? preview : null,
-				});
-			}, 300);
-		} catch (error) {
-			window.showAlert("App launch error: " + error);
-			// alert("Share error: " + error);
-		}
+				dispatch("app-launched");
+			}, 500);
+		}, 10);
+	});
+
+	return () => {
+		CapacitorApp.removeAllListeners();
 	};
+};
 
-	// eslint-disable-next-line no-unused-vars
-	const listenForOpen = () => {
-		CapacitorApp.addListener("appUrlOpen", async (event) => {
-			const result = await SendIntent.checkSendIntentReceived();
+setupLaunchListener();
 
-			if (
-				result.url?.length ||
-				result.title?.length ||
-				result.description?.length
-			) {
-				handleShareIntent(result, true);
-				return;
-			}
+export default function MobileApp() {
+	// const { initializing } = useCrotchetApp();
 
-			if (window.openTimeout) {
-				clearTimeout(window.openTimeout);
-				window.openTimeout = null;
-			}
-
-			try {
-				window.openTimeout = setTimeout(async () => {
-					openUrl(decodeURIComponent(event.url));
-				}, 10);
-			} catch (error) {
-				// alert("Error: " + error);
-			}
-		});
-	};
-
-	useEffect(() => {
-		// listenForOpen();
-		// return () => {
-		// 	window.removeEventListener(
-		// 		"sendIntentReceived",
-		// 		handleShareIntent,
-		// 		false
-		// 	);
-		// 	CapacitorApp.removeAllListeners();
-		// };
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	// useEffect(() => {
+	// 	// eslint-disable-next-line react-hooks/exhaustive-deps
+	// }, []);
 
 	// if (initializing) return <div className="py-12" />;
 
