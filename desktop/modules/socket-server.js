@@ -13,6 +13,7 @@ const {
 } = require("./files");
 const getIp = require("../utils/getIp");
 const findLocalDevices = require("local-devices");
+const crawlUrl = require("../utils/crawlUrl");
 
 const Key = {
 	Escape: 0,
@@ -307,6 +308,18 @@ module.exports = function socketServer(server) {
 		console.log("A new user connected to socket!");
 
 		Object.keys(events).forEach((key) => socket.on(key, events[key]));
+
+		socket.on("remote-action", async ({ _id, action, payload }) => {
+			let response = {
+				_id,
+				action,
+				payload,
+			};
+
+			if (action == "crawl") response = await crawlUrl(payload);
+
+			socket.emit(`remote-action-response-${_id}`, response);
+		});
 	});
 
 	ipcMain.on("socket-broadcast", (_, { event, payload }) =>
@@ -327,7 +340,7 @@ module.exports = function socketServer(server) {
 	ipcMain.handle("get-scripts", () => crotchetApp.getScripts());
 
 	ipcMain.handle("read-file", (_, payload) => readFile(payload));
-	
+
 	ipcMain.handle("file-stats", (_, payload) => fileStats(payload));
 
 	ipcMain.handle("write-file", (_, payload) => writeFile(payload));

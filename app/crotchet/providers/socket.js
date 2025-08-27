@@ -6,6 +6,8 @@ import { dispatch, onDesktop, onDesktopInitialize } from "../utils";
 const getSocket = () => {
 	return new Promise((resolve, reject) => {
 		try {
+			// if (window.socket?.connected) return window.socket;
+
 			getDoc(doc(db, "__crotchet", "desktop")).then((res) => {
 				const url = res.data().socket;
 				const _socket = io(url);
@@ -15,6 +17,7 @@ const getSocket = () => {
 				}, 2000);
 
 				_socket.on("connect", () => {
+					window.desktopUrl = url;
 					clearTimeout(ackTimeout);
 					resolve(_socket);
 				});
@@ -47,10 +50,13 @@ const getSocket = () => {
 		return;
 	}
 
+	window.getSocket = getSocket;
+
 	if (!window.socket?.connected) {
 		getSocket()
 			.then((_socket) => {
 				window.socket = _socket;
+
 				dispatch("socket-connected");
 
 				_socket.on("disconnect", function () {
@@ -61,6 +67,28 @@ const getSocket = () => {
 					console.log("Socket emit: ", event, payload);
 					_socket.emit(event, payload);
 				};
+
+				window.remoteSocketAction = (action, payload) => {
+					const _id = window.randomId("remoteAction");
+					console.log("Remote socket action: ", _id, action, payload);
+
+					const ref = `remote-action-response-${_id}`;
+					return new Promise((res) => {
+						const handler = async (data) => {
+							_socket.off(ref);
+							res(data);
+						};
+
+						_socket.on(ref, handler);
+
+						_socket.emit("remote-action", { _id, action, payload });
+					});
+				};
+
+				_socket.on("disconnect", () => {
+					window.socketEmit = null;
+					window.remoteSocketAction = null;
+				});
 			})
 			.catch((e) => {
 				console.log(e);

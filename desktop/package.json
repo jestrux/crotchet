@@ -23,6 +23,7 @@
 		"electron-is-dev": "^3.0.1",
 		"express": "^4.18.3",
 		"local-devices": "^4.0.0",
+		"node-html-parser": "^7.0.1",
 		"socket.io": "^4.7.4"
 	},
 	"build": {

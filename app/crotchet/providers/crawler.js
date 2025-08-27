@@ -1,5 +1,17 @@
 import { cleanObject, withCache } from "@/crotchet/utils";
 
+const getLinkPreview = async (url) => {
+	const response = await fetch(`https://api.linkpreview.net/?q=${url}`, {
+		headers: {
+			"X-Linkpreview-Api-Key": "b7fc8791125983bdf0b831273964f8b1",
+		},
+	}).then((res) => res.json());
+
+	if (!response.error) return response;
+
+	return null;
+};
+
 async function processWebsite(url, name) {
 	const content = await withCache(
 		name || url.substring(0, 50),
@@ -82,13 +94,8 @@ async function processWebsite(url, name) {
 	};
 
 	if (!meta.image || !meta.description || !meta.title) {
-		const response = await fetch(`https://api.linkpreview.net/?q=${url}`, {
-			headers: {
-				"X-Linkpreview-Api-Key": "b7fc8791125983bdf0b831273964f8b1",
-			},
-		}).then((res) => res.json());
-
-		if (!response.error) meta = response;
+		const response = await getLinkPreview();
+		if (response) meta = response;
 	}
 
 	return {
@@ -98,14 +105,50 @@ async function processWebsite(url, name) {
 }
 
 export const getWebsiteInfo = async (url, name) => {
-	var res = await withCache(
-		name || url.substring(0, 50),
-		fetch(
-			`https://us-central1-letterplace-c103c.cloudfunctions.net/api/crawl/${encodeURIComponent(
-				url
-			)}`
-		).then((res) => res.json())
-	);
+	const formatResponse = async (res) => {
+		let meta = res?.meta;
+
+		if (!meta?.image || !meta?.description || !meta?.title) {
+			const response = await getLinkPreview();
+			if (response) meta = response;
+		}
+
+		if (meta) {
+			res.meta = cleanObject(meta);
+			res.meta.subtitle = res.meta.description;
+		}
+
+		return res;
+	};
+
+	let baseUrl =
+		"https://us-central1-letterplace-c103c.cloudfunctions.net/api";
+	if (!window.onDesktop()) {
+		try {
+			await window.getSocket();
+			// baseUrl = window.desktopUrl;
+			if (window.remoteSocketAction) {
+				const res = await window.remoteSocketAction("crawl", url);
+				// .then((data) => {
+				// 	alert(JSON.stringify({ meta: data?.meta }));
+				// });
+				return formatResponse(res);
+			}
+		} catch (error) {
+			//
+		}
+	}
+
+	// var res = await withCache(
+	// 	name || url.substring(0, 50),
+	// 	fetch(`${baseUrl}/crawl/${encodeURIComponent(url)}`).then((res) =>
+	// 		res.json()
+	// 	)
+	// );
+	const crawlUrl = `${baseUrl}/crawl/${encodeURIComponent(url)}`;
+	await window.copyToClipboard(crawlUrl);
+
+	var res = fetch(crawlUrl).then((res) => res.json());
 
 	try {
 		res = JSON.parse(res);
@@ -113,17 +156,14 @@ export const getWebsiteInfo = async (url, name) => {
 		//
 	}
 
-	if (res?.meta) {
-		res.meta = cleanObject(res.meta);
-		res.meta.subtitle = res.meta.description;
-	}
-
-	return res;
+	return formatResponse(res);
 };
 
 export const crawlUrl = async (url, matcher) => {
-	// const res = await getWebsiteInfo(url);
-	const res = await processWebsite(url);
+	let res;
+
+	if (window.onDesktop()) res = await processWebsite(url);
+	else res = await getWebsiteInfo(url);
 
 	if (!matcher) return res;
 

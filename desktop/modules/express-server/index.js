@@ -1,21 +1,22 @@
 const express = require("express");
 const fs = require("fs");
+// const path = require("path");
+// const https = require("https");
 const http = require("http");
-const getIp = require("../utils/getIp");
+const getIp = require("../../utils/getIp");
+const crawlRouter = require("./crawl");
 
 module.exports = function expressServer() {
-	// const key = fs.readFileSync(appDir("cert/key.pem"));
-	// const cert = fs.readFileSync(appDir("cert/cert.pem"));
+	const expressApp = express();
+	const server = http.createServer(expressApp);
 	// const server = https.createServer(
 	// 	{
-	// 		key,
-	// 		cert,
+	// 		key: fs.readFileSync(path.resolve(__dirname, "cert/server.key")),
+	// 		cert: fs.readFileSync(path.resolve(__dirname, "cert/server.cert")),
 	// 		passphrase: "crotchet",
 	// 	},
 	// 	expressApp
 	// );
-	const expressApp = express();
-	const server = http.createServer(expressApp);
 
 	expressApp.set("views", buildDir());
 
@@ -56,6 +57,8 @@ module.exports = function expressServer() {
 			}),
 		});
 	});
+
+	expressApp.use("/crawl", crawlRouter);
 
 	return server;
 };
