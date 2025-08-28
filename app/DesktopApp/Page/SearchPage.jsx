@@ -72,6 +72,8 @@ export default function SearchPage() {
 		onDataUpdated,
 		onClick,
 		onEscape,
+		onNavigateLeft,
+		onNavigateRight,
 		onNavigateDown,
 		onNavigateUp,
 		onSearch,
@@ -176,6 +178,8 @@ export default function SearchPage() {
 	};
 
 	const navigate = (value) => {
+		if (["left", "right"].includes(value) && !grid) return;
+
 		const container = getContainer();
 		const scrollArea = container.querySelector("#scrollArea");
 
@@ -193,11 +197,22 @@ export default function SearchPage() {
 		);
 
 		if (!value) value = values[0];
-		else if (["up", "down"].includes(value)) {
+		else if (["up", "down", "left", "right"].includes(value)) {
 			let index = values.findIndex((value) => value === activeChoice);
 
 			if (index == -1) index = 0;
-			else if (value == "down")
+			else if (grid) {
+				const rows = Math.floor(options.length / columns);
+				const column = index % columns;
+				const row = Math.floor(index / columns);
+
+				if (value == "right" && column < columns - 1) index++;
+				if (value == "left" && column > 0) index--;
+				if (value == "down" && row < rows - 1)
+					index = Math.min(index + columns, options.length - 1);
+				if (value == "up" && row > 0)
+					index = Math.max(index - columns, 0);
+			} else if (value == "down")
 				index = index == options.length - 1 ? 0 : index + 1;
 			else if (value == "up")
 				index = index == 0 ? options.length - 1 : (index = index - 1);
@@ -292,6 +307,10 @@ export default function SearchPage() {
 
 		setTimeout(() => navigate(newSelection));
 	});
+
+	onNavigateLeft(() => navigate("left"));
+
+	onNavigateRight(() => navigate("right"));
 
 	onNavigateDown(() => navigate("down"));
 

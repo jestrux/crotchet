@@ -203,6 +203,16 @@ export default function useAppPages() {
 		action: () => dispatch(`navigate-up-${getCurrentPageId()}`),
 	});
 
+	useKeyDetector({
+		key: "ArrowLeft",
+		action: () => dispatch(`navigate-left-${getCurrentPageId()}`),
+	});
+
+	useKeyDetector({
+		key: "ArrowRight",
+		action: () => dispatch(`navigate-right-${getCurrentPageId()}`),
+	});
+
 	useOnInit(() => {
 		setTimeout(() => dispatch("open-root"), 300);
 	});

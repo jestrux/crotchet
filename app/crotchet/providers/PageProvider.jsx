@@ -52,6 +52,8 @@ const PageContext = createContext({
 	onChangeFilter: () => {},
 	onFilterChanged: () => {},
 	onSecondaryActionClick: () => {},
+	onNavigateLeft: () => {},
+	onNavigateRight: () => {},
 	onNavigateDown: () => {},
 	onNavigateUp: () => {},
 	contextInfo: {},
@@ -125,6 +127,12 @@ export default function PageProvider({
 	};
 	const navigateUpHandler = useRef(() => {});
 	const onNavigateUp = (callback) => (navigateUpHandler.current = callback);
+	const navigateLeftHandler = useRef(() => {});
+	const onNavigateLeft = (callback) =>
+		(navigateLeftHandler.current = callback);
+	const navigateRightHandler = useRef(() => {});
+	const onNavigateRight = (callback) =>
+		(navigateRightHandler.current = callback);
 
 	const [loadingFromSearch, setLoadingFromSearch] = useState(false);
 	const { refetch, loading } = useDataLoader({
@@ -291,6 +299,16 @@ export default function PageProvider({
 		pageInFocus(() => {
 			if (page.type == "form") mainActionClickHandler.current();
 		})
+	);
+
+	useEventListener(
+		"navigate-left-" + page?._id,
+		pageInFocus(navigateLeftHandler.current)
+	);
+
+	useEventListener(
+		"navigate-right-" + page?._id,
+		pageInFocus(navigateRightHandler.current)
 	);
 
 	useEventListener(
@@ -484,6 +502,8 @@ export default function PageProvider({
 					onMainActionClick,
 					onNavigateDown,
 					onNavigateUp,
+					onNavigateLeft,
+					onNavigateRight,
 					get contextInfo() {
 						return contextInfo;
 					},
