@@ -1,6 +1,6 @@
-const { parse } = require("node-html-parser");
+import { parse } from "node-html-parser";
 
-async function processWebsite(url, content) {
+async function processWebsite(url: string, content: string) {
 	const div = parse(content);
 
 	const ogImage = div
@@ -75,19 +75,22 @@ async function processWebsite(url, content) {
 	};
 
 	if (!res.image || !res.description || !res.title) {
-		const response = await fetch(`https://api.linkpreview.net/?q=${url}`, {
-			headers: {
-				"X-Linkpreview-Api-Key": "b7fc8791125983bdf0b831273964f8b1",
-			},
-		}).then((res) => res.json());
+		const response: typeof res & { error: string } = await fetch(
+			`https://api.linkpreview.net/?q=${url}`,
+			{
+				headers: {
+					"X-Linkpreview-Api-Key": "b7fc8791125983bdf0b831273964f8b1",
+				},
+			}
+		).then((res) => res.json());
 
-		if (!response.error) res = response;
+		if (!response.error) res = response as typeof res;
 	}
 
 	return res;
 }
 
-const getYoutubeId = (url) => {
+const getYoutubeId = (url: string) => {
 	if (!url?.length) return null;
 
 	return url.match(
@@ -96,12 +99,13 @@ const getYoutubeId = (url) => {
 	)?.[1];
 };
 
-const crawlUrl = async (url) => {
+export default async function crawlUrl(url: string) {
 	try {
 		url = decodeURIComponent(url);
 	} catch (e) {
 		//
 	}
+
 	if (!url.startsWith("http")) url = `https://${url}`;
 	const response = await fetch(url);
 	const data = await response.text();
@@ -109,13 +113,13 @@ const crawlUrl = async (url) => {
 
 	const youtubeId = getYoutubeId(url);
 	if (youtubeId)
-		meta.video = `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
+		(
+			meta as typeof meta & { video: string }
+		).video = `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
 
 	return {
 		url,
 		data,
 		meta,
 	};
-};
-
-module.exports = crawlUrl;
+}

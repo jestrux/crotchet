@@ -1,0 +1,22 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "backend",
+	"main": "src/worker.tsx",
+	"compatibility_date": "2025-05-07",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"assets": {
+		"binding": "ASSETS"
+	},
+	"observability": {
+		"enabled": true
+	},
+	"vars": {},
+	"kv_namespaces": [
+		{
+			"binding": "KV",
+			"id": "faa276efddf546119207fa1f5ea5dded"
+		}
+	],
+}

@@ -19,7 +19,7 @@ function getIp() {
 		}
 	}
 
-	return results.en0[0];
+	return results?.en0?.[0] ?? null;
 }
 
 const capacitorConfig = {
