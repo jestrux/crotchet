@@ -66,11 +66,12 @@ const createMainWindow = () => {
 
 	if (isDev) {
 		try {
-			const openDevTools = true;
+			const openDevTools = false;
 			if (openDevTools) {
-				mainWindow.webContents.openDevTools({ mode: "detach" });
-				// mainWindow.webContents.openDevTools();
-				setTimeout(() => crotchetApp.toggleWindow(true), 500);
+				setTimeout(() => {
+					mainWindow.webContents.openDevTools({ mode: "detach" });
+					setTimeout(() => crotchetApp.toggleWindow(true), 500);
+				});
 			}
 			mainWindow.webContents.executeJavaScript(
 				openDevTools
