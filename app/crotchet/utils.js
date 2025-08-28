@@ -135,37 +135,49 @@ export const removeToken = async (key) =>
 export const withCache = async (
 	name,
 	promise,
-	{ invalidate, onChange = () => {} } = {}
+	{ invalidate, cacheDuration, onChange = () => {} } = {}
 ) => {
-	let value = await getFromCache(name);
+	let value = await getFromCache(name, { invalidate });
 	const cacheAndReturn = () =>
-		promise.then((res) => {
+		promise().then((res) => {
 			if (res) {
-				cache(name, res);
+				cache(name, res, { duration: cacheDuration });
 				onChange(res);
 			}
 			return res;
 		});
 
 	if (!value) value = await cacheAndReturn();
-	else if (invalidate) cacheAndReturn();
 
-	await someTime();
+	await someTime(20);
 	return value;
 };
 
-export const getFromCache = async (key) => {
+export const getFromCache = async (key, { invalidate } = {}) => {
 	try {
-		return await window.readFile({ name: `__cache/${key}` });
+		const expiresAt = await window.readFile({
+			name: `__cache_expirations/${key}`,
+		});
+		const contents = await window.readFile({ name: `__cache/${key}` });
+		const now = Date.now();
+		if (expiresAt && now && expiresAt - now <= 0) invalidate = true;
+
+		if (invalidate) return null;
+
+		return contents;
 	} catch (error) {
 		//
 	}
 };
 
-export const cache = async (key, value) => {
+export const cache = async (key, value, { duration = 60 } = {}) => {
 	try {
 		if (!value) return value;
 		await saveFile({ name: `__cache/${key}` }, value);
+		await saveFile(
+			{ name: `__cache_expirations/${key}` },
+			Date.now() + duration * 1000
+		);
 		return value;
 	} catch (error) {
 		//
@@ -237,12 +249,13 @@ export const loadExternalAsset = async (url, { name, type, defer } = {}) => {
 		try {
 			const contents = await withCache(
 				name,
-				new Promise((resolve, reject) =>
-					fetch(url)
-						.then((res) => res.text())
-						.then(resolve)
-						.catch(reject)
-				)
+				() =>
+					new Promise((resolve, reject) =>
+						fetch(url)
+							.then((res) => res.text())
+							.then(resolve)
+							.catch(reject)
+					)
 			);
 
 			const asset = document.createElement(isCss ? "style" : "script");
@@ -606,17 +619,95 @@ export const isReactComponent = (child) => {
 };
 
 export const isValidUrl = (urlString) => {
-	const urlPattern = new RegExp(
-		"^(https?:\\/\\/)?" + // validate protocol
-			"((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // validate domain name
-			"((\\d{1,3}\\.){3}\\d{1,3}))" + // validate OR ip (v4) address
-			"(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // validate port and path
-			"(\\?[;&a-z\\d%_.~+=-]*)?" + // validate query string
-			"(\\#[-a-z\\d_]*)?$",
-		"i"
-	); // validate fragment locator
+	try {
+		new URL(urlString);
+		return true;
+	} catch (error) {
+		//
+	}
+	return false;
+	// const urlPattern = new RegExp(
+	// 	"^(https?:\\/\\/)?" + // validate protocol
+	// 		"((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // validate domain name
+	// 		"((\\d{1,3}\\.){3}\\d{1,3}))" + // validate OR ip (v4) address
+	// 		"(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // validate port and path
+	// 		"(\\?[;&a-z\\d%_.~+=-]*)?" + // validate query string
+	// 		"(\\#[-a-z\\d_]*)?$",
+	// 	"i"
+	// ); // validate fragment locator
 
-	return !!urlPattern.test(urlString);
+	// return !!urlPattern.test(urlString);
+};
+
+export const createPreviewImage = (props, returnType = "dataUrl") => {
+	const {
+		width = 800,
+		// height = 600,
+		height = 400,
+		background = "#0d1a4d",
+		color = "#ffffff",
+		text,
+		icon,
+	} = props ?? {};
+	return new Promise((resolve) => {
+		const canvas = document.createElement("canvas");
+		canvas.width = width;
+		canvas.height = height;
+		const ctx = canvas.getContext("2d");
+
+		// Draw background
+		ctx.fillStyle = background;
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+		if (icon) {
+			const { path, viewBox = 24 } =
+				typeof icon == "object"
+					? icon
+					: {
+							path: icon,
+					  };
+			// Draw globe icon directly using path
+			ctx.save();
+			const iconSize = 100;
+			ctx.translate(
+				canvas.width / 2 - iconSize / 2,
+				canvas.height / 2 - iconSize / 2
+			);
+			ctx.scale(iconSize / viewBox, iconSize / viewBox);
+			ctx.fillStyle = color;
+			const pathEl = new Path2D(path);
+			ctx.fill(pathEl);
+			ctx.restore();
+		} else if (text) {
+			// Add centered text for non-URL formats
+			ctx.fillStyle = color;
+			ctx.font = "bold 98px Courier";
+			ctx.textAlign = "center";
+			ctx.textBaseline = "middle";
+			ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+		}
+
+		if (returnType == "blob") return canvas.toBlob(resolve, "image/png");
+		resolve(canvas.toDataURL());
+	});
+};
+
+// Old: https://us-central1-letterplace-c103c.cloudfunctions.net/api;
+export const getBackendBaseUrl = () => import.meta.env.VITE_BACKEND_BASE_URL;
+
+export const kv = async (key, value) => {
+	const getting = typeof value == "undefined";
+	return await fetch(`${getBackendBaseUrl()}/kv/${key}`, {
+		headers: {
+			Accept: "application/json",
+		},
+		method: getting ? "GET" : "POST",
+		body: getting
+			? null
+			: JSON.stringify({
+					value,
+			  }),
+	}).then(async (res) => (await res.json())?.value);
 };
 
 export const isValidEmail = (email) =>

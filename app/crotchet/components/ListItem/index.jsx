@@ -205,6 +205,7 @@ export default function RegularListItem({
 
 		if (actions?.length) {
 			return window.openActionSheet({
+				fullScreen: true,
 				preview: {
 					image,
 					video,

@@ -13,6 +13,7 @@ global.crotchetApp = crotchetApp;
 const expressServer = require("./modules/express-server");
 const socketServer = require("./modules/socket-server");
 const getIp = require("./utils/getIp");
+const { kv } = require("./utils/backend");
 const server = expressServer();
 
 socketServer(server);
@@ -41,34 +42,49 @@ const createMainWindow = () => {
 
 	mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 	// mainWindow.setHiddenInMissionControl(true);
-	mainWindow.webContents.executeJavaScript(
-		/*js*/ `
-			localStorage.__onDesktop = true;
-			localStorage.__floatingWindow = false;
-			localStorage.__dataSocketUrl = 'http://${getIp()}:3127';
-		`,
-		true
-	);
 
-	if (isDev) {
-		const openDevTools = false;
-		if (openDevTools) {
-			mainWindow.webContents.openDevTools({ mode: "detach" });
-			setTimeout(() => crotchetApp.toggleWindow(true), 500);
-		}
+	let lastIpAddress;
+	const syncBaseUrl = () => {
+		const ipAddress = getIp();
+		if (lastIpAddress == ipAddress) return;
+		lastIpAddress = ipAddress;
+
+		const socketUrl = `http://${getIp()}:3127`;
+		kv("__desktopBaseUrl", socketUrl);
 		mainWindow.webContents.executeJavaScript(
-			openDevTools
-				? "localStorage.openDevTools = true"
-				: "localStorage.removeItem('openDevTools')",
+			/*js*/ `
+				localStorage.__onDesktop = true;
+				localStorage.__floatingWindow = false;
+				localStorage.__dataSocketUrl = '${socketUrl}';
+			`,
 			true
 		);
+	};
 
-		mainWindow.loadURL("http://localhost:5170/");
+	setInterval(syncBaseUrl, 5000);
+	syncBaseUrl();
 
+	if (isDev) {
 		try {
+			const openDevTools = true;
+			if (openDevTools) {
+				mainWindow.webContents.openDevTools({ mode: "detach" });
+				// mainWindow.webContents.openDevTools();
+				setTimeout(() => crotchetApp.toggleWindow(true), 500);
+			}
+			mainWindow.webContents.executeJavaScript(
+				openDevTools
+					? "localStorage.openDevTools = true"
+					: "localStorage.removeItem('openDevTools')",
+				true
+			);
+
+			mainWindow.loadURL("http://localhost:5170/");
+
 			require("electron-reloader")(module);
-		} catch {
+		} catch (e) {
 			//
+			console.log("Launch error: ", e);
 		}
 	} else {
 		mainWindow.loadFile(buildDir("index.html"));

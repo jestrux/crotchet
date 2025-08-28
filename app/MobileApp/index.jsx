@@ -44,17 +44,29 @@ registerPlatformUtils({
 		}
 	},
 	getFile: (props) => {
-		console.log(props);
+		console.log("Get file: ", props);
 	},
-	readFile: async (props) => {
+	readFile: async (props, withStats) => {
 		try {
-			var res = await Filesystem.readFile({
+			var stats;
+			var options = {
 				path: props.name || props.path,
 				directory: Directory.Documents,
 				encoding: Encoding.UTF8,
-			});
+			};
 
-			let contents = res?.data;
+			if (withStats) {
+				stats = await Filesystem.stat(options);
+				stats = !stats
+					? {}
+					: {
+							...stats,
+							createdAt: stats.ctime,
+							updatedAt: stats.mtime,
+					  };
+			}
+
+			let contents = (await Filesystem.readFile(options))?.data;
 
 			if (contents?.length) {
 				try {
@@ -64,9 +76,16 @@ registerPlatformUtils({
 				}
 			}
 
+			if (withStats)
+				return {
+					stats,
+					contents,
+				};
+
 			return contents;
 		} catch (error) {
 			// window.showToast("Read file failed: " + error);
+			// console.log("Error reading file: ", error);
 		}
 	},
 	// readNetworkFile: async (url) => {
@@ -82,8 +101,7 @@ registerPlatformUtils({
 				recursive: true,
 			});
 		} catch (error) {
-			//
-			console.log("Write file error: ", error);
+			// console.log("Write file error: ", error);
 		}
 	},
 	share: (payload) => Share.share(payload),

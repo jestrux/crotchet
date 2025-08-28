@@ -44,6 +44,8 @@ const fileStats = ({ path, folder, name }) =>
 				err
 					? null
 					: {
+							...data,
+							createdAt: data.ctime,
 							updatedAt: data.mtime,
 					  }
 			)
@@ -60,6 +62,20 @@ const readFile = ({ path, folder, name }) =>
 
 		fs.readFile(actualPath, "utf8", (err, data) => res(err ? null : data));
 	});
+
+const readFileWithStats = async (props) =>
+	await Promise.all([readFile(props), fileStats(props)]).then(
+		([contents, stats]) => ({
+			contents,
+			stats: !stats
+				? {}
+				: {
+						size: stats.size,
+						createdAt: stats.ctimeMs,
+						updatedAt: stats.mtimeMs,
+				  },
+		})
+	);
 
 const getFile = ({ read, properties = [] }) =>
 	new Promise((res) =>
@@ -154,6 +170,7 @@ module.exports = {
 	getWriteableFile,
 	readDir,
 	readFile,
+	readFileWithStats,
 	fileStats,
 	readNetworkFile,
 	writeFile,

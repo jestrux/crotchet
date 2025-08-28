@@ -106,15 +106,17 @@ if (utils.onDesktop()) {
 	});
 } else {
 	setTimeout(() => {
-		utils.getFromCache("__crotchetExtensions").then((res) => {
-			installExtensions(res);
-
-			firebaseUtils.watchDb("__crotchetExtensions", (res) => {
+		utils
+			.withCache(
+				"__crotchetExtensions",
+				() => firebaseUtils.queryDb("__crotchetExtensions"),
+				{
+					cacheDuration: 20,
+				}
+			)
+			.then((res) => {
 				installExtensions(res);
-				utils.cache("__crotchetExtensions", res);
 			});
-		});
-
 		firebaseUtils.watchDb("__crotchetDevExtensions", installExtensions);
 	}, 500);
 }

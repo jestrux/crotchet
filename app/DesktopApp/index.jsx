@@ -100,13 +100,19 @@ registerPlatformUtils({
 			dispatch("read-network-file", [ref, { url, ...props }]);
 		});
 	},
-	readFile: (props) => {
+	readFile: (props, withStats) => {
 		const key = "readFile" + window.randomId();
 
 		return new Promise((res) => {
 			var handler = async (e) => {
 				window.removeEventListener(`read-file-${key}`, handler);
-				let contents = e.detail;
+				
+				const response = e.detail;
+				let contents = response, stats;
+				if (withStats) {
+					stats = response.stats;
+					contents = response.contents;
+				}
 
 				if (contents?.length) {
 					try {
@@ -116,12 +122,12 @@ registerPlatformUtils({
 					}
 				}
 
-				res(contents);
+				res(withStats ? { contents, stats } : contents);
 			};
 
 			window.addEventListener(`read-file-${key}`, handler);
 
-			dispatch("read-file", { key, ...props });
+			dispatch("read-file", { key, ...props, withStats });
 		});
 	},
 	writeFile: (props = {}, contents, { folder, open } = {}) => {

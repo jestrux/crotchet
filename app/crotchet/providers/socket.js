@@ -1,15 +1,13 @@
-import { doc, getDoc, setDoc } from "firebase/firestore";
 import { io } from "socket.io-client";
-import { db } from "./firebase";
-import { dispatch, onDesktop, onDesktopInitialize } from "../utils";
+import { dispatch, kv, onDesktop } from "../utils";
 
 const getSocket = () => {
 	return new Promise((resolve, reject) => {
 		try {
 			// if (window.socket?.connected) return window.socket;
-
-			getDoc(doc(db, "__crotchet", "desktop")).then((res) => {
-				const url = res.data().socket;
+			// getDoc(doc(db, "__crotchet", "desktop")).then((res) => {
+			// 	const url = res.data().socket;
+			kv("__desktopBaseUrl").then((url) => {
 				const _socket = io(url);
 				const ackTimeout = setTimeout(() => {
 					_socket.close();
@@ -30,17 +28,16 @@ const getSocket = () => {
 };
 
 (async () => {
-	const _socketUrl = localStorage.__dataSocketUrl;
-
 	if (onDesktop()) {
-		const { isFloatingWindow } = await onDesktopInitialize();
-		if (!isFloatingWindow) {
-			setDoc(
-				doc(db, "__crotchet", "desktop"),
-				{ socket: _socketUrl },
-				{ merge: true }
-			);
-		}
+		// const _socketUrl = localStorage.__dataSocketUrl;
+		// const { isFloatingWindow } = await onDesktopInitialize();
+		// if (!isFloatingWindow) {
+		// 	setDoc(
+		// 		doc(db, "__crotchet", "desktop"),
+		// 		{ socket: _socketUrl },
+		// 		{ merge: true }
+		// 	);
+		// }
 		window.socketEmit = (event, payload) =>
 			window.dispatch("socket-emit", {
 				event,
@@ -65,6 +62,9 @@ const getSocket = () => {
 
 				window.socketEmit = (event, payload) => {
 					console.log("Socket emit: ", event, payload);
+					// window.showActionSheetAlert(
+					// 	"Socket emit at: " + window.window.desktopUrl
+					// );
 					_socket.emit(event, payload);
 				};
 

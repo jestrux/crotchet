@@ -1,4 +1,4 @@
-import { cleanObject, withCache } from "@/crotchet/utils";
+import { cleanObject, getBackendBaseUrl, withCache } from "@/crotchet/utils";
 
 const getLinkPreview = async (url) => {
 	const response = await fetch(`https://api.linkpreview.net/?q=${url}`, {
@@ -105,55 +105,55 @@ async function processWebsite(url, name) {
 }
 
 export const getWebsiteInfo = async (url, name) => {
-	const formatResponse = async (res) => {
-		let meta = res?.meta;
+	const getInfo = async () => {
+		const formatResponse = async (res) => {
+			let meta = res?.meta;
 
-		if (!meta?.image || !meta?.description || !meta?.title) {
-			const response = await getLinkPreview();
-			if (response) meta = response;
+			if (!meta?.image || !meta?.description || !meta?.title) {
+				const response = await getLinkPreview();
+				if (response) meta = response;
+			}
+
+			if (meta) {
+				res.meta = cleanObject(meta);
+				res.meta.subtitle = res.meta.description;
+			}
+
+			return res;
+		};
+
+		let baseUrl = getBackendBaseUrl();
+		if (!window.onDesktop()) {
+			try {
+				await window.getSocket();
+				if (window.remoteSocketAction) {
+					const res = await window.remoteSocketAction("crawl", url);
+					return formatResponse(res);
+				}
+			} catch (error) {
+				//
+			}
 		}
 
-		if (meta) {
-			res.meta = cleanObject(meta);
-			res.meta.subtitle = res.meta.description;
+		let res;
+		const crawlUrl = `${baseUrl}/crawl/${encodeURIComponent(url)}`;
+		try {
+			// await window.copyToClipboard(crawlUrl);
+			res = await fetch(crawlUrl).then((res) => res.json());
+			try {
+				res = JSON.parse(res);
+			} catch (error) {
+				//
+			}
+			res = formatResponse(res);
+		} catch (error) {
+			//
 		}
 
 		return res;
 	};
 
-	let baseUrl =
-		"https://us-central1-letterplace-c103c.cloudfunctions.net/api";
-	if (!window.onDesktop()) {
-		try {
-			await window.getSocket();
-			// baseUrl = window.desktopUrl;
-			if (window.remoteSocketAction) {
-				const res = await window.remoteSocketAction("crawl", url);
-				return formatResponse(res);
-			}
-		} catch (error) {
-			//
-		}
-	}
-
-	// var res = await withCache(
-	// 	name || url.substring(0, 50),
-	// 	fetch(`${baseUrl}/crawl/${encodeURIComponent(url)}`).then((res) =>
-	// 		res.json()
-	// 	)
-	// );
-	const crawlUrl = `${baseUrl}/crawl/${encodeURIComponent(url)}`;
-	await window.copyToClipboard(crawlUrl);
-
-	var res = fetch(crawlUrl).then((res) => res.json());
-
-	try {
-		res = JSON.parse(res);
-	} catch (error) {
-		//
-	}
-
-	return formatResponse(res);
+	return await withCache(name || url.substring(0, 50), getInfo);
 };
 
 export const crawlUrl = async (url, matcher) => {
