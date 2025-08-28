@@ -11,7 +11,7 @@ export default function RemotePageController({ page, onClose }) {
 	);
 
 	return (
-		<div className="py-3.5 px-3 pb-6">
+		<div className="py-3.5 px-3 pb-7">
 			<div className="grid grid-cols-3 gap-2">
 				{page.actions.map((action, index) => (
 					<button

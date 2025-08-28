@@ -24,9 +24,10 @@ export default function Sheet({
 	children,
 	ignoreSafeArea = false,
 	showOverlayBg = true,
+	fullWidth = false,
 	noHeading = false,
 	inset = true,
-	dismissible = true,
+	dismissible: _dismissible,
 	sortable = false,
 	selectable = false,
 	editable = false,
@@ -203,6 +204,8 @@ export default function Sheet({
 
 	const onlg = onScreenSize("lg");
 	const isMultiSelect = selectable == "multiple";
+	const dismissible =
+		_dismissible ?? (!sortable && !isMultiSelect && !(inset || !noHeading));
 
 	return (
 		<Portal>
@@ -235,7 +238,7 @@ export default function Sheet({
 						inset &&
 							noHeading &&
 							(loadingShareActions ? "" : "min-w-[200px]"),
-						inset && noHeading
+						inset && noHeading && !fullWidth
 							? "w-[max-content] mb-8"
 							: "w-full max-w-lg"
 					)}
@@ -271,12 +274,7 @@ export default function Sheet({
 						duration: 0.2,
 					}}
 					drag="y"
-					dragListener={
-						dismissible &&
-						!sortable &&
-						!isMultiSelect &&
-						!(inset || !noHeading)
-					}
+					dragListener={dismissible}
 					dragControls={controls}
 					dragConstraints={{
 						top: 0,

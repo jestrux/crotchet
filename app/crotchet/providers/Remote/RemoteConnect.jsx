@@ -56,12 +56,9 @@ export default function RemoteConnect() {
 		);
 
 		return () => {
-			window.socket?.off("remote-page-changed", handleRemotePageChanged);
-			window.socket?.off("remote-page-closed", handleRemotePageClosed);
-			window.socket?.off(
-				"open-remote-page-controller",
-				handleOpenRemotePageController
-			);
+			window.socket?.off("remote-page-changed");
+			window.socket?.off("remote-page-closed");
+			window.socket?.off("open-remote-page-controller");
 		};
 	}, [socketConnected]);
 

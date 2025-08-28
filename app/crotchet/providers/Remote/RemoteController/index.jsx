@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import useRemote from "../useRemote";
 import clsx from "clsx";
-import { useEventListener } from "@/crotchet/hooks";
-import { onScreenSize } from "@/crotchet/utils";
 
 export default function RemoteController({ flat = false, onClose }) {
 	const { pages, openPage, onAction } = useRemote();
@@ -29,14 +27,6 @@ export default function RemoteController({ flat = false, onClose }) {
 		const page = pages?.find((p) => p._id == activePage?._id);
 		if (!page) setActivePage(null);
 	}, [pages, activePage]);
-
-	useEventListener("open-remote-page-controller", (_, pageId) => {
-		if (!onScreenSize("lg")) return;
-
-		const page = (pages || []).find(({ _id }) => _id == pageId);
-
-		if (page) setActivePage(page);
-	});
 
 	const handleRemoteAction = (action, page) => onAction(action, page);
 

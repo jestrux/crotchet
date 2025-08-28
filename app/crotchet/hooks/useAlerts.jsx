@@ -336,7 +336,7 @@ export default function useAlerts() {
 			alert.callback = (data) => resolve(oldCallback(data));
 		});
 
-		const id = randomId();
+		const id = alert.id || randomId();
 
 		alert = {
 			...alert,
@@ -352,7 +352,7 @@ export default function useAlerts() {
 
 		setAlerts((alerts) => {
 			const currentValue = !alert.replace
-				? alerts
+				? alerts.filter(({ id }) => id !== alert.id)
 				: alerts.filter(({ id }) => id !== alerts.at(-1)?.id);
 
 			const newValue = [...currentValue, alert];
