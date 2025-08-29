@@ -117,6 +117,12 @@ if (utils.onDesktop()) {
 			.then((res) => {
 				installExtensions(res);
 			});
-		firebaseUtils.watchDb("__crotchetDevExtensions", installExtensions);
+		firebaseUtils.watchDb("__crotchetExtensions", (res) => {
+			installExtensions(res);
+		});
+		// firebaseUtils.watchDb("__crotchetDevExtensions", (res) => {
+		// 	window.showActionSheetAlert("Extensions updated!");
+		// 	installExtensions(res);
+		// });
 	}, 500);
 }

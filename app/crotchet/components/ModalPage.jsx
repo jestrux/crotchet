@@ -21,8 +21,10 @@ export default function ModalPage({
 	entryAction,
 	layout,
 	resolve,
+	fullScreen = false,
+	dismissible = false,
 	selectable = false,
-	searchable = false,
+	searchable: _searchable,
 	title: _title,
 	content: _content,
 	actionsTitle,
@@ -31,6 +33,7 @@ export default function ModalPage({
 	onClose = () => {},
 	onSearch,
 }) {
+	const searchable = _searchable || type == "search";
 	const inputRef = useRef(null);
 	const scrollViewRef = useRef(null);
 
@@ -347,8 +350,22 @@ export default function ModalPage({
 					duration: 0.1,
 				}}
 				onClick={() => (noContent ? onClose() : {})}
+				drag="y"
+				dragListener={dismissible}
+				// dragControls={controls}
+				dragConstraints={{
+					top: 0,
+					bottom: 0.5,
+				}}
+				// dragElastic={{
+				// 	top: 0,
+				// 	bottom: 0.5,
+				// }}
+				onDragEnd={(_, info) => {
+					if (info.offset.y > 0) onClose();
+				}}
 			>
-				{!noContent && (
+				{!noContent && !fullScreen && (
 					<div className="fixed top-0 inset-x-0 z-50">
 						<div
 							className="relative"

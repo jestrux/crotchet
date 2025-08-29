@@ -18,9 +18,191 @@ const getYoutubeActualUrl = (props) => {
 };
 
 const getEmbedUrl = (url, start = 0, end = 0) =>
-	`https://www.youtube.com/embed/${getYoutubeId(url)}${
+	`https://www.youtube-nocookie.com/embed/${getYoutubeId(url)}${
 		start ? `?start=${start}&` : ""
 	}${end ? `end=${end}` : ""}`;
+
+const getPoster = (url) =>
+	`https://i.ytimg.com/vi/${getYoutubeId(url)}/hqdefault.jpg`;
+
+const getVideoPlayer = (video, hideMeta = false) =>
+	!video
+		? null
+		: `
+		<div 
+			@youtube-clip-action.window="handleRemoteAction($event.detail)"
+		x-data="{
+			cropEnabled: true,
+			get start() {
+				return this.crop[0];
+			},
+			get end() {
+				return this.crop[1];
+			},
+			get startTime() {
+				return window.toHms(this.start);
+			},
+			get endTime() {
+				return window.toHms(this.end);
+			},
+			get src () {
+				const src = [
+					'https://www.youtube-nocookie.com/embed/',
+					this.videoId,
+					'?autoplay=1&enablejsapi=1&controls=1&start=',
+					this.start.toFixed(0),
+				].join('')
+
+				return src;
+			},
+			get youtubeUrl () {
+				return [
+					'https://youtube.com/watch?v=',
+					this.videoId,
+					'&t=',
+					this.start.toFixed(0),
+				].join('')
+			},
+			formatCropTime(time) {
+				return Number(Number(time).toFixed(3))
+			},
+			handleRemoteAction(payload) {
+				console.log('Remote action: ', payload);
+				const action = payload.action || payload.id;
+				if (action == 'restart') this.restartVideo();
+				if (action == 'skip-back') this.seekTo(this.currentTime - 5);
+				if (action == 'skip-forward') this.seekTo(this.currentTime + 5);
+				if (action == 'toggle-crop') {
+					this.cropEnabled = !this.cropEnabled;
+					this.restartVideo();
+				}
+				if (action == 'restore') {
+					window.closeFloatingWindow(this.$page._id);
+					window.socketEmit('run-action', {
+						showWindow: true,
+						action: 'playYoutubeClip',
+						payload: this.videoId,
+					});
+				}
+				if (action == 'youtube') {
+					window.closeFloatingWindow(this.$page._id);
+					window.socketEmit('open', this.youtubeUrl);
+				}
+			},
+			init() {
+				this.videoId = this.$pageData._id;
+				this.duration = this.$pageData.duration;
+				this.crop = [this.$pageData.start, this.$pageData.end].map(this.formatCropTime);
+				
+				if(typeof this.$onPageDataChanged == 'function') {
+					this.$onPageDataChanged((data) => {
+						this.crop = [data.start, data.end].map(this.formatCropTime);
+						this.restartVideo();
+					});
+				}
+
+				if(typeof this.$onRemoteAction == 'function')
+					this.$onRemoteAction((payload) => this.handleRemoteAction(payload));
+				
+				if(!window.YT?.Player) {
+					this.loadPlayer();
+					return console.log('Player not loaded!!!');
+				}
+
+				this.initPlayer();
+			},
+			loadPlayer() {
+				window.onYouTubeIframeAPIReady = () => {
+					console.log('Iframe ready...');
+					this.initPlayer();
+				};
+			},
+			initPlayer() {
+				this.player = new window.YT.Player('youtube-player', {
+					events: {
+						onReady: () => {
+							window.__player = this.player;
+							const parent = this.$el.closest('.yt-clips-editor-parent');
+							const props = {}
+							props.duration = this.player.getDuration();
+							props.title = this.player.getVideoData().title;
+							if(parent) {
+								parent.dispatchEvent(
+									new CustomEvent('video-loaded', {
+										detail: props,
+									})
+								);
+							}
+							else window.addEventListener('message', (e) => this.listenForTime(e));
+						},
+					},
+				});
+			},
+			seekTo(time, skipCheck){
+				if(!skipCheck) {
+					const [start, end] = this.crop;
+					if (time >= end || time >= this.duration || time <= start) time = 0;
+				}
+				this.currentTime = time;
+				this.player.seekTo(time);
+				this.player.playVideo();
+			},
+			restartVideo(){
+				const [start] = this.crop;
+				this.seekTo(this.cropEnabled ? start : 0, true);
+			},
+			listenForTime(event){
+				this.lastTimeUpdate = 0;
+
+				const data = JSON.parse(event.data);
+
+				if (
+					data.event === 'infoDelivery' &&
+					data.info &&
+					data.info.currentTime
+				) {
+					const time = this.formatCropTime(data.info.currentTime);
+					this.currentTime = time;
+
+					if (time == this.lastTimeUpdate) return;
+
+					this.lastTimeUpdate = time;
+
+					let [start, end] = this.crop;
+
+					if(!this.cropEnabled) {
+						start = 0;
+						end = this.duration;
+					}
+
+					if (time < end && time > start) return;
+
+					this.restartVideo();
+				}
+			}
+		}">
+			<iframe
+				id="youtube-player"
+				class="spointer-events-none w-full"
+				style="${hideMeta ? "position: absolute; height: 100%" : "aspect-ratio: 16/9"}"
+				src="${getEmbedUrl(video.url, video.start)}" 
+				x-bind:src="src"
+				allow="autoplay; encrypted-media"
+				allowfullscreen
+			>
+			</iframe>
+			<div class="mt-2 divide-y ${hideMeta && "hidden"}">
+				<div class="flex items-center justify-between gap-2 py-2 px-4">
+					<span>Start</span>
+					<span x-text="startTime"></span>
+				</div>
+				<div class="flex items-center justify-between gap-2 py-2 px-4">
+					<span>End</span>
+					<span x-text="endTime"></span>
+				</div>
+			</div>
+		</div>
+	`;
 
 const appIcon = UI.svg(
 	"M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z",
@@ -31,13 +213,14 @@ const appIcon = UI.svg(
 
 const mapEntry = (entry) => ({
 	...entry,
-	video: `https://i.ytimg.com/vi/${entry._id}/hqdefault.jpg`,
+	video: getPoster(getYoutubeActualUrl(entry)),
 	title: entry.name,
 	subtitle: `${[entry.crop?.[0], entry.crop?.[1]]
 		?.map(toHms)
 		.join(", ")} - ${toHms(entry.duration)}`,
 	// url: getYoutubeClipUrl(entry),
-	url: getYoutubeActualUrl(entry),
+	// url: getYoutubeActualUrl(entry),
+	url: `crotchet://action/playYoutubeClip?arg=${entry._id || entry.id}`,
 	actions: getActions(entry),
 });
 
@@ -57,6 +240,12 @@ const openOnDesktop = (clip) =>
 		payload: clip,
 		// payload: getPlayClipPage(clip),
 	});
+
+// const openOnDesktop = (clip) =>
+// 	socketEmit(
+// 		"open-url",
+// 		`crotchet://action/playYoutubeClip?arg=${clip._id || clip.id}`
+// 	);
 
 const getActions = (payload) => {
 	const actions = {
@@ -246,13 +435,47 @@ const editVideo = async ({ title, resolve, handler }) => {
 		resolve: async () => {
 			// const payload =
 			// 	typeof resolve == "function" ? await resolve() : resolve;
-			const payload = await resolve();
-			return {
-				...payload,
-				title: payload.title || payload.name,
-				start: payload.crop?.at(0) || 0,
-				end: payload.crop?.at(1) || payload.duration,
+			let payload = await resolve();
+
+			const formatPayload = (payload) => {
+				const start = payload.crop?.at(0) || 0;
+				const end = payload.crop?.at(1) || payload.duration;
+
+				return {
+					...payload,
+					title: payload.title || payload.name,
+					start,
+					end,
+					crop: [start, end],
+				};
 			};
+
+			if (!payload.title || !payload.duration) {
+				return new Promise((resolve) => {
+					const el = document.createElement("div");
+					el.className = "yt-clips-editor-parent";
+					el.setAttribute(
+						"x-data",
+						`
+						{
+							$page: {},
+							$pageData: {start: 0, end: 0, _id: '${payload._id}'},
+						}
+					`
+					);
+					const handleVideoLoad = (e) => {
+						payload = { ...payload, ...e.detail };
+						el.removeEventListener("video-loaded", handleVideoLoad);
+						el.remove();
+						resolve(formatPayload(payload));
+					};
+					el.addEventListener("video-loaded", handleVideoLoad);
+					el.innerHTML = getVideoPlayer(payload);
+					document.body.appendChild(el);
+				});
+			}
+
+			return formatPayload(payload);
 		},
 		externalAssets: [
 			{
@@ -266,141 +489,7 @@ const editVideo = async ({ title, resolve, handler }) => {
 
 			// return getPlayClipPage(video).content();
 			return UI.component({
-				content: `
-					<div x-data="{
-						get start() {
-							return this.crop[0];
-						},
-						get end() {
-							return this.crop[1];
-						},
-						get startTime() {
-							return window.toHms(this.start);
-						},
-						get endTime() {
-							return window.toHms(this.end);
-						},
-						get src () {
-							const src = [
-								'https://www.youtube-nocookie.com/embed/',
-								this.videoId,
-								'?autoplay=1&enablejsapi=1&controls=1&start=',
-								this.start.toFixed(0),
-								'&end=',
-								this.end.toFixed(0),
-							].join('')
-
-							return src;
-						},
-						get youtubeUrl () {
-							return [
-								'https://youtube.com/watch?v=',
-								this.videoId,
-								'&t=',
-								this.start.toFixed(0),
-							].join('')
-						},
-						formatCropTime(time) {
-							return Number(Number(time).toFixed(3))
-						},
-						init() {
-							this.videoId = this.$pageData._id;
-							this.crop = [this.$pageData.start, this.$pageData.end].map(this.formatCropTime);
-							
-							this.$onPageDataChanged((data) => {
-								this.crop = [data.start, data.end].map(this.formatCropTime);
-								this.restartVideo();
-							});
-							
-							if(!window.YT?.Player) {
-								this.loadPlayer();
-								return console.log('Player not loaded!!!');
-							}
-
-							this.initPlayer();
-						},
-						loadPlayer() {
-							window.onYouTubeIframeAPIReady = () => {
-								console.log('Iframe ready...');
-								this.initPlayer();
-							};
-						},
-						initPlayer() {
-							console.log('Init youtube player', window.YT.Player);
-							this.player = new window.YT.Player('youtube-player', {
-								events: {
-									onReady: () => {
-										console.log('On player ready...');
-										window.addEventListener('message', (e) => this.listenForTime(e));
-									},
-								},
-							});
-						},
-						seekTo(time, skipCheck){
-							if(!skipCheck) {
-								const [start, end] = this.crop;
-								if (time >= end || time >= this.duration || time <= start) time = 0;
-							}
-							this.currentTime = time;
-							this.player.seekTo(time);
-							this.player.playVideo();
-						},
-						restartVideo(){
-							const [start] = this.crop;
-							this.seekTo(this.cropEnabled ? start : 0, true);
-						},
-						listenForTime(event){
-							this.lastTimeUpdate = 0;
-
-							const data = JSON.parse(event.data);
-
-							if (
-								data.event === 'infoDelivery' &&
-								data.info &&
-								data.info.currentTime
-							) {
-								const time = this.formatCropTime(data.info.currentTime);
-								this.currentTime = time;
-
-								if (time == this.lastTimeUpdate) return;
-
-								this.lastTimeUpdate = time;
-
-								let [start, end] = this.crop;
-
-								if(!this.cropEnabled) {
-									start = 0;
-									end = this.duration;
-								}
-
-								if (time < end && time > start) return;
-
-								this.restartVideo();
-							}
-						}
-					}">
-						<iframe
-							id="youtube-player"
-							class="spointer-events-none w-full"
-							style="aspect-ratio: 16/9"
-							src="${getEmbedUrl(video.url, video.start, video.end)}" 
-							x-bind:src="src"
-							allow="autoplay; encrypted-media"
-							allowfullscreen
-						>
-						</iframe>
-						<div class="mt-2 divide-y">
-							<div class="flex items-center justify-between gap-2 py-2 px-4">
-								<span>Start</span>
-								<span x-text="startTime"></span>
-							</div>
-							<div class="flex items-center justify-between gap-2 py-2 px-4">
-								<span>End</span>
-								<span x-text="endTime"></span>
-							</div>
-						</div>
-					</div>
-				`,
+				content: getVideoPlayer(video),
 			});
 		},
 		fields: {
@@ -434,48 +523,69 @@ const editVideo = async ({ title, resolve, handler }) => {
 };
 
 const getVideoDetails = async (url) => {
-	const existingClip = await queryDb("youtubeClips", {
-		rowId: getYoutubeId(url),
-	});
+	try {
+		const existingClip = await queryDb("youtubeClips", {
+			rowId: getYoutubeId(url),
+		});
 
-	if (existingClip) return existingClip;
+		if (existingClip) return existingClip;
 
-	const res = await crawlUrl(getEmbedUrl(url));
-	const data = res.data;
-	const indexOfDuration = data.indexOf("videoDurationSeconds");
-	const object = data.substring(indexOfDuration, indexOfDuration + 120);
-	const end = object.indexOf(",");
-	let duration = object
-		.substring(0, end)
-		.replace("videoDurationSeconds", "")
-		.replace(/\\|"|:/g, "");
+		const res = await crawlUrl(
+			getEmbedUrl(url).replace("youtube-nocookie", "youtube")
+		);
+		console.log("Res: ", res.meta);
+		const data = res.data;
+		const indexOfTitle = data.indexOf("videoTitle");
+		const titleObject = data.substring(indexOfTitle, indexOfTitle + 320);
+		const titleEnd = titleObject.indexOf("}},");
+		let title = titleObject
+			.substring(0, titleEnd)
+			.replace("videoTitle", "")
+			.replace(/\\|"|:/g, "");
 
-	if (isNaN(Number(duration))) return null;
+		const indexOfDuration = data.indexOf("videoDurationSeconds");
+		const object = data.substring(indexOfDuration, indexOfDuration + 120);
+		const end = object.indexOf(",");
+		let duration = object
+			.substring(0, end)
+			.replace("videoDurationSeconds", "")
+			.replace(/\\|"|:/g, "");
 
-	let start = 0;
-	const params = new URLSearchParams(url);
-	const startParam = (params.get("t") || params.get("start") || "")
-		.toString()
-		.trim()
-		.replace("s", "");
-	if (startParam && !isNaN(Number(startParam))) start = Number(startParam);
+		// console.log("Duration: ", indexOfDuration, duration);
 
-	duration = Number(duration);
+		if (isNaN(Number(duration))) return null;
 
-	res.meta = res.meta || {};
+		let start = 0;
+		const params = new URLSearchParams(url);
+		const startParam = (params.get("t") || params.get("start") || "")
+			.toString()
+			.trim()
+			.replace("s", "");
+		if (startParam && !isNaN(Number(startParam)))
+			start = Number(startParam);
 
-	const payload = {
-		...res.meta,
-		_id: getYoutubeId(url),
-		url,
-		poster: res.meta.image,
-		duration,
-		start,
-		end: duration,
-		crop: [start, duration],
-	};
+		duration = Number(duration);
 
-	return payload;
+		res.meta = res.meta || {};
+		const poster = getPoster(url);
+
+		const payload = {
+			...res.meta,
+			_id: getYoutubeId(url),
+			title,
+			image: poster,
+			poster,
+			url,
+			duration,
+			start,
+			end: duration,
+			crop: [start, duration],
+		};
+
+		return payload;
+	} catch (error) {
+		console.log("Load video details error: ", error);
+	}
 };
 
 const addClip = async ({ url = "" } = {}) => {
@@ -655,7 +765,9 @@ const getPlayClipPage = (clip, external = false) => {
 	};
 
 	const componentProps = {
-		content: () => `
+		content: !external
+			? () => getVideoPlayer(clip, true)
+			: () => `
 			<div class="absolute inset-0 bg-black flex items-center justify-center"
 				x-data="{
 					cropEnabled: true,
@@ -709,7 +821,8 @@ const getPlayClipPage = (clip, external = false) => {
 					},
 					init() {
 						console.log('Page:', this.$page);
-						this.$onRemoteAction((payload) => this.handleRemoteAction(payload));
+						if(typeof this.$onRemoteAction == 'function')
+							this.$onRemoteAction((payload) => this.handleRemoteAction(payload));
 						if(!window.YT?.Player) {
 							this.loadPlayer();
 							return console.log('Player not loaded!!!');
@@ -723,7 +836,6 @@ const getPlayClipPage = (clip, external = false) => {
 						};
 					},
 					initPlayer() {
-						console.log('Init youtube player', window.YT.Player);
 						this.player = new window.YT.Player('youtube-player', {
 							events: {
 								onReady: () => {
@@ -797,18 +909,18 @@ const getPlayClipPage = (clip, external = false) => {
 			// 	console.log("Iframe loaded...", ...args);
 			// });
 			initPlayer();
-			window.addEventListener("youtube-clip-action", handleAction, false);
+			// window.addEventListener("youtube-clip-action", handleAction, false);
 		},
 		onRemoteAction: (action) =>
 			dispatch("youtube-clip-action", { action: action.id }),
 		onDestroy: () => {
 			console.log("Do a clean YT clips destroy...");
 			if (typeof stopLooper == "function") stopLooper();
-			window.removeEventListener(
-				"youtube-clip-action",
-				handleAction,
-				false
-			);
+			// window.removeEventListener(
+			// 	"youtube-clip-action",
+			// 	handleAction,
+			// 	false
+			// );
 			// if (window.YT?.Player)
 			// 	window.addEventListener("message", listenForTime);
 			// else console.log("No player initialized...");
@@ -935,6 +1047,13 @@ const getPlayClipPage = (clip, external = false) => {
 		},
 	];
 
+	const resolve = () => ({
+		...clip,
+		start,
+		end,
+		crop: crop.map(formatCropTime),
+	});
+
 	if (external) {
 		return {
 			external: true,
@@ -943,6 +1062,7 @@ const getPlayClipPage = (clip, external = false) => {
 			video: clip.video,
 			title: clip.title,
 			...componentProps,
+			resolve,
 			actions: actions({}, true),
 			window: {
 				background: "black",
@@ -971,6 +1091,7 @@ const getPlayClipPage = (clip, external = false) => {
 		video: clip.video,
 		title: clip.title,
 		fullScreen: true,
+		resolve,
 		content: () => UI.component(componentProps),
 		// preview: () =>
 		// 	UI.component({
@@ -1150,7 +1271,8 @@ registerWidget("youtubeClips", {
 	label: "Recent Clips",
 	resolve: async ({ state }) => {
 		const res = await sourceGet(
-			{ handler: () => queryDb("youtubeClips") },
+			"youtubeClips",
+			// { handler: () => queryDb("youtubeClips") },
 			{ orderBy: "updatedAt,desc", random: true, limit: 3 }
 			// { orderBy: "updatedAt,desc", random: state.random, limit: 3 }
 		);
@@ -1164,32 +1286,7 @@ registerWidget("youtubeClips", {
 		{
 			label: "Search",
 			icon: UI.icon("search"),
-			handler: () => {
-				openChoicePicker({
-					// title: "Youtube Clips",
-					layout: "grid",
-					fullScreen: true,
-					inset: false,
-					dismissible: false,
-					noHeading: false,
-					choices: async () => {
-						const res = await sourceGet(
-							{ handler: () => queryDb("youtubeClips") },
-							{ orderBy: "name" }
-						);
-
-						return res.map((item) => ({
-							...mapEntry(item),
-							label: item.title,
-							value: item,
-							url: getYoutubeActualUrl(item),
-						}));
-					},
-				}).then((res) => {
-					if (!res) return res;
-					openUrl(res.url);
-				});
-			},
+			url: "crotchet://search/youtubeClips",
 		},
 		{
 			label: "Shuffle",
@@ -1230,9 +1327,7 @@ registerAction("addToYoutubeClips", {
 	preview: (url) => {
 		return UI.component({
 			content: `
-				<iframe src="https://www.youtube.com/embed/${getYoutubeId(
-					url
-				)}" class="w-full aspect-[16/9]">
+				<iframe src="${getEmbedUrl(url)}" class="w-full aspect-[16/9]">
 				</iframe>
 			`,
 		});

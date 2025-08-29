@@ -18,6 +18,7 @@ function Component({ data }) {
 	const [initialized, setInitialized] = useState(false);
 	const elementRef = useRef();
 	const pageDataChangedHandler = useRef();
+	const remoteActionHandler = useRef();
 
 	useLayoutEffect(() => {
 		elementRef.current.setAttribute(
@@ -32,6 +33,11 @@ function Component({ data }) {
 			window.Alpine.magic("onPageDataChanged", () => (callback) => {
 				pageDataChangedHandler.current = callback;
 			});
+
+			window.Alpine.magic(
+				"onRemoteAction",
+				() => (callback) => (remoteActionHandler.current = callback)
+			);
 
 			setTimeout(() => {
 				setInitialized(true);
@@ -68,6 +74,11 @@ function Component({ data }) {
 
 		if (typeof pageDataChangedHandler.current == "function")
 			pageDataChangedHandler.current(payload);
+	});
+
+	useEventListener("remote-action-" + page._id, (_, payload) => {
+		if (typeof remoteActionHandler.current == "function")
+			remoteActionHandler.current(payload);
 	});
 
 	const content =

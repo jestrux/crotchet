@@ -103,6 +103,7 @@ export function AlertsWrapper() {
 								key={alert.id}
 								{...alert}
 								type={alert.pageType}
+								fullScreen={alert.fullScreenPage}
 								onClose={alert.close}
 							/>
 						);
@@ -132,9 +133,13 @@ export function AlertsWrapper() {
 							<ModalPage
 								key={alert.id}
 								{...alert}
+								fullScreen={alert.fullScreenPage}
 								type={alert.pageType}
 								resolve={alert.resolve || alert.choices}
-								searchable={alert.searchable ?? true}
+								searchable={
+									alert.searchable ??
+									alert.pageType == "search"
+								}
 								selectable={
 									alert.selectable
 										? alert.selectable
@@ -219,6 +224,7 @@ export function AlertsWrapper() {
 								key={alert.id}
 								{...alert}
 								type={alert.pageType}
+								fullScreen={alert.fullScreenPage}
 								onClose={alert.close}
 							>
 								{form}
@@ -249,6 +255,7 @@ export function AlertsWrapper() {
 							key={alert.id}
 							{...alert}
 							type={alert.pageType}
+							fullScreen={alert.fullScreenPage}
 							onClose={alert.close}
 						/>
 					);
@@ -410,6 +417,7 @@ export default function useAlerts() {
 
 	const showActionSheetAlert = (message) =>
 		openActionSheet({
+			id: "action-sheet-alert",
 			noHeading: false,
 			inset: false,
 			emptyStateMessage: message,
@@ -450,11 +458,12 @@ export default function useAlerts() {
 			props = {
 				fullScreen: true,
 				inset: false,
-				dismissible: false,
+				dismissible: props.dismissible ?? props.fullScreen,
 				noHeading: false,
 				...props,
 				choices: props.resolve,
 				pageType: props.type || "search",
+				fullScreenPage: props.fullScreen,
 			};
 
 			if (props.source) {

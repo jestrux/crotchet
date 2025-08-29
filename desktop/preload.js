@@ -195,8 +195,7 @@ ipcRenderer.on("floating-window-event", function (_, props) {
 });
 
 window.addEventListener("DOMContentLoaded", () => {
-	document.body.classList.add("on-electron");
-	document.body.setAttribute("data-socket-url", `http://${getIp()}:3127`);
+	document.body.setAttribute("base-url", `http://${getIp()}:3127`);
 });
 
 ipcRenderer.on("background-window", function () {

@@ -235,6 +235,14 @@ module.exports = function socketServer(server) {
 			});
 		},
 
+		"open-url": (payload) => {
+			crotchetApp.toggleWindow(true);
+			crotchetApp.windowEmit("socket", {
+				event: "open-url",
+				payload: payload,
+			});
+		},
+
 		app(props) {
 			if (crotchetApp.openApp) crotchetApp.openApp(props);
 			else {

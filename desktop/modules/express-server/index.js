@@ -18,6 +18,11 @@ module.exports = function expressServer() {
 	// 	expressApp
 	// );
 
+	expressApp.use((req, res, next) => {
+		res.set("Access-Control-Allow-Origin", "*");
+		next();
+	});
+
 	expressApp.set("views", buildDir());
 
 	expressApp.use(

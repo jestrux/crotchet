@@ -176,7 +176,7 @@ export const cache = async (key, value, { duration = 60 } = {}) => {
 		await saveFile({ name: `__cache/${key}` }, value);
 		await saveFile(
 			{ name: `__cache_expirations/${key}` },
-			Date.now() + duration * 1000
+			(Date.now() + duration * 1000).toString()
 		);
 		return value;
 	} catch (error) {

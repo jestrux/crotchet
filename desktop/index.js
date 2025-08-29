@@ -60,6 +60,7 @@ const createMainWindow = () => {
 				localStorage.__onDesktop = true;
 				localStorage.__floatingWindow = false;
 				localStorage.__dataSocketUrl = '${socketUrl}';
+				document.body.setAttribute("base-url", '${socketUrl}');
 			`,
 			true
 		);

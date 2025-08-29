@@ -94,17 +94,7 @@ export default function useAppPages() {
 	};
 
 	// window.openPage = (page) => dispatch("open-page", page);
-	window.openPage = (page) => {
-		if (!onDesktop()) {
-			return window.showAlert({
-				...(page || {}),
-				type: page?.type == "form" ? "form" : "page",
-				fullScreen: true,
-			});
-		}
-
-		return pushPage(page);
-	};
+	if (onDesktop()) window.openPage = (page) => pushPage(page);
 
 	// window.openPage = (page) => pushPage(page);
 	window.openForm = (page) => window.openPage({ ...page, type: "form" });
