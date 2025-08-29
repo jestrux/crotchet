@@ -201,7 +201,7 @@ export default function SearchPage() {
 			let index = values.findIndex((value) => value === activeChoice);
 
 			if (index == -1) index = 0;
-			else if (grid) {
+			else if (grid && !masonry) {
 				const rows = Math.floor(options.length / columns);
 				const column = index % columns;
 				const row = Math.floor(index / columns);
@@ -212,6 +212,42 @@ export default function SearchPage() {
 					index = Math.min(index + columns, options.length - 1);
 				if (value == "up" && row > 0)
 					index = Math.max(index - columns, 0);
+			} else if (masonry) {
+				const itemsPerColumn = Math.ceil(options.length / columns);
+				const currentColumn = Math.floor(index / itemsPerColumn);
+				const currentRow = index % itemsPerColumn;
+
+				if (value == "up" && currentRow > 0) index--;
+				if (value == "down") {
+					const columnStart = currentColumn * itemsPerColumn;
+					const columnSize = Math.min(
+						itemsPerColumn,
+						options.length - columnStart
+					);
+					if (currentRow < columnSize - 1) index++;
+				}
+				// Move to next column, same row position if available
+				if (value == "right" && currentColumn < columns - 1) {
+					const nextColumnStart =
+						(currentColumn + 1) * itemsPerColumn;
+					const nextColumnSize = Math.min(
+						itemsPerColumn,
+						options.length - nextColumnStart
+					);
+					const targetRow = Math.min(currentRow, nextColumnSize - 1);
+					index = nextColumnStart + targetRow;
+				}
+				// Move to previous column, same row position if available
+				if (value == "left" && currentColumn > 0) {
+					const prevColumnStart =
+						(currentColumn - 1) * itemsPerColumn;
+					const prevColumnSize = Math.min(
+						itemsPerColumn,
+						options.length - prevColumnStart
+					);
+					const targetRow = Math.min(currentRow, prevColumnSize - 1);
+					index = prevColumnStart + targetRow;
+				}
 			} else if (value == "down")
 				index = index == options.length - 1 ? 0 : index + 1;
 			else if (value == "up")
