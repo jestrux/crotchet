@@ -106,9 +106,10 @@ registerPlatformUtils({
 		return new Promise((res) => {
 			var handler = async (e) => {
 				window.removeEventListener(`read-file-${key}`, handler);
-				
+
 				const response = e.detail;
-				let contents = response, stats;
+				let contents = response,
+					stats;
 				if (withStats) {
 					stats = response.stats;
 					contents = response.contents;
@@ -213,13 +214,11 @@ export default function DesktopApp() {
 
 		if (event == "open-url") {
 			console.log("Socket open url: ", payload);
-			// try {
-			// 	setTimeout(() => {
-			// 		openUrl(payload);
-			// 	}, 20);
-			// } catch (error) {
-			// 	//
-			// }
+			try {
+				setTimeout(() => window.openUrl(payload), 20);
+			} catch (error) {
+				//
+			}
 
 			return;
 		}

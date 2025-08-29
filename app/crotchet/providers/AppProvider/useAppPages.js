@@ -15,7 +15,7 @@ export default function useAppPages() {
 		const promise = new Promise((resolve) => {
 			pageResolver = resolve;
 		});
-		const id = randomId();
+		const id = page.id || randomId();
 
 		if (page.source) {
 			const { q, query, source, ...otherPageProps } = page;
@@ -65,7 +65,10 @@ export default function useAppPages() {
 			status: "idle",
 		});
 
-		setPages((pages) => [...pages, newPage]);
+		setPages((pages) => [
+			...pages.filter(({ _id }) => _id != newPage._id),
+			newPage,
+		]);
 
 		dispatch(`blur-${window.currentPageId}`);
 

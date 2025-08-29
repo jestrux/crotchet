@@ -1,9 +1,13 @@
 const path = require("path");
+const {
+	electronAppUniversalProtocolClient,
+} = require("electron-app-universal-protocol-client");
 const Crotchet = require("./modules/crotchet");
 const { app, BrowserWindow } = require("electron");
 
 global.isDev = process.env.NODE_ENV == "dev";
 let mainWindow = null;
+const PROTOCOL = "crotchet";
 const crotchetApp = new Crotchet();
 
 global.appDir = (...subPaths) => path.join(__dirname, ...subPaths);
@@ -98,7 +102,22 @@ const createMainWindow = () => {
 	crotchetApp.initialize(mainWindow);
 };
 
-app.whenReady().then(() => {
+// Usually you want to run only one instance of your app to handle all requests in one context
+if (!app.requestSingleInstanceLock()) app.exit(0);
+
+app.whenReady().then(async () => {
+	app.setName("Crotchet");
+
+	electronAppUniversalProtocolClient.on(
+		"request",
+		crotchetApp.handleDeepLink
+	);
+
+	await electronAppUniversalProtocolClient.initialize({
+		protocol: PROTOCOL,
+		mode: isDev ? "development" : "production",
+	});
+
 	crotchetApp.setMenuItems();
 	createMainWindow();
 });

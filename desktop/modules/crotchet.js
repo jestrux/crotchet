@@ -21,6 +21,20 @@ module.exports = function Crotchet() {
 		this.registerShortcuts();
 	};
 
+	this.processDeepLink = () => {
+		if (this.deeplinkingUrl) {
+			this.toggleWindow(true);
+			this.socketEmit("open-url", this.deeplinkingUrl);
+			this.deeplinkingUrl = null;
+			return;
+		}
+	};
+
+	this.handleDeepLink = (url) => {
+		this.deeplinkingUrl = url;
+		if (this.webAppInitialized) this.processDeepLink();
+	};
+
 	this.getScripts = async () =>
 		readFile({ path: appDir("scripts/index.js") });
 
@@ -88,9 +102,13 @@ module.exports = function Crotchet() {
 			);
 		}
 
+		if (this.deeplinkingUrl) this.processDeepLink();
+
 		this.windowEmit("initialize-app", {
 			pageId: "root",
 		});
+
+		this.webAppInitialized = true;
 	};
 
 	this.setMenuItems = (items = [], { replace = false } = {}) => {

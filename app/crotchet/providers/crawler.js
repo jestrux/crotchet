@@ -124,15 +124,8 @@ export const getWebsiteInfo = async (url, name) => {
 
 		let baseUrl = getBackendBaseUrl();
 		if (!window.onDesktop()) {
-			try {
-				await window.getSocket();
-				if (window.remoteSocketAction) {
-					const res = await window.remoteSocketAction("crawl", url);
-					return formatResponse(res);
-				}
-			} catch (error) {
-				//
-			}
+			const res = await window.remoteSocketAction("crawl", url);
+			if (res) return formatResponse(res);
 		}
 
 		let res;

@@ -7,7 +7,7 @@
 	"private": true,
 	"version": "0.0.0",
 	"scripts": {
-		"dev": "cross-env NODE_ENV=dev electron .",
+		"dev": "lsof -ti:3127 | xargs -r kill -9 && cross-env NODE_ENV=dev electron .",
 		"package": "npx electron-builder",
 		"cert": "openssl req -x509 -newkey rsa:2048 -keyout cert/key.pem -out cert/cert.pem -days 365",
 		"fix-robot": "npx electron-rebuild -f -t prod,optional,dev -w robotjs"
@@ -20,6 +20,7 @@
 		"eslint": "^8.56.0"
 	},
 	"dependencies": {
+		"electron-app-universal-protocol-client": "^2.1.1",
 		"electron-is-dev": "^3.0.1",
 		"express": "^4.18.3",
 		"local-devices": "^4.0.0",
