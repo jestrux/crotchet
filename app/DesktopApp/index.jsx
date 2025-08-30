@@ -13,6 +13,7 @@ import { useAppContext } from "@/crotchet/providers/AppProvider";
 import { onActionClick } from "@/crotchet/hooks/useActionClick";
 import FloatingWindow from "./FloatingWindows/FloatingWindow";
 import FloatingWindowManager from "./FloatingWindows/FloatingWindowManager";
+import { processSchemeUrl } from "@/crotchet/open-url";
 
 registerPlatformUtils({
 	showToast: (...toast) => {
@@ -214,8 +215,18 @@ export default function DesktopApp() {
 
 		if (event == "open-url") {
 			console.log("Socket open url: ", payload);
+
 			try {
-				setTimeout(() => window.openUrl(payload), 20);
+				setTimeout(() => {
+					const args = processSchemeUrl(payload)?.args;
+
+					if (args?.from_oauth) {
+						console.log("Handle oauth: ", payload);
+						return window.handleOauthRedirect(args);
+					}
+
+					window.openUrl(payload);
+				}, 20);
 			} catch (error) {
 				//
 			}

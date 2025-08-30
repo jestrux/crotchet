@@ -6,6 +6,7 @@ import { Document } from "@/app/Document";
 import { Home } from "@/app/pages/Home";
 import { setCommonHeaders } from "@/app/headers";
 import crawlUrl from "./app/api/crawl";
+import { exchangeCodeForAuthToken, generateOauthUrl } from "./app/api/oauth";
 
 // @ts-ignore
 const kv = env.KV;
@@ -26,6 +27,56 @@ export default defineApp([
 	}),
 	route("/crawl/:url", async function handler({ params }) {
 		return Response.json(await crawlUrl(params.url));
+	}),
+	route("/oauth", async function handler({ request }) {
+		const { url, redirectUrl } = (await request.json()) as {
+			url: string;
+			redirectUrl: string;
+		};
+		return Response.json(
+			await generateOauthUrl({
+				url,
+				redirectUrl,
+				request,
+			})
+		);
+	}),
+	route("/oauth-callback", async function handler({ request }) {
+		try {
+			let { state, ...params } = Object.fromEntries(
+				new URL(request.url).searchParams.entries()
+			);
+
+			const redirectUrl = new URL(
+				state ? decodeURIComponent(state) : "http://localhost:5170"
+			);
+
+			params = {
+				...params,
+				...Object.fromEntries(redirectUrl.searchParams.entries()),
+			};
+
+			redirectUrl.search = new URLSearchParams(params).toString();
+
+			const tokenDetails = await exchangeCodeForAuthToken(
+				redirectUrl.toString()
+			);
+
+			if (!tokenDetails || typeof tokenDetails != "object")
+				throw "Invalid token. Please check and try again.";
+
+			const returnUrl = new URL(redirectUrl.toString());
+			returnUrl.search = new URLSearchParams({
+				// ...params,
+				from_oauth: "true",
+				preferenceKey: params.preferenceKey,
+				...(tokenDetails as { [k: string]: string }),
+			}).toString();
+			return Response.redirect(returnUrl.toString());
+		} catch (error) {
+			// @ts-ignore
+			return new Response("Error: " + (error?.message || error));
+		}
 	}),
 	route("/kv/:key", async function handler({ request, params }) {
 		const key = params.key;

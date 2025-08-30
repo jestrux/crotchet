@@ -73,12 +73,13 @@ declare var camelCaseToSentenceCase: (string: String) => string;
 
 declare var getToken: (
 	name: String,
-	props?: { prompt?: boolean }
+	props?: { prompt?: boolean; invalidate?: boolean }
 ) => Promise<string | null | undefined>;
 
 declare var saveToken: (
 	key: String,
-	value: any
+	value: any,
+	expiresIn?: number
 ) => Promise<string | null | undefined>;
 
 declare var networkRequest: (
@@ -88,6 +89,14 @@ declare var networkRequest: (
 		secretToken?: string;
 	}
 ) => PromiseLike<any>;
+
+declare var oauth: (props: {
+	authorizeUrl: String;
+	tokenExchangeUrl: String;
+	preferenceKey: String;
+	params?: typeof GenericObject;
+	readOnly?: boolean;
+}) => PromiseLike<any>;
 
 declare var showAlert: (
 	message: String | { title: string; message: string }
@@ -230,6 +239,16 @@ declare var UI: {
 	) => any;
 };
 
+declare var withCache: (
+	name: string,
+	promise: () => Promise<any>,
+	obj?: {
+		invalidate?: boolean;
+		cacheDuration?: number;
+		onChange?: (status: String, payload: any) => void | undefined;
+	}
+) => Promise<any>;
+
 declare var withLoader: (
 	action: PromiseLike<any> | Function,
 	obj?:
@@ -288,7 +307,7 @@ declare var ActionButton:
 			label?: string;
 			icon?: string | typeof UI.icon;
 			url?: string | null;
-			destructive?: boolean,
+			destructive?: boolean;
 			handler?: (
 				payload: typeof WidgetActionContext | any
 				// | { [key: string]: any }

@@ -1,13 +1,15 @@
 import { Clipboard } from "@capacitor/clipboard";
 import { Share } from "@capacitor/share";
+import { Capacitor } from "@capacitor/core";
 import { App as CapacitorApp } from "@capacitor/app";
 import { Directory, Encoding, Filesystem } from "@capacitor/filesystem";
 import registerPlatformUtils from "@/crotchet/registerPlatformUtils";
 import { dispatch, fetchImage } from "@/crotchet/utils";
+import { processSchemeUrl } from "@/crotchet/open-url";
 // import { Loader } from "@/crotchet/components";
 
 import CrotchetHomePage from "./CrotchetHomePage";
-import { processSchemeUrl } from "@/crotchet/open-url";
+import ReceiveShareIntent from "./ReceiveShareIntent";
 // import AppScaffold from "@/crotchet/providers/AppScaffold";
 
 registerPlatformUtils({
@@ -105,9 +107,31 @@ registerPlatformUtils({
 		}
 	},
 	share: (payload) => Share.share(payload),
+	oauthRedirectUrl: Capacitor.isNativePlatform()
+		? "crotchet://"
+		: new URL(location.href).origin,
 });
 
 const setupLaunchListener = () => {
+	// For web
+	setTimeout(() => {
+		if (Capacitor.isNativePlatform()) return;
+
+		const urltoProcess = new URL(location.href);
+		urltoProcess.host = "crotchet://";
+		const args = processSchemeUrl(urltoProcess.toString())?.args;
+
+		if (args?.from_oauth) {
+			window.handleOauthRedirect(args);
+			var url = new URL(location.href);
+			url.search = "";
+			const updatedUrl = url.search
+				? url.href
+				: url.href.replace("?", "");
+			window.history.replaceState({}, document.title, updatedUrl);
+		}
+	}, 10);
+
 	CapacitorApp.addListener("appUrlOpen", async (event) => {
 		if (window.appUrlOpenHandlerTimeout) {
 			clearTimeout(window.appUrlOpenHandlerTimeout);
@@ -117,7 +141,10 @@ const setupLaunchListener = () => {
 		window.appUrlOpenHandlerTimeout = setTimeout(() => {
 			const args = processSchemeUrl(event?.url)?.args;
 			window.appLaunchArgs = null;
+
 			if (!args) return;
+
+			if (args?.from_oauth) return window.handleOauthRedirect(args);
 
 			window.appLaunchArgs = args;
 
@@ -146,5 +173,10 @@ export default function MobileApp() {
 	// if (app?.homePage)
 	// 	return <AppScaffold key={app?.homePage._id} rootPage={app?.homePage} />;
 
-	return <CrotchetHomePage />;
+	return (
+		<>
+			<CrotchetHomePage />
+			<ReceiveShareIntent />
+		</>
+	);
 }
