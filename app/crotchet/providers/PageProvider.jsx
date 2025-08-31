@@ -106,8 +106,8 @@ export default function PageProvider({
 		(onChangeFilterHandler.current = callback);
 	const dataUpdatedHandler = useRef(() => {});
 	const onDataUpdated = (callback) => (dataUpdatedHandler.current = callback);
-	const readyHandler = useRef(() => {});
-	const onReady = (callback) => (readyHandler.current = callback);
+	const readyHandler = useRef([]);
+	const onReady = (callback) => readyHandler.current.push(callback);
 	const escapeHandler = useRef((payload) => onClose(payload));
 	const onEscape = (callback) => (escapeHandler.current = callback);
 
@@ -171,7 +171,12 @@ export default function PageProvider({
 			setTimeout(() => {
 				if (typeof page.onReady == "function")
 					page.onReady(getContextInfo(data));
-				readyHandler.current(data);
+
+				if (readyHandler.current?.length) {
+					readyHandler.current.forEach((handler) => {
+						handler(data);
+					});
+				}
 			});
 		},
 		onUpdate: (data, oldData) => {
@@ -343,6 +348,10 @@ export default function PageProvider({
 			pageDataVersion,
 			formData,
 			pageFilter,
+			setPageData: (data) => {
+				setPageData(data);
+				setPageDataVersion("data-" + randomId());
+			},
 			setMainAction,
 			setSecondaryAction,
 			setActions,

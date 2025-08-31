@@ -38,7 +38,7 @@ export default function PageContent({ children }) {
 
 		try {
 			return (
-				<div className="border-t divide-y divide-content/5 text-sm">
+				<div className="border-b divide-y divide-content/5 text-sm">
 					{Object.entries(previewContent.metadata).map(
 						([label, value], index) => (
 							<div
@@ -66,26 +66,32 @@ export default function PageContent({ children }) {
 	if (isPreviewPage && !objectIsEmpty(previewContent)) {
 		preview = (
 			<>
-				{(previewContent.title ||
-					previewContent.description ||
-					previewContent.subtitle) && (
-					<div className="p-4 space-y-1">
+				{(previewContent.title || previewContent.subtitle) && (
+					<div className="p-4 border-b">
 						{previewContent.title && (
 							<h1 className="text-2xl font-medium">
 								{previewContent.title}
 							</h1>
 						)}
-						{(previewContent.description ||
-							previewContent.subtitle) && (
-							<p className="text-content/85">
-								{previewContent.description ||
-									previewContent.subtitle}
+						{previewContent.subtitle && (
+							<p className="mt-1 text-content/85">
+								{previewContent.subtitle}
 							</p>
 						)}
 					</div>
 				)}
 
 				{metadata()}
+
+				{previewContent.description && (
+					<p
+						className={
+							"p-4 text-sm text-content/70 font-light leading-loose"
+						}
+					>
+						{previewContent.description}
+					</p>
+				)}
 			</>
 		);
 	}

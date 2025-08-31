@@ -30,9 +30,15 @@ export default async function aiPrompt(
 		throw new Error("Unexpected response type from Claude");
 
 	const responseText = response.text.trim();
-	const nothingFound = ["I apologize", "I'm not able", "cannot verify"].some(
-		(check) => responseText.includes(check)
-	);
+	const nothingFound = [
+		"I apologize",
+		"I'm not able",
+		"I'm not aware",
+		"I don't have",
+		"cannot verify",
+		"not familiar",
+		"enough information",
+	].some((check) => responseText.toLowerCase().includes(check.toLowerCase()));
 
 	return {
 		success: true,

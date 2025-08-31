@@ -31,12 +31,14 @@ export default function audioPlayerExtension() {
 				// fullScreen: true,
 				resolve: () => media,
 				content: media?.metadata ? UI.previewWithMeta : UI.media,
-				onReady: ({
-					page,
-					setActions,
-					setMainAction,
-					setSecondaryAction,
-				}) => {
+				onReady: (pageContext) => {
+					const {
+						page,
+						setActions,
+						setMainAction,
+						setSecondaryAction,
+					} = pageContext;
+
 					setSecondaryAction(
 						UI.component({
 							content: () => `
@@ -82,6 +84,14 @@ export default function audioPlayerExtension() {
 					]);
 
 					player.playSong(media.src);
+
+					if (media.onReady) {
+						try {
+							media.onReady(pageContext);
+						} catch (error) {
+							//
+						}
+					}
 				},
 				onClose: () => {
 					player.cleanup();

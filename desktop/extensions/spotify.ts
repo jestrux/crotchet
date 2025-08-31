@@ -72,7 +72,7 @@ async function getBasicToken() {
 	return savedToken;
 }
 
-const querySpotify = async (endpoint = "/me") => {
+const querySpotify = async (endpoint = "/me", cache = true) => {
 	let token = endpoint.startsWith("/me")
 		? await authenticate(true)
 		: await getBasicToken();
@@ -92,13 +92,16 @@ const querySpotify = async (endpoint = "/me") => {
 					}
 				);
 
+				if (response.status == 204) return null;
+
 				// @ts-ignore
 				if (!response.ok)
 					throw "Invalid token. Please check and try again.";
 
 				// @ts-ignore
 				return await response.json();
-			}
+			},
+			{ invalidate: !cache }
 		);
 	} catch (error) {
 		await saveToken(basicTokenKey, null);
@@ -156,7 +159,7 @@ const queryPlaylists = async () =>
 				_id: item.id,
 				image: item.images?.[0]?.url,
 				title: item.name,
-				subtitle: `by ${item.owner.display_name}`,
+				subtitle: item.owner.display_name,
 				url: item.external_urls?.spotify ?? item.uri,
 				owner: item.owner,
 			};
@@ -182,20 +185,24 @@ const queryArtists = async () =>
 		})
 	);
 
+const formatAlbum = (item) => ({
+	_id: item.id,
+	image: item.images?.[0]?.url,
+	title: item.name,
+	subtitle: !item.artists?.length
+		? ""
+		: _.map(item.artists, "name").join(","),
+	url: item.uri,
+	artists: item.artists,
+	action: {
+		label: "View",
+		url: item.uri,
+	},
+});
+
 const queryAlbums = async () =>
 	await querySpotify("/me/albums?limit=50").then((res) =>
-		res?.items.map(({ album: item }) => {
-			return {
-				_id: item.id,
-				image: item.images?.[0]?.url,
-				title: item.name,
-				subtitle: !item.artists?.length
-					? ""
-					: `By ${_.map(item.artists, "name").join(",")}`,
-				url: item.external_urls?.spotify ?? item.uri,
-				artists: item.artists,
-			};
-		})
+		res?.items.map((i) => formatAlbum(i.album))
 	);
 
 const queryTracks = async () =>
@@ -207,39 +214,25 @@ const queryTracks = async () =>
 				title: item.name,
 				subtitle: !item.artists?.length
 					? ""
-					: `By ${_.map(item.artists, "name").join(",")}`,
+					: _.map(item.artists, "name").join(","),
 				url: item.external_urls?.spotify ?? item.uri,
 				artists: item.artists,
 			};
 		})
 	);
 
-const addTrackMetadata = async (track) => {
-	const artists = track.artists.map(({ name }) => name).join(", ");
-
+const addTrackMetadata = (track) => {
 	track.metadata = {
-		subtitle: artists,
-		"Release Date": formatDate(track.releaseDate?.isoString),
-		duration: toHms(track.duration),
+		// subtitle: artists,
+		"Release Date": formatDate(
+			track.release_date
+				? track.release_date
+				: track.releaseDate?.isoString
+		),
+		duration: toHms(
+			(track.duration_ms ? track.duration_ms : track.duration) / 1000
+		),
 	};
-
-	const interestingFact = await promptAI(
-		`Tell me something interesting "${track.name}" by ${artists}, keep it concise`,
-		{
-			cacheKey: `spotifyArtist/${track.id}`,
-		}
-	);
-
-	const genres = await promptAI(
-		`What are the genres form "${track.name}" by ${artists}. Don't explain just give them to me comma separated like "jazz, rnb"`,
-		{
-			cacheKey: `spotifyArtist/${track.id}/genres`,
-		}
-	);
-
-	if (genres) track.metadata.genres = genres;
-
-	if (interestingFact) track.description = interestingFact;
 
 	const actions = [
 		...(track.preview_url
@@ -247,7 +240,7 @@ const addTrackMetadata = async (track) => {
 					{
 						icon: UI.icon("play"),
 						label: "Preview",
-						handle: () => previewTrack(track),
+						handler: () => previewTrack(track),
 					},
 			  ]
 			: []),
@@ -276,6 +269,62 @@ const addTrackMetadata = async (track) => {
 	};
 };
 
+const addGenericAIInsights = async (item) => {
+	const interestingFact = await promptAI(
+		`Tell me something interesting about ${item.title} ${
+			item.subtitle ? "by " + item.subtitle : ""
+		}, keep it concise.`,
+		{
+			systemPrompt:
+				"You're a music expert. The user's request is either about an artist or album, so limit your response to that and say you don't know if results fall outside those parameters.",
+			// cacheKey: `spotifyArtist/${item.id}`,
+		}
+	);
+
+	const genres = await promptAI(
+		`What are the genres for ${item.title} ${
+			item.subtitle ?? ""
+		}. Don't explain just give them to me comma separated like "jazz, rnb"`,
+		{
+			systemPrompt:
+				"You're a music expert. The user's request is either about an artist or album, so limit your response to that and say you don't know if results fall outside those parameters.",
+			// cacheKey: `spotifyArtist/${item.id}/genres`,
+		}
+	);
+
+	if ((!item.metadata && genres) || interestingFact) item.metadata = {};
+
+	if (genres) item.metadata.genres = genres;
+
+	if (interestingFact) item.description = interestingFact;
+
+	return item;
+};
+
+const addTrackAIInsights = async (track) => {
+	const artists = track.artists.map(({ name }) => name).join(", ");
+
+	const interestingFact = await promptAI(
+		`Tell me something interesting "${track.name}" by ${artists}, keep it concise`,
+		{
+			cacheKey: `spotifyArtist/${track.id}`,
+		}
+	);
+
+	const genres = await promptAI(
+		`What are the genres for "${track.name}" by ${artists}. Don't explain just give them to me comma separated like "jazz, rnb"`,
+		{
+			cacheKey: `spotifyArtist/${track.id}/genres`,
+		}
+	);
+
+	if (genres) track.metadata.genres = genres;
+
+	if (interestingFact) track.description = interestingFact;
+
+	return track;
+};
+
 const getTrackDetails = async (url) => {
 	const trackId = new URL(url).pathname.replace("/track/", "");
 	let crawlRes = (
@@ -296,10 +345,9 @@ const getTrackDetails = async (url) => {
 			title: t.name,
 			subtitle: t.artists.map(({ name }) => name).join(", "),
 			preview_url: t.audioPreview?.url,
-			duration: t.duration / 1000,
 		};
 
-		return await addTrackMetadata({
+		return addTrackMetadata({
 			...t,
 			...track,
 		});
@@ -331,9 +379,10 @@ const getTrackDetails = async (url) => {
 	});
 };
 
-const previewTrack = (track) => {
+const previewTrack = (track) =>
 	playMedia({
 		...track,
+		duration: 30,
 		src: track.preview_url,
 		actions: [
 			{
@@ -342,7 +391,7 @@ const previewTrack = (track) => {
 				label: "Play On Spotify",
 				handler: () => {
 					closePage();
-					openUrl(track.url);
+					openUrl(track.uri ?? `spotify://track/${track.id}`);
 				},
 			},
 			{
@@ -357,22 +406,24 @@ const previewTrack = (track) => {
 				},
 			},
 		],
+		onReady: async ({ setPageData }) => {
+			const trackWithMetaData = await addTrackAIInsights(track);
+			setPageData(trackWithMetaData);
+		},
 	});
-};
 
-const openSongPreviewPage = ({ url } = { url: "" }) => {
+const openTrackPreviewPage = ({ url } = { url: "" }) => {
 	if (!url) return;
 
 	return openPage({
 		type: "preview",
 		title: ({ pageData }) => (pageData ? "" : "Preview Spotify Track"),
 		resolve: async () => await getTrackDetails(url),
-		onReady: ({ pageData, closePage }) => {
-			if (!pageData?.preview_url) return;
+		onReady: async ({ pageData: track, closePage }) => {
+			if (!track?.id) return;
 
 			closePage();
-
-			previewTrack(pageData);
+			previewTrack(track);
 		},
 	});
 };
@@ -468,6 +519,16 @@ const registerRandomSpotifyAction = (name, loader, { label = "" } = {}) => {
 							}
 						);
 
+						if (entry.url) {
+							entry.action = {
+								label: "Open",
+								url: entry.url.replace(
+									"https://open.spotify.com/",
+									"spotify://"
+								),
+							};
+						}
+
 						if (name == "randomSpotifyTrack")
 							entry = await getTrackDetails(entry.url);
 
@@ -479,12 +540,28 @@ const registerRandomSpotifyAction = (name, loader, { label = "" } = {}) => {
 						);
 					}
 				},
-				onReady: ({ pageData, closePage }) => {
-					if (!pageData?.preview_url) return;
+				onReady: async ({ pageData, setPageData, closePage }) => {
+					if (!pageData) return;
 
-					closePage();
+					if (name == "randomSpotifyTrack") {
+						if (!pageData?.preview_url) {
+							pageData = await addTrackAIInsights(pageData);
+							setPageData(pageData);
+							return;
+						}
 
-					previewTrack(pageData);
+						closePage();
+						previewTrack(pageData);
+					}
+
+					if (
+						["randomSpotifyArtist", "randomSpotifyAlbum"].includes(
+							name
+						)
+					) {
+						pageData = await addGenericAIInsights(pageData);
+						setPageData(pageData);
+					}
 				},
 			});
 		},
@@ -513,10 +590,232 @@ registerAction("currentSongOnSpotify", {
 	color: appColor,
 	global: true,
 	tags: ["spotify"],
-	handler: async () => {
-		const track = await querySpotify("/me/player/currently-playing");
-		console.log("Now playing: ", track);
-	},
+	handler: async () =>
+		openPage({
+			type: "preview",
+			title: "Now playing on Spotify",
+			resolve: async () => {
+				const res = await querySpotify(
+					"/me/player/currently-playing",
+					false
+				);
+
+				if (!res) {
+					showToast("Nothing playing!");
+					return closePage();
+				}
+
+				const { item, context } = res;
+
+				const track = addTrackMetadata({
+					...item,
+					context,
+					release_date: item.release_date || item.album.release_date,
+					image: item.album.images?.[0]?.url,
+					title: item.name,
+					subtitle: !item.artists?.length
+						? ""
+						: _.map(item.artists, "name").join(","),
+					url: item.external_urls?.spotify ?? item.uri,
+					artists: item.artists,
+				});
+
+				track.metadata.album = track.album.name;
+
+				const contextType = context?.type;
+
+				const actions = [
+					...(contextType != "album"
+						? [
+								{
+									icon: UI.icon("open-external"),
+									label: "Open " + contextType,
+									url: context.uri,
+								},
+						  ]
+						: []),
+					{
+						icon: UI.icon("open-external"),
+						label: "Open Album",
+						url: track.album.uri,
+					},
+					{
+						icon: UI.icon("shuffle"),
+						label: "Song Radio",
+						handler: async () => {
+							const radioDetails = await querySpotify(
+								`/recommendations?limit=50&market=US&seed_tracks=${track.id}&target_acousticness=0.1`
+							);
+							console.log("Radio details: ", radioDetails);
+						},
+					},
+				];
+
+				track.actions = actions;
+				track.action = actions[0];
+
+				return track;
+			},
+			onReady: async ({ pageData: track, setPageData }) => {
+				if (!track) return null;
+
+				const context = track.context;
+				const [trackWithMetaData, contextData] = await Promise.all([
+					addTrackAIInsights(track),
+					(async () => {
+						if (context?.type == "playlist") {
+							return await querySpotify(
+								context.href.replace(
+									"https://api.spotify.com/v1/",
+									"/"
+								),
+								false
+							);
+						}
+					})(),
+				]);
+
+				const contextType = context?.type;
+
+				if (contextType != "album" && contextData?.name)
+					trackWithMetaData.metadata[contextType] = contextData?.name;
+
+				setPageData(trackWithMetaData);
+			},
+		}),
+});
+
+const formatTrack = (item) => {
+	const track = addTrackMetadata({
+		...item,
+		image: item.album.images?.[0]?.url,
+		title: item.name,
+		subtitle: !item.artists?.length
+			? ""
+			: _.map(item.artists, "name").join(","),
+		url: `https://open.spotify.com/track/${item.id}`,
+		artists: item.artists,
+	});
+
+	track.metadata.album = track.album.name;
+
+	const actions = [
+		{
+			icon: UI.icon("play"),
+			label: "Preview",
+			handler: () => openTrackPreviewPage(track),
+		},
+		{
+			icon: UI.icon("play"),
+			label: "Play",
+			shortcut: "Shift + Space",
+			url: track.uri,
+		},
+		{
+			icon: UI.icon("list"),
+			label: "Open Album",
+			url: track.album.uri,
+		},
+	];
+
+	track.actions = actions;
+	track.action = actions[0];
+
+	return track;
+};
+
+registerAction("topSongsOnSpotify", {
+	label: "Top Songs",
+	icon: appIcon,
+	color: appColor,
+	global: true,
+	tags: ["spotify"],
+	handler: async () =>
+		openPage({
+			title: "Top Songs on Spotify",
+			layout: "grid",
+			resolve: async () => {
+				const res = await querySpotify(
+					"/me/top/tracks?time_range=long_term&limit=50",
+					false
+				);
+
+				return res.items.map(formatTrack);
+			},
+		}),
+});
+
+registerAction("topArtistsOnSpotify", {
+	label: "Top Artists",
+	icon: appIcon,
+	color: appColor,
+	global: true,
+	tags: ["spotify"],
+	handler: async () =>
+		openPage({
+			title: "Top Artists on Spotify",
+			layout: "grid",
+			resolve: async () => {
+				const res = await querySpotify(
+					"/me/top/artists?time_range=long_term&limit=50",
+					false
+				);
+
+				return res.items.map((item) => {
+					return {
+						...item,
+						image: item.images?.[0]?.url,
+						title: item.name,
+						url: `https://open.spotify.com/artist/${item.id}`,
+						metadata: {
+							genres: item.genres,
+							popularity: item.popularity,
+						},
+						action: {
+							icon: UI.icon("open-external"),
+							label: "View",
+							url: item.uri,
+						},
+						actions: [
+							{
+								label: "Top Tracks",
+								handler: () => {
+									openPage({
+										title: `${item.name}'s top Songs`,
+										layout: "grid",
+										resolve: async () => {
+											const res = await querySpotify(
+												`/artists/${item.id}/top-tracks`,
+												false
+											);
+
+											return res.tracks.map(formatTrack);
+										},
+									});
+								},
+							},
+							{
+								label: "Discography",
+								handler: () => {
+									openPage({
+										title: `${item.name}'s Discography`,
+										layout: "grid",
+										resolve: async () => {
+											const res = await querySpotify(
+												`/artists/${item.id}/albums`,
+												false
+											);
+
+											return res.items.map(formatAlbum);
+										},
+									});
+								},
+							},
+						],
+					};
+				});
+			},
+		}),
 });
 
 registerAction("previewSpotifySong", {
@@ -524,7 +823,7 @@ registerAction("previewSpotifySong", {
 	context: "share",
 	match: ({ url }) =>
 		url?.toString().startsWith("https://open.spotify.com/track/"),
-	handler: async ({ url }) => openSongPreviewPage({ url }),
+	handler: async ({ url }) => openTrackPreviewPage({ url }),
 });
 
 registerWidget("spotifyPlaylists", {
@@ -589,7 +888,7 @@ registerWidget("randomSpotifyTrack", {
 
 		return "no token";
 	},
-	onClick: ({ data }) => (data.url ? openSongPreviewPage(data) : null),
+	onClick: ({ data }) => (data.url ? openTrackPreviewPage(data) : null),
 	onSwipe: ({ refetch }) => refetch?.(),
 	title: ({ data, loading }) => {
 		if (loading || !data || data == "no token")
@@ -617,7 +916,7 @@ registerWidget("randomSpotifyTrack", {
 		return {
 			icon: UI.icon("play", { filled: true }),
 			label: "Play on Spotify",
-			url: data.url,
+			url: data.uri ?? `spotify://track/${data.id}`,
 		};
 	},
 	actions: ({ loading, data }) => {

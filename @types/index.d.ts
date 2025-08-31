@@ -294,6 +294,9 @@ declare var PageContext: {
 	page: typeof Page;
 	pageResolving?: boolean;
 	pageFilter?: string;
+	setMainAction: (action: typeof ActionButton) => {};
+	setActions: (action: (typeof ActionButton)[]) => {};
+	setPageData: (data?: typeof GenericObject) => {};
 	setPageFilter: (filter?: string) => {};
 	pageData?: { [key: string]: any };
 	pageTab?: string;

@@ -385,7 +385,7 @@ export default function SearchPage() {
 					type="text"
 					ref={inputRef}
 					className="popover-input bg-transparent h-full flex-1 border-none shadow-none px-0 py-3 text-xl focus:outline-none placeholder-content/30"
-					placeholder={page?.placeholder || "Type to search actions"}
+					placeholder={page?.placeholder || "Type to search..."}
 					debounce={page?.onSearch ? 500 : 0}
 					value={query}
 					onChange={(query) => {
