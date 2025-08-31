@@ -39,7 +39,7 @@ export default function ModalPage({
 
 	const focusSearchInput = (delay = 80) => {
 		setTimeout(() => {
-			inputRef.current.focus();
+			if (inputRef.current) inputRef.current.focus();
 		}, delay);
 	};
 

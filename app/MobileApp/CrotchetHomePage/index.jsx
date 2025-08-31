@@ -1,5 +1,4 @@
 import AppContent from "./AppContent";
-import ReceiveShareIntent from "./ReceiveShareIntent";
 
 export default function CrotchetHomePage() {
 	return (
@@ -25,8 +24,6 @@ export default function CrotchetHomePage() {
 			<div className="relative">
 				<AppContent />
 			</div>
-
-			<ReceiveShareIntent />
 		</>
 	);
 }

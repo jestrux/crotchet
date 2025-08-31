@@ -74,14 +74,16 @@ export default async function openUrl(path) {
 	if (path.startsWith("crotchet://copy"))
 		return window.copyToClipboard(path.replace("crotchet://copy/", ""));
 
-	if (path.startsWith("crotchet://preview/")) {
-		const { preview, actions } = cleanObject(
-			JSON.parse(
-				decodeURIComponent(path.replace("crotchet://preview/", ""))
-			)
-		);
-
-		return window.openPage({ preview, actions });
+	if (path.startsWith("crotchet://preview")) {
+		try {
+			const { args } = processSchemeUrl(path, "preview");
+			console.log(args);
+			if (args)
+				return window.openPage({ id: "crotchet-preview", ...args });
+		} catch (error) {
+			//
+		}
+		return;
 	}
 
 	if (path.startsWith("crotchet://share/")) {

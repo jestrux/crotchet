@@ -15,6 +15,7 @@ import { Filesystem } from "@capacitor/filesystem";
 import { useRef, useState } from "react";
 import { crawlUrl } from "@/crotchet/providers/crawler";
 import ModalPage from "@/crotchet/components/ModalPage";
+import { onActionClick } from "@/crotchet/hooks/useActionClick";
 
 const generatePreview = async (fileDataUrl, format) => {
 	async function generateGenericPreview(previewText, format) {
@@ -185,7 +186,7 @@ export default function ReceiveShareIntent({ floating = true }) {
 		_setShareSheet(newValue);
 		dispatch("share-intent-data-updated");
 	};
-	const supportedDocTypes = ["pdf"];
+	const supportedDocTypes = ["pdf", "m4a"];
 
 	const setPreviewLoading = (loading) => {
 		const v = shareSheetRef.current;
@@ -324,6 +325,8 @@ export default function ReceiveShareIntent({ floating = true }) {
 			subtitle: null,
 		};
 
+		// return alert(JSON.stringify({resultType}));
+
 		if (resultType == "plain") {
 			preview.subtitle = resultUrl;
 
@@ -347,7 +350,7 @@ export default function ReceiveShareIntent({ floating = true }) {
 		} else if (supportedDocTypes.includes(resultType)) {
 			preview.title = resultUrl.split("/").at(-1).split(".").at(0);
 			preview.subtitle = `document/${resultType}`;
-			payload.type = `document/${resultType}`;
+			// payload.type = `document/${resultType}`;
 			payload.file = await Filesystem.readFile({
 				path: resultUrl,
 			}).then(
@@ -363,18 +366,23 @@ export default function ReceiveShareIntent({ floating = true }) {
 			title: "Select an action",
 			payload,
 			preview: !objectIsEmpty(preview) ? preview : null,
-			actions: getShareActions(payload),
 		};
 	};
 
 	const { data: actions } = useDataLoader({
 		handler: async () => {
-			return getShareActions(shareSheetRef.current?.payload);
+			const payload = shareSheetRef.current?.payload;
+			return getShareActions(payload).map((a) => {
+				return {
+					...a,
+					handler: () => {
+						onActionClick(a)(payload);
+					},
+				};
+			});
 		},
 		listenForUpdates: ["app-actions-updated", "share-intent-data-updated"],
 	});
-
-	const error = null;
 
 	useEventListener("app-launched", () => {
 		let launchUrl;
@@ -411,7 +419,7 @@ export default function ReceiveShareIntent({ floating = true }) {
 		}
 	});
 
-	if (error || !shareSheet) return null;
+	if (!shareSheet) return null;
 
 	const { preview } = shareSheet || {};
 

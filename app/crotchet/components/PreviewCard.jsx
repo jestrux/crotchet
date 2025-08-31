@@ -92,9 +92,10 @@ export default function PreviewCard({
 						)}
 					>
 						{title?.length > 0 && (
-							<h5 className="text-sm text-content font-semibold first-letter:capitalize">
-								{title}
-							</h5>
+							<h5
+								className="text-sm text-content font-semibold first-letter:capitalize"
+								dangerouslySetInnerHTML={{ __html: title }}
+							/>
 						)}
 						{subtitle?.toString().length > 0 && (
 							<p
@@ -102,9 +103,8 @@ export default function PreviewCard({
 									"text-sm opacity-75",
 									title ? "line-clamp-1" : "line-clamp-2"
 								)}
-							>
-								{subtitle}
-							</p>
+								dangerouslySetInnerHTML={{ __html: title }}
+							/>
 						)}
 					</div>
 				)}

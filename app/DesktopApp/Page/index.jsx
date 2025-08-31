@@ -75,6 +75,12 @@ const PageContentWrapper = () => {
 		},
 	});
 
+	useEffect(() => {
+		return () => {
+			if (typeof page.onClose == "function") page.onClose();
+		};
+	}, []);
+
 	return (
 		<>
 			{page?.type == "search" && <SearchPage />}

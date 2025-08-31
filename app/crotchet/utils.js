@@ -828,18 +828,21 @@ export const getPreviewUrl = (content) => {
 
 	if (!_.isObject(content)) return "";
 
-	const url = `crotchet://preview/${encodeURIComponent(
-		JSON.stringify({
-			preview: _.pick(content, [
-				"image",
-				"video",
-				"title",
-				"subtitle",
-				"aspectRatio",
-			]),
-			actions: content.actions,
-		})
-	)}`;
+	const url = `crotchet://preview/?${objectToQueryParams({
+		preview: _.pick(content, [
+			"image",
+			"video",
+			"title",
+			"subtitle",
+			"aspectRatio",
+		]),
+		actions: content.actions ?? [
+			"Summer",
+			{
+				label: "Breeze",
+			},
+		],
+	})}`;
 
 	return url;
 };

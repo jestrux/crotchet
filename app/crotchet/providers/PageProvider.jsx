@@ -168,12 +168,21 @@ export default function PageProvider({
 		dismiss: onClose,
 		onSuccess: (data) => {
 			setPageData(data);
-			setTimeout(() => readyHandler.current(data));
+			setTimeout(() => {
+				if (typeof page.onReady == "function")
+					page.onReady(getContextInfo(data));
+				readyHandler.current(data);
+			});
 		},
 		onUpdate: (data, oldData) => {
 			setPageDataVersion("data-" + randomId());
 			setPageData(data);
-			setTimeout(() => dataUpdatedHandler.current(data, oldData));
+			setTimeout(() => {
+				if (typeof page.onUpdate == "function")
+					page.onUpdate(getContextInfo(data));
+
+				dataUpdatedHandler.current(data, oldData);
+			});
 		},
 	});
 
@@ -325,15 +334,24 @@ export default function PageProvider({
 		setPageStatus(payload)
 	);
 
-	const contextInfo = {
-		page,
-		pageData,
-		pageDataVersion,
-		formData,
-		pageFilter,
-		closePage: (payload) => onClose(payload),
-		popToRoot: onPopToRoot,
-	};
+	function getContextInfo(data) {
+		data = data ?? pageData;
+		return {
+			page,
+			data,
+			pageData: data,
+			pageDataVersion,
+			formData,
+			pageFilter,
+			setMainAction,
+			setSecondaryAction,
+			setActions,
+			closePage: (payload) => onClose(payload),
+			popToRoot: onPopToRoot,
+		};
+	}
+
+	const contextInfo = getContextInfo();
 
 	return (
 		<div
@@ -428,6 +446,8 @@ export default function PageProvider({
 									shortcut:
 										page.type == "form"
 											? "Cmd + Enter"
+											: action.shortcut
+											? action.shortcut
 											: "Enter",
 							  }
 							: null;

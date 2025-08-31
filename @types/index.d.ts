@@ -98,6 +98,11 @@ declare var oauth: (props: {
 	readOnly?: boolean;
 }) => PromiseLike<any>;
 
+declare var playMedia: (
+	media: typeof GenericObject,
+	type?: "audio" | "video"
+) => PromiseLike<any>;
+
 declare var showAlert: (
 	message: String | { title: string; message: string }
 ) => Promise<any>;
@@ -277,6 +282,7 @@ declare var ChoiceList:
 	| (typeof ChoiceItem)[]
 	| (() => PromiseLike<(typeof ChoiceItem)[]>);
 declare var PageContext: {
+	page: typeof Page;
 	pageResolving?: boolean;
 	pageFilter?: string;
 	setPageFilter: (filter?: string) => {};
@@ -327,6 +333,8 @@ declare var Page: {
 	title?: typeof PageTitle;
 	layout?: "list" | "grid" | "masonry";
 	onSearch?: (value?: string) => PromiseLike<any>;
+	onReady?: (payload: typeof PageContext) => void;
+	onClose?: (payload: any) => void;
 	fullScreen?: boolean | ((payload: typeof PageContext) => boolean);
 	condensingTitle?: boolean | ((payload: typeof PageContext) => boolean);
 	placeholder?: string;

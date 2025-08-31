@@ -176,8 +176,8 @@ const queryPlaylists = async () =>
 	);
 
 const queryArtists = async () =>
-	await querySpotify("/me/top/artists?limit=50").then((res) =>
-		res?.items.map((item) => {
+	await querySpotify("/me/following?type=artist&limit=50").then((res) =>
+		res?.artists?.items.map((item) => {
 			return {
 				_id: item.id,
 				image: item.images?.[0]?.url,
@@ -196,7 +196,7 @@ const queryArtists = async () =>
 
 const queryAlbums = async () =>
 	await querySpotify("/me/albums?limit=50").then((res) =>
-		res?.items.map((item) => {
+		res?.items.map(({ album: item }) => {
 			return {
 				_id: item.id,
 				image: item.images?.[0]?.url,
@@ -211,8 +211,8 @@ const queryAlbums = async () =>
 	);
 
 const queryTracks = async () =>
-	await querySpotify("/me/top/tracks?limit=50").then((res) =>
-		res?.items.map((item) => {
+	await querySpotify("/me/tracks?limit=50").then((res) =>
+		res?.items.map(({ track: item }) => {
 			return {
 				_id: item.id,
 				image: item.album.images?.[0]?.url,
@@ -225,6 +225,152 @@ const queryTracks = async () =>
 			};
 		})
 	);
+
+const addTrackMetadata = (track) => {
+	track.metadata = {
+		title: track.name,
+		description: track.artists.map(({ name }) => name).join(", "),
+		releaseDate: formatDate(track.releaseDate?.isoString),
+		duration: toHms(track.duration),
+		url: track.url,
+		embedUrl: `https://open.spotify.com/embed/track/${track.id}`,
+	};
+
+	const actions = [
+		...(track.preview_url
+			? [
+					{
+						icon: UI.icon("play"),
+						label: "Preview",
+						handle: () => previewTrack(track),
+					},
+			  ]
+			: []),
+		{
+			icon: UI.icon("open-external"),
+			label: "Play",
+			url: track.url,
+		},
+		{
+			icon: UI.icon("shuffle"),
+			label: "Song Radio",
+			handler: async () => {
+				const radioDetails = await querySpotify(
+					`/recommendations?limit=50&market=US&seed_tracks=${track.id}&target_acousticness=0.1`
+				);
+				console.log("Radio details: ", radioDetails);
+			},
+		},
+	];
+
+	return {
+		...track,
+		url: track.url.replace("https://open.spotify.com/", "spotify://"),
+		action: actions[0],
+		actions,
+	};
+};
+
+const getTrackDetails = async (url) => {
+	const trackId = new URL(url).pathname.replace("/track/", "");
+	let crawlRes = (
+		await crawlUrl(
+			`https://open.spotify.com/embed/track/${trackId}`,
+			"#__NEXT_DATA__"
+		)
+	)?.[0];
+	try {
+		crawlRes = JSON.parse(crawlRes)?.props?.pageProps?.state?.data?.entity;
+	} catch (error) {}
+
+	if (crawlRes?.id) {
+		const t = crawlRes;
+		const track = {
+			url: `https://open.spotify.com/track/${trackId}`,
+			image: t.visualIdentity.image[0].url,
+			title: t.name,
+			description: t.artists.map(({ name }) => name).join(", "),
+			preview_url: t.audioPreview?.url,
+			duration: t.duration / 1000,
+		};
+
+		return addTrackMetadata({
+			...t,
+			...track,
+		});
+	}
+
+	return await querySpotify(`/tracks/${trackId}`).then((track) => {
+		const artwork = track.album.images[0].url;
+		const album = track.album.name;
+		const artist = track.artists.map(({ name }) => name).join(", ");
+		const preview = track.preview_url;
+		const title = track.name;
+
+		return {
+			// artwork,
+			// album,
+			// artist,
+			// preview,
+			image: artwork,
+			title: `<span>
+					${title}
+					<span class="ml-1 opacity-50">
+					&mdash; ${album}
+					</span>
+					</span>`,
+			subtitle: artist,
+			url,
+			src: preview,
+		};
+	});
+};
+
+const previewTrack = (track) => {
+	playMedia({
+		...track,
+		src: track.preview_url,
+		actions: [
+			{
+				icon: appIcon,
+				shortcut: "Shift + Space",
+				label: "Play On Spotify",
+				handler: () => {
+					closePage();
+					openUrl(track.url);
+				},
+			},
+			{
+				icon: appIcon,
+				shortcut: "Shift + R",
+				label: "Song Radio",
+				handler: async () => {
+					const radioDetails = await querySpotify(
+						`/recommendations?limit=50&market=US&seed_tracks=${track.id}&target_acousticness=0.1`
+					);
+					console.log("Radio details: ", radioDetails);
+				},
+			},
+		],
+	});
+};
+
+const openSongPreviewPage = ({ url } = { url: "" }) => {
+	if (!url) return;
+
+	return openPage({
+		type: "preview",
+		title: ({ pageData }) => (pageData ? "" : "Preview Spotify Track"),
+		resolve: async () => await getTrackDetails(url),
+		onReady: ({ pageData, closePage }) => {
+			if (!pageData?.preview_url) return;
+
+			closePage();
+
+			previewTrack(pageData);
+		},
+	});
+};
 
 const widgetResolverContentActions = (dataLoader, { entity = "" } = {}) => ({
 	resolve: async () => {
@@ -300,12 +446,14 @@ const registerRandomSpotifyAction = (name, loader, { label = "" } = {}) => {
 		global: true,
 		tags: ["spotify"],
 		handler: async () => {
-			window.openActionSheet({
-				noHeading: true,
-				actions: async () => {
+			window.openPage({
+				// noHeading: true,
+				type: "preview",
+				resolve: async () => {
 					try {
+						await someTime();
 						const res = await loader();
-						const entry = await sourceGet(
+						let entry = await sourceGet(
 							{
 								handler: () => res,
 							},
@@ -314,13 +462,24 @@ const registerRandomSpotifyAction = (name, loader, { label = "" } = {}) => {
 								single: true,
 							}
 						);
-						openShareSheet(entry);
+
+						if (name == "randomSpotifyTrack")
+							entry = await getTrackDetails(entry.url);
+
+						return entry;
 					} catch (error) {
 						// @ts-ignore
 						window.promptConnectSpotify(() =>
 							openUrl(`crotchet://action/${name}`)
 						);
 					}
+				},
+				onReady: ({ pageData, closePage }) => {
+					if (!pageData?.preview_url) return;
+
+					closePage();
+
+					previewTrack(pageData);
 				},
 			});
 		},
@@ -348,46 +507,7 @@ registerAction("previewSpotifySong", {
 	context: "share",
 	match: ({ url }) =>
 		url?.toString().startsWith("https://open.spotify.com/track/"),
-	// url?.toString().indexOf("open.spotify.com/track/") != -1,
-	handler: async ({ url }) => {
-		if (!url) return;
-
-		const trackId = new URL(url).pathname.replace("/track/", "");
-		const track = await querySpotify(`/tracks/${trackId}`).then((track) => {
-			const artwork = track.album.images[0].url;
-			const album = track.album.name;
-			const artist = track.artists.map(({ name }) => name).join(", ");
-			const preview = track.preview_url;
-			const title = track.name;
-
-			return {
-				// artwork,
-				// album,
-				// artist,
-				// preview,
-				image: artwork,
-				title: `<span>
-					${title}
-					<span class="ml-1 opacity-50">
-					&mdash; ${album}
-					</span>
-					</span>`,
-				subtitle: artist,
-				url,
-				src: preview,
-			};
-		});
-
-		return openPage({
-			type: "preview",
-			title: "Spotify Preview",
-			data: track,
-		});
-
-		// return openUrl(
-		// 	`crotchet://action/playAudio?${objectToQueryParams(track)}`
-		// );
-	},
+	handler: async ({ url }) => openSongPreviewPage({ url }),
 });
 
 registerWidget("spotifyPlaylists", {
@@ -452,7 +572,7 @@ registerWidget("randomSpotifyTrack", {
 
 		return "no token";
 	},
-	onClick: ({ data }) => (data.url ? openUrl(data.url) : null),
+	onClick: ({ data }) => (data.url ? openSongPreviewPage(data) : null),
 	onSwipe: ({ refetch }) => refetch?.(),
 	title: ({ data, loading }) => {
 		if (loading || !data || data == "no token")

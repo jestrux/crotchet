@@ -15,7 +15,9 @@ export default function useAppPages() {
 		const promise = new Promise((resolve) => {
 			pageResolver = resolve;
 		});
-		const id = page.id || randomId();
+		const id =
+			page.id ||
+			(page.type == "preview" ? "crotchet-preview" : randomId());
 
 		if (page.source) {
 			const { q, query, source, ...otherPageProps } = page;
@@ -89,8 +91,10 @@ export default function useAppPages() {
 
 	window.closePage = (data) => {
 		if (!onDesktop()) return window.hideAlert();
-
-		popPage(pages.at(-1)?._id, data);
+		
+		setTimeout(() => {
+			popPage(pages.at(-1)?._id, data);
+		});
 	};
 
 	// window.openPage = (page) => dispatch("open-page", page);

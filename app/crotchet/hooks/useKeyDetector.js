@@ -133,7 +133,11 @@ const useKeyDetector = ({ key, delayBy = 0, action }) => {
 
 	function onKeyUp(e) {
 		keys.forEach((key) => {
-			if (key.toLowerCase() == e.key.toLowerCase()) action(e, key);
+			if (
+				key.toLowerCase() == e.key.toLowerCase() ||
+				key.toLowerCase() == e.code.toLowerCase()
+			)
+				action(e, key);
 		});
 	}
 

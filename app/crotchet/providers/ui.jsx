@@ -7,10 +7,16 @@ import { loadExternalAsset } from "../utils";
 import clsx from "clsx";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import openUrl from "../open-url";
+import PreviewWithMeta from "../components/PreviewWithMeta";
 
 export function media({ data } = {}) {
 	if (!data) return null;
 	return <MediaItem {...data} />;
+}
+
+export function previewWithMeta({ data } = {}) {
+	if (!data) return null;
+	return <PreviewWithMeta {...data} />;
 }
 
 function Component({ data }) {
@@ -25,7 +31,7 @@ function Component({ data }) {
 			"x-data",
 			`{
 				$page: ${JSON.stringify(page)},
-				$pageData: ${JSON.stringify(pageData || {})}
+				$pageData: ${JSON.stringify(pageData || {})},
 			}`
 		);
 
@@ -37,6 +43,19 @@ function Component({ data }) {
 			window.Alpine.magic(
 				"onRemoteAction",
 				() => (callback) => (remoteActionHandler.current = callback)
+			);
+
+			elementRef.current.setAttribute(
+				"x-data",
+				`{
+					$page: ${JSON.stringify(page)},
+					$pageData: ${JSON.stringify(pageData || {})},
+					init() {
+						this.$onPageDataChanged((data) => {
+							this.$pageData = data;
+						});
+					}
+				}`
 			);
 
 			setTimeout(() => {
@@ -76,7 +95,7 @@ function Component({ data }) {
 			pageDataChangedHandler.current(payload);
 	});
 
-	useEventListener("remote-action-" + page._id, (_, payload) => {
+	useEventListener("remote-action-" + page?._id, (_, payload) => {
 		if (typeof remoteActionHandler.current == "function")
 			remoteActionHandler.current(payload);
 	});
@@ -104,7 +123,7 @@ export function list({ data } = {}) {
 	return (
 		<div className="pt-1.5 px-3 relative size-full">
 			{data.map((item) => (
-				<RegularListItem key={item._id} {...item} />
+				<RegularListItem key={item?._id} {...item} />
 			))}
 		</div>
 	);
@@ -141,7 +160,7 @@ const GridItem = ({ item }) => {
 
 	return (
 		<div
-			key={item._id}
+			key={item?._id}
 			{...gestures}
 			onDoubleClick={() => {}}
 			onClick={() => handleClick()}
@@ -209,7 +228,7 @@ export function grid({ data, entryActions, entryAction } = {}) {
 						? () => entryAction(item)
 						: null;
 
-				return <GridItem key={item._id} item={item} />;
+				return <GridItem key={item?._id} item={item} />;
 			})}
 		</div>
 	);

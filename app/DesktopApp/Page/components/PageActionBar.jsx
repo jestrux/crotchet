@@ -116,6 +116,13 @@ export default function PageActionBar() {
 		}
 
 		if (secondaryAction) {
+			if (!isValidAction(secondaryAction))
+				return (
+					<span className="text-sm">
+						{secondaryAction?.label || secondaryAction}
+					</span>
+				);
+
 			return (
 				<PageButton
 					className="gap-1"

@@ -456,6 +456,7 @@ export default function useAlerts() {
 	if (!window.onDesktop()) {
 		window.openPage = (props) => {
 			props = {
+				...(props.type == "preview" ? { id: "crotchet-preview" } : {}),
 				fullScreen: true,
 				inset: false,
 				dismissible: props.dismissible ?? props.fullScreen,

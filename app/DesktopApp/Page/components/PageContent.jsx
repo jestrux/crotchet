@@ -11,19 +11,82 @@ export default function PageContent({ children }) {
 		pageResolving,
 		page,
 		pageData,
+		setActions,
+		setMainAction,
+		onReady,
 	} = usePageContext();
 	const isPreviewPage = page.type == "preview";
-	const previewContent = _.pick(pageData || {}, ["title", "subtitle"]);
+	const previewContent = _.pick(pageData || {}, [
+		"title",
+		"description",
+		"subtitle",
+		"metadata",
+		"action",
+		"actions",
+	]);
 	let preview = _preview;
+
+	onReady((data) => {
+		if (page.type == "preview") {
+			if (data?.action) setMainAction(data.action);
+			if (data?.actions) setActions(data.actions);
+		}
+	});
+
+	const metadata = () => {
+		if (!previewContent.metadata) return null;
+
+		try {
+			return (
+				<div className="border-t divide-y divide-content/5 text-sm">
+					{Object.entries(previewContent.metadata).map(
+						([label, value], index) => (
+							<div
+								key={index}
+								className="flex gap-16 items-center justify-between py-2 px-4"
+							>
+								<span className="opacity-70 capitalize flex-shrink-0">
+									{label}
+								</span>
+								<span className="opacity-85 flex-1 truncates line-clamp-1 text-right">
+									{value}
+								</span>
+							</div>
+						)
+					)}
+				</div>
+			);
+		} catch (error) {
+			console.log("Metadata error: ", error, previewContent.metadata);
+		}
+
+		return null;
+	};
 
 	if (isPreviewPage && !objectIsEmpty(previewContent)) {
 		preview = (
-			<div className="p-4 space-y-2">
-				<h1 className="font-medium">{previewContent.title}</h1>
-				<p className="text-sm text-content/50">
-					{previewContent.subtitle}
-				</p>
-			</div>
+			<>
+				{(previewContent.title ||
+					previewContent.description ||
+					previewContent.subtitle) && (
+					<div className="p-4 space-y-1">
+						{previewContent.title && (
+							<h1 className="text-2xl font-medium">
+								{previewContent.title}
+							</h1>
+						)}
+						{(previewContent.description ||
+							previewContent.subtitle) && (
+							<p className="text-content/85">
+								{previewContent.description ||
+									previewContent.subtitle}
+							</p>
+						)}
+					</div>
+				)}
+
+				{metadata()}
+			</>
 		);
 	}
 
