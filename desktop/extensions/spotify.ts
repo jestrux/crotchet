@@ -466,6 +466,9 @@ const widgetResolverContentActions = (dataLoader, { entity = "" } = {}) => ({
 				label: "View",
 				icon: UI.icon("search"),
 				handler: () => {
+					if (entity == "Artists")
+						return window.actions.topArtistsOnSpotify.handler();
+
 					openChoicePicker({
 						fullScreen: true,
 						// title: entity ? `Select ${entity}` : null,
