@@ -98,6 +98,15 @@ declare var oauth: (props: {
 	readOnly?: boolean;
 }) => PromiseLike<any>;
 
+declare var promptAI: (
+	prompt: string,
+	props?: {
+		systemPrompt?: string;
+		cacheKey?: string;
+		cacheDuration?: number;
+	}
+) => PromiseLike<any>;
+
 declare var playMedia: (
 	media: typeof GenericObject,
 	type?: "audio" | "video"

@@ -110,18 +110,6 @@ const querySpotify = async (endpoint = "/me") => {
 	}
 };
 
-const connectSpotify = async () => {
-	try {
-		await querySpotify();
-		dispatch(connectionChangedEvent);
-		return true;
-	} catch (error) {
-		showActionSheetAlert("Invalid Spotify token");
-	}
-
-	return false;
-};
-
 const promptConnectSpotify = async (callback) => {
 	let response;
 	try {
@@ -226,15 +214,32 @@ const queryTracks = async () =>
 		})
 	);
 
-const addTrackMetadata = (track) => {
+const addTrackMetadata = async (track) => {
+	const artists = track.artists.map(({ name }) => name).join(", ");
+
 	track.metadata = {
-		title: track.name,
-		description: track.artists.map(({ name }) => name).join(", "),
-		releaseDate: formatDate(track.releaseDate?.isoString),
+		subtitle: artists,
+		"Release Date": formatDate(track.releaseDate?.isoString),
 		duration: toHms(track.duration),
-		url: track.url,
-		embedUrl: `https://open.spotify.com/embed/track/${track.id}`,
 	};
+
+	const interestingFact = await promptAI(
+		`Tell me something interesting "${track.name}" by ${artists}, keep it concise`,
+		{
+			cacheKey: `spotifyArtist/${track.id}`,
+		}
+	);
+
+	const genres = await promptAI(
+		`What are the genres form "${track.name}" by ${artists}. Don't explain just give them to me comma separated like "jazz, rnb"`,
+		{
+			cacheKey: `spotifyArtist/${track.id}/genres`,
+		}
+	);
+
+	if (genres) track.metadata.genres = genres;
+
+	if (interestingFact) track.description = interestingFact;
 
 	const actions = [
 		...(track.preview_url
@@ -289,12 +294,12 @@ const getTrackDetails = async (url) => {
 			url: `https://open.spotify.com/track/${trackId}`,
 			image: t.visualIdentity.image[0].url,
 			title: t.name,
-			description: t.artists.map(({ name }) => name).join(", "),
+			subtitle: t.artists.map(({ name }) => name).join(", "),
 			preview_url: t.audioPreview?.url,
 			duration: t.duration / 1000,
 		};
 
-		return addTrackMetadata({
+		return await addTrackMetadata({
 			...t,
 			...track,
 		});
@@ -500,6 +505,18 @@ registerRandomSpotifyAction("randomSpotifyAlbum", queryAlbums, {
 
 registerRandomSpotifyAction("randomSpotifyTrack", queryTracks, {
 	label: "Random Track",
+});
+
+registerAction("currentSongOnSpotify", {
+	label: "Now Playing",
+	icon: appIcon,
+	color: appColor,
+	global: true,
+	tags: ["spotify"],
+	handler: async () => {
+		const track = await querySpotify("/me/player/currently-playing");
+		console.log("Now playing: ", track);
+	},
 });
 
 registerAction("previewSpotifySong", {

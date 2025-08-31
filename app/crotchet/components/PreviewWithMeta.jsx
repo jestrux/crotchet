@@ -11,7 +11,7 @@ export default function PreviewWithMeta({
 
 		try {
 			return (
-				<div className="border-t divide-y divide-content/5 text-sm">
+				<div className="border-b divide-y divide-content/5 text-sm">
 					{Object.entries(_metadata).map(([label, value], index) => (
 						<div
 							key={index}
@@ -36,18 +36,26 @@ export default function PreviewWithMeta({
 
 	const preview = (
 		<>
-			{(title || description || subtitle) && (
-				<div className="p-4 space-y-1">
+			{(title || subtitle) && (
+				<div className="p-4 border-b">
 					{title && <h1 className="text-2xl font-medium">{title}</h1>}
-					{(description || subtitle) && (
-						<p className="text-content/85">
-							{description || subtitle}
-						</p>
+					{subtitle && (
+						<p className="mt-1 text-content/85">{subtitle}</p>
 					)}
 				</div>
 			)}
 
 			{metadata()}
+
+			{description && (
+				<p
+					className={
+						"p-4 text-sm text-content/70 font-light leading-loose"
+					}
+				>
+					{description}
+				</p>
+			)}
 		</>
 	);
 
@@ -78,7 +86,7 @@ export default function PreviewWithMeta({
 					</div>
 				)}
 			</div>
-			<div>{preview}</div>
+			<div className="h-full overflow-auto">{preview}</div>
 		</div>
 	);
 }

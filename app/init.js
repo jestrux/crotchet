@@ -7,6 +7,7 @@ import * as UI from "./crotchet/providers/ui";
 import * as crotchet from "./crotchet";
 import * as authUtils from "./crotchet/providers/auth";
 import * as audioPlayerUtils from "./crotchet/providers/audio";
+import * as aiUtils from "./crotchet/providers/ai";
 import "./crotchet/providers/socket";
 import { crawlUrl } from "./crotchet/providers/crawler";
 
@@ -20,6 +21,7 @@ Object.assign(window, {
 	...crotchetThings,
 	...firebaseUtils,
 	...authUtils,
+	...aiUtils,
 	crawlUrl,
 	...audioPlayerUtils,
 	UI,

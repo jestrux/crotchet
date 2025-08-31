@@ -7,6 +7,7 @@ import { Home } from "@/app/pages/Home";
 import { setCommonHeaders } from "@/app/headers";
 import crawlUrl from "./app/api/crawl";
 import { exchangeCodeForAuthToken, generateOauthUrl } from "./app/api/oauth";
+import aiPrompt from "./app/api/ai";
 
 // @ts-ignore
 const kv = env.KV;
@@ -19,6 +20,14 @@ export default defineApp([
 		// setup ctx here
 		ctx;
 	},
+	route("/prompt", async function handler({ request }) {
+		const { prompt, systemPrompt } = (await request.json()) as {
+			prompt: string;
+			systemPrompt?: string;
+		};
+
+		return Response.json(await aiPrompt(prompt, { systemPrompt }));
+	}),
 	route("/socket", async function handler() {
 		const url = await kv.get("__desktopBaseUrl");
 		return Response.json({
@@ -84,11 +93,15 @@ export default defineApp([
 		if (request.method == "DELETE") await kv.delete(key);
 
 		if (request.method == "POST") {
-			await kv.put(
-				key,
-				((await request.json()) as { value?: string | object })?.value,
-				{ expirationTtl: 60 * 3600 * 24 * 365 }
-			);
+			let value = ((await request.json()) as { value?: string | object })
+				?.value;
+
+			if (typeof value != "undefined") {
+				if (typeof value == "object") value = JSON.stringify(value);
+				await kv.put(key, value, {
+					expirationTtl: 60 * 3600 * 24 * 365,
+				});
+			}
 		}
 
 		return Response.json({ value: await kv.get(key) });
