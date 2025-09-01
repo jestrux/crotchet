@@ -658,6 +658,7 @@ registerPage("setHeroHome", {
 			],
 		};
 	},
+	// @ts-ignore
 	nav: ({ pageResolving, pageData }) => {
 		if (pageResolving || !pageData) return null;
 

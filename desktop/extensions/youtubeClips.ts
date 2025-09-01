@@ -472,6 +472,7 @@ const editVideo = async ({ title, resolve, handler }) => {
 						resolve(formatPayload(payload));
 					};
 					el.addEventListener("video-loaded", handleVideoLoad);
+					// @ts-ignore
 					el.innerHTML = getVideoPlayer(payload);
 					document.body.appendChild(el);
 				});
@@ -762,6 +763,7 @@ const getPlayClipPage = (clip, external = false) => {
 		}
 		if (action == "pip") {
 			closePage();
+			// @ts-ignore
 			openPage(getPlayClipPage(clip, true));
 		}
 	};
@@ -1149,6 +1151,7 @@ const playClip = async (clip, external = false) => {
 		clip = pageRes;
 	}
 
+	// @ts-ignore
 	openPage(getPlayClipPage(clip, external || clip?.external));
 };
 
@@ -1156,7 +1159,6 @@ registerDataSource("db", "youtubeClips", {
 	icon: appIcon,
 	table: "youtubeClips",
 	label: "Youtube Clips",
-	collection: "videos",
 	orderBy: "updatedAt,desc",
 	mapEntry,
 	searchFields: ["title"],

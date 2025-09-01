@@ -185,6 +185,7 @@ const getThemes = ({
 				  }),
 		};
 
+		// @ts-ignore
 		if (!filter || filter == colorScheme) agg.push(theme);
 
 		return agg;
@@ -254,6 +255,7 @@ registerAction("samsungRemote", {
 
 				console.log("Devices: ", foundDevices);
 
+				// @ts-ignore
 				return foundDevices.map(({ ip }) => ({
 					label: `Samsung TV (${ip})`,
 					// value: ip,

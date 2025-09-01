@@ -45,7 +45,7 @@ declare var getPreviewUrl: (payload: any) => string;
 
 declare var crawlUrl: (
 	url: string,
-	props: {
+	props?: {
 		matcher?: string;
 		cacheKey?: string;
 		cacheDuration?: number;
@@ -451,11 +451,34 @@ declare var registerPage: (name: string, props: typeof Page) => void;
 declare var registerDataSource: (
 	provider: String,
 	name: String,
-	formFields?: { [key: string]: any },
-	layoutProps?: {
-		layout?: String;
-		aspectRatio?: String;
-		meta?: { [key: string]: any };
+	props: {
+		table?: string;
+		label?: string;
+		fetch?: () => {};
+		icon?: string | typeof UI.icon;
+		formFields?: { [key: string]: any };
+		listenForUpdates?: typeof ListenForUpdates;
+		searchFields?: string[];
+		filter?: { [key: string]: any } | ((payload: any) => {}) | undefined;
+		filters?: (typeof ChoiceItem)[];
+		orderBy?: string;
+		layoutProps?: {
+			layout?: String;
+			columns?: number | string;
+			aspectRatio?: String;
+			meta?: { [key: string]: any };
+		};
+		mapEntry?: ((GenericObject) => void) | null;
+		search?: (value: string) => PromiseLike<typeof ChoiceList>;
+		actions?:
+			| (typeof ActionButton)[]
+			| ((payload: typeof WidgetPayload) => (typeof ActionButton)[])
+			| any;
+		entryAction?: (payload: any) => any;
+		entryActions?:
+			| (typeof ActionButton)[]
+			| ((payload: any) => any);
+		entryPreview?: (payload: any) => any;
 	}
 ) => void;
 

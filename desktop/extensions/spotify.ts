@@ -328,10 +328,9 @@ const addTrackAIInsights = async (track) => {
 const getTrackDetails = async (url) => {
 	const trackId = new URL(url).pathname.replace("/track/", "");
 	let crawlRes = (
-		await crawlUrl(
-			`https://open.spotify.com/embed/track/${trackId}`,
-			"#__NEXT_DATA__"
-		)
+		await crawlUrl(`https://open.spotify.com/embed/track/${trackId}`, {
+			matcher: "#__NEXT_DATA__",
+		})
 	)?.[0];
 	try {
 		crawlRes = JSON.parse(crawlRes)?.props?.pageProps?.state?.data?.entity;
