@@ -105,11 +105,12 @@ export default async function openUrl(path) {
 	}
 
 	if (path.startsWith("crotchet://search")) {
-		const { scheme } = processSchemeUrl(path, "search");
+		const { scheme, slug, params } = processSchemeUrl(path, "search");
 		return window.openPage({
 			id: "crotchet-search",
 			type: "search",
 			source: scheme,
+			query: decodeURIComponent(slug || params?.q || ""),
 		});
 	}
 

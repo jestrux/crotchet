@@ -43,7 +43,15 @@ declare var toHms: (number: Number) => string | null;
 
 declare var getPreviewUrl: (payload: any) => string;
 
-declare var crawlUrl: (url: string, matcher?: string) => Promise<any>;
+declare var crawlUrl: (
+	url: string,
+	props: {
+		matcher?: string;
+		cacheKey?: string;
+		cacheDuration?: number;
+		invalidateCache?: boolean;
+	}
+) => Promise<any>;
 
 declare var queryDb: (
 	name: String,
@@ -167,10 +175,11 @@ declare var DataItem: {
 	image?: string | null;
 	title?: string | null;
 	subtitle?: string | null;
+	description?: string | null;
 	url?: string | null;
 	share?: string | null;
 	actions?: (typeof ActionButton)[] | (() => (typeof ActionButton)[]);
-	meta: { [key: string]: any };
+	meta?: { [key: string]: any };
 	status?:
 		| "success"
 		| "verified"
@@ -215,12 +224,18 @@ declare var UI: {
 		data?: typeof DataItem | null;
 		loading?: boolean;
 	}) => [];
+	previewWithMeta: (payload: {
+		data?: (typeof DataItem & { layout?: "portrait" }) | null;
+		loading?: boolean;
+	}) => [];
 	list: (payload: { data?: []; loading?: boolean }) => [];
 	grid: (payload: { data?: []; loading?: boolean }) => [];
 	icon: (
 		icon?:
 			| "default"
 			| "bolt"
+			| "ai"
+			| "sparkles"
 			| "restore"
 			| "check"
 			| "clear"

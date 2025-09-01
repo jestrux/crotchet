@@ -204,6 +204,7 @@ export default function registerDataSource(provider, name, props = {}) {
 
 	const source = {
 		..._.omit(props, getterFields),
+		icon: props.icon,
 		_id: randomId(),
 		provider,
 		name,

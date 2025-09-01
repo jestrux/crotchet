@@ -344,6 +344,7 @@ export default function SearchPage() {
 	onOpen(() => {
 		if (!activeChoice) navigateToStart("select");
 		focusInput();
+		if (page.searchQuery && !query) handleSearch(page.searchQuery);
 	});
 
 	onReady(() => navigateToStart());
@@ -471,6 +472,7 @@ export default function SearchPage() {
 										<PageListItem
 											key={choice.__id}
 											className="cursor-default"
+											leading={choice.leading}
 											trailing={
 												trailing?.length ? (
 													<div

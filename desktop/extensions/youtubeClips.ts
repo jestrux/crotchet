@@ -1153,6 +1153,7 @@ const playClip = async (clip, external = false) => {
 };
 
 registerDataSource("db", "youtubeClips", {
+	icon: appIcon,
 	table: "youtubeClips",
 	label: "Youtube Clips",
 	collection: "videos",

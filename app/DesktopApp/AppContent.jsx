@@ -97,6 +97,7 @@ const getCommands = async () => {
 	return [
 		..._.concat(getAutomationsAction, window.globalActions()).map(
 			(action) => ({
+				leading: action.icon,
 				name: action.name,
 				label: action.label,
 				value: action.label,
@@ -115,6 +116,7 @@ const getCommands = async () => {
 			),
 			"label"
 		).map((source) => ({
+			leading: source.icon,
 			name: source.name,
 			label: source.label,
 			value: source.label,
@@ -168,6 +170,7 @@ const searchActionResults = _.throttle((searchQuery, appendResult) => {
 
 				const { image, video, ...result } = res;
 
+				result.leading = action.icon;
 				result.trailing = source.label;
 				result.__searchKey = action._id;
 
@@ -211,6 +214,7 @@ export default function AppContent() {
 				return {
 					// pinned: ranking[item.name] ?? -1,
 					...item,
+					leading: item.icon,
 					name: item.name,
 					label: item.label,
 					value: item.label,

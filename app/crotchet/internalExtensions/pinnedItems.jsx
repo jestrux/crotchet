@@ -78,6 +78,7 @@ export default function pinnedItems() {
 	};
 
 	registerDataSource("db", "pinnedItems", {
+		icon,
 		orderBy: "updatedAt,desc",
 		mapEntry: (entry) => ({
 			...entry,

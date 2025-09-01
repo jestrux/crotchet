@@ -100,6 +100,7 @@ const addItem = async (value) =>
 	});
 
 registerDataSource("db", "reader", {
+	icon: appIcon,
 	table: "reader",
 	label: "Reader",
 	// collection: "videos",
