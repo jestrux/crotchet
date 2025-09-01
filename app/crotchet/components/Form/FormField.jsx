@@ -9,6 +9,7 @@ import {
 	loadExternalAsset,
 	objectField,
 	objectFieldChoices,
+	onDesktop,
 	randomId,
 	someTime,
 } from "@/crotchet/utils";
@@ -727,37 +728,41 @@ const Field = ({ field, value, onChange, __data }) => {
 			);
 
 		case "radio": {
-			return (
-				<>
-					<ActionGrid
-						type="inline"
-						title={field.editable ? field.label : ""}
-						data={objectFieldChoices(field.choices).map(
-							(choice) => {
-								choice.selected =
+			if (!onDesktop()) {
+				return (
+					<>
+						<ActionGrid
+							type="inline"
+							title={field.editable ? field.label : ""}
+							data={objectFieldChoices(field.choices).map(
+								(choice) => {
+									choice.selected =
+										field.multiple || field.editable
+											? value.includes(choice.value)
+											: value == choice.value;
+									return choice;
+								}
+							)}
+							sortable={field.sortable}
+							editable={field.editable}
+							selectable={field.multiple ? "multiple" : "single"}
+							onChange={(choices) => {
+								const values = _.filter(
+									choices,
+									"selected"
+								).map(({ value }) => value);
+								onChange(
 									field.multiple || field.editable
-										? value.includes(choice.value)
-										: value == choice.value;
-								return choice;
-							}
-						)}
-						sortable={field.sortable}
-						editable={field.editable}
-						selectable={field.multiple ? "multiple" : "single"}
-						onChange={(choices) => {
-							const values = _.filter(choices, "selected").map(
-								({ value }) => value
-							);
-							onChange(
-								field.multiple || field.editable
-									? values
-									: values?.[0]
-							);
-						}}
-					/>
-					<input type="hidden" name={field.name} value={value} />
-				</>
-			);
+										? values
+										: values?.[0]
+								);
+							}}
+						/>
+						<input type="hidden" name={field.name} value={value} />
+					</>
+				);
+			}
+
 			if (field.choiceType == "color") {
 				field.renderChoice = (choice, selected) => {
 					return `
