@@ -93,6 +93,8 @@ export default function DetailPage() {
 								res = await withLoader(
 									() => pageAction.__originalHandler(values),
 									{
+										loadingMessage:
+											pageAction.loadingMessage,
 										successMessage:
 											pageAction.successMessage,
 										errorMessage: pageAction.errorMessage,

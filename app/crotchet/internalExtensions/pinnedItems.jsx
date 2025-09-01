@@ -18,8 +18,8 @@ export default function pinnedItems() {
 	const getAddToPinnedItemsAction = () => {
 		return {
 			label: "Add to Pinned Items",
-			handler: async (value) => {
-				const pinnedItem = await window.openForm({
+			handler: async (value) =>
+				window.openForm({
 					title: "Add to Pinned Items",
 					fields: formFields,
 					resolve: async () => {
@@ -63,13 +63,17 @@ export default function pinnedItems() {
 
 						return data;
 					},
-				});
-
-				if (!pinnedItem) return;
-
-				await window.dataSources.pinnedItems.insertRow(pinnedItem);
-				window.showToast("Added to pinned items");
-			},
+					action: {
+						label: "Save",
+						loadingMessage: "Adding to pinned items...",
+						successMessage: "Added to pinned items",
+						errorMessage: "Failed add to pinned items",
+						handler: async (pinnedItem) =>
+							await window.dataSources.pinnedItems.insertRow(
+								pinnedItem
+							),
+					},
+				}),
 		};
 	};
 
