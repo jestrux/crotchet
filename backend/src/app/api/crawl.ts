@@ -1,3 +1,4 @@
+import { env } from "cloudflare:workers";
 import { parse } from "node-html-parser";
 
 async function processWebsite(url: string, content: string) {
@@ -107,11 +108,34 @@ export default async function crawlUrl(url: string) {
 	}
 
 	if (!url.startsWith("http")) url = `https://${url}`;
-	const response = await fetch(url);
-	const data = await response.text();
-	const meta = await processWebsite(url, data);
 
+	let data;
+
+	try {
+		data = await fetch(
+			`https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/browser-rendering/content`,
+			{
+				method: "POST",
+				headers: {
+					Authorization: `Bearer ${env.CRAWLER_API_TOKEN}`,
+				},
+				body: JSON.stringify({
+					url,
+				}),
+			}
+		)
+			.then((response) => response.json())
+			.then((response) => (response as { result: string }).result);
+	} catch (error) {}
+
+	if (!data) {
+		const response = await fetch(url);
+		data = await response.text();
+	}
+
+	const meta = await processWebsite(url, data);
 	const youtubeId = getYoutubeId(url);
+
 	if (youtubeId)
 		(
 			meta as typeof meta & { video: string }
@@ -119,7 +143,7 @@ export default async function crawlUrl(url: string) {
 
 	return {
 		url,
-		data,
 		meta,
+		data,
 	};
 }

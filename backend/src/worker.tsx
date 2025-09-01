@@ -34,6 +34,21 @@ export default defineApp([
 			url,
 		});
 	}),
+	route("/crawl", async function handler({ request }) {
+		const url =
+			request.method.toLowerCase() == "post"
+				? (
+						(await request.json()) as {
+							url: string;
+						}
+				  )?.url
+				: new URL(request.url).searchParams.get("url");
+
+		if (!url?.length)
+			return new Response("No url provided", { status: 400 });
+
+		return Response.json(await crawlUrl(url));
+	}),
 	route("/crawl/:url", async function handler({ params }) {
 		return Response.json(await crawlUrl(params.url));
 	}),

@@ -11,6 +11,8 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite dev",
+    "env:add": "npx wrangler secret put",
+    "env:types": "npx wrangler types",
     "dev:init": "rw-scripts dev-init",
     "preview": "vite preview",
     "worker:run": "rw-scripts worker-run",
