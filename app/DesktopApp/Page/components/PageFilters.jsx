@@ -38,7 +38,7 @@ export default function PageFilters() {
 			trigger={
 				<div
 					ref={filterMenuTriggerRef}
-					className="gap-2 w-[200px] relative cursor-default rounded-md h-9 px-2 focus:outline-none focus-visible:border-content/20 text-xs font-medium border border-content/20 text-left"
+					className="flex items-center gap-2 w-[200px] relative cursor-default rounded-md h-9 px-2 focus:outline-none focus-visible:border-content/20 text-xs font-medium border border-content/20 text-left"
 					size="sm"
 				>
 					<span className="mr-0.5 capitalize text-sm flex-1 truncate">
