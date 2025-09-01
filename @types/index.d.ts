@@ -226,6 +226,7 @@ declare var UI: {
 			| "clear"
 			| "close"
 			| "copy"
+			| "edit"
 			| "delete"
 			| "more"
 			| "home"
@@ -269,6 +270,7 @@ declare var withLoader: (
 	action: PromiseLike<any> | Function,
 	obj?:
 		| {
+				loadingMessage?: String | Function | undefined;
 				successMessage?: String | Function | undefined;
 				errorMessage?: String | Function | undefined;
 				onChange?: (status: String, payload: any) => void | undefined;
@@ -328,6 +330,9 @@ declare var ActionButton:
 			icon?: string | typeof UI.icon;
 			url?: string | null;
 			destructive?: boolean;
+			loadingMessage?: String | Function | undefined;
+			successMessage?: String | Function | undefined;
+			errorMessage?: String | Function | undefined;
 			handler?: (
 				payload: typeof WidgetActionContext | any
 				// | { [key: string]: any }

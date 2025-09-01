@@ -14,7 +14,7 @@ const appIcon = UI.svg(
 	}
 );
 
-const formatEntry = (item) => {
+const mapEntry = (item) => {
 	const isVideo =
 		item.url?.toLowerCase().indexOf("videos") != -1 ||
 		item.url?.toLowerCase().indexOf("youtube") != -1 ||
@@ -43,40 +43,126 @@ const formFields = {
 	url: "text",
 };
 
-const addItem = async (item) =>
+const addItem = async (value) =>
 	window.openForm({
 		title: "Add to reading list",
-		data: item
-			? {
-					// group: (await Preferences.get({ key: "groupFilter" })).value ?? "",
-					group: item.group || "🌎 General",
-					image: item.image,
-					title: item.title,
-					description: item.description || item.subtitle,
-					url: item.url,
-			  }
-			: null,
+		resolve: async () => {
+			const res = value
+				? typeof value === "string"
+					? { text: value }
+					: value
+				: await window
+						.readClipboard()
+						.then((res) => ({ text: res.value }));
+
+			if (!res) return;
+
+			const { payload, preview } =
+				window.processShareData(res.text, res.type, {
+					fromClipboard: true,
+				}) || {};
+
+			let data = {
+				...payload,
+				...preview,
+			};
+
+			if (data.url && !data.image) {
+				const res = await window.crawlUrl(data.url);
+				if (res.meta) {
+					data.image = res.meta.image;
+					data.title = res.meta.title;
+					data.description = res.meta.description;
+				}
+			}
+
+			data = _.pick(data, Object.keys(formFields));
+
+			data.group =
+				Object.values(filters).includes(data.group) ||
+				filters[data.group]
+					? data.group
+					: "🌎 General";
+
+			return data;
+		},
 		fields: formFields,
 		action: {
 			label: "Save",
-			handler: (data) =>
-				window.withLoader(
-					window.dataSources.reader.insertRow(data),
-					"Added to reading list"
-				),
+			loadingMessage: "Adding to reading list...",
+			successMessage: "Added to reading list",
+			errorMessage: "Failed add to reading list",
+			handler: async (data) => {
+				if (!data) return null;
+				return await window.dataSources.reader.insertRow(data);
+			},
 		},
 	});
+
+registerDataSource("db", "reader", {
+	table: "reader",
+	label: "Reader",
+	// collection: "videos",
+	// orderBy: "updatedAt,desc",
+	mapEntry,
+	searchFields: ["title"],
+	actions: [
+		{
+			label: "Add Entry",
+			handler: addItem,
+		},
+	],
+	entryAction: (entry) => ({
+		label: "Open",
+		url: entry.url,
+	}),
+	entryActions: (entry) => {
+		return [
+			{
+				icon: window.UI.icon("edit"),
+				label: "Edit",
+				handler: () => {
+					window.openPage({
+						type: "form",
+						fields: formFields,
+						resolve: () => entry,
+						action: {
+							label: "Save",
+							handler: (data) => {
+								if (!data) return;
+
+								return window.dataSources.reader.updateRow(
+									data._id,
+									data
+								);
+							},
+						},
+					});
+				},
+			},
+			{
+				icon: window.UI.icon("delete"),
+				label: "Delete",
+				destructive: true,
+				handler: async () =>
+					window.withLoader(
+						window.dataSources.reader.deleteRow(entry._id),
+						{
+							loadingMessage: "Deleting...",
+							successMessage: "Entry deleted",
+							errorMessage: "Failed to delete entry",
+						}
+					),
+			},
+		];
+	},
+});
 
 registerAction("addToReadingList", {
 	context: "share",
 	icon: appIcon,
 	match: "url",
-	handler: async ({ preview, url }) =>
-		addItem({
-			...(preview?.image ? preview : await crawlUrl(url)),
-			url,
-			group: "🧪 Learn",
-		}),
+	handler: async ({ url }) => addItem(url),
 });
 
 // registerAction("addToWatchList", {
@@ -108,7 +194,7 @@ registerWidget("readingList", {
 				limit: 5,
 			}
 		);
-		return res?.map(formatEntry);
+		return res?.map(mapEntry);
 	},
 	filter: () => {
 		return {
@@ -142,7 +228,7 @@ registerWidget("readingList", {
 								orderBy: "_index,desc",
 							}
 						);
-						return res?.map(formatEntry);
+						return res?.map(mapEntry);
 					},
 				}).then((res) => {
 					if (!res) return res;
@@ -176,7 +262,7 @@ registerSection("watchList", {
 				limit: 4,
 			}
 		);
-		return res?.map(formatEntry);
+		return res?.map(mapEntry);
 	},
 });
 
@@ -194,7 +280,7 @@ registerSection("readingList", {
 				limit: 4,
 			}
 		);
-		return res?.map(formatEntry);
+		return res?.map(mapEntry);
 	},
 });
 
@@ -204,23 +290,20 @@ registerAction("learnNow", {
 	color: "#3E3215",
 	global: true,
 	context: "shortcut",
-	tags: ["youtube"],
+	tags: ["reader"],
 	handler: async () => {
 		window.openActionSheet({
 			noHeading: true,
 			actions: async () => {
 				try {
-					const res = await sourceGet(
-						{ handler: () => queryDb("reader") },
-						{
-							orderBy: "_index,desc",
-							filters: { group: filters.learn },
-							random: true,
-							single: true,
-						}
-					);
+					const res = await sourceGet("reader", {
+						orderBy: "_index,desc",
+						filters: { group: filters.learn },
+						random: true,
+						single: true,
+					});
 
-					const entry = formatEntry(res);
+					const entry = mapEntry(res);
 
 					window.openActionSheet({
 						fullScreen: true,
@@ -233,21 +316,15 @@ registerAction("learnNow", {
 						]),
 						actions: [
 							{
-								label: "Open",
-								// icon: UI.icon("open-external"),
 								icon: UI.svg(
 									"M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
 								),
-								// url: entry.url,
-								handler: () => openUrl(entry.url),
+								label: "Open",
+								url: entry.url,
 							},
 							{
-								label: "Open on desktop",
 								icon: UI.icon("open-external"),
-								// icon: appIcon,
-								// url: `crotchet://app/youtubeClips?${entry.url}`,
-								// url: `crotchet://socket/run?command=open ${entry.url}`,
-								// url: `crotchet://socket/open/${entry.url}`,
+								label: "Open on desktop",
 								handler: () => socketEmit("open", entry.url),
 							},
 						],
@@ -258,4 +335,11 @@ registerAction("learnNow", {
 			},
 		});
 	},
+});
+
+registerAction("searchReadingList", {
+	icon: appIcon,
+	label: "Search Reading List",
+	context: "search",
+	source: "reader",
 });
