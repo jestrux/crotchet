@@ -62,7 +62,12 @@ export default function dataSourceProviders(provider, props = {}) {
 			},
 		},
 		crawler: {
-			fetch: () => crawlUrl(props.url, props.matcher),
+			fetch: () =>
+				crawlUrl(props.url, {
+					matcher: props.matcher,
+					cacheKey: props.cacheKey,
+					cacheDuration: props.cacheDuration,
+				}),
 		},
 	}[provider];
 }
