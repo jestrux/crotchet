@@ -84,9 +84,30 @@ export const sourceGet = async (source, props = {}) => {
 			entry = mapSourceEntry(entry);
 
 			const matches = Object.entries(validFilters).every(
-				([key, value]) =>
-					value?.toString().toLowerCase() ==
-					entry[key]?.toString().toLowerCase()
+				([key, value]) => {
+					let entryValue = entry[key];
+					const filterValue = value
+						?.toString()
+						.toLowerCase()
+						.replaceAll(" ", "");
+
+					if (Array.isArray(entryValue)) {
+						return entryValue.some(
+							(v) =>
+								v
+									?.toString()
+									.toLowerCase()
+									.replaceAll(" ", "") == filterValue
+						);
+					}
+
+					return (
+						entryValue
+							?.toString()
+							.toLowerCase()
+							.replaceAll(" ", "") == filterValue
+					);
+				}
 			);
 
 			return [...agg, ...(matches ? [entry] : [])];
