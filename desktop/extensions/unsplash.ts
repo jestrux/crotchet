@@ -128,6 +128,7 @@ const previewImage = async (image = null) => {
 };
 
 registerDataSource("custom", "unsplash", {
+	icon: appIcon,
 	listenForUpdates: "tokens-updated",
 	fetch: () => {
 		// TODO: Add caching logic
@@ -191,4 +192,12 @@ registerWidget("unsplash", {
 	source: "unsplash",
 	content: UI.grid,
 	actions: [searchAction],
+});
+
+registerAction("searchUnsplash", {
+	context: "share",
+	icon: appIcon,
+	match: "text",
+	desktopOnly: true,
+	handler: async ({ text }) => openUrl("crotchet://search/unsplash/" + text),
 });
