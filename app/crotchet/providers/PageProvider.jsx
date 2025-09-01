@@ -493,7 +493,7 @@ export default function PageProvider({
 					setActions,
 					onClick,
 					onOpenActionMenu,
-					onSearch: async (query) => {
+					onSearch: async (query, appendResult) => {
 						let searchResults = [];
 
 						if (page?.onSearch) {
@@ -511,16 +511,24 @@ export default function PageProvider({
 							);
 						}
 
-						if (
-							!searchResults.length &&
-							page?.fallbackSearchResults
-						) {
-							searchResults = (
-								page.fallbackSearchResults(query) || []
+						if (page?.fallbackSearchResults) {
+							const fallbackSearchResults = (
+								page.fallbackSearchResults(query, (result) => {
+									appendResult({
+										...result,
+										isFallbackResult: true,
+										isCustomSearchResult: true,
+									});
+								}) || []
 							).map((result) => ({
 								...result,
-								section: `Use "${query}" with...`,
+								isFallbackResult: true,
 							}));
+
+							searchResults = [
+								...searchResults,
+								...fallbackSearchResults,
+							];
 						}
 
 						return searchResults;

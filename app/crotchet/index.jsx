@@ -34,6 +34,7 @@ export const registerAction = (name, action) => {
 
 	const {
 		label,
+		source,
 		handler,
 		hideApp: actionHidesApp,
 		actions,
@@ -81,6 +82,7 @@ export const registerAction = (name, action) => {
 		desktopOnly,
 		actions,
 		preview,
+		source,
 		handler: _handler,
 	};
 

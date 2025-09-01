@@ -95,9 +95,24 @@ export default function SearchPage() {
 	};
 
 	const choices = pageData || [];
+	const mainSearchResults = searchResults.filter(
+		(res) => !res.isFallbackResult
+	);
+	const orderedResults = (searchResults.length ? searchResults : choices).map(
+		(c) => {
+			if (c.isFallbackResult || c.isCustomSearchResult) {
+				c.section = c.isCustomSearchResult
+					? mainSearchResults.length
+						? "Other results"
+						: "Results"
+					: `Use "${query}" with...`;
+			}
+			return c;
+		}
+	);
 	const choiceSections = searchResults.length
-		? sectionedChoices(searchResults, "")
-		: sectionedChoices(choices, query);
+		? sectionedChoices(orderedResults, "")
+		: sectionedChoices(orderedResults, query);
 
 	const getContainer = () => containerRef.current;
 
@@ -315,7 +330,9 @@ export default function SearchPage() {
 		setSearchResults([]);
 		setQuery(query);
 
-		onSearch(query).then((results) => {
+		onSearch(query, (result) => {
+			setSearchResults([...resultsRef.current, result]);
+		}).then((results) => {
 			setSearchResults(results);
 		});
 	};

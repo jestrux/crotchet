@@ -6,8 +6,10 @@ import {
 	savePreference,
 	processShareData,
 	getShareActions,
+	objectIsEmpty,
 } from "@/crotchet/utils";
 import { useAppContext } from "@/crotchet/providers/AppProvider";
+import { sourceGet } from "@/crotchet";
 
 const getFavoriteCommands = () => getPreference("favorite-commands", []);
 
@@ -134,6 +136,60 @@ const getCommands = async () => {
 	];
 };
 
+const searchActionResults = _.throttle((searchQuery, appendResult) => {
+	const searchActions = Object.entries(window.actions ?? {}).reduce(
+		(agg, [name, action]) => {
+			if (action.context != "search") return agg;
+
+			return [
+				...agg,
+				{
+					name,
+					...action,
+				},
+			];
+		},
+		[]
+	);
+
+	searchActions.forEach((action) => {
+		if (action.source) {
+			let source = action.source;
+			if (typeof source == "string") source = window.dataSources[source];
+
+			sourceGet(source, {
+				searchQuery,
+				first: true,
+				cacheKey: `${source.name}/search`,
+				// cacheDuration: yearInSeconds(),
+				// invalidateCache: true,
+			}).then((res) => {
+				if (!res) return null;
+
+				const { image, video, ...result } = res;
+
+				result.trailing = source.label;
+				result.__searchKey = action._id;
+
+				if (!objectIsEmpty({ image, video })) {
+					result.preview = () => {
+						return window.UI.previewWithMeta({
+							data: {
+								...result,
+								image,
+								video,
+								layout: "portrait",
+							},
+						});
+					};
+				}
+
+				appendResult(result);
+			});
+		}
+	});
+}, 300);
+
 export default function AppContent() {
 	const { pages, popPage } = useAppContext();
 	const rootPage = {
@@ -141,11 +197,13 @@ export default function AppContent() {
 		_id: "root",
 		type: "search",
 		resolve: getCommands,
-		fallbackSearchResults: (searchQuery) => {
+		fallbackSearchResults: (searchQuery, appendResult) => {
 			const payload = {
 				...((processShareData(searchQuery) || {}).payload || {}),
 				fromClipboard: true,
 			};
+
+			searchActionResults(searchQuery, appendResult);
 
 			return getShareActions(payload).map((item) => {
 				// const ranking = rankingRef.current;

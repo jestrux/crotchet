@@ -17,6 +17,8 @@ export const random = (array) => shuffle(shuffle(array))[0];
 
 export const someTime = (t = 200) => new Promise((res) => setTimeout(res, t));
 
+export const yearInSeconds = () => 60 * 3600 * 24 * 365;
+
 export const onDesktop = () => localStorage.__onDesktop;
 
 export const onFloatingWindow = () => window.__isFloatingWindow;
@@ -132,7 +134,7 @@ export const getToken = async (key, { prompt, invalidate, expiresIn } = {}) => {
 				await saveToken(
 					key,
 					newToken,
-					Date.now() + (expiresIn ?? 60 * 3600 * 24 * 365) * 1000
+					Date.now() + (expiresIn ?? yearInSeconds()) * 1000
 				)
 			)?.value;
 	}
@@ -149,7 +151,7 @@ export const getToken = async (key, { prompt, invalidate, expiresIn } = {}) => {
 export const saveToken = async (key, value, expiresIn) =>
 	savePreference(`token-${key}`, {
 		value: typeof value == "string" ? value : JSON.stringify(value),
-		expiresAt: Date.now() + (expiresIn ?? 60 * 3600 * 24 * 365) * 1000,
+		expiresAt: Date.now() + (expiresIn ?? yearInSeconds()) * 1000,
 	});
 
 export const removeToken = async (key) =>
@@ -428,6 +430,7 @@ export const objectFieldChoices = (choices) =>
 
 		return {
 			__id: randomId(),
+			__searchKey: choice.__searchKey ?? randomId(),
 			tempId: label,
 			label,
 			value,
@@ -525,8 +528,16 @@ export const sectionedChoices = (choices = [], query, { valuesOnly } = {}) => {
 		});
 	}
 
+	formattedChoices = _.orderBy(
+		_.orderBy(formattedChoices, "pinned", "desc"),
+		["isFallbackResult", "isCustomSearchResult"],
+		["desc", "asc"]
+	);
+
+	formattedChoices = _.uniqBy(formattedChoices, "__searchKey");
+
 	formattedChoices = Object.entries(
-		_.groupBy(_.orderBy(formattedChoices, "pinned", "desc"), "section")
+		_.groupBy(formattedChoices, "section")
 	).filter(([, choices]) => choices.length);
 
 	return valuesOnly

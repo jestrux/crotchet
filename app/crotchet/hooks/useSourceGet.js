@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { matchSorter } from "match-sorter";
-import { cleanObject, shuffle } from "@/crotchet/utils";
+import { cleanObject, shuffle, withCache } from "@/crotchet/utils";
 
 export const getterFields = [
 	"limit",
@@ -10,6 +10,9 @@ export const getterFields = [
 	"shuffle",
 	"fieldMap",
 	"mapEntry",
+	"mapEntry",
+	"entryActions",
+	"entryAction",
 	"orderBy",
 	"searchable",
 	"searchFields",
@@ -31,6 +34,8 @@ export const sourceGet = async (source, props = {}) => {
 		shuffle: shuffleResults,
 		orderBy,
 		mapEntry,
+		entryActions,
+		entryAction,
 		searchable,
 		searchFields = ["title", "subtitle", "tags"],
 		searchQuery,
@@ -40,28 +45,43 @@ export const sourceGet = async (source, props = {}) => {
 
 	if ([typeof source?.get, typeof source?.handler].includes("function")) {
 		handler = typeof source.get == "function" ? source.get : source.handler;
-		// random = random || source.random;
-		// single = single || source.single;
-		// first = first || source.first;
-		// searchable = searchable || source.searchable;
-		// searchFields = searchFields || source.searchFields;
-		// searchQuery = searchQuery || source.searchQuery;
 	}
 
 	if (typeof handler != "function") return null;
 
-	let res = await handler(payload);
+	let res;
+
+	if (props.cacheKey) {
+		res = await withCache(
+			props.cacheKey,
+			async () => await handler(payload),
+			{
+				invalidate: props.invalidateCache,
+				cacheDuration: props.cacheDuration ?? 60,
+			}
+		);
+	} else res = await handler(payload);
 
 	if (!Array.isArray(res)) return res;
 
 	const validFilters = cleanObject(props.filters || {});
+
+	const mapSourceEntry = (entry) => {
+		if (typeof mapEntry == "function")
+			entry = { ...entry, ...mapEntry(entry) };
+
+		if (typeof entryAction == "function") entry.action = entryAction(entry);
+		if (typeof entryActions == "function")
+			entry.actions = entryActions(entry);
+
+		return entry;
+	};
 	if (
 		Object.values(validFilters).length > 0
 		// && ![true, false].includes(source.filterable)
 	) {
 		res = res.reduce((agg, entry) => {
-			if (typeof source.mapEntry == "function")
-				entry = { ...entry, ...source.mapEntry(entry) };
+			entry = mapSourceEntry(entry);
 
 			const matches = Object.entries(validFilters).every(
 				([key, value]) =>
@@ -71,7 +91,7 @@ export const sourceGet = async (source, props = {}) => {
 
 			return [...agg, ...(matches ? [entry] : [])];
 		}, []);
-	} else if (typeof source.mapEntry == "function") res = res.map(mapEntry);
+	} else res = res.map(mapSourceEntry);
 
 	if (searchable !== false && res?.length && searchQuery?.length) {
 		res = matchSorter(res, searchQuery, {

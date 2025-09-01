@@ -21,6 +21,8 @@ declare var copyImage: (url: string, message?: string) => Promise<any>;
 
 declare var shareImage: (url?: string) => Promise<any>;
 
+declare var yearInSeconds: () => number;
+
 declare var someTime: (duration?: number) => Promise<any>;
 
 declare var shuffle: (arr?: any[]) => any[] | undefined | null;
@@ -404,7 +406,8 @@ declare var registerAction: (
 				icon?: String | undefined;
 				color?: String | undefined;
 				label?: String | undefined;
-				context?: "share" | "shortcut" | undefined;
+				source?: string;
+				context?: "share" | "shortcut" | "search" | undefined;
 				global?: boolean | undefined;
 				mobileOnly?: boolean | undefined;
 				desktopOnly?: boolean | undefined;

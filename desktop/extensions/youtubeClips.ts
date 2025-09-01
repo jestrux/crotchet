@@ -251,7 +251,9 @@ const getActions = (payload) => {
 	const actions = {
 		// playVideo: {
 		// 	icon: appIcon,
-		// 	url: clipUrl,
+		// 	url: `crotchet://action/playYoutubeClip?${objectToQueryParams(
+		// 		payload
+		// 	)}`,
 		// 	section: "Play",
 		// },
 		playOnYoutube: {
@@ -765,9 +767,10 @@ const getPlayClipPage = (clip, external = false) => {
 	};
 
 	const componentProps = {
-		content: !external
-			? () => getVideoPlayer(clip, true)
-			: () => `
+		// content: !external
+		// 	? () => getVideoPlayer(clip, true)
+		// 	: () => `
+		content: () => `
 			<div class="absolute inset-0 bg-black flex items-center justify-center"
 				x-data="{
 					cropEnabled: true,
@@ -820,7 +823,6 @@ const getPlayClipPage = (clip, external = false) => {
 						}
 					},
 					init() {
-						console.log('Page:', this.$page);
 						if(typeof this.$onRemoteAction == 'function')
 							this.$onRemoteAction((payload) => this.handleRemoteAction(payload));
 						if(!window.YT?.Player) {
@@ -1182,7 +1184,6 @@ registerDataSource("db", "youtubeClips", {
 	entryActions: getActions,
 	entryAction: (entry) => ({
 		label: "Play Video",
-		// url: entry.url,
 		handler: () => playClip(entry),
 	}),
 });
@@ -1317,6 +1318,13 @@ registerSection("recentYoutubeClips", {
 });
 
 registerAction("playYoutubeClip", playClip);
+
+registerAction("searchYoutubeClips", {
+	icon: appIcon,
+	label: "Search Youtube Clips",
+	context: "search",
+	source: "youtubeClips",
+});
 
 registerAction("addToYoutubeClips", {
 	icon: appIcon,

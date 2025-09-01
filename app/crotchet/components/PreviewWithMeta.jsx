@@ -1,3 +1,5 @@
+import clsx from "clsx";
+
 export default function PreviewWithMeta({
 	video,
 	image,
@@ -5,13 +7,14 @@ export default function PreviewWithMeta({
 	subtitle,
 	description,
 	metadata: _metadata,
+	layout,
 }) {
 	const metadata = () => {
 		if (!_metadata) return null;
 
 		try {
 			return (
-				<div className="border-b divide-y divide-content/5 text-sm">
+				<div className="border-t divide-y divide-content/5 text-sm">
 					{Object.entries(_metadata).map(([label, value], index) => (
 						<div
 							key={index}
@@ -37,7 +40,7 @@ export default function PreviewWithMeta({
 	const preview = (
 		<>
 			{(title || subtitle) && (
-				<div className="p-4 border-b">
+				<div className="p-4">
 					{title && <h1 className="text-2xl font-medium">{title}</h1>}
 					{subtitle && (
 						<p className="mt-1 text-content/85">{subtitle}</p>
@@ -50,7 +53,7 @@ export default function PreviewWithMeta({
 			{description && (
 				<p
 					className={
-						"p-4 text-sm text-content/70 font-light leading-loose"
+						"border-t p-4 text-sm text-content/70 font-light leading-loose"
 					}
 				>
 					{description}
@@ -59,9 +62,25 @@ export default function PreviewWithMeta({
 		</>
 	);
 
+	const portrait = layout == "portrait";
+
 	return (
-		<div className="absolute size-full grid grid-cols-2">
-			<div className="relative pointer-events-none bg-content/10">
+		<div
+			className={clsx(
+				"absolute size-full",
+				portrait ? "overflow-auto" : "grid grid-cols-2"
+			)}
+		>
+			<div
+				className="relative pointer-events-none bg-content/10"
+				style={
+					portrait
+						? {
+								aspectRatio: "16/9",
+						  }
+						: {}
+				}
+			>
 				<img
 					className={"size-full object-cover"}
 					src={image?.length ? image : video}
@@ -86,7 +105,9 @@ export default function PreviewWithMeta({
 					</div>
 				)}
 			</div>
-			<div className="h-full overflow-auto">{preview}</div>
+			<div className={clsx({ "h-full overflow-auto": !portrait })}>
+				{preview}
+			</div>
 		</div>
 	);
 }
