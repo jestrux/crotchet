@@ -25,6 +25,7 @@ const mapEntry = (item) => {
 		...(isVideo
 			? { video: item.image || "placeholder" }
 			: { image: item.image || "placeholder" }),
+		leading: appIcon,
 		title: item.title || "Untitled" + (" " + item.group),
 		subtitle: item.description,
 		tags: [item.group],
@@ -157,6 +158,11 @@ registerDataSource("db", "reader", {
 			},
 		];
 	},
+	filter: {
+		field: "group",
+		defaultValue: "",
+	},
+	filters: [{ label: "All", value: "" }, ...Object.values(filters)],
 });
 
 registerAction("addToReadingList", {

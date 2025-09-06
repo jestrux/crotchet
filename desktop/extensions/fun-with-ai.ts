@@ -1,3 +1,5 @@
+import "../../@types/index";
+
 const googleImagenPromptsFilters = [
 	{ label: "Photo Realistic", value: "photorealistic" },
 	{ label: "Cinematic", value: "cinematic" },
@@ -54,7 +56,15 @@ registerDataSource("custom", "googleImagenPrompts", {
 						type: _.map(_.orderBy(itemFilters, "index"), "filter"),
 						action: {
 							label: "Preview",
-							handler: () => {},
+							handler: () =>
+								openPage({
+									type: "detail",
+									resolve: () => ({
+										image: item.image,
+										description: item.prompt,
+									}),
+									content: UI.previewWithMeta,
+								}),
 						},
 						preview: () => {
 							return UI.previewWithMeta({
