@@ -474,7 +474,7 @@ declare var registerDataSource: (
 			| (typeof ActionButton)[]
 			| ((payload: typeof WidgetPayload) => (typeof ActionButton)[])
 			| any;
-		entryAction?: (payload: any) => any;
+		entryAction?: ((payload: any) => any) | null;
 		entryActions?:
 			| (typeof ActionButton)[]
 			| ((payload: any) => any);

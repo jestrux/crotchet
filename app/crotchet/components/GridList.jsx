@@ -33,7 +33,7 @@ export default function GridList({ source, data, isLoading, ...props }) {
 			const onClick =
 				typeof props.onSelect == "function"
 					? () => props.onSelect(entry)
-					: onActionClick(entry);
+					: onActionClick(entry.action || entry);
 			const entryProps = {
 				_id,
 				...entry,

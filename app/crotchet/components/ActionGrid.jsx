@@ -177,7 +177,7 @@ export default function ActionGrid({
 			const onClick = onActionClick(action);
 
 			if (onClick) {
-				onClose(action?.handler ? null : action?.value || action);
+				onClose(action?.handler ? null : action?.value ?? action);
 				return onClick();
 			}
 		}

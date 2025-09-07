@@ -7,13 +7,16 @@ export default function PreviewCard({
 	url,
 	label,
 	title: _title,
-	subtitle,
+	subtitle: _subtitle,
+	description,
 	color,
 	aspectRatio,
 	loading,
 }) {
 	aspectRatio = aspectRatio ? aspectRatio.replace(":", "/") : "";
 	const title = _title || label;
+	const subtitle = _subtitle || description;
+
 	const handleClick = () => {
 		if (url) window.openUrl(url);
 	};
@@ -93,7 +96,12 @@ export default function PreviewCard({
 					>
 						{title?.length > 0 && (
 							<h5
-								className="text-sm text-content font-semibold first-letter:capitalize"
+								className={clsx(
+									"text-sm",
+									subtitle
+										? "text-content font-semibold first-letter:capitalize"
+										: "opacity-75"
+								)}
 								dangerouslySetInnerHTML={{ __html: title }}
 							/>
 						)}
@@ -101,9 +109,10 @@ export default function PreviewCard({
 							<p
 								className={clsx(
 									"text-sm opacity-75",
-									title ? "line-clamp-1" : "line-clamp-2"
+									{ "line-clamp-1": title }
+									// title ? "line-clamp-1" : "line-clamp-2"
 								)}
-								dangerouslySetInnerHTML={{ __html: title }}
+								dangerouslySetInnerHTML={{ __html: subtitle }}
 							/>
 						)}
 					</div>

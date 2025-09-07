@@ -1,6 +1,7 @@
-import { randomId } from "@/crotchet/utils";
+import { isValidAction, randomId } from "@/crotchet/utils";
 import { Loader } from "@/crotchet/components";
 import RegularListItem from "./ListItem";
+import { onActionClick } from "../hooks/useActionClick";
 
 export default function ListView({
 	source,
@@ -32,8 +33,8 @@ export default function ListView({
 			entry.onClick =
 				typeof props.onSelect == "function"
 					? () => props.onSelect(entry)
-					: typeof entry.onClick == "function"
-					? entry.onClick
+					: isValidAction(entry.action)
+					? onActionClick(entry.action)
 					: typeof entryAction == "function"
 					? () => entryAction(entry)
 					: null;

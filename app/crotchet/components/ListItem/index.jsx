@@ -364,7 +364,7 @@ export default function RegularListItem({
 			{content()}
 
 			{actionLoading && (
-				<div className="absolute right-0 inset-y-0 p-1 backdrop-blur-sm">
+				<div className="absolute right-0 inset-y-0 p-1 backdrop-blur-sm flex items-center justify-center">
 					<Loader className="opacity-50" size={20} />
 				</div>
 			)}

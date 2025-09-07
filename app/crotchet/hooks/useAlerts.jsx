@@ -492,6 +492,8 @@ export default function useAlerts() {
 					entryAction: actualSource.entryAction,
 					entryActions: actualSource.entryActions,
 					entryPreview: actualSource.entryPreview,
+					filters: actualSource.filters,
+					filter: actualSource.filter,
 				};
 			}
 

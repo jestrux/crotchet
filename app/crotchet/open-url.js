@@ -1,4 +1,4 @@
-import { cleanObject, dispatch, onDesktop, showApp } from "./utils";
+import { dispatch, onDesktop, showApp } from "./utils";
 
 const urlQueryParamsAsObject = (path) => {
 	const url = new URL(
@@ -130,4 +130,6 @@ export default async function openUrl(path) {
 	if (onDesktop()) return dispatch("open-url", new URL(path).href);
 
 	window.open(path, "_blank");
+
+	return Promise.resolve(true);
 }

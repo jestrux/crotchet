@@ -841,7 +841,7 @@ registerWidget("spotifyPlaylists", {
 registerWidget("spotifyArtists", {
 	icon: appIcon,
 	label: "Saved Artists",
-	title: "Top Artists",
+	title: "Saved Artists",
 	listenForUpdates: [connectionChangedEvent],
 	...widgetResolverContentActions(queryArtists, {
 		entity: "Artists",
@@ -851,7 +851,7 @@ registerWidget("spotifyArtists", {
 registerWidget("spotifyTracks", {
 	icon: appIcon,
 	label: "Recent Tracks",
-	title: "Top Tracks",
+	title: "Liked Tracks",
 	listenForUpdates: [connectionChangedEvent],
 	...widgetResolverContentActions(queryTracks, {
 		entity: "Tracks",
@@ -861,7 +861,7 @@ registerWidget("spotifyTracks", {
 registerWidget("spotifyAlbums", {
 	icon: appIcon,
 	label: "Recent Albums",
-	title: "Top Albums",
+	title: "Saved Albums",
 	listenForUpdates: [connectionChangedEvent],
 	...widgetResolverContentActions(queryAlbums, {
 		entity: "Albums",

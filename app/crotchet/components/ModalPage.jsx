@@ -12,6 +12,8 @@ import { Input } from ".";
 import GridList from "./GridList";
 import PreviewCard from "./PreviewCard";
 import ActionGrid from "./ActionGrid";
+import { objectFieldChoices } from "../utils";
+import { sourceGet } from "../hooks/useSourceGet";
 
 export default function ModalPage({
 	type,
@@ -32,6 +34,8 @@ export default function ModalPage({
 	emptyStateMessage = "Nothing in here",
 	onClose = () => {},
 	onSearch,
+	filters,
+	filter: _filter,
 }) {
 	const searchable = _searchable || type == "search";
 	const inputRef = useRef(null);
@@ -54,6 +58,7 @@ export default function ModalPage({
 	};
 
 	const [searchQuery, setSearchQuery] = useState("");
+	const [filter, setFilter] = useState(_filter?.defaultValue ?? "");
 	const [canDrag, setCanDrag] = useState(false);
 	const [loadingFromSearch, setLoadingFromSearch] = useState(false);
 	const [data, setData] = useState([]);
@@ -91,6 +96,34 @@ export default function ModalPage({
 		);
 	};
 
+	const handleFilter = (newFilter) => {
+		if (!newFilter) return setData(_data);
+
+		sourceGet(() => _data, {
+			filters: _filter?.field ? { [_filter?.field]: newFilter } : null,
+		}).then(setData);
+	};
+
+	const selectFilter = async () => {
+		const newValue = await window.openChoicePicker({
+			title: "Filter",
+			choices: objectFieldChoices([
+				{ label: "All", value: "" },
+				...filters,
+			]).map((choice) => {
+				choice.selected = choice.value == filter;
+				return choice;
+			}),
+			inset: false,
+		});
+
+		setFilter((filter) => {
+			const newFilter = newValue ?? filter;
+			handleFilter(newFilter);
+			return newFilter;
+		});
+	};
+
 	const evaluate = (item, payload, defaultValue) => {
 		if (!item) return defaultValue;
 		return typeof item == "function" ? item(payload) ?? defaultValue : item;
@@ -126,7 +159,7 @@ export default function ModalPage({
 
 	const searchInput = () => {
 		return (
-			<div className="relative">
+			<div className={clsx("relative", { "pr-11": filters })}>
 				<svg
 					className="absolute inset-0 my-auto left-2.5 size-5 opacity-30"
 					viewBox="0 0 24 24"
@@ -150,6 +183,24 @@ export default function ModalPage({
 					onEnter={blurSearchInput}
 					onChange={handleSearch}
 				/>
+
+				{filters && (
+					<button
+						className="absolute inset-y-0 right-0 aspect-[1/1] flex items-center justify-center rounded-lg border-none dark:border border-stroke shadow dark:shadow-sm bg-card/80 dark:bg-content/5 text-content/80"
+						onClick={selectFilter}
+					>
+						<svg
+							className="size-5"
+							fill="currentColor"
+							viewBox="0 0 16 16"
+						>
+							<path d="M6 10.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5m-2-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5m-2-3a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5" />
+						</svg>
+						{filter && (
+							<div className="absolute -top-px -right-px size-2 bg-blue-500 rounded-full" />
+						)}
+					</button>
+				)}
 
 				{searchQuery && (
 					<button

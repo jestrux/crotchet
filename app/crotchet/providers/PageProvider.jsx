@@ -420,9 +420,14 @@ export default function PageProvider({
 					},
 					filters: () => {
 						const filters = page?.filters;
-						return typeof filters == "function"
-							? filters(contextInfo)
-							: filters;
+						const filterItems =
+							typeof filters == "function"
+								? filters(contextInfo)
+								: filters;
+
+						return filterItems?.length
+							? [{ label: "All", value: "" }, ...filterItems]
+							: null;
 					},
 					formFields: () => {
 						let fields = page?.fields;

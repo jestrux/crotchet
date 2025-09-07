@@ -410,7 +410,6 @@ export const useMobileActions = () => {
 				if (!a.context) {
 					agg.push({
 						...a,
-						icon: null,
 						pinned: 0,
 						section: "All Actions",
 					});

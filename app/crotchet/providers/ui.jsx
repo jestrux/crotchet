@@ -3,11 +3,12 @@ import MediaItem from "../components/MediaItem";
 import { useEventListener, useLongPress } from "../hooks";
 import { useLayoutEffect, useRef, useState } from "react";
 import { usePageContext } from "./PageProvider";
-import { loadExternalAsset } from "../utils";
+import { isValidAction, loadExternalAsset } from "../utils";
 import clsx from "clsx";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import openUrl from "../open-url";
 import PreviewWithMeta from "../components/PreviewWithMeta";
+import { onActionClick } from "../hooks/useActionClick";
 
 export function media({ data } = {}) {
 	if (!data) return null;
@@ -118,13 +119,25 @@ function Component({ data }) {
 
 export const component = (data) => <Component data={data} />;
 
-export function list({ data } = {}) {
+export function list({ data, entryActions, entryAction } = {}) {
 	if (!data?.length) return null;
 	return (
 		<div className="pt-1.5 px-3 relative size-full">
-			{data.map((item) => (
-				<RegularListItem key={item?._id} {...item} />
-			))}
+			{data.map((item) => {
+				item.actions = item.actions
+					? item.actions
+					: entryActions
+					? entryActions(item)
+					: [];
+
+				item.onClick = isValidAction(item.action)
+					? onActionClick(item.action)
+					: typeof entryAction == "function"
+					? () => entryAction(item)
+					: null;
+
+				return <RegularListItem key={item?._id} {...item} />;
+			})}
 		</div>
 	);
 }

@@ -162,7 +162,7 @@ registerDataSource("db", "reader", {
 		field: "group",
 		defaultValue: "",
 	},
-	filters: [{ label: "All", value: "" }, ...Object.values(filters)],
+	filters: Object.values(filters),
 });
 
 registerAction("addToReadingList", {
@@ -170,6 +170,14 @@ registerAction("addToReadingList", {
 	icon: appIcon,
 	match: "url",
 	handler: async ({ url }) => addItem(url),
+});
+
+registerAction("searchReader", {
+	label: "Search Reading List",
+	icon: appIcon,
+	global: true,
+	mobileOnly: true,
+	url: "crotchet://search/reader",
 });
 
 // registerAction("addToWatchList", {
@@ -189,7 +197,7 @@ registerAction("addToReadingList", {
 
 registerWidget("readingList", {
 	icon: appIcon,
-	title: "Learning List",
+	title: "Reading List",
 	listenForUpdates: "firebase-table-updated:readingList",
 	resolve: async ({ state }) => {
 		const res = await sourceGet(
@@ -221,27 +229,7 @@ registerWidget("readingList", {
 		{
 			label: "Search",
 			icon: UI.icon("search"),
-			handler: () => {
-				openChoicePicker({
-					// title: "Reading List",
-					fullScreen: true,
-					inset: false,
-					dismissible: false,
-					noHeading: false,
-					choices: async () => {
-						const res = await sourceGet(
-							{ handler: () => queryDb("reader") },
-							{
-								orderBy: "_index,desc",
-							}
-						);
-						return res?.map(mapEntry);
-					},
-				}).then((res) => {
-					if (!res) return res;
-					openUrl(res.url);
-				});
-			},
+			url: "crotchet://search/reader",
 		},
 		{
 			label: "Shuffle",
