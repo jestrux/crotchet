@@ -1,4 +1,5 @@
 import { useDataLoader } from "@/crotchet/hooks";
+import { getRootActions } from "@/crotchet/rootActions";
 import { getHomePagePreferences } from "@/crotchet/userPreferences";
 import {
 	camelCaseToSentenceCase,
@@ -12,7 +13,8 @@ import { useState } from "react";
 export const useMobileActions = () => {
 	const [searchQuery, setSearchQuery] = useState();
 	const { data: actions, refetch } = useDataLoader({
-		handler: window.globalActions,
+		// handler: window.globalActions,
+		handler: getRootActions,
 		listenForUpdates: "extensions-updated",
 	});
 
@@ -406,17 +408,19 @@ export const useMobileActions = () => {
 		[
 			...(searchQuery?.length ? pinnedActions : []),
 			...[customizeHomePage(), customizeNavigation()],
-			...(actions || []).reduce((agg, a) => {
-				if (!a.context) {
-					agg.push({
-						...a,
-						pinned: 0,
-						section: "All Actions",
-					});
-				}
+			...(actions || []),
+			// ...getRootActions(),
+			// ...(actions || []).reduce((agg, a) => {
+			// 	if (!a.context) {
+			// 		agg.push({
+			// 			...a,
+			// 			pinned: 0,
+			// 			section: "All Actions",
+			// 		});
+			// 	}
 
-				return agg;
-			}, []),
+			// 	return agg;
+			// }, []),
 		].map((a) => {
 			if (searchQuery?.length) a.section = "Results";
 
