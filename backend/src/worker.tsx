@@ -8,6 +8,10 @@ import { setCommonHeaders } from "@/app/headers";
 import crawlUrl from "./app/api/crawl";
 import { exchangeCodeForAuthToken, generateOauthUrl } from "./app/api/oauth";
 import aiPrompt from "./app/api/ai";
+import {
+	getSheetDetails,
+	getSheetDetailsSimple,
+} from "./app/api/google-sheets";
 
 // @ts-ignore
 const kv = env.KV;
@@ -51,6 +55,27 @@ export default defineApp([
 	}),
 	route("/crawl/:url", async function handler({ params }) {
 		return Response.json(await crawlUrl(params.url));
+	}),
+	route("/google-sheet", async function handler({ request }) {
+		const requestUrl = new URL(request.url);
+		const simple = requestUrl.searchParams.get("simple") === "true";
+
+		const url =
+			request.method.toLowerCase() == "post"
+				? (
+						(await request.json()) as {
+							url: string;
+						}
+				  )?.url
+				: requestUrl.searchParams.get("url");
+
+		if (!url?.length)
+			return new Response("No url provided", { status: 400 });
+
+		return Response.json(await getSheetDetails(url));
+		// return Response.json(await getSheetDetails(url, { simple }));
+		// const res = await getSheetDetailsSimple(url);
+		// return new Response(res?.html || "");
 	}),
 	route("/oauth", async function handler({ request }) {
 		const { url, redirectUrl } = (await request.json()) as {
