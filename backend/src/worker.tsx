@@ -56,6 +56,75 @@ export default defineApp([
 	route("/crawl/:url", async function handler({ params }) {
 		return Response.json(await crawlUrl(params.url));
 	}),
+	route("/proxy", async function handler({ request }) {
+		// Handle preflight OPTIONS request
+		if (request.method === "OPTIONS") {
+			return new Response(null, {
+				status: 204,
+				headers: {
+					"Access-Control-Allow-Origin": "*",
+					"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+					"Access-Control-Allow-Headers":
+						"Content-Type, Authorization",
+					"Access-Control-Max-Age": "86400",
+				},
+			});
+		}
+
+		const url =
+			request.method.toLowerCase() == "post"
+				? (
+						(await request.json()) as {
+							url: string;
+						}
+				  )?.url
+				: new URL(request.url).searchParams.get("url");
+
+		if (!url?.length)
+			return new Response("No url provided", { status: 400 });
+
+		try {
+			// Decode URL if needed
+			let decodedUrl = url;
+			try {
+				decodedUrl = decodeURIComponent(url);
+			} catch (e) {
+				// URL already decoded
+			}
+
+			// Ensure URL has protocol
+			if (!decodedUrl.startsWith("http")) {
+				decodedUrl = `https://${decodedUrl}`;
+			}
+
+			// Fetch the content
+			const response = await fetch(decodedUrl);
+
+			// Get the content
+			const content = await response.blob();
+
+			// Return with original content-type and explicit CORS headers
+			return new Response(content, {
+				status: response.status,
+				headers: {
+					"Content-Type":
+						response.headers.get("Content-Type") ||
+						"application/octet-stream",
+					"Access-Control-Allow-Origin": "*",
+					"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+					"Access-Control-Allow-Headers":
+						"Content-Type, Authorization",
+				},
+			});
+		} catch (error) {
+			return new Response(
+				`Failed to proxy URL: ${
+					error instanceof Error ? error.message : String(error)
+				}`,
+				{ status: 500 }
+			);
+		}
+	}),
 	route("/google-sheet", async function handler({ request }) {
 		const requestUrl = new URL(request.url);
 		const simple = requestUrl.searchParams.get("simple") === "true";
