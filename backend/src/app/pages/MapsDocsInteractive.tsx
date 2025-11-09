@@ -61,14 +61,14 @@ export function MapsDocsInteractive({ ctx }: RequestInfo) {
 						<span style={{ backgroundColor: "#fef3c7", padding: "2px 8px", borderRadius: "4px", fontSize: "0.9rem", fontWeight: "700" }}>
 							REQUIRED
 						</span>{" "}
-						coordinates
+						markers
 					</h3>
 					<p style={{ color: "#4a5568", marginBottom: "10px" }}>
-						JSON array of [longitude, latitude] pairs. Must contain at least 1 coordinate.
+						Comma-separated lng,lat pairs. Must contain at least 1 coordinate pair (2 values minimum).
 					</p>
 					<div style={{ backgroundColor: "#f7fafc", padding: "12px", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
 						<code style={{ fontSize: "0.95rem", color: "#2d3748" }}>
-							[[-122.4194,37.7749],[-74.0060,40.7128]]
+							-122.4194,37.7749,-74.0060,40.7128
 						</code>
 					</div>
 				</div>
@@ -112,16 +112,10 @@ export function MapsDocsInteractive({ ctx }: RequestInfo) {
 							<td style={{ padding: "12px", color: "#4a5568" }}>Initial zoom level (1-20). Auto-fits if not specified.</td>
 						</tr>
 						<tr style={{ borderBottom: "1px solid #e2e8f0" }}>
-							<td style={{ padding: "12px", fontWeight: "500" }}>markerColor</td>
+							<td style={{ padding: "12px", fontWeight: "500" }}>markerColors</td>
 							<td style={{ padding: "12px", color: "#4a5568" }}>string</td>
 							<td style={{ padding: "12px" }}><code>hash-based</code></td>
-							<td style={{ padding: "12px", color: "#4a5568" }}>Single color for all markers (hex with #)</td>
-						</tr>
-						<tr style={{ borderBottom: "1px solid #e2e8f0" }}>
-							<td style={{ padding: "12px", fontWeight: "500" }}>markerColors</td>
-							<td style={{ padding: "12px", color: "#4a5568" }}>array</td>
-							<td style={{ padding: "12px" }}><code>-</code></td>
-							<td style={{ padding: "12px", color: "#4a5568" }}>Array of colors (hex with #) for each marker</td>
+							<td style={{ padding: "12px", color: "#4a5568" }}>Comma-separated colors (hex without #) for each marker. Falls back to hash-based if not provided.</td>
 						</tr>
 						<tr style={{ borderBottom: "1px solid #e2e8f0" }}>
 							<td style={{ padding: "12px", fontWeight: "500" }}>markerStyle</td>
@@ -151,7 +145,7 @@ export function MapsDocsInteractive({ ctx }: RequestInfo) {
 					<div style={{ backgroundColor: "#1a202c", padding: "15px", borderRadius: "8px", overflowX: "auto" }}>
 						<code style={{ fontSize: "0.9rem", color: "#68d391", whiteSpace: "pre", display: "block" }}>
 {`<iframe
-  src="/maps/interactive?coordinates=[[-122.4194,37.7749]]&theme=Light"
+  src="/maps/interactive?markers=-122.4194,37.7749&theme=Light"
   width="800"
   height="600"
 ></iframe>`}
@@ -166,7 +160,7 @@ export function MapsDocsInteractive({ ctx }: RequestInfo) {
 					<div style={{ backgroundColor: "#1a202c", padding: "15px", borderRadius: "8px", overflowX: "auto" }}>
 						<code style={{ fontSize: "0.9rem", color: "#68d391", whiteSpace: "pre", display: "block" }}>
 {`<iframe
-  src="/maps/interactive?coordinates=[[-122.4,37.7],[-118.2,34.0]]&markerStyle=circle&markerColors=[%22%23FF0000%22,%22%2300FF00%22]&theme=Dark"
+  src="/maps/interactive?markers=-122.4,37.7,-118.2,34.0&markerStyle=circle&markerColors=FF0000,00FF00&theme=Dark"
   width="100%"
   height="500"
 ></iframe>`}
@@ -181,8 +175,8 @@ export function MapsDocsInteractive({ ctx }: RequestInfo) {
 					<div style={{ backgroundColor: "#1a202c", padding: "15px", borderRadius: "8px", overflowX: "auto" }}>
 						<code style={{ fontSize: "0.9rem", color: "#68d391", whiteSpace: "pre", display: "block" }}>
 {`function InteractiveMap({ coordinates, theme = "Light" }) {
-  const coordsString = JSON.stringify(coordinates);
-  const url = \`/maps/interactive?coordinates=\${encodeURIComponent(coordsString)}&theme=\${theme}\`;
+  const markers = coordinates.flat().join(',');
+  const url = \`/maps/interactive?markers=\${markers}&theme=\${theme}\`;
 
   return (
     <iframe
@@ -358,7 +352,7 @@ mapFrame.contentWindow.postMessage({
     <h3>Map with Pin Markers</h3>
     <iframe
       id="mapFrame1"
-      src="/maps/interactive?coordinates=[[-122.4194,37.7749],[-74.0060,40.7128],[-0.1278,51.5074],[139.6917,35.6895]]&theme=Light&width=100%&height=500px"
+      src="/maps/interactive?markers=-122.4194,37.7749,-74.0060,40.7128,-0.1278,51.5074,139.6917,35.6895&theme=Light&width=100%&height=500px"
       width="100%"
       height="500"
     ></iframe>
@@ -368,7 +362,7 @@ mapFrame.contentWindow.postMessage({
     <h3>Map with Circle Markers</h3>
     <iframe
       id="mapFrame2"
-      src="/maps/interactive?coordinates=[[-122.4194,37.7749],[-74.0060,40.7128],[-0.1278,51.5074],[139.6917,35.6895]]&theme=Dark&width=100%&height=500px&markerStyle=circle&markerColors=[%22%23FF6B6B%22,%22%234ECDC4%22,%22%23FFE66D%22,%22%23A8E6CF%22]"
+      src="/maps/interactive?markers=-122.4194,37.7749,-74.0060,40.7128,-0.1278,51.5074,139.6917,35.6895&theme=Dark&width=100%&height=500px&markerStyle=circle&markerColors=FF6B6B,4ECDC4,FFE66D,A8E6CF"
       width="100%"
       height="500"
     ></iframe>
@@ -478,8 +472,8 @@ function ControlledMap({ coordinates, theme = "Light" }) {
     sendCommand('fitBounds', { padding: 50 });
   };
 
-  const coordsString = JSON.stringify(coordinates);
-  const url = \`/maps/interactive?coordinates=\${encodeURIComponent(coordsString)}&theme=\${theme}\`;
+  const markers = coordinates.flat().join(',');
+  const url = \`/maps/interactive?markers=\${markers}&theme=\${theme}\`;
 
   return (
     <div>

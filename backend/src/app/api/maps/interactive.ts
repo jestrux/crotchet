@@ -9,8 +9,7 @@ import { env } from "cloudflare:workers";
  * @param {number} [options.width="100%"] - Map width (pixels or percentage)
  * @param {number} [options.height="600px"] - Map height (pixels or percentage)
  * @param {number} [options.zoomLevel] - Zoom level (auto-fit if not specified)
- * @param {string} [options.markerColor] - Single color for all markers (hex). Falls back to hash-based if not provided.
- * @param {Array<string>} [options.markerColors] - Array of colors (hex) for each marker. Uses modulus if length doesn't match coordinates.
+ * @param {Array<string>} [options.markerColors] - Array of colors (hex with # prefix) for each marker. Uses modulus if length doesn't match coordinates. Falls back to hash-based if not provided.
  * @param {string} [options.markerStyle="pin"] - Marker style: "pin" (default) or "circle"
  * @param {boolean} [options.autoFit=true] - Auto-fit map to show all markers
  *
@@ -23,7 +22,6 @@ export default function generateInteractiveMap(
 		width?: string;
 		height?: string;
 		zoomLevel?: number;
-		markerColor?: string;
 		markerColors?: string[];
 		markerStyle?: string;
 		autoFit?: boolean;
@@ -31,7 +29,7 @@ export default function generateInteractiveMap(
 ): string {
 	// Validate inputs
 	if (!Array.isArray(coordinates) || coordinates.length === 0) {
-		throw new Error("coordinates must be a non-empty array");
+		throw new Error("markers must contain at least 1 coordinate pair");
 	}
 
 	// Validate each coordinate
@@ -54,7 +52,6 @@ export default function generateInteractiveMap(
 		width = "100%",
 		height = "600px",
 		zoomLevel,
-		markerColor,
 		markerColors,
 		markerStyle = "pin",
 		autoFit = true,
@@ -139,13 +136,11 @@ export default function generateInteractiveMap(
 	centerLng /= coordinates.length;
 	centerLat /= coordinates.length;
 
-	// Generate markers with colors
+	// Generate markers with colors (two-tier fallback: markerColors array or hash-based)
 	const markers = coordinates.map((coords, index) => {
 		let color: string;
 		if (markerColors && markerColors.length > 0) {
 			color = markerColors[index % markerColors.length];
-		} else if (markerColor) {
-			color = markerColor;
 		} else {
 			color = hashCoordinateToColor(coords[0], coords[1]);
 		}

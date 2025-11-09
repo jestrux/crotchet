@@ -9,8 +9,7 @@ import { env } from "cloudflare:workers";
  * @param {number} [options.width=800] - Map width in pixels (max 1280)
  * @param {number} [options.height=800] - Map height in pixels (max 1280)
  * @param {number} [options.zoomLevel] - Zoom level (auto-fit if not specified)
- * @param {string} [options.markerColor] - Single color for all markers (hex). Falls back to hash-based if not provided.
- * @param {Array<string>} [options.markerColors] - Array of colors (hex) for each marker. Uses modulus if length doesn't match coordinates.
+ * @param {Array<string>} [options.markerColors] - Array of colors (hex with # prefix) for each marker. Uses modulus if length doesn't match coordinates. Falls back to hash-based if not provided.
  * @param {string} [options.markerIcon="circle"] - Marker icon
  * @param {boolean} [options.autoFit=true] - Auto-fit map to show all markers
  *
@@ -23,7 +22,6 @@ export default async function generatePlotImage(
 		width?: number;
 		height?: number;
 		zoomLevel?: number;
-		markerColor?: string;
 		markerColors?: string[];
 		markerIcon?: string;
 		autoFit?: boolean;
@@ -31,7 +29,7 @@ export default async function generatePlotImage(
 ): Promise<ArrayBuffer> {
 	// Validate inputs
 	if (!Array.isArray(coordinates) || coordinates.length === 0) {
-		throw new Error("coordinates must be a non-empty array");
+		throw new Error("markers must contain at least 1 coordinate pair");
 	}
 
 	// Validate each coordinate
@@ -54,7 +52,6 @@ export default async function generatePlotImage(
 		width = 800,
 		height = 800,
 		zoomLevel,
-		markerColor,
 		markerColors,
 		markerIcon = "circle",
 		autoFit = true,
@@ -126,22 +123,19 @@ export default async function generatePlotImage(
 		finalHeight = 1280 / aspectRatio;
 	}
 
-	// Create GeoJSON for markers with three-tier color fallback
+	// Create GeoJSON for markers with two-tier color fallback
 	const icon = markerIcon || "circle";
 
 	const geojson = {
 		type: "FeatureCollection",
 		features: coordinates.map((coords, index) => {
-			// Three-tier color fallback:
+			// Two-tier color fallback:
 			// 1. markerColors array (with modulus)
-			// 2. markerColor single value
-			// 3. hash-based color
+			// 2. hash-based color
 			let color: string;
 			if (markerColors && markerColors.length > 0) {
 				// Use modulus to cycle through colors if array is shorter than coordinates
 				color = markerColors[index % markerColors.length].replace("#", "");
-			} else if (markerColor) {
-				color = markerColor.replace("#", "");
 			} else {
 				color = hashCoordinateToColor(coords[0], coords[1]);
 			}

@@ -12,7 +12,6 @@ import { env } from "cloudflare:workers";
  * @param {string} [options.line.color="#55FF33"] - Line color (hex)
  * @param {number} [options.line.width=6] - Line width (4-10)
  * @param {boolean} [options.markers=true] - Show markers at each coordinate
- * @param {string} [options.markerColor] - Marker color (hex). If not provided, colors are generated from coordinate hash
  * @param {string} [options.markerIcon="circle"] - Marker icon
  *
  * @returns {Promise<ArrayBuffer>} Image binary data
@@ -28,13 +27,12 @@ export default async function generatePathImage(
 			width?: number;
 		};
 		markers?: boolean;
-		markerColor?: string;
 		markerIcon?: string;
 	} = {}
 ): Promise<ArrayBuffer> {
 	// Validate inputs
 	if (!Array.isArray(coordinates) || coordinates.length < 2) {
-		throw new Error("coordinates must be an array with at least 2 elements");
+		throw new Error("markers must contain at least 2 coordinate pairs");
 	}
 
 	// Validate each coordinate
@@ -58,7 +56,6 @@ export default async function generatePathImage(
 		height = 800,
 		line = { color: "#55FF33", width: 6 },
 		markers = true,
-		markerColor,
 		markerIcon = "circle",
 	} = options;
 
@@ -171,10 +168,8 @@ export default async function generatePathImage(
 	let overlayString = pathString;
 	if (markers) {
 		const markerStrings = coordinates.map(([lng, lat]) => {
-			// Use provided color or generate from hash
-			const color = markerColor
-				? markerColor.replace("#", "")
-				: hashCoordinateToColor(lng, lat);
+			// Generate color from coordinate hash
+			const color = hashCoordinateToColor(lng, lat);
 			return `pin-s-${markerIcon}+${color}(${lng},${lat})`;
 		});
 		overlayString = pathString + "," + markerStrings.join(",");

@@ -56,14 +56,14 @@ export function MapsDocs({ ctx }: RequestInfo) {
 						<span style={{ backgroundColor: "#fef3c7", padding: "2px 8px", borderRadius: "4px", fontSize: "0.9rem", fontWeight: "700" }}>
 							REQUIRED
 						</span>{" "}
-						coordinates
+						markers
 					</h3>
 					<p style={{ color: "#4a5568", marginBottom: "10px" }}>
-						JSON array of [longitude, latitude] pairs. Must contain at least 2 coordinates.
+						Comma-separated lng,lat pairs. Must contain at least 2 coordinate pairs (4 values minimum).
 					</p>
 					<div style={{ backgroundColor: "#f7fafc", padding: "12px", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
 						<code style={{ fontSize: "0.95rem", color: "#2d3748" }}>
-							[[-73.935242,40.730610],[-74.006,40.7128],[-71.057083,42.361145]]
+							-73.935242,40.730610,-74.006,40.7128,-71.057083,42.361145
 						</code>
 					</div>
 				</div>
@@ -116,13 +116,7 @@ export function MapsDocs({ ctx }: RequestInfo) {
 							<td style={{ padding: "12px", fontWeight: "500" }}>markers</td>
 							<td style={{ padding: "12px", color: "#4a5568" }}>boolean</td>
 							<td style={{ padding: "12px" }}><code>true</code></td>
-							<td style={{ padding: "12px", color: "#4a5568" }}>Show markers (set to "false" to hide)</td>
-						</tr>
-						<tr style={{ borderBottom: "1px solid #e2e8f0" }}>
-							<td style={{ padding: "12px", fontWeight: "500" }}>markerColor</td>
-							<td style={{ padding: "12px", color: "#4a5568" }}>string</td>
-							<td style={{ padding: "12px" }}><code>hash-based</code></td>
-							<td style={{ padding: "12px", color: "#4a5568" }}>Marker color (hex, no #). If not provided, each marker gets a unique color based on coordinate hash</td>
+							<td style={{ padding: "12px", color: "#4a5568" }}>Show markers (set to "false" to hide). When shown, each marker gets a unique color based on coordinate hash</td>
 						</tr>
 						<tr style={{ borderBottom: "1px solid #e2e8f0" }}>
 							<td style={{ padding: "12px", fontWeight: "500" }}>markerIcon</td>
@@ -175,7 +169,7 @@ export function MapsDocs({ ctx }: RequestInfo) {
 					</h3>
 					<div style={{ backgroundColor: "#1a202c", padding: "15px", borderRadius: "8px", overflowX: "auto" }}>
 						<code style={{ fontSize: "0.9rem", color: "#68d391", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
-							{`/maps/path?coordinates=[[-73.935242,40.730610],[-74.006,40.7128],[-71.057083,42.361145]]`}
+							{`/maps/path?markers=-73.935242,40.730610,-74.006,40.7128,-71.057083,42.361145`}
 						</code>
 					</div>
 				</div>
@@ -186,18 +180,7 @@ export function MapsDocs({ ctx }: RequestInfo) {
 					</h3>
 					<div style={{ backgroundColor: "#1a202c", padding: "15px", borderRadius: "8px", overflowX: "auto" }}>
 						<code style={{ fontSize: "0.9rem", color: "#68d391", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
-							{`/maps/path?coordinates=[[-73.935242,40.730610],[-74.006,40.7128]]&theme=Dark&width=1000&height=600&lineColor=00FF00&lineWidth=8`}
-						</code>
-					</div>
-				</div>
-
-				<div style={{ marginBottom: "30px" }}>
-					<h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#2d3748", marginBottom: "10px" }}>
-						Single Marker Color
-					</h3>
-					<div style={{ backgroundColor: "#1a202c", padding: "15px", borderRadius: "8px", overflowX: "auto" }}>
-						<code style={{ fontSize: "0.9rem", color: "#68d391", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
-							{`/maps/path?coordinates=[[-73.935242,40.730610],[-74.006,40.7128],[-71.057083,42.361145]]&markerColor=FF0000`}
+							{`/maps/path?markers=-73.935242,40.730610,-74.006,40.7128&theme=Dark&width=1000&height=600&lineColor=00FF00&lineWidth=8`}
 						</code>
 					</div>
 				</div>
@@ -208,7 +191,7 @@ export function MapsDocs({ ctx }: RequestInfo) {
 					</h3>
 					<div style={{ backgroundColor: "#1a202c", padding: "15px", borderRadius: "8px", overflowX: "auto" }}>
 						<code style={{ fontSize: "0.9rem", color: "#68d391", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
-							{`/maps/path?coordinates=[[-73.935242,40.730610],[-74.006,40.7128]]&markers=false`}
+							{`/maps/path?markers=-73.935242,40.730610,-74.006,40.7128&markers=false`}
 						</code>
 					</div>
 				</div>
@@ -220,7 +203,7 @@ export function MapsDocs({ ctx }: RequestInfo) {
 					<div style={{ backgroundColor: "#1a202c", padding: "15px", borderRadius: "8px", overflowX: "auto" }}>
 						<code style={{ fontSize: "0.9rem", color: "#68d391", whiteSpace: "pre", display: "block" }}>
 {`<img
-  src="/maps/path?coordinates=[[-73.935242,40.730610],[-74.006,40.7128]]&theme=Dark"
+  src="/maps/path?markers=-73.935242,40.730610,-74.006,40.7128&theme=Dark"
   alt="Map with path"
 />`}
 						</code>
@@ -239,8 +222,11 @@ export function MapsDocs({ ctx }: RequestInfo) {
   [-71.057083, 42.361145]
 ];
 
+// Convert to comma-separated string
+const markers = coordinates.flat().join(',');
+
 const params = new URLSearchParams({
-  coordinates: JSON.stringify(coordinates),
+  markers: markers,
   theme: 'Dark',
   width: '1000',
   height: '600'
@@ -269,14 +255,14 @@ const imageUrl = \`/maps/path?\${params}\`;`}
 						<span style={{ backgroundColor: "#fef3c7", padding: "2px 8px", borderRadius: "4px", fontSize: "0.9rem", fontWeight: "700" }}>
 							REQUIRED
 						</span>{" "}
-						coordinates
+						markers
 					</h4>
 					<p style={{ color: "#4a5568", marginBottom: "10px" }}>
-						JSON array of [longitude, latitude] pairs. Must contain at least 1 coordinate.
+						Comma-separated lng,lat pairs. Must contain at least 1 coordinate pair (2 values minimum).
 					</p>
 					<div style={{ backgroundColor: "#f7fafc", padding: "12px", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
 						<code style={{ fontSize: "0.95rem", color: "#2d3748" }}>
-							[[-73.935242,40.730610],[-74.006,40.7128],[-71.057083,42.361145]]
+							-73.935242,40.730610,-74.006,40.7128,-71.057083,42.361145
 						</code>
 					</div>
 				</div>
@@ -314,16 +300,10 @@ const imageUrl = \`/maps/path?\${params}\`;`}
 							<td style={{ padding: "12px", color: "#4a5568" }}>Image height in pixels (max 1280)</td>
 						</tr>
 						<tr style={{ borderBottom: "1px solid #e2e8f0" }}>
-							<td style={{ padding: "12px", fontWeight: "500" }}>markerColor</td>
+							<td style={{ padding: "12px", fontWeight: "500" }}>markerColors</td>
 							<td style={{ padding: "12px", color: "#4a5568" }}>string</td>
 							<td style={{ padding: "12px" }}><code>hash-based</code></td>
-							<td style={{ padding: "12px", color: "#4a5568" }}>Single color for all markers (hex, no #). Falls back to hash-based if not provided.</td>
-						</tr>
-						<tr style={{ borderBottom: "1px solid #e2e8f0" }}>
-							<td style={{ padding: "12px", fontWeight: "500" }}>markerColors</td>
-							<td style={{ padding: "12px", color: "#4a5568" }}>array</td>
-							<td style={{ padding: "12px" }}><code>-</code></td>
-							<td style={{ padding: "12px", color: "#4a5568" }}>Array of colors (hex, no #) for each marker. Uses modulus to cycle if shorter than coordinates. Takes priority over markerColor.</td>
+							<td style={{ padding: "12px", color: "#4a5568" }}>Comma-separated colors (hex, no #) for each marker. Uses modulus to cycle if fewer colors than markers. Falls back to hash-based if not provided.</td>
 						</tr>
 						<tr style={{ borderBottom: "1px solid #e2e8f0" }}>
 							<td style={{ padding: "12px", fontWeight: "500" }}>markerIcon</td>
@@ -359,18 +339,7 @@ const imageUrl = \`/maps/path?\${params}\`;`}
 					</p>
 					<div style={{ backgroundColor: "#1a202c", padding: "15px", borderRadius: "8px", overflowX: "auto" }}>
 						<code style={{ fontSize: "0.9rem", color: "#68d391", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
-							{`/maps/plot?coordinates=[[-73.935242,40.730610],[-74.006,40.7128],[-71.057083,42.361145]]`}
-						</code>
-					</div>
-				</div>
-
-				<div style={{ marginBottom: "30px" }}>
-					<h4 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#2d3748", marginBottom: "10px" }}>
-						Single Color for All Markers
-					</h4>
-					<div style={{ backgroundColor: "#1a202c", padding: "15px", borderRadius: "8px", overflowX: "auto" }}>
-						<code style={{ fontSize: "0.9rem", color: "#68d391", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
-							{`/maps/plot?coordinates=[[-73.935242,40.730610],[-74.006,40.7128]]&markerColor=3B82F6&theme=Dark`}
+							{`/maps/plot?markers=-73.935242,40.730610,-74.006,40.7128,-71.057083,42.361145`}
 						</code>
 					</div>
 				</div>
@@ -380,11 +349,11 @@ const imageUrl = \`/maps/path?\${params}\`;`}
 						Individual Colors per Marker
 					</h4>
 					<p style={{ color: "#4a5568", marginBottom: "10px" }}>
-						Specify exact colors for each marker
+						Specify exact colors for each marker (comma-separated hex codes without #)
 					</p>
 					<div style={{ backgroundColor: "#1a202c", padding: "15px", borderRadius: "8px", overflowX: "auto" }}>
 						<code style={{ fontSize: "0.9rem", color: "#68d391", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
-							{`/maps/plot?coordinates=[[-73.935242,40.730610],[-74.006,40.7128],[-71.057083,42.361145]]&markerColors=["FF0000","00FF00","0000FF"]`}
+							{`/maps/plot?markers=-73.935242,40.730610,-74.006,40.7128,-71.057083,42.361145&markerColors=FF0000,00FF00,0000FF`}
 						</code>
 					</div>
 				</div>
@@ -394,11 +363,11 @@ const imageUrl = \`/maps/path?\${params}\`;`}
 						Color Palette (using modulus)
 					</h4>
 					<p style={{ color: "#4a5568", marginBottom: "10px" }}>
-						Provide fewer colors than coordinates - cycles through the palette
+						Provide fewer colors than markers - cycles through the palette
 					</p>
 					<div style={{ backgroundColor: "#1a202c", padding: "15px", borderRadius: "8px", overflowX: "auto" }}>
 						<code style={{ fontSize: "0.9rem", color: "#68d391", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
-							{`/maps/plot?coordinates=[[-73.935242,40.730610],[-74.006,40.7128],[-71.057083,42.361145],[-70.25,41.85],[-72.5,42.1]]&markerColors=["FF6B6B","4ECDC4","45B7D1"]`}
+							{`/maps/plot?markers=-73.935242,40.730610,-74.006,40.7128,-71.057083,42.361145,-70.25,41.85,-72.5,42.1&markerColors=FF6B6B,4ECDC4,45B7D1`}
 						</code>
 					</div>
 				</div>
@@ -412,7 +381,7 @@ const imageUrl = \`/maps/path?\${params}\`;`}
 					</p>
 					<div style={{ backgroundColor: "#1a202c", padding: "15px", borderRadius: "8px", overflowX: "auto" }}>
 						<code style={{ fontSize: "0.9rem", color: "#68d391", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
-							{`/maps/plot?coordinates=[[-73.935242,40.730610],[-74.006,40.7128]]&zoomLevel=10&autoFit=false`}
+							{`/maps/plot?markers=-73.935242,40.730610,-74.006,40.7128&zoomLevel=10&autoFit=false`}
 						</code>
 					</div>
 				</div>

@@ -186,32 +186,46 @@ export default defineApp([
 	route("/maps/path", async function handler({ request }) {
 		try {
 			const url = new URL(request.url);
-			const coordinatesParam = url.searchParams.get("coordinates");
+			const markersParam = url.searchParams.get("markers");
 
-			if (!coordinatesParam) {
+			if (!markersParam) {
 				return new Response(
-					"coordinates query parameter is required (JSON array of [lng, lat] pairs)",
+					"markers query parameter is required (comma-separated lng,lat pairs)",
 					{ status: 400 }
 				);
 			}
 
-			// Parse coordinates from JSON string
+			// Parse markers from comma-separated string
 			let coordinates: Array<[number, number]>;
 			try {
-				coordinates = JSON.parse(coordinatesParam);
+				const values = markersParam.split(',').map(v => parseFloat(v.trim()));
+
+				// Validate even number of values
+				if (values.length % 2 !== 0) {
+					return new Response(
+						"Invalid markers format. Must have an even number of values (lng,lat pairs)",
+						{ status: 400 }
+					);
+				}
+
+				// Group into pairs [lng, lat]
+				coordinates = [];
+				for (let i = 0; i < values.length; i += 2) {
+					if (isNaN(values[i]) || isNaN(values[i + 1])) {
+						return new Response(
+							"Invalid markers format. All values must be valid numbers",
+							{ status: 400 }
+						);
+					}
+					coordinates.push([values[i], values[i + 1]]);
+				}
 			} catch (e) {
 				return new Response(
-					"Invalid coordinates format. Expected JSON array.",
+					"Invalid markers format. Expected comma-separated numbers.",
 					{
 						status: 400,
 					}
 				);
-			}
-
-			if (!Array.isArray(coordinates)) {
-				return new Response("coordinates must be an array", {
-					status: 400,
-				});
 			}
 
 			// Parse optional parameters
@@ -221,7 +235,6 @@ export default defineApp([
 				height?: number;
 				line?: { color?: string; width?: number };
 				markers?: boolean;
-				markerColor?: string;
 				markerIcon?: string;
 			} = {};
 
@@ -245,10 +258,6 @@ export default defineApp([
 			if (url.searchParams.get("markers") === "false") {
 				options.markers = false;
 			}
-
-			// Only set markerColor if explicitly provided (otherwise hash colors are used)
-			const markerColor = url.searchParams.get("markerColor");
-			if (markerColor) options.markerColor = markerColor;
 
 			const markerIcon = url.searchParams.get("markerIcon");
 			if (markerIcon) options.markerIcon = markerIcon;
@@ -296,32 +305,46 @@ export default defineApp([
 	route("/maps/plot", async function handler({ request }) {
 		try {
 			const url = new URL(request.url);
-			const coordinatesParam = url.searchParams.get("coordinates");
+			const markersParam = url.searchParams.get("markers");
 
-			if (!coordinatesParam) {
+			if (!markersParam) {
 				return new Response(
-					"coordinates query parameter is required (JSON array of [lng, lat] pairs)",
+					"markers query parameter is required (comma-separated lng,lat pairs)",
 					{ status: 400 }
 				);
 			}
 
-			// Parse coordinates from JSON string
+			// Parse markers from comma-separated string
 			let coordinates: Array<[number, number]>;
 			try {
-				coordinates = JSON.parse(coordinatesParam);
+				const values = markersParam.split(',').map(v => parseFloat(v.trim()));
+
+				// Validate even number of values
+				if (values.length % 2 !== 0) {
+					return new Response(
+						"Invalid markers format. Must have an even number of values (lng,lat pairs)",
+						{ status: 400 }
+					);
+				}
+
+				// Group into pairs [lng, lat]
+				coordinates = [];
+				for (let i = 0; i < values.length; i += 2) {
+					if (isNaN(values[i]) || isNaN(values[i + 1])) {
+						return new Response(
+							"Invalid markers format. All values must be valid numbers",
+							{ status: 400 }
+						);
+					}
+					coordinates.push([values[i], values[i + 1]]);
+				}
 			} catch (e) {
 				return new Response(
-					"Invalid coordinates format. Expected JSON array.",
+					"Invalid markers format. Expected comma-separated numbers.",
 					{
 						status: 400,
 					}
 				);
-			}
-
-			if (!Array.isArray(coordinates)) {
-				return new Response("coordinates must be an array", {
-					status: 400,
-				});
 			}
 
 			// Parse optional parameters
@@ -330,7 +353,6 @@ export default defineApp([
 				width?: number;
 				height?: number;
 				zoomLevel?: number;
-				markerColor?: string;
 				markerColors?: string[];
 				markerIcon?: string;
 				autoFit?: boolean;
@@ -348,21 +370,20 @@ export default defineApp([
 			const zoomLevel = url.searchParams.get("zoomLevel");
 			if (zoomLevel) options.zoomLevel = parseInt(zoomLevel);
 
-			// Parse markerColors array (priority over markerColor)
+			// Parse markerColors from comma-separated string (hex codes without # prefix)
 			const markerColorsParam = url.searchParams.get("markerColors");
 			if (markerColorsParam) {
 				try {
-					const parsed = JSON.parse(markerColorsParam);
-					if (Array.isArray(parsed)) {
-						options.markerColors = parsed;
-					}
+					const colors = markerColorsParam.split(',').map(c => {
+						const trimmed = c.trim();
+						// Add # prefix if not already present
+						return trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
+					});
+					options.markerColors = colors;
 				} catch (e) {
-					// Invalid JSON, ignore and fall back to other options
+					// Invalid format, ignore
 				}
 			}
-
-			const markerColor = url.searchParams.get("markerColor");
-			if (markerColor) options.markerColor = markerColor;
 
 			const markerIcon = url.searchParams.get("markerIcon");
 			if (markerIcon) options.markerIcon = markerIcon;
@@ -416,27 +437,46 @@ export default defineApp([
 	route("/maps/interactive", async function handler({ request }) {
 		try {
 			const url = new URL(request.url);
-			const coordinatesParam = url.searchParams.get("coordinates");
+			const markersParam = url.searchParams.get("markers");
 
-			if (!coordinatesParam) {
+			if (!markersParam) {
 				return new Response(
-					"coordinates query parameter is required (JSON array of [lng, lat] pairs)",
+					"markers query parameter is required (comma-separated lng,lat pairs)",
 					{ status: 400 }
 				);
 			}
 
-			// Parse coordinates from JSON string
+			// Parse markers from comma-separated string
 			let coordinates: Array<[number, number]>;
 			try {
-				coordinates = JSON.parse(coordinatesParam);
-			} catch (e) {
-				return new Response("Invalid coordinates format. Expected JSON array.", {
-					status: 400,
-				});
-			}
+				const values = markersParam.split(',').map(v => parseFloat(v.trim()));
 
-			if (!Array.isArray(coordinates)) {
-				return new Response("coordinates must be an array", { status: 400 });
+				// Validate even number of values
+				if (values.length % 2 !== 0) {
+					return new Response(
+						"Invalid markers format. Must have an even number of values (lng,lat pairs)",
+						{ status: 400 }
+					);
+				}
+
+				// Group into pairs [lng, lat]
+				coordinates = [];
+				for (let i = 0; i < values.length; i += 2) {
+					if (isNaN(values[i]) || isNaN(values[i + 1])) {
+						return new Response(
+							"Invalid markers format. All values must be valid numbers",
+							{ status: 400 }
+						);
+					}
+					coordinates.push([values[i], values[i + 1]]);
+				}
+			} catch (e) {
+				return new Response(
+					"Invalid markers format. Expected comma-separated numbers.",
+					{
+						status: 400,
+					}
+				);
 			}
 
 			// Parse optional parameters
@@ -445,7 +485,6 @@ export default defineApp([
 				width?: string;
 				height?: string;
 				zoomLevel?: number;
-				markerColor?: string;
 				markerColors?: string[];
 				markerStyle?: string;
 				autoFit?: boolean;
@@ -463,21 +502,20 @@ export default defineApp([
 			const zoomLevel = url.searchParams.get("zoomLevel");
 			if (zoomLevel) options.zoomLevel = parseInt(zoomLevel);
 
-			// Parse markerColors array (priority over markerColor)
+			// Parse markerColors from comma-separated string (hex codes without # prefix)
 			const markerColorsParam = url.searchParams.get("markerColors");
 			if (markerColorsParam) {
 				try {
-					const parsed = JSON.parse(markerColorsParam);
-					if (Array.isArray(parsed)) {
-						options.markerColors = parsed;
-					}
+					const colors = markerColorsParam.split(',').map(c => {
+						const trimmed = c.trim();
+						// Add # prefix if not already present
+						return trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
+					});
+					options.markerColors = colors;
 				} catch (e) {
-					// Invalid JSON, ignore and fall back to other options
+					// Invalid format, ignore
 				}
 			}
-
-			const markerColor = url.searchParams.get("markerColor");
-			if (markerColor) options.markerColor = markerColor;
 
 			const markerStyle = url.searchParams.get("markerStyle");
 			if (markerStyle) options.markerStyle = markerStyle;
