@@ -11,6 +11,9 @@ pnpm-debug.log*
 .env
 .dev.vars
 
+# Firebase service account credentials
+*firebase*adminsdk*.json
+
 # Vite build output
 dist
 

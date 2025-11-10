@@ -17,6 +17,11 @@ import {
 import generatePathImage from "./app/api/maps/path";
 import generatePlotImage from "./app/api/maps/plot";
 import generateInteractiveMap from "./app/api/maps/interactive";
+import {
+	sendTopicNotification,
+	subscribeToTopic,
+	unsubscribeFromTopic,
+} from "./app/api/firebase";
 
 // @ts-ignore
 const kv = env.KV;
@@ -183,6 +188,79 @@ export default defineApp([
 		// const res = await getSheetDetailsSimple(url);
 		// return new Response(res?.html || "");
 	}),
+	route("/firebase/notify", async function handler({ request }) {
+		const url = new URL(request.url);
+		const topic = url.searchParams.get("topic");
+		const title = url.searchParams.get("title");
+		const body = url.searchParams.get("body");
+		const dataParam = url.searchParams.get("data");
+
+		// Validate required parameters
+		if (!topic || !title || !body) {
+			return new Response(
+				"Missing required parameters. Need: topic, title, and body",
+				{ status: 400 }
+			);
+		}
+
+		// Parse optional data parameter (expects JSON string)
+		let data: Record<string, string> | undefined;
+		if (dataParam) {
+			try {
+				data = JSON.parse(dataParam);
+			} catch (e) {
+				return new Response(
+					"Invalid data parameter. Must be valid JSON string",
+					{ status: 400 }
+				);
+			}
+		}
+
+		const result = await sendTopicNotification({
+			topic,
+			title,
+			body,
+			data,
+		});
+
+		return Response.json(result);
+	}),
+	route("/firebase/subscribe", async function handler({ request }) {
+		const { token, topic } = (await request.json()) as {
+			token: string;
+			topic: string;
+		};
+
+		// Validate required parameters
+		if (!token || !topic) {
+			return new Response(
+				"Missing required parameters. Need: token and topic",
+				{ status: 400 }
+			);
+		}
+
+		const result = await subscribeToTopic({ token, topic });
+
+		return Response.json(result);
+	}),
+	route("/firebase/unsubscribe", async function handler({ request }) {
+		const { token, topic } = (await request.json()) as {
+			token: string;
+			topic: string;
+		};
+
+		// Validate required parameters
+		if (!token || !topic) {
+			return new Response(
+				"Missing required parameters. Need: token and topic",
+				{ status: 400 }
+			);
+		}
+
+		const result = await unsubscribeFromTopic({ token, topic });
+
+		return Response.json(result);
+	}),
 	route("/maps/path", async function handler({ request }) {
 		try {
 			const url = new URL(request.url);
@@ -198,7 +276,9 @@ export default defineApp([
 			// Parse markers from comma-separated string
 			let coordinates: Array<[number, number]>;
 			try {
-				const values = markersParam.split(',').map(v => parseFloat(v.trim()));
+				const values = markersParam
+					.split(",")
+					.map((v) => parseFloat(v.trim()));
 
 				// Validate even number of values
 				if (values.length % 2 !== 0) {
@@ -317,7 +397,9 @@ export default defineApp([
 			// Parse markers from comma-separated string
 			let coordinates: Array<[number, number]>;
 			try {
-				const values = markersParam.split(',').map(v => parseFloat(v.trim()));
+				const values = markersParam
+					.split(",")
+					.map((v) => parseFloat(v.trim()));
 
 				// Validate even number of values
 				if (values.length % 2 !== 0) {
@@ -374,10 +456,12 @@ export default defineApp([
 			const markerColorsParam = url.searchParams.get("markerColors");
 			if (markerColorsParam) {
 				try {
-					const colors = markerColorsParam.split(',').map(c => {
+					const colors = markerColorsParam.split(",").map((c) => {
 						const trimmed = c.trim();
 						// Add # prefix if not already present
-						return trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
+						return trimmed.startsWith("#")
+							? trimmed
+							: `#${trimmed}`;
 					});
 					options.markerColors = colors;
 				} catch (e) {
@@ -449,7 +533,9 @@ export default defineApp([
 			// Parse markers from comma-separated string
 			let coordinates: Array<[number, number]>;
 			try {
-				const values = markersParam.split(',').map(v => parseFloat(v.trim()));
+				const values = markersParam
+					.split(",")
+					.map((v) => parseFloat(v.trim()));
 
 				// Validate even number of values
 				if (values.length % 2 !== 0) {
@@ -506,10 +592,12 @@ export default defineApp([
 			const markerColorsParam = url.searchParams.get("markerColors");
 			if (markerColorsParam) {
 				try {
-					const colors = markerColorsParam.split(',').map(c => {
+					const colors = markerColorsParam.split(",").map((c) => {
 						const trimmed = c.trim();
 						// Add # prefix if not already present
-						return trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
+						return trimmed.startsWith("#")
+							? trimmed
+							: `#${trimmed}`;
 					});
 					options.markerColors = colors;
 				} catch (e) {
@@ -559,7 +647,8 @@ export default defineApp([
 					"Access-Control-Allow-Origin": "*",
 					"X-Cache": "DISABLED",
 					// Override CSP to allow inline scripts for the interactive map
-					"Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://api.mapbox.com; style-src 'self' 'unsafe-inline' https://api.mapbox.com; img-src 'self' data: https: blob:; connect-src 'self' https://api.mapbox.com https://events.mapbox.com; frame-ancestors *; worker-src 'self' blob:; child-src 'self' blob:; object-src 'none';",
+					"Content-Security-Policy":
+						"default-src 'self'; script-src 'self' 'unsafe-inline' https://api.mapbox.com; style-src 'self' 'unsafe-inline' https://api.mapbox.com; img-src 'self' data: https: blob:; connect-src 'self' https://api.mapbox.com https://events.mapbox.com; frame-ancestors *; worker-src 'self' blob:; child-src 'self' blob:; object-src 'none';",
 				},
 			});
 		} catch (error) {
@@ -643,6 +732,6 @@ export default defineApp([
 	render(Document, [
 		route("/", Home),
 		route("/maps/docs", MapsDocs),
-		route("/maps/docs/interactive", MapsDocsInteractive)
+		route("/maps/docs/interactive", MapsDocsInteractive),
 	]),
 ]);
