@@ -308,7 +308,18 @@ export function svg(
 			viewBox={`0 0 ${boxSize} ${boxSize}`}
 			{...fillStroke}
 		>
-			<path strokeLinecap="round" strokeLinejoin="round" d={path} />
+			{Array.isArray(path) ? (
+				path.map((p, i) => (
+					<path
+						key={i}
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						d={p}
+					/>
+				))
+			) : (
+				<path strokeLinecap="round" strokeLinejoin="round" d={path} />
+			)}
 		</svg>
 	);
 }

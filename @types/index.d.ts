@@ -31,6 +31,8 @@ declare var random: (arr?: any[]) => any | undefined | null;
 
 declare var randomId: (prefix?: String) => string;
 
+declare var isValidUrl: (text?: String) => boolean;
+
 declare var openUrl: (path: String) => Promise<any>;
 
 declare var onDesktop: () => boolean;
@@ -260,7 +262,7 @@ declare var UI: {
 		props?: { size?: string | number; filled?: boolean }
 	) => any;
 	svg: (
-		path: String,
+		path: String | String[],
 		props?: {
 			size?: string | number;
 			opacity?: number;

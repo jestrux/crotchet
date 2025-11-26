@@ -769,10 +769,11 @@ const getPlayClipPage = (clip, external = false) => {
 	};
 
 	const componentProps = {
+		content: () => getVideoPlayer(clip, true),
 		// content: !external
 		// 	? () => getVideoPlayer(clip, true)
 		// 	: () => `
-		content: () => `
+		scontent: () => `
 			<div class="absolute inset-0 bg-black flex items-center justify-center"
 				x-data="{
 					cropEnabled: true,
