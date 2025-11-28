@@ -7,6 +7,8 @@ const readFile = (props) => ipcRenderer.invoke("read-file", props);
 const fileStats = (props) => ipcRenderer.invoke("file-stats", props);
 const writeFile = (contents) => ipcRenderer.invoke("write-file", contents);
 
+contextBridge.exposeInMainWorld("__onDesktop", true);
+
 contextBridge.exposeInMainWorld(
 	"onCrotchetReady",
 	async ({ queryDb, dbInsert }) => {

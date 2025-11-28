@@ -19,7 +19,8 @@ export const someTime = (t = 200) => new Promise((res) => setTimeout(res, t));
 
 export const yearInSeconds = () => 60 * 3600 * 24 * 365;
 
-export const onDesktop = () => localStorage.__onDesktop;
+export const onDesktop = () => window.__onDesktop;
+// export const onDesktop = () => localStorage.__onDesktop;
 
 export const onFloatingWindow = () => window.__isFloatingWindow;
 

@@ -93,7 +93,8 @@ const createMainWindow = () => {
 			console.log("Launch error: ", e);
 		}
 	} else {
-		mainWindow.loadFile(buildDir("index.html"));
+		// mainWindow.loadFile(buildDir("index.html"));
+		mainWindow.loadURL("http://localhost:3127/");
 		app.setLoginItemSettings({
 			openAtLogin: true,
 			openAsHidden: false,

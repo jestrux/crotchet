@@ -13,8 +13,12 @@ const getYoutubeClipUrl = (clip) =>
 	`crotchet://app/youtubeClips?${objectToQueryParams(clip)}`;
 
 const getYoutubeActualUrl = (props) => {
-	const [start] = (props?.crop || [0, props?.duration]).map(Number);
-	return `https://youtube.com/watch?v=${props?._id}&t=${start.toFixed(0)}`;
+	const [start, end] = (props?.crop || [0, props?.duration]).map(Number);
+	return `https://youtube.com/watch?v=${props?._id}&t=${start.toFixed(
+		0
+	)}s&loop=0&${start ? `start=${toHms(start)}&` : ""}${
+		end ? `end=${toHms(end)}` : ""
+	}`;
 };
 
 const getEmbedUrl = (url, start = 0, end = 0) =>
@@ -24,6 +28,17 @@ const getEmbedUrl = (url, start = 0, end = 0) =>
 
 const getPoster = (url) =>
 	`https://i.ytimg.com/vi/${getYoutubeId(url)}/hqdefault.jpg`;
+
+const formFields = [
+	"title",
+	"poster",
+	"start",
+	"end",
+	"duration",
+	"crop",
+	"description",
+	"url",
+];
 
 const getVideoPlayer = (video, hideMeta = false) =>
 	!video
@@ -237,7 +252,7 @@ const openOnDesktop = (clip) =>
 			// maximize: true,
 			// fullScreen: true,
 		},
-		payload: clip,
+		payload: _.omit(clip, ['action', 'actions']),
 		// payload: getPlayClipPage(clip),
 	});
 
@@ -320,7 +335,7 @@ const getActions = (payload) => {
 									if (!editedVideo) return;
 									return dataSources.youtubeClips.updateRow(
 										payload._id,
-										editedVideo
+										_.pick(editedVideo, formFields)
 									);
 								},
 							});
@@ -598,7 +613,10 @@ const addClip = async ({ url = "" } = {}) => {
 		if (!id) return;
 
 		if (video._rowId)
-			return dataSources.youtubeClips.updateRow(video._rowId, video);
+			return dataSources.youtubeClips.updateRow(
+				video._rowId,
+				_.pick(video, formFields)
+			);
 
 		return dataSources.youtubeClips.insertRow({
 			...video,
@@ -769,11 +787,10 @@ const getPlayClipPage = (clip, external = false) => {
 	};
 
 	const componentProps = {
-		content: () => getVideoPlayer(clip, true),
-		// content: !external
-		// 	? () => getVideoPlayer(clip, true)
-		// 	: () => `
-		scontent: () => `
+		// content: () => getVideoPlayer(clip, true),
+		content: !external
+			? () => getVideoPlayer(clip, true)
+			: () => `
 			<div class="absolute inset-0 bg-black flex items-center justify-center"
 				x-data="{
 					cropEnabled: true,
