@@ -3,6 +3,9 @@ PODS:
     - CapacitorCordova
   - CapacitorApp (5.0.8):
     - Capacitor
+  - CapacitorBarcodeScanner (2.2.0):
+    - Capacitor
+    - OSBarcodeLib (= 2.0.1)
   - CapacitorClipboard (5.0.8):
     - Capacitor
   - CapacitorCommunitySpeechRecognition (5.1.0):
@@ -22,12 +25,14 @@ PODS:
     - Capacitor
   - CapacitorWidgetsbridgePlugin (0.1.2):
     - Capacitor
+  - OSBarcodeLib (2.0.1)
   - SendIntent (0.0.1):
     - Capacitor
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorApp (from `../../node_modules/@capacitor/app`)"
+  - "CapacitorBarcodeScanner (from `../../node_modules/@capacitor/barcode-scanner`)"
   - "CapacitorClipboard (from `../../node_modules/@capacitor/clipboard`)"
   - "CapacitorCommunitySpeechRecognition (from `../../node_modules/@capacitor-community/speech-recognition`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
@@ -40,11 +45,17 @@ DEPENDENCIES:
   - CapacitorWidgetsbridgePlugin (from `../../node_modules/capacitor-widgetsbridge-plugin`)
   - SendIntent (from `../../node_modules/send-intent`)
 
+SPEC REPOS:
+  trunk:
+    - OSBarcodeLib
+
 EXTERNAL SOURCES:
   Capacitor:
     :path: "../../node_modules/@capacitor/ios"
   CapacitorApp:
     :path: "../../node_modules/@capacitor/app"
+  CapacitorBarcodeScanner:
+    :path: "../../node_modules/@capacitor/barcode-scanner"
   CapacitorClipboard:
     :path: "../../node_modules/@capacitor/clipboard"
   CapacitorCommunitySpeechRecognition:
@@ -71,6 +82,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   Capacitor: 0039e9b67cfde2d5e9111b3ddca8c0097f4cf2f4
   CapacitorApp: 102e553c3b1fdc255969c39aa19b529675690ef4
+  CapacitorBarcodeScanner: 8de3b13b681ff3b92e21b286e9847ee525f44796
   CapacitorClipboard: 03628c89fe70d06d36288ee4eff7e205a6e81e53
   CapacitorCommunitySpeechRecognition: 4b07fb675f4e5ce3376748557875d182973a788a
   CapacitorCordova: d906edead798c9bb1b07274f15615878d27507d5
@@ -81,8 +93,9 @@ SPEC CHECKSUMS:
   CapacitorShare: abef1f7be4e10b448693b0b83b540cb4b92dc849
   CapacitorToast: 5967ced673b9fb9b7d7b8520c648dbd8f5064b15
   CapacitorWidgetsbridgePlugin: 384cf6a56ba2a3ee6d199579f5403723e766b958
+  OSBarcodeLib: 57987d2eb1f916f701f4554e20e349b3cb83f023
   SendIntent: 0a17b6984c4f27e9dfa56513267ba2c044a5a6c8
 
-PODFILE CHECKSUM: 34677444d512c3b76b05fb62ff48269b12e56b65
+PODFILE CHECKSUM: 2b667a72a31db5564fa255814f951c2eb8a565a6
 
 COCOAPODS: 1.15.2

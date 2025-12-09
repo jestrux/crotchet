@@ -1009,3 +1009,54 @@ export const scanNetwork = async () => {
 		);
 	});
 };
+
+export const scanQRCode = async () => {
+	// Check if on mobile (Capacitor native platform)
+	const isMobile =
+		!onDesktop() &&
+		window.Capacitor?.isNativePlatform?.();
+
+	// If on mobile, try to scan with camera
+	if (isMobile) {
+		try {
+			const { CapacitorBarcodeScanner, CapacitorBarcodeScannerTypeHint } = await import(
+				"@capacitor/barcode-scanner"
+			);
+
+			const result = await CapacitorBarcodeScanner.scanBarcode({
+				hint: CapacitorBarcodeScannerTypeHint.QR_CODE,
+				scanInstructions: "Point your camera at a QR code",
+			});
+
+			return result?.ScanResult;
+		} catch (error) {
+			// alert("Scan QR Code Error: " + error?.message);
+
+			// If user cancelled or error occurred, fall through to empty form
+			console.log("QR scan error:", error);
+
+			// Check if user cancelled
+			if (
+				error?.message?.includes("cancelled") ||
+				error?.message?.includes("canceled")
+			) {
+				return null; // Don't show form if user cancelled
+			}
+		}
+	}
+
+	// On desktop/web or if scanning failed, open form with empty field
+	return window.openPage({
+		title: "QR Code",
+		type: "form",
+		fields: {
+			qrCode: {
+				label: "QR Code",
+				type: "contentEditable",
+			},
+		},
+		resolve: async () => ({
+			qrCode: "",
+		}),
+	});
+};

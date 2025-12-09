@@ -3,6 +3,7 @@ import pinnedItems from "./pinnedItems";
 import codeScreenshot from "./codeScreenshot";
 import appPages from "./app-pages";
 import audioPlayer from "./audio-player";
+import qrScanner from "./qrScanner";
 
 export default function internalExtensions() {
 	clipboard();
@@ -10,4 +11,5 @@ export default function internalExtensions() {
 	codeScreenshot();
 	appPages();
 	audioPlayer();
+	qrScanner();
 }
