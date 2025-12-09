@@ -595,3 +595,5 @@ declare var setCrotchetApp: (appDetails: {
 		primaryDark?: string;
 	};
 }) => void;
+
+declare var scanQRCode: () => PromiseLike<{ qrCode: string } | null>;

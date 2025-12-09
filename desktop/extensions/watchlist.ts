@@ -1,0 +1,216 @@
+import "../../@types/index";
+
+const appIcon = UI.svg(
+	"M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 0 1-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-1.5A1.125 1.125 0 0 1 18 18.375M20.625 4.5H3.375m17.25 0c.621 0 1.125.504 1.125 1.125M20.625 4.5h-1.5C18.504 4.5 18 5.004 18 5.625m3.75 0v1.5c0 .621-.504 1.125-1.125 1.125M3.375 4.5c-.621 0-1.125.504-1.125 1.125M3.375 4.5h1.5C5.496 4.5 6 5.004 6 5.625m-3.75 0v1.5c0 .621.504 1.125 1.125 1.125m0 0h1.5m-1.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125m1.5-3.75C5.496 8.25 6 7.746 6 7.125v-1.5M4.875 8.25C5.496 8.25 6 8.754 6 9.375v1.5m0-5.25v5.25m0-5.25C6 5.004 6.504 4.5 7.125 4.5h9.75c.621 0 1.125.504 1.125 1.125m1.125 2.625h1.5m-1.5 0A1.125 1.125 0 0 1 18 7.125v-1.5m1.125 2.625c-.621 0-1.125.504-1.125 1.125v1.5m2.625-2.625c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125M18 5.625v5.25M7.125 12h9.75m-9.75 0A1.125 1.125 0 0 1 6 10.875M7.125 12C6.504 12 6 12.504 6 13.125m0-2.25C6 11.496 5.496 12 4.875 12M18 10.875c0 .621-.504 1.125-1.125 1.125M18 10.875c0 .621.504 1.125 1.125 1.125m-2.25 0c.621 0 1.125.504 1.125 1.125m-12 5.25v-5.25m0 5.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125m-12 0v-1.5c0-.621.504-1.125 1.125-1.125M18 18.375v-5.25m0 5.25v-1.5c0-.621-.504-1.125-1.125-1.125M18 13.125v1.5c0 .621.504 1.125 1.125 1.125M18 13.125c0-.621.504-1.125 1.125-1.125M6 13.125v1.5c0 .621-.504 1.125-1.125 1.125M6 13.125C6 12.504 5.496 12 4.875 12m-1.5 0h1.5m-1.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125M19.125 12h1.5m0 0c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125m-17.25 0h1.5m14.25 0h1.5",
+	{
+		filled: false,
+	}
+);
+
+const mapEntry = (item) => {
+	const isVideo = item.type === "movie" || item.type === "tv";
+
+	// Format progress text for TV shows
+	let progressText = "";
+	if (item.type === "tv" && item.season && item.episode) {
+		progressText = `S${item.season}E${item.episode}`;
+		if (item.currentTime && item.currentTime !== "00:00") {
+			progressText += ` • ${item.currentTime}`;
+		}
+	} else if (item.currentTime && item.currentTime !== "00:00") {
+		progressText = item.currentTime;
+	}
+
+	return {
+		...item,
+		...(isVideo
+			? { video: item.poster || item.image || "placeholder" }
+			: { image: item.image || "placeholder" }),
+		leading: appIcon,
+		title: item.title || "Untitled",
+		subtitle: progressText || item.description,
+		tags: [item.type, ...(progressText ? ["In Progress"] : [])],
+	};
+};
+
+registerDataSource("db", "watchlist", {
+	icon: appIcon,
+	table: "watchlist",
+	label: "Watchlist",
+	mapEntry,
+	searchFields: ["title", "description"],
+	entryAction: (entry) => ({
+		label: "Open",
+		url: entry.url,
+	}),
+	entryActions: (entry) => {
+		return [
+			{
+				icon: window.UI.icon("open-external"),
+				label: "Open",
+				url: entry.url,
+			},
+			{
+				icon: window.UI.icon("edit"),
+				label: "Edit",
+				handler: () => {
+					const formFields = {
+						title: "text",
+						description: "text",
+						url: "text",
+						image: "image",
+						poster: "image",
+						type: {
+							type: "radio",
+							choices: ["movie", "tv"],
+						},
+						currentTime: "text",
+						season: "text",
+						episode: "text",
+					};
+
+					window.openPage({
+						type: "form",
+						fields: formFields,
+						resolve: () => entry,
+						action: {
+							label: "Save",
+							handler: (data) => {
+								if (!data) return;
+
+								return window.dataSources.watchlist.updateRow(
+									data._id,
+									_.pick(data, Object.keys(formFields))
+								);
+							},
+						},
+					});
+				},
+			},
+			{
+				icon: window.UI.icon("delete"),
+				label: "Delete",
+				destructive: true,
+				handler: async () =>
+					window.withLoader(
+						window.dataSources.watchlist.deleteRow(entry._id),
+						{
+							loadingMessage: "Deleting...",
+							successMessage: "Entry deleted",
+							errorMessage: "Failed to delete entry",
+						}
+					),
+			},
+		];
+	},
+});
+
+registerAction("scanToUpdateWatchlist", {
+	label: "Scan to Update Watchlist",
+	icon: appIcon,
+	global: true,
+	mobileOnly: true,
+	handler: async () => {
+		try {
+			// Scan QR code to get watchlist data
+			const result = await window.scanQRCode();
+
+			if (!result?.qrCode) {
+				return window.showToast("No QR code data found");
+			}
+
+			let data;
+			try {
+				// Try to parse as JSON
+				data = JSON.parse(result.qrCode);
+			} catch (error) {
+				return window.showToast("Invalid QR code data format");
+			}
+
+			// Validate required fields
+			if (!data.title || !data.url) {
+				return window.showToast("QR code missing required fields (title, url)");
+			}
+
+			// Prepare watchlist item
+			const watchlistItem = {
+				_rowId: data._rowId || data._id,
+				title: data.title,
+				description: data.description || "",
+				url: data.url,
+				image: data.image || "",
+				poster: data.poster || "",
+				type: data.type || "movie",
+				currentTime: data.currentTime || "00:00",
+				...(data.season && { season: data.season }),
+				...(data.episode && { episode: data.episode }),
+				updatedAt: new Date().toISOString(),
+			};
+
+			// Update or insert into watchlist
+			await window.withLoader(
+				async () => {
+					if (watchlistItem._rowId) {
+						// Update existing item
+						return await window.dataSources.watchlist.updateRow(
+							watchlistItem._rowId,
+							watchlistItem,
+							{ upsert: true }
+						);
+					} else {
+						// Insert new item
+						return await window.dataSources.watchlist.insertRow(watchlistItem);
+					}
+				},
+				{
+					loadingMessage: "Updating watchlist...",
+					successMessage: `${watchlistItem.title} updated`,
+					errorMessage: "Failed to update watchlist",
+				}
+			);
+		} catch (error) {
+			console.error("Scan to update watchlist error:", error);
+			window.showToast("Failed to scan QR code");
+		}
+	},
+});
+
+registerWidget("watchlist", {
+	icon: appIcon,
+	title: "Watchlist",
+	listenForUpdates: "firebase-table-updated:watchlist",
+	resolve: async ({ state }) => {
+		const res = await sourceGet(
+			{ handler: () => queryDb("watchlist") },
+			{
+				orderBy: "_index,desc",
+				random: state.random,
+				limit: 5,
+			}
+		);
+		return res?.map(mapEntry);
+	},
+	content: UI.list,
+	actions: [
+		{
+			label: "Search",
+			icon: UI.icon("search"),
+			url: "crotchet://search/watchlist",
+		},
+		{
+			label: "Shuffle",
+			icon: UI.icon("shuffle"),
+			handler: ({ refetch, setState }) => {
+				setState?.("random", true);
+				refetch?.();
+			},
+		},
+	],
+});
+
+registerAction("searchWatchList", {
+	icon: appIcon,
+	label: "Search Watch List",
+	context: "search",
+	source: "watchlist",
+});
