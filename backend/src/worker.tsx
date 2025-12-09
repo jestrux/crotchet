@@ -6,7 +6,8 @@ import { Document } from "@/app/Document";
 import { Home } from "@/app/pages/Home";
 import { MapsDocs } from "@/app/pages/MapsDocs";
 import { MapsDocsInteractive } from "@/app/pages/MapsDocsInteractive";
-import { setCommonHeaders } from "@/app/headers";
+import { DbDocs } from "@/app/pages/DbDocs";
+import { setCommonHeaders, corsPreflightResponse } from "@/app/headers";
 import crawlUrl from "./app/api/crawl";
 import { exchangeCodeForAuthToken, generateOauthUrl } from "./app/api/oauth";
 import aiPrompt from "./app/api/ai";
@@ -21,6 +22,13 @@ import {
 	sendTopicNotification,
 	subscribeToTopic,
 	unsubscribeFromTopic,
+	queryDb,
+	dbInsert,
+	dbUpdate,
+	dbDelete,
+	uploadRawString,
+	uploadStringAsFile,
+	uploadDataUrl,
 } from "./app/api/firebase";
 
 // @ts-ignore
@@ -81,6 +89,9 @@ export default defineApp([
 		});
 	}),
 	route("/crawl", async function handler({ request }) {
+		const urlObj = new URL(request.url);
+		const dataOnly = urlObj.searchParams.get("dataOnly") === "true";
+
 		const url =
 			request.method.toLowerCase() == "post"
 				? (
@@ -88,29 +99,31 @@ export default defineApp([
 							url: string;
 						}
 				  )?.url
-				: new URL(request.url).searchParams.get("url");
+				: urlObj.searchParams.get("url");
 
 		if (!url?.length)
 			return new Response("No url provided", { status: 400 });
 
-		return Response.json(await crawlUrl(url));
+		const result = await crawlUrl(url);
+		return dataOnly
+			? new Response(result.data, {
+				headers: { "Content-Type": "text/plain" }
+			})
+			: Response.json(result);
 	}),
-	route("/crawl/:url", async function handler({ params }) {
-		return Response.json(await crawlUrl(params.url));
+	route("/crawl/:url", async function handler({ params, request }) {
+		const dataOnly = new URL(request.url).searchParams.get("dataOnly") === "true";
+		const result = await crawlUrl(params.url);
+		return dataOnly
+			? new Response(result.data, {
+				headers: { "Content-Type": "text/plain" }
+			})
+			: Response.json(result);
 	}),
 	route("/proxy", async function handler({ request }) {
 		// Handle preflight OPTIONS request
 		if (request.method === "OPTIONS") {
-			return new Response(null, {
-				status: 204,
-				headers: {
-					"Access-Control-Allow-Origin": "*",
-					"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-					"Access-Control-Allow-Headers":
-						"Content-Type, Authorization",
-					"Access-Control-Max-Age": "86400",
-				},
-			});
+			return corsPreflightResponse("GET, POST, OPTIONS");
 		}
 
 		const url =
@@ -710,6 +723,275 @@ export default defineApp([
 			return new Response("Error: " + (error?.message || error));
 		}
 	}),
+	// Database routes - RESTful style
+	route("/db/:table/:rowId", async function handler({ request, params }) {
+		// Handle preflight OPTIONS request
+		if (request.method === "OPTIONS") {
+			return corsPreflightResponse("GET, PUT, DELETE, OPTIONS");
+		}
+
+		try {
+			const table = params.table;
+			const rowId = params.rowId;
+
+			// GET - Get single document by ID
+			if (request.method === "GET") {
+				const result = await queryDb(table, { rowId });
+
+				if (!result) {
+					return new Response("Document not found", { status: 404 });
+				}
+
+				return Response.json(result);
+			}
+
+			// PUT - Update document (using rowId from path)
+			if (request.method === "PUT") {
+				const body = await request.json();
+				const { data, merge } = body as {
+					data: any;
+					merge?: boolean;
+				};
+
+				if (!data) {
+					return new Response("data field is required", {
+						status: 400,
+					});
+				}
+
+				const result = await dbUpdate(table, rowId, data, { merge });
+				return Response.json(result);
+			}
+
+			// DELETE - Delete document (using rowId from path)
+			if (request.method === "DELETE") {
+				await dbDelete(table, rowId);
+				return Response.json({ success: true });
+			}
+
+			return new Response("Method not allowed", { status: 405 });
+		} catch (error) {
+			return new Response(
+				`Database error: ${
+					error instanceof Error ? error.message : String(error)
+				}`,
+				{ status: 500 }
+			);
+		}
+	}),
+	route("/db/:table", async function handler({ request, params }) {
+		// Handle preflight OPTIONS request
+		if (request.method === "OPTIONS") {
+			return corsPreflightResponse("GET, POST, PUT, DELETE, OPTIONS");
+		}
+
+		try {
+			const table = params.table;
+			const url = new URL(request.url);
+
+			// GET - Query documents
+			if (request.method === "GET") {
+				const orderBy = url.searchParams.get("orderBy");
+				const limit = url.searchParams.get("limit");
+				const first = url.searchParams.get("first") === "true";
+				const random = url.searchParams.get("random") === "true";
+				const shuffle = url.searchParams.get("shuffle") === "true";
+				const searchable = url.searchParams.get("searchable");
+				const searchQuery = url.searchParams.get("searchQuery");
+				const searchFields = url.searchParams.get("searchFields");
+
+				// Support multiple filters via query params
+				// e.g., ?filters[userId]=user123&filters[status]=active
+				const filters: Record<string, any> = {};
+				for (const [key, value] of url.searchParams.entries()) {
+					if (key.startsWith("filters[") && key.endsWith("]")) {
+						const filterKey = key.slice(8, -1); // Extract key from filters[key]
+						filters[filterKey] = value;
+					}
+				}
+
+				// Support field mapping via query params
+				// e.g., ?fieldMap[displayName]=name
+				const fieldMap: Record<string, any> = {};
+				for (const [key, value] of url.searchParams.entries()) {
+					if (key.startsWith("fieldMap[") && key.endsWith("]")) {
+						const mapKey = key.slice(9, -1); // Extract key from fieldMap[key]
+						fieldMap[mapKey] = value;
+					}
+				}
+
+				const options: any = {};
+				if (orderBy) options.orderBy = orderBy;
+				if (Object.keys(filters).length > 0) options.filters = filters;
+				if (limit) options.limit = parseInt(limit);
+				if (first) options.first = first;
+				if (random) options.random = random;
+				if (shuffle) options.shuffle = shuffle;
+				if (searchable !== null) options.searchable = searchable === "true";
+				if (searchQuery) options.searchQuery = searchQuery;
+				if (searchFields) options.searchFields = searchFields.split(",");
+				if (Object.keys(fieldMap).length > 0) options.fieldMap = fieldMap;
+
+				const result = await queryDb(table, options);
+
+				return Response.json(result);
+			}
+
+			// POST - Insert document
+			if (request.method === "POST") {
+				const body = await request.json();
+				const { data, rowId, merge } = body as {
+					data: any;
+					rowId?: string;
+					merge?: boolean;
+				};
+
+				if (!data) {
+					return new Response("data field is required", {
+						status: 400,
+					});
+				}
+
+				const result = await dbInsert(table, data, { rowId, merge });
+				return Response.json(result);
+			}
+
+			// PUT - Update document (accepts rowId in body)
+			if (request.method === "PUT") {
+				const body = await request.json();
+				const { rowId, data, merge } = body as {
+					rowId?: string;
+					data: any;
+					merge?: boolean;
+				};
+
+				if (!rowId) {
+					return new Response("rowId field is required in body when using PUT /db/:table", {
+						status: 400,
+					});
+				}
+
+				if (!data) {
+					return new Response("data field is required", {
+						status: 400,
+					});
+				}
+
+				const result = await dbUpdate(table, rowId, data, { merge });
+				return Response.json(result);
+			}
+
+			// DELETE - Not supported without rowId in path
+			if (request.method === "DELETE") {
+				return new Response("Use DELETE /db/:table/:rowId to delete a document", {
+					status: 400,
+				});
+			}
+
+			return new Response("Method not allowed", { status: 405 });
+		} catch (error) {
+			return new Response(
+				`Database error: ${
+					error instanceof Error ? error.message : String(error)
+				}`,
+				{ status: 500 }
+			);
+		}
+	}),
+	// Storage routes - dashed naming
+	route("/storage/upload-raw-string", async function handler({ request }) {
+		// Handle preflight OPTIONS request
+		if (request.method === "OPTIONS") {
+			return corsPreflightResponse("POST, OPTIONS");
+		}
+
+		try {
+			const body = await request.json();
+			const { content, name, type } = body as {
+				content: string;
+				name?: string;
+				type?: string;
+			};
+
+			if (!content) {
+				return new Response("content field is required", {
+					status: 400,
+				});
+			}
+
+			const url = await uploadRawString(content, { name, type });
+			return Response.json({ url });
+		} catch (error) {
+			return new Response(
+				`Upload error: ${
+					error instanceof Error ? error.message : String(error)
+				}`,
+				{ status: 500 }
+			);
+		}
+	}),
+	route("/storage/upload-string-as-file", async function handler({
+		request,
+	}) {
+		// Handle preflight OPTIONS request
+		if (request.method === "OPTIONS") {
+			return corsPreflightResponse("POST, OPTIONS");
+		}
+
+		try {
+			const body = await request.json();
+			const { content, name, type } = body as {
+				content: string;
+				name?: string;
+				type?: string;
+			};
+
+			if (!content) {
+				return new Response("content field is required", {
+					status: 400,
+				});
+			}
+
+			const url = await uploadStringAsFile(content, { name, type });
+			return Response.json({ url });
+		} catch (error) {
+			return new Response(
+				`Upload error: ${
+					error instanceof Error ? error.message : String(error)
+				}`,
+				{ status: 500 }
+			);
+		}
+	}),
+	route("/storage/upload-data-url", async function handler({ request }) {
+		// Handle preflight OPTIONS request
+		if (request.method === "OPTIONS") {
+			return corsPreflightResponse("POST, OPTIONS");
+		}
+
+		try {
+			const body = await request.json();
+			const { dataUrl } = body as {
+				dataUrl: string;
+			};
+
+			if (!dataUrl) {
+				return new Response("dataUrl field is required", {
+					status: 400,
+				});
+			}
+
+			const url = await uploadDataUrl(dataUrl);
+			return Response.json({ url });
+		} catch (error) {
+			return new Response(
+				`Upload error: ${
+					error instanceof Error ? error.message : String(error)
+				}`,
+				{ status: 500 }
+			);
+		}
+	}),
 	route("/kv/:key", async function handler({ request, params }) {
 		const key = params.key;
 
@@ -733,5 +1015,6 @@ export default defineApp([
 		route("/", Home),
 		route("/maps/docs", MapsDocs),
 		route("/maps/docs/interactive", MapsDocsInteractive),
+		route("/db-docs", DbDocs),
 	]),
 ]);

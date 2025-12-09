@@ -34,3 +34,16 @@ export const setCommonHeaders =
 		response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
 		response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
 	};
+
+// Utility function for CORS preflight OPTIONS responses
+export const corsPreflightResponse = (methods: string) => {
+	return new Response(null, {
+		status: 204,
+		headers: {
+			"Access-Control-Allow-Origin": "*",
+			"Access-Control-Allow-Methods": methods,
+			"Access-Control-Allow-Headers": "Content-Type, Authorization",
+			"Access-Control-Max-Age": "86400",
+		},
+	});
+};
