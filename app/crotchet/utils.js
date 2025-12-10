@@ -120,6 +120,7 @@ export const getToken = async (key, { prompt, invalidate, expiresIn } = {}) => {
 			// noHeading: false,
 			title: `Enter ${camelCaseToSentenceCase(key)}`,
 			field: {
+				floating: true,
 				placeholder: `Enter ${camelCaseToSentenceCase(key)}`,
 				// placeholder: "Enter token here...",
 				hideLabel: true,

@@ -19,6 +19,7 @@ import PageProvider from "@/crotchet/providers/AppScaffold/PageProvider";
 import IonicModal from "../components/IonicModal";
 import clsx from "clsx";
 import ModalPage from "../components/ModalPage";
+import useKeyboard from "./useKeyboard";
 
 const ToastMessage = ({ message, onClose, duration = 3000 }) => {
 	const toastTimerRef = useRef();
@@ -45,6 +46,7 @@ const ToastMessage = ({ message, onClose, duration = 3000 }) => {
 
 export function AlertsWrapper() {
 	const { alerts, ...alertThings } = useAlerts();
+	const { KeyboardPlaceholder } = useKeyboard();
 
 	Object.assign(window, alertThings);
 
@@ -184,8 +186,17 @@ export function AlertsWrapper() {
 								if (res == null) return null;
 
 								alert.close(res);
+
+								window.showActionSheetAlert(
+									alert.action.successMessage ||
+										"Changes saved"
+								);
 							} catch (error) {
-								window.showAlert(error);
+								window.showActionSheetAlert(
+									alert.action.successMessage ??
+										(error?.message ||
+											"Failed to save changes")
+								);
 								return;
 							}
 						}
@@ -196,10 +207,12 @@ export function AlertsWrapper() {
 					const form = (
 						<div
 							className={clsx(
-								alert.field && !(alert.noHeading ?? true)
-									? "-mx-2 -mt-2 pb-1"
-									: "py-2 px-1",
-								{ "pb-12": !alert.field }
+								// !alert.field?.floating
+								// 	? "-mx-2 -mt-2 pb-1"
+								// 	: "py-2 px-1",
+								// { "pb-12": !alert.field?.floating }
+								"py-2 px-1",
+								{ "pb-4": !alert.field?.floating }
 							)}
 						>
 							<Form
@@ -215,6 +228,8 @@ export function AlertsWrapper() {
 								onChange={alert.onChange}
 								onSubmit={alert.onSubmit}
 							/>
+
+							{!alert.field?.floating && <KeyboardPlaceholder />}
 						</div>
 					);
 
@@ -495,6 +510,16 @@ export default function useAlerts() {
 					filters: actualSource.filters,
 					filter: actualSource.filter,
 				};
+			}
+
+			if (props.type == "form") {
+				return openAlertForm({
+					title: props.title,
+					field: props.field,
+					fields: props.fields,
+					data: props.resolve ? props.resolve() : {},
+					action: props.action,
+				});
 			}
 
 			return openChoicePicker(props);

@@ -5,6 +5,7 @@ import {
 	camelCaseToSentenceCase,
 	dispatch,
 	getPreference,
+	getUserPreferences,
 	savePreference,
 	sectionedChoices,
 } from "@/crotchet/utils";
@@ -173,13 +174,6 @@ export const useMobileActions = () => {
 					"desc"
 				);
 
-				console.log(
-					"Home page content: ",
-					savedShortcuts,
-					homePageContent
-					// widgetChoices
-				);
-
 				window.openAlertForm({
 					title: "Customize Home Page",
 					fields: {
@@ -270,6 +264,60 @@ export const useMobileActions = () => {
 								window.dispatch("home-page-content-updated")
 							),
 						]);
+					},
+				});
+			},
+			pinned: 1,
+			section: "Customize",
+		};
+	};
+
+	const manageTokens = () => {
+		return {
+			icon: window.UI.svg(
+				"M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+			),
+			label: "Manage Tokens",
+			handler: async () => {
+				const allPreferences = (await getUserPreferences()) ?? {};
+				let tokens = Object.keys(allPreferences).reduce((agg, key) => {
+					if (key.startsWith("token-"))
+						agg[key.replace("token-", "")] = allPreferences[key];
+
+					return agg;
+				}, {});
+
+				tokens = Object.keys(tokens);
+
+				window.openAlertForm({
+					inset: false,
+					noHeading: false,
+					title: "Manage Tokens",
+					field: {
+						hideLabel: true,
+						type: "radio",
+						editable: false,
+						multiple: true,
+						choices: tokens,
+						value: tokens,
+					},
+					action: {
+						label: "Save",
+						successMessage: "Tokens updated",
+						handler: async (newTokens) => {
+							if (!newTokens) return true;
+
+							const removedTokens = tokens.filter(
+								(token) => !newTokens.includes(token)
+							);
+
+							for (const token of removedTokens) {
+								// Removes preference
+								await savePreference(`token-${token}`);
+							}
+
+							return true;
+						},
 					},
 				});
 			},
@@ -407,7 +455,7 @@ export const useMobileActions = () => {
 	const actionSections = sectionedChoices(
 		[
 			...(searchQuery?.length ? pinnedActions : []),
-			...[customizeHomePage(), customizeNavigation()],
+			...[customizeHomePage(), customizeNavigation(), manageTokens()],
 			...(actions || []),
 			// ...getRootActions(),
 			// ...(actions || []).reduce((agg, a) => {

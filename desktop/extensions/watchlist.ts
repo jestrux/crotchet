@@ -7,6 +7,75 @@ const appIcon = UI.svg(
 	}
 );
 
+const formFields = {
+	title: "text",
+	description: "text",
+	url: "text",
+	image: "image",
+	poster: "image",
+	// type: {
+	// 	type: "radio",
+	// 	choices: ["movie", "tv"],
+	// },
+	season: "text",
+	episode: "text",
+	currentTime: "text",
+};
+
+const getActions = (entry) => {
+	return [
+		{
+			icon: window.UI.icon("open-external"),
+			label: "Open",
+			url: entry.url,
+		},
+		{
+			icon: window.UI.icon("edit"),
+			label: "Edit",
+			handler: async () => {
+				const entity =
+					entry.type?.toLowerCase() == "movie" ? "Movie" : "Show";
+
+				window.openPage({
+					title: `Edit ${entity}`,
+					type: "form",
+					fields: _.omit(
+						formFields,
+						entry.type == "movie" ? ["season", "episode"] : []
+					),
+					resolve: () => entry,
+					action: {
+						label: "Save",
+						successMessage: `${entity} saved`,
+						handler: (data) => {
+							if (!data) return;
+
+							return window.dataSources.watchlist.updateRow(
+								data._id,
+								_.pick(data, Object.keys(formFields))
+							);
+						},
+					},
+				});
+			},
+		},
+		{
+			icon: window.UI.icon("delete"),
+			label: "Delete",
+			destructive: true,
+			handler: async () =>
+				window.withLoader(
+					window.dataSources.watchlist.deleteRow(entry._id),
+					{
+						loadingMessage: "Deleting...",
+						successMessage: "Entry deleted",
+						errorMessage: "Failed to delete entry",
+					}
+				),
+		},
+	];
+};
+
 const mapEntry = (item) => {
 	const isVideo = item.type === "movie" || item.type === "tv";
 
@@ -21,7 +90,7 @@ const mapEntry = (item) => {
 		progressText = item.currentTime;
 	}
 
-	return {
+	const entry = {
 		...item,
 		...(isVideo
 			? { video: item.poster || item.image || "placeholder" }
@@ -31,6 +100,10 @@ const mapEntry = (item) => {
 		subtitle: progressText || item.description,
 		tags: [item.type, ...(progressText ? ["In Progress"] : [])],
 	};
+
+	entry.actions = getActions(entry);
+
+	return entry;
 };
 
 registerDataSource("db", "watchlist", {
@@ -43,66 +116,6 @@ registerDataSource("db", "watchlist", {
 		label: "Open",
 		url: entry.url,
 	}),
-	entryActions: (entry) => {
-		return [
-			{
-				icon: window.UI.icon("open-external"),
-				label: "Open",
-				url: entry.url,
-			},
-			{
-				icon: window.UI.icon("edit"),
-				label: "Edit",
-				handler: () => {
-					const formFields = {
-						title: "text",
-						description: "text",
-						url: "text",
-						image: "image",
-						poster: "image",
-						type: {
-							type: "radio",
-							choices: ["movie", "tv"],
-						},
-						currentTime: "text",
-						season: "text",
-						episode: "text",
-					};
-
-					window.openPage({
-						type: "form",
-						fields: formFields,
-						resolve: () => entry,
-						action: {
-							label: "Save",
-							handler: (data) => {
-								if (!data) return;
-
-								return window.dataSources.watchlist.updateRow(
-									data._id,
-									_.pick(data, Object.keys(formFields))
-								);
-							},
-						},
-					});
-				},
-			},
-			{
-				icon: window.UI.icon("delete"),
-				label: "Delete",
-				destructive: true,
-				handler: async () =>
-					window.withLoader(
-						window.dataSources.watchlist.deleteRow(entry._id),
-						{
-							loadingMessage: "Deleting...",
-							successMessage: "Entry deleted",
-							errorMessage: "Failed to delete entry",
-						}
-					),
-			},
-		];
-	},
 });
 
 registerAction("scanToUpdateWatchlist", {
@@ -129,7 +142,9 @@ registerAction("scanToUpdateWatchlist", {
 
 			// Validate required fields
 			if (!data.title || !data.url) {
-				return window.showToast("QR code missing required fields (title, url)");
+				return window.showToast(
+					"QR code missing required fields (title, url)"
+				);
 			}
 
 			// Prepare watchlist item
@@ -159,7 +174,9 @@ registerAction("scanToUpdateWatchlist", {
 						);
 					} else {
 						// Insert new item
-						return await window.dataSources.watchlist.insertRow(watchlistItem);
+						return await window.dataSources.watchlist.insertRow(
+							watchlistItem
+						);
 					}
 				},
 				{
@@ -179,15 +196,13 @@ registerWidget("watchlist", {
 	icon: appIcon,
 	title: "Watchlist",
 	listenForUpdates: "firebase-table-updated:watchlist",
+	source: "watchlist",
 	resolve: async ({ state }) => {
-		const res = await sourceGet(
-			{ handler: () => queryDb("watchlist") },
-			{
-				orderBy: "_index,desc",
-				random: state.random,
-				limit: 5,
-			}
-		);
+		const res = await sourceGet("watchlist", {
+			orderBy: "_index,desc",
+			random: state.random ?? true,
+			limit: 5,
+		});
 		return res?.map(mapEntry);
 	},
 	content: UI.list,
