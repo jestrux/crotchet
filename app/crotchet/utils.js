@@ -736,7 +736,17 @@ export const withLoader = async (action, props) => {
 			});
 
 			onChange(status, payload);
-		} else if (isMessageStatus && (!props.quiet || !message?.length))
+		}
+		else if(status == "loading") {
+			window.openChoicePicker({
+				loadingMessage,
+				choices: async () => {
+					await action();
+					return null;
+				},
+			});
+		} 
+		else if (isMessageStatus && (!props.quiet || !message?.length))
 			window.showToast(message);
 	};
 
@@ -1013,16 +1023,13 @@ export const scanNetwork = async () => {
 
 export const scanQRCode = async () => {
 	// Check if on mobile (Capacitor native platform)
-	const isMobile =
-		!onDesktop() &&
-		window.Capacitor?.isNativePlatform?.();
+	const isMobile = !onDesktop() && window.Capacitor?.isNativePlatform?.();
 
 	// If on mobile, try to scan with camera
 	if (isMobile) {
 		try {
-			const { CapacitorBarcodeScanner, CapacitorBarcodeScannerTypeHint } = await import(
-				"@capacitor/barcode-scanner"
-			);
+			const { CapacitorBarcodeScanner, CapacitorBarcodeScannerTypeHint } =
+				await import("@capacitor/barcode-scanner");
 
 			const result = await CapacitorBarcodeScanner.scanBarcode({
 				hint: CapacitorBarcodeScannerTypeHint.QR_CODE,

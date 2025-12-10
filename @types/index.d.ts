@@ -477,9 +477,7 @@ declare var registerDataSource: (
 			| ((payload: typeof WidgetPayload) => (typeof ActionButton)[])
 			| any;
 		entryAction?: ((payload: any) => any) | null;
-		entryActions?:
-			| (typeof ActionButton)[]
-			| ((payload: any) => any);
+		entryActions?: (typeof ActionButton)[] | ((payload: any) => any);
 		entryPreview?: (payload: any) => any;
 	}
 ) => void;
@@ -553,7 +551,9 @@ declare var pushPage: (props: string | typeof Page) => PromiseLike<any>;
 
 declare var openForm: (props: typeof Page) => PromiseLike<any>;
 
-declare var openAlertForm: (props: typeof Page) => PromiseLike<any>;
+declare var openAlertForm: (
+	props: typeof Page & { inset: boolean; noHeading: boolean }
+) => PromiseLike<any>;
 
 declare var openChoicePicker: (
 	choices:
@@ -596,4 +596,4 @@ declare var setCrotchetApp: (appDetails: {
 	};
 }) => void;
 
-declare var scanQRCode: () => PromiseLike<{ qrCode: string } | null>;
+declare var scanQRCode: () => PromiseLike<string | null>;

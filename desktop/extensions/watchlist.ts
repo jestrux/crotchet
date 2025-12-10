@@ -22,6 +22,31 @@ const formFields = {
 	currentTime: "text",
 };
 
+const editEntry = (entry) => {
+	const entity = entry.type?.toLowerCase() == "movie" ? "Movie" : "Show";
+	return window.openPage({
+		title: `Edit ${entity}`,
+		type: "form",
+		fields: _.omit(
+			formFields,
+			entry.type == "movie" ? ["season", "episode"] : []
+		),
+		resolve: () => entry,
+		action: {
+			label: "Save",
+			successMessage: `${entity} saved`,
+			handler: (data) => {
+				if (!data) return;
+
+				return window.dataSources.watchlist.updateRow(
+					data._id,
+					_.pick(data, Object.keys(formFields))
+				);
+			},
+		},
+	});
+};
+
 const getActions = (entry) => {
 	return [
 		{
@@ -32,32 +57,7 @@ const getActions = (entry) => {
 		{
 			icon: window.UI.icon("edit"),
 			label: "Edit",
-			handler: async () => {
-				const entity =
-					entry.type?.toLowerCase() == "movie" ? "Movie" : "Show";
-
-				window.openPage({
-					title: `Edit ${entity}`,
-					type: "form",
-					fields: _.omit(
-						formFields,
-						entry.type == "movie" ? ["season", "episode"] : []
-					),
-					resolve: () => entry,
-					action: {
-						label: "Save",
-						successMessage: `${entity} saved`,
-						handler: (data) => {
-							if (!data) return;
-
-							return window.dataSources.watchlist.updateRow(
-								data._id,
-								_.pick(data, Object.keys(formFields))
-							);
-						},
-					},
-				});
-			},
+			handler: async () => await editEntry(entry),
 		},
 		{
 			icon: window.UI.icon("delete"),
@@ -76,7 +76,7 @@ const getActions = (entry) => {
 	];
 };
 
-const mapEntry = (item) => {
+const mapEntry = (item, withActions = true) => {
 	const isVideo = item.type === "movie" || item.type === "tv";
 
 	// Format progress text for TV shows
@@ -101,7 +101,7 @@ const mapEntry = (item) => {
 		tags: [item.type, ...(progressText ? ["In Progress"] : [])],
 	};
 
-	entry.actions = getActions(entry);
+	if (withActions) entry.actions = getActions(entry);
 
 	return entry;
 };
@@ -125,66 +125,79 @@ registerAction("scanToUpdateWatchlist", {
 	mobileOnly: true,
 	handler: async () => {
 		try {
-			// Scan QR code to get watchlist data
 			const result = await window.scanQRCode();
 
-			if (!result?.qrCode) {
-				return window.showToast("No QR code data found");
-			}
+			if (!result) return window.showToast("No QR code data found");
 
 			let data;
 			try {
-				// Try to parse as JSON
-				data = JSON.parse(result.qrCode);
+				data = JSON.parse(result);
 			} catch (error) {
 				return window.showToast("Invalid QR code data format");
 			}
 
-			// Validate required fields
-			if (!data.title || !data.url) {
+			if (!data.title || !data.url)
 				return window.showToast(
 					"QR code missing required fields (title, url)"
 				);
-			}
 
-			// Prepare watchlist item
-			const watchlistItem = {
-				_rowId: data._rowId || data._id,
-				title: data.title,
-				description: data.description || "",
-				url: data.url,
-				image: data.image || "",
-				poster: data.poster || "",
-				type: data.type || "movie",
-				currentTime: data.currentTime || "00:00",
-				...(data.season && { season: data.season }),
-				...(data.episode && { episode: data.episode }),
-				updatedAt: new Date().toISOString(),
-			};
+			return window.openPage({
+				type: "preview",
+				resolve: async () => {
+					const res = await window.queryDb("watchlist", {
+						rowId: data._rowId,
+					});
 
-			// Update or insert into watchlist
-			await window.withLoader(
-				async () => {
-					if (watchlistItem._rowId) {
-						// Update existing item
-						return await window.dataSources.watchlist.updateRow(
-							watchlistItem._rowId,
-							watchlistItem,
-							{ upsert: true }
-						);
-					} else {
-						// Insert new item
-						return await window.dataSources.watchlist.insertRow(
-							watchlistItem
-						);
-					}
+					return mapEntry({ ...data, ...(res._rowId ? res : {}) });
 				},
-				{
-					loadingMessage: "Updating watchlist...",
-					successMessage: `${watchlistItem.title} updated`,
-					errorMessage: "Failed to update watchlist",
-				}
-			);
+				actions: ({ pageData }) => {
+					if (!pageData) return null;
+
+					return [
+						{
+							icon: window.UI.icon("edit"),
+							label: "Edit current time",
+							handler: async () => {
+								const time = await window.openAlertForm({
+									inset: false,
+									noHeading: false,
+									preview: {
+										title: `Enter current time for ${pageData.title}`,
+									},
+									field: {
+										floating: true,
+										hideLabel: true,
+										meta: {
+											flat: true,
+											bold: true,
+										},
+										value: pageData.currentTime,
+									},
+								});
+
+								if (!time) return;
+
+								await window.withLoader(
+									async () =>
+										await window.dataSources.watchlist.updateRow(
+											pageData._rowId,
+											{ currentTime: time }
+										),
+									{
+										loadingMessage: "Saving new time",
+										successMessage: `New time for ${pageData.title} set to: ${time}`,
+									}
+								);
+							},
+						},
+						{
+							icon: window.UI.icon("edit"),
+							label: "Edit all details",
+							handler: () => editEntry(pageData),
+						},
+					];
+				},
+			});
 		} catch (error) {
 			console.error("Scan to update watchlist error:", error);
 			window.showToast("Failed to scan QR code");
@@ -197,14 +210,12 @@ registerWidget("watchlist", {
 	title: "Watchlist",
 	listenForUpdates: "firebase-table-updated:watchlist",
 	source: "watchlist",
-	resolve: async ({ state }) => {
-		const res = await sourceGet("watchlist", {
+	resolve: async ({ state }) =>
+		await sourceGet("watchlist", {
 			orderBy: "_index,desc",
 			random: state.random ?? true,
 			limit: 5,
-		});
-		return res?.map(mapEntry);
-	},
+		}),
 	content: UI.list,
 	actions: [
 		{

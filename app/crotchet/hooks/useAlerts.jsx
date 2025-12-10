@@ -14,7 +14,7 @@ import {
 	Form,
 } from "@/crotchet/components";
 import { useOnInit } from "@/crotchet/hooks";
-import { useIonToast } from "@ionic/react";
+// import { useIonToast } from "@ionic/react";
 import PageProvider from "@/crotchet/providers/AppScaffold/PageProvider";
 import IonicModal from "../components/IonicModal";
 import clsx from "clsx";
@@ -207,12 +207,10 @@ export function AlertsWrapper() {
 					const form = (
 						<div
 							className={clsx(
-								// !alert.field?.floating
-								// 	? "-mx-2 -mt-2 pb-1"
-								// 	: "py-2 px-1",
-								// { "pb-12": !alert.field?.floating }
-								"py-2 px-1",
-								{ "pb-4": !alert.field?.floating }
+								!(alert.noHeading ?? true) &&
+									alert.field?.floating
+									? "-mx-2 -mt-2 pb-1"
+									: "py-2 px-1"
 							)}
 						>
 							<Form
@@ -256,6 +254,7 @@ export function AlertsWrapper() {
 							noHeading={
 								alert.noHeading ?? alert.field ? true : false
 							}
+							preview={alert.preview}
 							title={alert.title}
 							onClose={alert.close}
 						>
@@ -320,7 +319,7 @@ export function AlertsWrapper() {
 
 export default function useAlerts() {
 	const [alerts, setAlerts] = useState([]);
-	const [presentToast] = useIonToast();
+	// const [presentToast] = useIonToast();
 
 	const notifyParent = (newValue, id, status) => {
 		window.alerts = newValue;
@@ -458,14 +457,16 @@ export default function useAlerts() {
 			});
 		}
 
-		presentToast({
-			message: [...message].join(" "),
-			duration: 2000,
-			position: "top",
-			color: "dark",
-			swipeGesture: "vertical",
-			translucent: true,
-		});
+		showActionSheetAlert([...message].join(" "));
+
+		// presentToast({
+		// 	message: [...message].join(" "),
+		// 	duration: 2000,
+		// 	position: "top",
+		// 	color: "dark",
+		// 	swipeGesture: "vertical",
+		// 	translucent: true,
+		// });
 	};
 
 	if (!window.onDesktop()) {

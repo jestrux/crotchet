@@ -12,7 +12,7 @@ import { Input } from ".";
 import GridList from "./GridList";
 import PreviewCard from "./PreviewCard";
 import ActionGrid from "./ActionGrid";
-import { objectFieldChoices } from "../utils";
+import { objectFieldChoices, randomId } from "../utils";
 import { sourceGet } from "../hooks/useSourceGet";
 
 export default function ModalPage({
@@ -62,6 +62,7 @@ export default function ModalPage({
 	const [canDrag, setCanDrag] = useState(false);
 	const [loadingFromSearch, setLoadingFromSearch] = useState(false);
 	const [data, setData] = useState([]);
+	const [gridKey, setGridKey] = useState(randomId());
 	const { KeyboardPlaceholder } = useKeyboard();
 	const {
 		data: _data,
@@ -72,6 +73,7 @@ export default function ModalPage({
 		handler: resolve,
 		onSuccess: (res) => {
 			setData(res);
+			setGridKey(randomId());
 		},
 	});
 
@@ -319,12 +321,12 @@ export default function ModalPage({
 									)}
 								>
 									<ActionGrid
-										key={
+										key={`${gridKey}-${
 											actions &&
 											JSON.stringify(
 												actions.map((a) => a.name)
 											)
-										}
+										}`}
 										title={actionsTitle}
 										hideTrailing
 										type="inline"

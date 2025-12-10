@@ -37,7 +37,7 @@ const updateDataSourceWidget = async (name, key, value) => {
 						"url",
 					])
 				),
-				group: "group.tz.co.crotchety",
+				group: "group.tz.co.crotchet",
 			});
 
 			await WidgetsBridgePlugin.reloadTimelines({
@@ -54,7 +54,7 @@ const updateDataSourceWidget = async (name, key, value) => {
 		await WidgetsBridgePlugin.setItem({
 			key: "dataSources",
 			value: validDataSources,
-			group: "group.tz.co.crotchety",
+			group: "group.tz.co.crotchet",
 		});
 	} catch (error) {
 		//
@@ -75,7 +75,7 @@ const updateDataSourceWidget = async (name, key, value) => {
 				title: source.label,
 				subtitle: data.length + " records",
 			}),
-			group: "group.tz.co.crotchety",
+			group: "group.tz.co.crotchet",
 		});
 	} catch (error) {
 		// console.log("Update widget: error: ", error);
@@ -95,7 +95,28 @@ const updateDataSourceWidget = async (name, key, value) => {
 			await WidgetsBridgePlugin.setItem({
 				key: name + "Latest",
 				value: JSON.stringify(latestData),
-				group: "group.tz.co.crotchety",
+				group: "group.tz.co.crotchet",
+			});
+		} catch (error) {
+			//
+		}
+	}
+
+	// Store first 6 items for LatestList
+	const latestList = data.slice(0, 6).map(item => ({
+		video: item.video,
+		image: item.image,
+		title: item.title,
+		subtitle: item.subtitle,
+		url: item.url,
+	}));
+
+	if (latestList.length > 0) {
+		try {
+			await WidgetsBridgePlugin.setItem({
+				key: name + "LatestList",
+				value: JSON.stringify(latestList),
+				group: "group.tz.co.crotchet",
 			});
 		} catch (error) {
 			//
@@ -117,10 +138,36 @@ const updateDataSourceWidget = async (name, key, value) => {
 			await WidgetsBridgePlugin.setItem({
 				key: name + "Random",
 				value: JSON.stringify(randomData),
-				group: "group.tz.co.crotchety",
+				group: "group.tz.co.crotchet",
 			});
 
 			// await await WidgetsBridgePlugin.reloadAllTimelines();
+			await WidgetsBridgePlugin.reloadTimelines({
+				ofKind: "CrotchetWidget",
+			});
+		} catch (error) {
+			//
+		}
+	}
+
+	// Store 6 random items for RandomList
+	const shuffledData = shuffle(shuffle(data));
+	const randomList = shuffledData.slice(0, 6).map(item => ({
+		video: item.video,
+		image: item.image,
+		title: item.title,
+		subtitle: item.subtitle,
+		url: item.url,
+	}));
+
+	if (randomList.length > 0) {
+		try {
+			await WidgetsBridgePlugin.setItem({
+				key: name + "RandomList",
+				value: JSON.stringify(randomList),
+				group: "group.tz.co.crotchet",
+			});
+
 			await WidgetsBridgePlugin.reloadTimelines({
 				ofKind: "CrotchetWidget",
 			});

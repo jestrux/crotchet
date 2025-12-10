@@ -40,58 +40,28 @@ export default function qrScanner() {
 					...preview,
 				};
 
-				if (data.url && !data.image) {
-					const res = await window.crawlUrl(data.url);
-					if (res.meta) {
-						data.image = res.meta.image;
-						data.title = res.meta.title;
-						data.description = res.meta.description;
-					}
-				} else {
-					return window.openActionSheet({
-						title: "QR Code Result",
-						noHeading: false,
-						inset: false,
-						emptyStateMessage: result,
-					});
-
-					// Open form with scanned value
-					return window.openPage({
-						fullScreen: true,
-						title: "QR Code",
-						type: "form",
-						fields: {
-							qrCode: {
-								label: "QR Code",
-								type: "contentEditable",
-							},
-						},
-						content: ({ pageData }) =>
-							window.UI.component({
-								content: `
-								<pre>${pageData?.description}</pre>
-								<pre>Fallback: ${result.ScanResult}</pre>
-							`,
-							}),
-						resolve: () => ({
-							qrCode: result.ScanResult,
-						}),
-					});
-				}
-
-				// alert(JSON.stringify(data));
-
-				return window.openPage({
+				window.openPage({
 					type: "preview",
-					// title: "Select an action",
-					// payload,
-					// preview,
-					resolve: () => data,
-					actions: () => window.getShareActions(data),
+					resolve: async () => {
+						if (data.url && !data.image) {
+							const res = await window.crawlUrl(data.url);
+							if (res.meta) {
+								data.image = res.meta.image;
+								data.title = res.meta.title;
+								data.description = res.meta.description;
+							}
+						}
+
+						return data;
+					},
+					actions: ({ pageData }) => {
+						if (!pageData) return null;
+
+						return window.getShareActions(data);
+					},
 				});
 			} catch (error) {
 				window.showToast(error);
-				// console.log("Clipboard error: ", error);
 			}
 		},
 	});

@@ -95,6 +95,7 @@ export const getRootActions = async () => {
 					label: "Select action",
 					handler: action.handler,
 				},
+				handler: action.handler,
 				...commandProps(action, "Actions", favorites),
 			})
 		),
@@ -113,7 +114,7 @@ export const getRootActions = async () => {
 			action: {
 				label: "View Data Source",
 				handler: () =>
-					dispatch("open-page", {
+					window.openPage({
 						type: "search",
 						source: source.name,
 						filter: source.filter,
@@ -122,6 +123,15 @@ export const getRootActions = async () => {
 						onSearch: source.search,
 					}),
 			},
+			handler: () =>
+				window.openPage({
+					type: "search",
+					source: source.name,
+					filter: source.filter,
+					filters: source.filters,
+					listenForUpdates: source.listenForUpdates,
+					onSearch: source.search,
+				}),
 			...commandProps(source, "Data Source", favorites),
 		})),
 	];
