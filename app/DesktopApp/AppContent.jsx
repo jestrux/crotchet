@@ -168,18 +168,18 @@ const searchActionResults = _.throttle((searchQuery, appendResult) => {
 			}).then((res) => {
 				if (!res) return null;
 
-				const { image, video, ...result } = res;
+				const { image, poster, video, ...result } = res;
 
 				result.leading = action.icon;
 				result.trailing = source.label;
 				result.__searchKey = action._id;
 
-				if (!objectIsEmpty({ image, video })) {
+				if (!objectIsEmpty({ image: poster || image, video })) {
 					result.preview = () => {
 						return window.UI.previewWithMeta({
 							data: {
 								...result,
-								image,
+								image: poster || image,
 								video,
 								layout: "portrait",
 							},
