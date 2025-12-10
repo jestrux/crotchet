@@ -496,6 +496,7 @@ export default function useAlerts() {
 					...props,
 					layoutProps: actualSource.layoutProps,
 					layout: actualSource.layoutProps?.layout,
+					aspectRatio: actualSource.layoutProps?.aspectRatio,
 					placeholder: actualSource.name
 						? `Search ${camelCaseToSentenceCase(
 								actualSource.name

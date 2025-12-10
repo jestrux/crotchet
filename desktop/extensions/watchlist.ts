@@ -77,7 +77,8 @@ const getActions = (entry) => {
 };
 
 const mapEntry = (item, withActions = true) => {
-	const isVideo = item.type === "movie" || item.type === "tv";
+	// const isVideo = item.type === "movie" || item.type === "tv";
+	const isVideo = false;
 
 	// Format progress text for TV shows
 	let progressText = "";
@@ -112,6 +113,11 @@ registerDataSource("db", "watchlist", {
 	label: "Watchlist",
 	mapEntry,
 	searchFields: ["title", "description"],
+	layoutProps: {
+		layout: "grid",
+		aspectRatio: onDesktop() ? "1/1.3" : "2/3",
+		columns: "sm:2,2xl:3,4xl:4",
+	},
 	entryAction: (entry) => ({
 		label: "Open",
 		url: entry.url,

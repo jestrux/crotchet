@@ -22,6 +22,7 @@ export default function ModalPage({
 	entryActions,
 	entryAction,
 	layout,
+	aspectRatio,
 	resolve,
 	fullScreen = false,
 	dismissible = false,
@@ -247,6 +248,7 @@ export default function ModalPage({
 							<GridList
 								data={data}
 								gap="0.5rem"
+								aspectRatio={aspectRatio}
 								masonry={layout == "masonry"}
 								entryActions={entryActions}
 								entryAction={entryAction}
