@@ -1700,46 +1700,53 @@ struct ActionsWidgetView: View {
     func actionsSmallView() -> some View {
         GeometryReader { geometry in
             VStack(spacing: 8) {
-                // Search action - full width, half height
+                // Search action - full width, takes remaining height
+                let buttonSize = (geometry.size.width - 8) / 2
+
                 actionButton(
                     title: "Search",
                     icon: "number",
                     action: "Search",
                     isSearch: true,
+                    isSmallWidget: true,
                     width: geometry.size.width,
-                    height: (geometry.size.height - 8) / 2
+                    height: geometry.size.height - buttonSize - 8
                 )
 
-                // Bottom row - 3 actions
+                // Bottom row - 2 actions
                 HStack(spacing: 8) {
                     actionButton(
                         title: "Clipboard",
-                        icon: "bolt.fill",
+                        icon: "square.filled.on.square",
                         action: "Clipboard",
                         isSearch: false,
-                        width: (geometry.size.width - 16) / 3,
-                        height: (geometry.size.height - 8) / 2
+                        isSmallWidget: true,
+                        width: buttonSize,
+                        height: buttonSize
                     )
 
                     actionButton(
                         title: "Pinboard",
-                        icon: "bolt.fill",
+                        icon: "pin.fill",
                         action: "Pinboard",
                         isSearch: false,
-                        width: (geometry.size.width - 16) / 3,
-                        height: (geometry.size.height - 8) / 2
+                        isSmallWidget: true,
+                        width: buttonSize,
+                        height: buttonSize
                     )
 
-                    actionButton(
-                        title: "Now Playing",
-                        icon: "bolt.fill",
-                        action: "Now playing",
-                        isSearch: false,
-                        width: (geometry.size.width - 16) / 3,
-                        height: (geometry.size.height - 8) / 2
-                    )
+//                    actionButton(
+//                        title: "Now Playing",
+//                        icon: "music.quarternote.3",
+//                        action: "Now playing",
+//                        isSearch: false,
+//                        isSmallWidget: true,
+//                        width: buttonSize,
+//                        height: buttonSize
+//                    )
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
     }
 
@@ -1747,89 +1754,108 @@ struct ActionsWidgetView: View {
     func actionsMediumView() -> some View {
         GeometryReader { geometry in
             VStack(spacing: 8) {
-                // Search action - full width, half height
-                actionButton(
-                    title: "Search",
-                    icon: "number",
-                    action: "Search",
-                    isSearch: true,
-                    width: geometry.size.width,
-                    height: (geometry.size.height - 8) / 2
-                )
+                // Search action - full width, takes remaining height
+                let buttonSize = (geometry.size.width - 32) / 5
 
-                // Bottom row - 6 actions
+                GeometryReader { searchGeometry in
+                    actionButton(
+                        title: "Search",
+                        icon: "number",
+                        action: "Search",
+                        isSearch: true,
+                        isSmallWidget: false,
+                        width: searchGeometry.size.width,
+                        height: searchGeometry.size.height
+                    )
+                }
+                .frame(maxHeight: .infinity)
+                .padding(.top, 4)
+                .padding(.bottom, 4)
+
+                // Bottom row - 5 actions
                 HStack(spacing: 8) {
                     actionButton(
                         title: "Clipboard",
-                        icon: "bolt.fill",
+                        icon: "square.filled.on.square",
                         action: "Clipboard",
                         isSearch: false,
-                        width: (geometry.size.width - 40) / 6,
-                        height: (geometry.size.height - 8) / 2
+                        isSmallWidget: false,
+                        width: buttonSize,
+                        height: buttonSize
                     )
 
                     actionButton(
                         title: "Pinboard",
-                        icon: "bolt.fill",
+                        icon: "pin.fill",
                         action: "Pinboard",
                         isSearch: false,
-                        width: (geometry.size.width - 40) / 6,
-                        height: (geometry.size.height - 8) / 2
+                        isSmallWidget: false,
+                        width: buttonSize,
+                        height: buttonSize
                     )
 
                     actionButton(
                         title: "Now Playing",
-                        icon: "bolt.fill",
+                        icon: "music.quarternote.3",
                         action: "Now playing",
                         isSearch: false,
-                        width: (geometry.size.width - 40) / 6,
-                        height: (geometry.size.height - 8) / 2
+                        isSmallWidget: false,
+                        width: buttonSize,
+                        height: buttonSize
                     )
 
                     actionButton(
                         title: "Random Pic",
-                        icon: "bolt.fill",
+                        icon: "photo.on.rectangle.angled",
                         action: "Random Pic",
                         isSearch: false,
-                        width: (geometry.size.width - 40) / 6,
-                        height: (geometry.size.height - 8) / 2
+                        isSmallWidget: false,
+                        width: buttonSize,
+                        height: buttonSize
                     )
 
                     actionButton(
                         title: "Random Prompt",
-                        icon: "bolt.fill",
+                        icon: "sparkles",
                         action: "Random Prompt",
                         isSearch: false,
-                        width: (geometry.size.width - 40) / 6,
-                        height: (geometry.size.height - 8) / 2
+                        isSmallWidget: false,
+                        width: buttonSize,
+                        height: buttonSize
                     )
 
-                    actionButton(
-                        title: "Text to QR",
-                        icon: "bolt.fill",
-                        action: "Text to Qr",
-                        isSearch: false,
-                        width: (geometry.size.width - 40) / 6,
-                        height: (geometry.size.height - 8) / 2
-                    )
+//                    actionButton(
+//                        title: "Text to QR",
+//                        icon: "qrcode",
+//                        action: "Text to Qr",
+//                        isSearch: false,
+//                        isSmallWidget: false,
+//                        width: buttonSize,
+//                        height: buttonSize
+//                    )
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
     }
 
-    func actionButton(title: String, icon: String, action: String, isSearch: Bool, width: CGFloat, height: CGFloat) -> some View {
-        let url = URL(string: "crotchet://search/pinnedItems")!
-        let isMedium = width > 200 // Detect medium widget based on width
+    struct SearchButtonView: View {
+        let title: String
+        let icon: String
+        let isMedium: Bool
+        let width: CGFloat
+        let height: CGFloat
+        @Environment(\.colorScheme) var colorScheme
 
-        return Link(destination: url) {
-            if isSearch {
-                // Search: full width fully rounded with gray background
-                ZStack(alignment: .leading) {
-                    Color(.systemGray5)
+        var body: some View {
+            ZStack(alignment: .leading) {
+                Color(.systemGray5)
 
-                    HStack(spacing: 8) {
-                        // Small gradient circle icon
-                        ZStack {
+                HStack(spacing: 8) {
+                    // Icon with different styles for light/dark mode
+                    ZStack {
+                        if colorScheme == .dark {
+                            // Dark mode: gradient background with number icon
                             LinearGradient(
                                 gradient: Gradient(colors: [
                                     Color(red: 211/255, green: 255/255, blue: 255/255),
@@ -1842,19 +1868,38 @@ struct ActionsWidgetView: View {
                             Image(systemName: icon)
                                 .font(.system(size: 16))
                                 .foregroundColor(Color(red: 62/255, green: 50/255, blue: 21/255))
-                        }
-                        .frame(width: 32, height: 32)
-                        .clipShape(Circle())
+                        } else {
+                            // Light mode: subtle background with magnifying glass
+                            Circle()
+                                .fill(Color.primary.opacity(0.05))
 
-                        Text(title)
-                            .font(isMedium ? .body : .callout)
-                            .fontWeight(.medium)
-                            .foregroundColor(.primary.opacity(0.6))
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 16))
+                                .foregroundColor(.primary)
+                        }
                     }
-                    .padding(.horizontal, 16)
+                    .frame(width: 32, height: 32)
+                    .clipShape(Circle())
+
+                    Text(title)
+                        .font(isMedium ? .body : .callout)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary.opacity(0.6))
                 }
-                .frame(width: width, height: height)
-                .clipShape(RoundedRectangle(cornerRadius: height / 2))
+                .padding(.horizontal, 12)
+            }
+            .frame(width: width, height: height)
+            .clipShape(RoundedRectangle(cornerRadius: height / 2))
+        }
+    }
+
+    func actionButton(title: String, icon: String, action: String, isSearch: Bool, isSmallWidget: Bool, width: CGFloat, height: CGFloat) -> some View {
+        let url = URL(string: "crotchet://search/pinnedItems")!
+        let isMedium = width > 200 // Detect medium widget based on width
+
+        return Link(destination: url) {
+            if isSearch {
+                SearchButtonView(title: title, icon: icon, isMedium: isMedium, width: width, height: height)
             } else {
                 // Other actions: circle with gray background
                 ZStack {
@@ -1862,7 +1907,7 @@ struct ActionsWidgetView: View {
 
                     Image(systemName: icon)
                         .font(.system(size: 20))
-                        .foregroundColor(.primary)
+                        .foregroundColor(.primary.opacity(0.6))
                 }
                 .frame(width: width, height: height)
                 .clipShape(Circle())
