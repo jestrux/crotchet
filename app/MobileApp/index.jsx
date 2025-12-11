@@ -4,8 +4,9 @@ import { Capacitor } from "@capacitor/core";
 import { App as CapacitorApp } from "@capacitor/app";
 import { Directory, Encoding, Filesystem } from "@capacitor/filesystem";
 import registerPlatformUtils from "@/crotchet/registerPlatformUtils";
-import { dispatch, fetchImage } from "@/crotchet/utils";
-import { processSchemeUrl } from "@/crotchet/open-url";
+import { fetchImage } from "@/crotchet/utils";
+import { setupDeepLinking } from "@/crotchet/deep-linking";
+import { setupBackgroundActionListener } from "@/crotchet/background-actions";
 // import { Loader } from "@/crotchet/components";
 
 import CrotchetHomePage from "./CrotchetHomePage";
@@ -107,59 +108,69 @@ registerPlatformUtils({
 		}
 	},
 	share: (payload) => Share.share(payload),
+	hideApp: async () => {
+		try {
+			if (Capacitor.getPlatform() === "android") {
+				await CapacitorApp.minimizeApp();
+			} else if (Capacitor.getPlatform() === "ios") {
+				if (window.minimizeAppIos) {
+					await window.minimizeAppIos();
+				}
+			}
+		} catch (error) {
+			console.error("hideApp error:", error);
+		}
+	},
+	showLocalNotification: async (titleOrDescriptionOrProps, description) => {
+		let title, body;
+
+		// Parse arguments: (title, description) or (description) or ({title, description})
+		if (typeof titleOrDescriptionOrProps === "string") {
+			if (description) {
+				// Two strings: (title, description)
+				title = titleOrDescriptionOrProps;
+				body = description;
+			} else {
+				// One string: (description)
+				title = "Notification";
+				body = titleOrDescriptionOrProps;
+			}
+		} else if (typeof titleOrDescriptionOrProps === "object") {
+			// Object: ({title, description})
+			title = titleOrDescriptionOrProps.title || "Notification";
+			body = titleOrDescriptionOrProps.description || titleOrDescriptionOrProps.body;
+		}
+
+		if (!body) return;
+
+		try {
+			const response = await fetch(
+				`${import.meta.env.VITE_BACKEND_BASE_URL}/firebase/notify?` +
+				new URLSearchParams({
+					topic: "widget-refresh-random",
+					title,
+					body,
+					data: JSON.stringify({
+						type: "local-notification",
+						title,
+						message: body
+					})
+				})
+			);
+
+			return response.ok;
+		} catch (error) {
+			console.error("Failed to send local notification:", error);
+			return false;
+		}
+	},
 	oauthRedirectUrl: Capacitor.isNativePlatform()
 		? "crotchet://"
 		: new URL(location.href).origin,
 });
 
-const setupLaunchListener = () => {
-	// For web
-	setTimeout(() => {
-		if (Capacitor.isNativePlatform()) return;
-
-		const urltoProcess = new URL(location.href);
-		urltoProcess.host = "crotchet://";
-		const args = processSchemeUrl(urltoProcess.toString())?.args;
-
-		if (args?.from_oauth) {
-			window.handleOauthRedirect(args);
-			var url = new URL(location.href);
-			url.search = "";
-			const updatedUrl = url.search
-				? url.href
-				: url.href.replace("?", "");
-			window.history.replaceState({}, document.title, updatedUrl);
-		}
-	}, 10);
-
-	CapacitorApp.addListener("appUrlOpen", async (event) => {
-		if (window.appUrlOpenHandlerTimeout) {
-			clearTimeout(window.appUrlOpenHandlerTimeout);
-			window.appUrlOpenHandlerTimeout = null;
-		}
-
-		window.appUrlOpenHandlerTimeout = setTimeout(() => {
-			const args = processSchemeUrl(event?.url)?.args;
-			window.appLaunchArgs = null;
-
-			if (!args) return;
-
-			if (args?.from_oauth) return window.handleOauthRedirect(args);
-
-			window.appLaunchArgs = args;
-
-			setTimeout(() => {
-				dispatch("app-launched");
-			}, 500);
-		}, 10);
-	});
-
-	return () => {
-		CapacitorApp.removeAllListeners();
-	};
-};
-
-setupLaunchListener();
+setupDeepLinking();
+setupBackgroundActionListener();
 
 export default function MobileApp() {
 	// const { initializing } = useCrotchetApp();

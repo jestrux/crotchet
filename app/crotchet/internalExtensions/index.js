@@ -4,6 +4,7 @@ import codeScreenshot from "./codeScreenshot";
 import appPages from "./app-pages";
 import audioPlayer from "./audio-player";
 import qrScanner from "./qrScanner";
+import localNotification from "./localNotification";
 
 export default function internalExtensions() {
 	clipboard();
@@ -12,4 +13,5 @@ export default function internalExtensions() {
 	appPages();
 	audioPlayer();
 	qrScanner();
+	localNotification();
 }

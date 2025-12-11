@@ -142,6 +142,32 @@ registerPlatformUtils({
 		});
 	},
 	share: () => {},
+	showLocalNotification: async (titleOrDescriptionOrProps, description) => {
+		let title, body;
+
+		// Parse arguments: (title, description) or (description) or ({title, description})
+		if (typeof titleOrDescriptionOrProps === "string") {
+			if (description) {
+				// Two strings: (title, description)
+				title = titleOrDescriptionOrProps;
+				body = description;
+			} else {
+				// One string: (description)
+				title = "Notification";
+				body = titleOrDescriptionOrProps;
+			}
+		} else if (typeof titleOrDescriptionOrProps === "object") {
+			// Object: ({title, description})
+			title = titleOrDescriptionOrProps.title || "Notification";
+			body = titleOrDescriptionOrProps.description || titleOrDescriptionOrProps.body;
+		}
+
+		if (!body) return;
+
+		// On desktop, just show a toast
+		window.showToast(body);
+		return true;
+	},
 });
 
 export default function DesktopApp() {

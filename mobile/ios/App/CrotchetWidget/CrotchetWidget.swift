@@ -7,6 +7,52 @@
 
 import WidgetKit
 import SwiftUI
+import AppIntents
+
+struct RefreshRandomIntent: AppIntent {
+    static var title: LocalizedStringResource = "Refresh Random"
+
+    static var parameterSummary: some ParameterSummary {
+        Summary("Refresh \(\.$source)")
+    }
+
+    @Parameter(title: "Source")
+    var source: String
+
+    @Parameter(title: "Widget Size")
+    var widgetSize: String
+
+    init(source: String, widgetSize: String) {
+        self.source = source
+        self.widgetSize = widgetSize
+    }
+
+    init() {
+        self.source = ""
+        self.widgetSize = ""
+    }
+
+    func perform() async throws -> some IntentResult {
+        // Build URL to trigger Firebase notification
+        var components = URLComponents(string: "https://backend.wakyj07.workers.dev/firebase/notify")!
+        components.queryItems = [
+            URLQueryItem(name: "topic", value: "widget-refresh-random"),
+            URLQueryItem(name: "title", value: "Widget Refresh"),
+            URLQueryItem(name: "body", value: "Refreshing \(source) data"),
+            URLQueryItem(name: "data", value: "{\"type\":\"widget-refresh\",\"source\":\"\(source)\",\"widgetSize\":\"\(widgetSize)\"}"),
+            URLQueryItem(name: "silent", value: "true")
+        ]
+
+        guard let url = components.url else {
+            return .result()
+        }
+
+        // Make the network request
+        let (_, _) = try await URLSession.shared.data(from: url)
+
+        return .result()
+    }
+}
 
 struct Provider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> SimpleEntry {
@@ -44,7 +90,8 @@ struct Provider: AppIntentTimelineProvider {
                     video: nil,
                     title: placeholderTitles[index],
                     subtitle: placeholderSubtitles[index],
-                    url: nil
+                    url: nil,
+                    _id: nil
                 )
             }
             return SimpleEntry(date: Date(),
@@ -94,7 +141,8 @@ struct Provider: AppIntentTimelineProvider {
                     video: nil,
                     title: placeholderTitles[index],
                     subtitle: placeholderSubtitles[index],
-                    url: nil
+                    url: nil,
+                    _id: nil
                 )
             }
             return SimpleEntry(date: Date(),
@@ -121,6 +169,7 @@ struct Provider: AppIntentTimelineProvider {
         var title: String? = nil
         var subtitle: String? = nil
         var url: String? = nil
+        var _id: String? = nil
         var items: [ItemData]? = nil
 
         // Determine if we should fetch list data based on widget family
@@ -145,7 +194,8 @@ struct Provider: AppIntentTimelineProvider {
                                         video: dict["video"] as? String,
                                         title: dict["title"] as? String,
                                         subtitle: dict["subtitle"] as? String,
-                                        url: dict["url"] as? String
+                                        url: dict["url"] as? String,
+                                        _id: dict["_id"] as? String
                                     )
                                 }
                             }
@@ -157,6 +207,7 @@ struct Provider: AppIntentTimelineProvider {
                                 title = dictionary["title"] as? String
                                 subtitle = dictionary["subtitle"] as? String
                                 url = dictionary["url"] as? String
+                                _id = dictionary["_id"] as? String
                             }
                         }
                     } catch let error as NSError {
@@ -175,6 +226,7 @@ struct Provider: AppIntentTimelineProvider {
                                 video: video,
                                 image: image, title: title, subtitle: subtitle,
                                 url: url,
+                                _id: _id,
                                 items: items,
                                 configuration: configuration)
         entries.append(entry)
@@ -189,6 +241,7 @@ struct ItemData {
     let title: String?
     let subtitle: String?
     let url: String?
+    let _id: String?
 }
 
 struct SimpleEntry: TimelineEntry {
@@ -198,17 +251,19 @@ struct SimpleEntry: TimelineEntry {
     let title: String?
     let subtitle: String?
     let url: String?
+    let _id: String?
     let items: [ItemData]?
     let configuration: ConfigurationAppIntent
     let previewSourceName: String?
 
-    init(date: Date, video: String? = nil, image: String? = nil, title: String? = nil, subtitle: String? = nil, url: String? = nil, items: [ItemData]? = nil, configuration: ConfigurationAppIntent, previewSourceName: String? = nil) {
+    init(date: Date, video: String? = nil, image: String? = nil, title: String? = nil, subtitle: String? = nil, url: String? = nil, _id: String? = nil, items: [ItemData]? = nil, configuration: ConfigurationAppIntent, previewSourceName: String? = nil) {
         self.date = date
         self.image = image ?? video
         self.video = video
         self.title = title
         self.subtitle = subtitle
         self.url = url
+        self._id = _id
         self.items = items
         self.configuration = configuration
         self.previewSourceName = previewSourceName
@@ -318,7 +373,15 @@ struct CrotchetWidgetEntryView : View {
         let searchPlaceholder = "Search \(toTitleCase(text: sourceName))..."
         let searchPath = source != nil ? "crotchet://search/\(sourceName)" : "crotchet://";
         let searchUrl = URL(string: searchPath)!
-        let contentUrl = URL(string: entry.url ?? searchPath)!
+
+        // Construct URL: if _id exists use source-entry URL, otherwise fallback to search
+        let contentUrl: URL = {
+            if let id = entry._id, let src = source {
+                return URL(string: "crotchet://source-entry/\(src.id)/\(id)")!
+            } else {
+                return searchUrl
+            }
+        }()
         let hasData = !sourceName.isEmpty
         
         if(!hasData) {
@@ -367,10 +430,8 @@ struct CrotchetWidgetEntryView : View {
                                                 .foregroundColor(.white)
                                         }
                                     }
-                                    .frame(maxWidth: width - 80)
                                     .aspectRatio(1, contentMode: .fit)
                                     .cornerRadius(8)
-                                    .padding(.trailing, 18)
 
                                     Text(toTitleCase(text: sourceName).uppercased())
                                         .font(.system(size: 12))
@@ -399,11 +460,22 @@ struct CrotchetWidgetEntryView : View {
                                 }
                                 Spacer()
                             }
-                            .padding(.horizontal, 14)
                         }
 
                         if(source != nil || entry.previewSourceName != nil){
-                            Group {
+                            HStack(spacing: -4) {
+                                // Show refresh button for Random view
+                                if entry.configuration.view.id == "Random", let src = source {
+                                    Button(intent: RefreshRandomIntent(source: src.id, widgetSize: "small")) {
+                                        Image(systemName: "arrow.triangle.2.circlepath")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(height: 12)
+                                    }
+                                    .tint(.secondary)
+                                    .clipShape(Circle())
+                                }
+
                                 Link(destination: searchUrl) {
                                     Button {
 
@@ -417,10 +489,9 @@ struct CrotchetWidgetEntryView : View {
                                     .clipShape(Circle())
                                 }
                             }
-                            .padding(.trailing, 8)
+                            .padding(.trailing, -10)
                         }
                     }
-                    .padding(.vertical, 14)
                 }
             }
         }
@@ -434,23 +505,36 @@ struct CrotchetWidgetEntryView : View {
                     Spacer()
 
                     if(source != nil || entry.previewSourceName != nil){
-                        Link(destination: searchUrl) {
-                            Button {
-
-                            } label: {
-                                Image(systemName: "magnifyingglass")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(height: 12)
+                        HStack(spacing: 0) {
+                            // Show refresh button for Random view
+                            if entry.configuration.view.id == "Random", let src = source {
+                                Button(intent: RefreshRandomIntent(source: src.id, widgetSize: "medium")) {
+                                    Image(systemName: "arrow.triangle.2.circlepath")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(height: 12)
+                                }
+                                .tint(.secondary)
+                                .clipShape(Circle())
                             }
-                            .tint(.secondary)
-                            .clipShape(Circle())
+
+                            Link(destination: searchUrl) {
+                                Button {
+
+                                } label: {
+                                    Image(systemName: "magnifyingglass")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(height: 12)
+                                }
+                                .tint(.secondary)
+                                .clipShape(Circle())
+                            }
                         }
                     }
                 }
-                .padding(.leading, 14)
-                .padding(.trailing, 8)
-                .padding(.top, 6)
+                .padding(.top, -8)
+                .padding(.trailing, -10)
 
                 if(noSource) {
                     VStack(spacing: 8) {
@@ -474,7 +558,14 @@ struct CrotchetWidgetEntryView : View {
                         VStack(spacing: 0) {
                             ForEach(0..<3, id: \.self) { index in
                                 let item = items.count > index ? items[index] : nil
-                                Link(destination: contentUrl) {
+                                let itemUrl: URL = {
+                                    if let id = item?._id, let src = source {
+                                        return URL(string: "crotchet://source-entry/\(src.id)/\(id)")!
+                                    } else {
+                                        return searchUrl
+                                    }
+                                }()
+                                Link(destination: itemUrl) {
                                     HStack(spacing: 6) {
                                         ZStack {
                                             NetworkImage(url: item?.image ?? entry.image)
@@ -519,7 +610,14 @@ struct CrotchetWidgetEntryView : View {
                         VStack(spacing: 0) {
                             ForEach(3..<6, id: \.self) { index in
                                 let item = items.count > index ? items[index] : nil
-                                Link(destination: contentUrl) {
+                                let itemUrl: URL = {
+                                    if let id = item?._id, let src = source {
+                                        return URL(string: "crotchet://source-entry/\(src.id)/\(id)")!
+                                    } else {
+                                        return searchUrl
+                                    }
+                                }()
+                                Link(destination: itemUrl) {
                                     HStack(spacing: 6) {
                                         ZStack {
                                             NetworkImage(url: item?.image ?? entry.image)
@@ -561,9 +659,8 @@ struct CrotchetWidgetEntryView : View {
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.top, 2)
-                    .padding(.bottom, 6)
+                    .padding(.top, 4)
+                    .padding(.bottom, -2)
                     .frame(maxHeight: .infinity)
                 }
             }
@@ -583,7 +680,6 @@ struct CrotchetWidget: Widget {
             CrotchetWidgetEntryView(entry: entry)
                 .containerBackground(.fill.tertiary, for: .widget)
         }
-        .contentMarginsDisabled()
         .supportedFamilies([
             .systemSmall,
             .systemMedium

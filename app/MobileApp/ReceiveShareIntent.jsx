@@ -406,8 +406,6 @@ export default function ReceiveShareIntent({ floating = true }) {
 				)
 					addFilePreview(payload);
 			});
-
-			// alert(JSON.stringify({ launchUrl }));
 		} catch (error) {
 			alert(
 				JSON.stringify({

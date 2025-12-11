@@ -89,6 +89,7 @@ const updateDataSourceWidget = async (name, key, value) => {
 			title: latest.title,
 			subtitle: latest.subtitle,
 			url: latest.url,
+			_id: latest._id,
 		};
 
 		try {
@@ -109,6 +110,7 @@ const updateDataSourceWidget = async (name, key, value) => {
 		title: item.title,
 		subtitle: item.subtitle,
 		url: item.url,
+		_id: item._id,
 	}));
 
 	if (latestList.length > 0) {
@@ -132,6 +134,7 @@ const updateDataSourceWidget = async (name, key, value) => {
 			title: random.title,
 			subtitle: random.subtitle,
 			url: random.url,
+			_id: random._id,
 		};
 
 		try {
@@ -158,6 +161,7 @@ const updateDataSourceWidget = async (name, key, value) => {
 		title: item.title,
 		subtitle: item.subtitle,
 		url: item.url,
+		_id: item._id,
 	}));
 
 	if (randomList.length > 0) {

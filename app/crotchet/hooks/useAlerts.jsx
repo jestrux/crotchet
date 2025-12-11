@@ -449,6 +449,41 @@ export default function useAlerts() {
 			type: "form",
 		});
 
+	const openFloatingForm = (titleOrProps, value) => {
+		let title, fieldProps;
+
+		// Parse arguments
+		if (typeof titleOrProps === "string") {
+			// Simple API: openFloatingForm(label, value)
+			fieldProps = { placeholder: titleOrProps, value };
+		} else {
+			// Object API: openFloatingForm({ title, placeholder, value, ... })
+			({ title, ...fieldProps } = titleOrProps);
+		}
+
+		// Default config
+		const config = {
+			inset: false,
+			field: {
+				floating: true,
+				hideLabel: true,
+				meta: {
+					flat: true,
+					bold: true,
+				},
+				...fieldProps,
+			},
+		};
+
+		// Add title-specific config if title exists
+		if (title) {
+			config.noHeading = false;
+			config.preview = { title };
+		}
+
+		return openAlertForm(config);
+	};
+
 	const showToast = (...message) => {
 		if (window.onDesktop()) {
 			return showAlert({
@@ -538,6 +573,7 @@ export default function useAlerts() {
 		openActionSheet,
 		openChoicePicker,
 		openAlertForm,
+		openFloatingForm,
 		showToast,
 		openModal: showAlert,
 		showActionSheetAlert,

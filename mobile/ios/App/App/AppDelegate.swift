@@ -1,16 +1,190 @@
 import UIKit
 import SendIntent
 import Capacitor
+import Firebase
+import FirebaseMessaging
+import WebKit
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, MessagingDelegate, UNUserNotificationCenterDelegate, WKScriptMessageHandler {
 
     var window: UIWindow?
     let store = ShareStore.store
 
+    func notifyWebView(eventName: String, data: [String: Any]) {
+        guard let bridge = (window?.rootViewController as? CAPBridgeViewController)?.bridge else {
+            print("⚠️ Bridge not available")
+            return
+        }
+
+        // Convert data dictionary to JSON string
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: data),
+              let jsonString = String(data: jsonData, encoding: .utf8) else {
+            return
+        }
+
+        // Dispatch CustomEvent with data in detail property
+        let jsCode = """
+        (function() {
+            var event = new CustomEvent('\(eventName)', { detail: \(jsonString) });
+            window.dispatchEvent(event);
+        })();
+        """
+
+        bridge.webView?.evaluateJavaScript(jsCode, completionHandler: nil)
+    }
+
+    func setupCustomWindowFunctions() {
+        // Wait a bit for bridge to be ready
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            guard let self = self,
+                  let bridge = (self.window?.rootViewController as? CAPBridgeViewController)?.bridge else {
+                return
+            }
+
+            // Expose minimizeApp function to JavaScript
+            let jsCode = """
+            window.minimizeAppIos = function() {
+                window.webkit.messageHandlers.minimizeAppIos.postMessage({});
+                return Promise.resolve();
+            };
+            """
+
+            bridge.webView?.evaluateJavaScript(jsCode, completionHandler: nil)
+
+            // Add message handler for minimizeAppIos
+            let contentController = bridge.webView?.configuration.userContentController
+            contentController?.add(self, name: "minimizeAppIos")
+        }
+    }
+
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        if message.name == "minimizeAppIos" {
+            DispatchQueue.main.async {
+                let selector = NSSelectorFromString("suspend")
+                if UIApplication.shared.responds(to: selector) {
+                    UIApplication.shared.perform(selector)
+                }
+            }
+        }
+    }
+
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Register custom window functions
+        setupCustomWindowFunctions()
+
+        // Initialize Firebase
+        FirebaseApp.configure()
+
+        // Set FCM messaging delegate
+        Messaging.messaging().delegate = self
+
+        // Set notification delegate
+        UNUserNotificationCenter.current().delegate = self
+
+        // Request notification permissions
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+            if granted {
+                DispatchQueue.main.async {
+                    application.registerForRemoteNotifications()
+                }
+            }
+        }
+
         return true
+    }
+
+    // MARK: - FCM Token
+    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
+        print("🔥 Firebase registration token: \(String(describing: fcmToken))")
+
+        // Store the token for later use
+        let dataDict: [String: String] = ["token": fcmToken ?? ""]
+        NotificationCenter.default.post(
+            name: Notification.Name("FCMToken"),
+            object: nil,
+            userInfo: dataDict
+        )
+    }
+
+    // MARK: - Push Notifications
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        Messaging.messaging().apnsToken = deviceToken
+
+        // Subscribe to topics after APNs token is set
+        subscribeToTopics()
+    }
+
+    func subscribeToTopics() {
+        Messaging.messaging().subscribe(toTopic: "widget-refresh-random") { error in
+            if let error = error {
+                print("❌ Error subscribing to topic: \(error)")
+            } else {
+                print("✅ Subscribed to widget-refresh-random topic")
+            }
+        }
+    }
+
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        print("❌ Failed to register for notifications: \(error)")
+    }
+
+    // MARK: - Notification Handling
+
+    // Handle notification taps
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        let userInfo = response.notification.request.content.userInfo
+        print("🔔 Notification tapped: \(userInfo)")
+
+        // Clear all badges and notifications
+        UIApplication.shared.applicationIconBadgeNumber = 0
+        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+
+        // Extract action type and payload
+        let type = userInfo["type"] as? String ?? ""
+
+        // Extract all other keys as payload (excluding "type")
+        var payload: [String: Any] = [:]
+        for (key, value) in userInfo {
+            if let keyString = key as? String, keyString != "type" {
+                payload[keyString] = value
+            }
+        }
+
+        // Dispatch generic background action
+        if !type.isEmpty {
+            notifyWebView(eventName: "BackgroundAction", data: [
+                "type": type,
+                "payload": payload
+            ])
+        }
+
+        completionHandler()
+    }
+
+    // Handle background push notifications
+    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        // Extract action type and payload
+        let type = userInfo["type"] as? String ?? ""
+
+        // Extract all other keys as payload (excluding "type")
+        var payload: [String: Any] = [:]
+        for (key, value) in userInfo {
+            if let keyString = key as? String, keyString != "type" {
+                payload[keyString] = value
+            }
+        }
+
+        // Dispatch generic background action
+        if !type.isEmpty {
+            notifyWebView(eventName: "BackgroundAction", data: [
+                "type": type,
+                "payload": payload
+            ])
+            completionHandler(.newData)
+        } else {
+            completionHandler(.noData)
+        }
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
@@ -29,6 +203,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationDidBecomeActive(_ application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+
+        // Clear all badges and notifications when app becomes active
+        UIApplication.shared.applicationIconBadgeNumber = 0
+        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
     }
 
     func applicationWillTerminate(_ application: UIApplication) {

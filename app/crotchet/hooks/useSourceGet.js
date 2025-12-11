@@ -3,6 +3,7 @@ import { matchSorter } from "match-sorter";
 import { cleanObject, shuffle, withCache } from "@/crotchet/utils";
 
 export const getterFields = [
+	"_rowId",
 	"limit",
 	"single",
 	"first",
@@ -27,6 +28,7 @@ export const sourceGet = async (source, props = {}) => {
 
 	const payload = _.omit(props, getterFields);
 	let {
+		_rowId,
 		limit,
 		single,
 		first,
@@ -76,6 +78,16 @@ export const sourceGet = async (source, props = {}) => {
 
 		return entry;
 	};
+
+	if (_rowId) {
+		const row = res.find((e) =>
+			[e._id, e.rowId, e._rowId].includes(_rowId)
+		);
+		if (!row) return null;
+
+		return mapSourceEntry(row);
+	}
+	
 	if (
 		Object.values(validFilters).length > 0
 		// && ![true, false].includes(source.filterable)

@@ -1,3 +1,4 @@
+import { sourceGet } from "./hooks/useSourceGet";
 import { dispatch, onDesktop, showApp } from "./utils";
 
 const urlQueryParamsAsObject = (path) => {
@@ -68,7 +69,7 @@ export const processSchemeUrl = (path, schemeName) => {
 	return { scheme, slug, args };
 };
 
-export default async function openUrl(path) {
+export default async function openUrl(path, callback) {
 	if (onDesktop()) showApp();
 
 	if (path.startsWith("crotchet://copy"))
@@ -114,6 +115,16 @@ export default async function openUrl(path) {
 		});
 	}
 
+	if (path.startsWith("crotchet://source-entry")) {
+		const { scheme, slug } = processSchemeUrl(path, "source-entry");
+		return window.openPage({
+			id: "crotchet-source-entry",
+			type: "preview",
+			resolve: () => sourceGet(scheme, { _rowId: slug }),
+			actions: ({ pageData }) => pageData?.actions,
+		});
+	}
+
 	if (path.startsWith("crotchet://action/")) {
 		const { scheme, args } = processSchemeUrl(path, "action");
 		const action = window.actions[scheme];
@@ -128,6 +139,8 @@ export default async function openUrl(path) {
 	}
 
 	if (onDesktop()) return dispatch("open-url", new URL(path).href);
+
+	if (typeof callback == "function") return callback();
 
 	window.open(path, "_blank");
 

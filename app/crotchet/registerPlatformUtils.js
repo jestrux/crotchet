@@ -8,6 +8,8 @@ export default function registerPlatformUtils({
 	writeFile,
 	readNetworkFile,
 	share,
+	showLocalNotification,
+	hideApp,
 	oauthRedirectUrl,
 } = {}) {
 	Object.assign(window, {
@@ -20,6 +22,8 @@ export default function registerPlatformUtils({
 		writeFile,
 		readNetworkFile,
 		share,
+		showLocalNotification,
+		hideApp,
 		oauthRedirectUrl,
 	});
 }

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
+		323D60352EEA7A4F001A9B64 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 323D60342EEA7A4F001A9B64 /* GoogleService-Info.plist */; };
 		324F7E462BEC2ABB00DA0CC9 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 324F7E452BEC2ABB00DA0CC9 /* WidgetKit.framework */; };
 		324F7E482BEC2ABB00DA0CC9 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 324F7E472BEC2ABB00DA0CC9 /* SwiftUI.framework */; };
 		324F7E4B2BEC2ABB00DA0CC9 /* CrotchetWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 324F7E4A2BEC2ABB00DA0CC9 /* CrotchetWidgetBundle.swift */; };
@@ -62,6 +63,7 @@
 
 /* Begin PBXFileReference section */
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
+		323D60342EEA7A4F001A9B64 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "../../../../../../../Desktop/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		324F7E442BEC2ABB00DA0CC9 /* CrotchetWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CrotchetWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		324F7E452BEC2ABB00DA0CC9 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		324F7E472BEC2ABB00DA0CC9 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -186,6 +188,7 @@
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
 				504EC3131FED79650016851F /* Info.plist */,
+				323D60342EEA7A4F001A9B64 /* GoogleService-Info.plist */,
 				2FAD9762203C412B000D30F8 /* config.xml */,
 				50B271D01FEDC1A000F3C39B /* public */,
 			);
@@ -331,6 +334,7 @@
 				50379B232058CBB4000EE86E /* capacitor.config.json in Resources */,
 				504EC30D1FED79650016851F /* Main.storyboard in Resources */,
 				2FAD9763203C412B000D30F8 /* config.xml in Resources */,
+				323D60352EEA7A4F001A9B64 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
