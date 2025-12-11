@@ -207,6 +207,7 @@ export default defineApp([
 		const title = url.searchParams.get("title");
 		const body = url.searchParams.get("body");
 		const dataParam = url.searchParams.get("data");
+		const silent = url.searchParams.get("silent") === "true";
 
 		// Validate required parameters
 		if (!topic || !title || !body) {
@@ -234,6 +235,7 @@ export default defineApp([
 			title,
 			body,
 			data,
+			silent,
 		});
 
 		return Response.json(result);

@@ -5,6 +5,7 @@ export interface NotificationOptions {
 	title: string;
 	body: string;
 	data?: Record<string, string>;
+	silent?: boolean;
 }
 
 export interface SubscriptionOptions {
@@ -252,36 +253,55 @@ export async function sendTopicNotification(options: NotificationOptions) {
 		const message: any = {
 			message: {
 				topic: options.topic,
-				notification: {
-					title: options.title,
-					body: options.body,
-				},
-				// Android-specific options
-				android: {
-					priority: "high",
-					notification: {
-						sound: "default",
-						channel_id: "default",
-					},
-				},
-				// iOS-specific options
-				apns: {
-					headers: {
-						"apns-priority": "10",
-					},
-					payload: {
-						aps: {
-							sound: "default",
-							badge: 1,
-						},
-					},
-				},
 			},
 		};
 
-		// Add optional data payload
-		if (options.data) {
-			message.message.data = options.data;
+		if (options.silent) {
+			// Silent notification - data only, no system notification
+			message.message.data = {
+				title: options.title,
+				body: options.body,
+				...(options.data || {}),
+			};
+			message.message.apns = {
+				headers: {
+					"apns-priority": "10",
+				},
+				payload: {
+					aps: {
+						"content-available": 1,
+					},
+				},
+			};
+		} else {
+			// Regular notification with system UI
+			message.message.notification = {
+				title: options.title,
+				body: options.body,
+			};
+			message.message.android = {
+				priority: "high",
+				notification: {
+					sound: "default",
+					channel_id: "default",
+				},
+			};
+			message.message.apns = {
+				headers: {
+					"apns-priority": "10",
+				},
+				payload: {
+					aps: {
+						sound: "default",
+						badge: 1,
+					},
+				},
+			};
+
+			// Add data payload if provided
+			if (options.data) {
+				message.message.data = options.data;
+			}
 		}
 
 		// Send notification via FCM REST API
