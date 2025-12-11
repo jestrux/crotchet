@@ -8,6 +8,23 @@
 import WidgetKit
 import AppIntents
 
+// MARK: - Template Enum (must be before intents)
+
+enum CrotchetTemplateAppEnum: String, AppEnum {
+    case defaultTemplate = "Default"
+    case highlight = "Highlight"
+    case person = "Person"
+
+    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Template")
+    static var caseDisplayRepresentations: [CrotchetTemplateAppEnum: DisplayRepresentation] = [
+        .defaultTemplate: "Default",
+        .highlight: "Highlight",
+        .person: "Person"
+    ]
+}
+
+// MARK: - Data Source Entity
+
 struct WidgetDataSource: AppEntity {
     var id: String
     
@@ -80,13 +97,64 @@ struct WidgetViewQuery: EntityQuery {
     }
 }
 
+// MARK: - Template Configuration Intents
+
 struct ConfigurationAppIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource = "Data source"
-    static var description = IntentDescription("Select data source")
+    static var title: LocalizedStringResource = "Configuration"
+    static var description = IntentDescription("Configure widget")
 
     @Parameter(title: "Data source")
     var dataSource: WidgetDataSource?
-    
+
     @Parameter(title: "View")
     var view: WidgetView
+
+    @Parameter(title: "Template", default: .defaultTemplate)
+    var template: CrotchetTemplateAppEnum
 }
+
+struct ConfigurationHighlightAppIntent: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "Configuration"
+    static var description = IntentDescription("Configure widget")
+
+    @Parameter(title: "Data source")
+    var dataSource: WidgetDataSource?
+
+    @Parameter(title: "View")
+    var view: WidgetView
+
+    @Parameter(title: "Template", default: .highlight)
+    var template: CrotchetTemplateAppEnum
+}
+
+struct ConfigurationPersonAppIntent: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "Configuration"
+    static var description = IntentDescription("Configure widget")
+
+    @Parameter(title: "Data source")
+    var dataSource: WidgetDataSource?
+
+    @Parameter(title: "View")
+    var view: WidgetView
+
+    @Parameter(title: "Template", default: .person)
+    var template: CrotchetTemplateAppEnum
+}
+
+// MARK: - Actions Widget Intent (No Configuration Needed)
+
+struct ConfigurationActionsAppIntent: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "Actions"
+    static var description = IntentDescription("Quick actions widget")
+}
+
+// Protocol to extract template from any intent type
+protocol TemplateProviding {
+    var template: CrotchetTemplateAppEnum { get }
+    var dataSource: WidgetDataSource? { get }
+    var view: WidgetView { get }
+}
+
+extension ConfigurationAppIntent: TemplateProviding {}
+extension ConfigurationHighlightAppIntent: TemplateProviding {}
+extension ConfigurationPersonAppIntent: TemplateProviding {}

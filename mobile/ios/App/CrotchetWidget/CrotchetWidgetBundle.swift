@@ -11,7 +11,13 @@ import SwiftUI
 @main
 struct CrotchetWidgetBundle: WidgetBundle {
     var body: some Widget {
-        CrotchetWidget()
+        if #available(iOS 17.0, *) {
+            CrotchetWidgetActions()
+            CrotchetWidgetDefaultSmall()
+            CrotchetWidgetDefaultMedium()
+            CrotchetWidgetHighlight()
+            CrotchetWidgetPerson()
+        }
         CrotchetWidgetLiveActivity()
     }
 }
