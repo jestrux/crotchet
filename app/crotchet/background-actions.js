@@ -17,12 +17,13 @@ export default async function processBackgroundAction(action) {
 		}
 
 		try {
-			const { WidgetsBridgePlugin } = await import("capacitor-widgetsbridge-plugin");
-
 			// Only refresh the specific widget size
 			if (widgetSize === "small") {
 				// Fetch single random item for Random widget
-				const randomSingle = await window.dataSources[source].get({ shuffle: true, single: true });
+				const randomSingle = await window.dataSources[source].get({
+					shuffle: true,
+					single: true,
+				});
 
 				if (randomSingle?.title) {
 					const randomData = {
@@ -34,18 +35,17 @@ export default async function processBackgroundAction(action) {
 						_id: randomSingle._id,
 					};
 
-					await WidgetsBridgePlugin.setItem({
-						key: source + "Random",
-						value: JSON.stringify(randomData),
-						group: "group.tz.co.crotchet",
-					});
+					await window.syncWidgetData(source + "Random", randomData);
 				}
 			} else if (widgetSize === "medium") {
 				// Fetch 6 random items for RandomList widget
-				const randomList = await window.dataSources[source].get({ shuffle: true, limit: 6 });
+				const randomList = await window.dataSources[source].get({
+					shuffle: true,
+					limit: 6,
+				});
 
 				if (randomList?.length > 0) {
-					const listData = randomList.slice(0, 6).map(item => ({
+					const listData = randomList.slice(0, 6).map((item) => ({
 						video: item.video,
 						image: item.image,
 						title: item.title,
@@ -54,18 +54,14 @@ export default async function processBackgroundAction(action) {
 						_id: item._id,
 					}));
 
-					await WidgetsBridgePlugin.setItem({
-						key: source + "RandomList",
-						value: JSON.stringify(listData),
-						group: "group.tz.co.crotchet",
-					});
+					await window.syncWidgetData(
+						source + "RandomList",
+						listData
+					);
 				}
 			}
 
-			// Reload widget timelines
-			await WidgetsBridgePlugin.reloadTimelines({
-				ofKind: "CrotchetWidget",
-			});
+			await window.reloadWidgetTimelines();
 		} catch (error) {
 			console.error("Failed to refresh widget data:", error);
 		}

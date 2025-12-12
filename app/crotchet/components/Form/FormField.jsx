@@ -743,6 +743,8 @@ const Field = ({ field, value, onChange, __data }) => {
 									return choice;
 								}
 							)}
+							min={field.min}
+							max={field.max}
 							sortable={field.sortable}
 							editable={field.editable}
 							selectable={field.multiple ? "multiple" : "single"}

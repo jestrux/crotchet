@@ -65,6 +65,8 @@ export default function ActionGrid({
 	sortable = false,
 	selectable = false,
 	editable = false,
+	min,
+	max,
 	onChange = () => {},
 	onClose = () => {},
 	alignment,
@@ -90,6 +92,11 @@ export default function ActionGrid({
 	});
 
 	const handleAdd = async () => {
+		// Check if we're at max capacity
+		if (max !== undefined && actions.length >= max) {
+			return;
+		}
+
 		window.openChoicePicker({
 			title: title
 				? `Add${title ? ` ${title}` : ""}`
@@ -113,7 +120,18 @@ export default function ActionGrid({
 					return a;
 				});
 
-				const newActions = _.filter(allActions.current, "selected");
+				let newActions = _.filter(allActions.current, "selected");
+
+				// Enforce max limit
+				if (max !== undefined && newActions.length > max) {
+					newActions = newActions.slice(0, max);
+					// Update allActions to reflect the trimmed selection
+					const trimmedIds = newActions.map(a => a.__gridId);
+					allActions.current = allActions.current.map((a) => {
+						if (!trimmedIds.includes(a.__gridId)) a.selected = false;
+						return a;
+					});
+				}
 
 				setActions(() => {
 					onChange(newActions);
@@ -136,6 +154,11 @@ export default function ActionGrid({
 
 	const handleClick = (action) => {
 		if (editable) {
+			// Check if we're at minimum and trying to remove
+			if (min !== undefined && actions.length <= min) {
+				return;
+			}
+
 			allActions.current = allActions.current.map((a) => {
 				if (a.__gridId == action.__gridId) a.selected = false;
 				return a;
@@ -152,6 +175,22 @@ export default function ActionGrid({
 			const isMultiSelect = selectable == "multiple";
 
 			setActions((actions) => {
+				// Count currently selected
+				const currentlySelected = actions.filter(a => a.selected).length;
+				const isActionSelected = action.selected;
+
+				// Check constraints for multi-select
+				if (isMultiSelect) {
+					// If trying to deselect and at minimum, prevent it
+					if (isActionSelected && min !== undefined && currentlySelected <= min) {
+						return actions;
+					}
+					// If trying to select and at maximum, prevent it
+					if (!isActionSelected && max !== undefined && currentlySelected >= max) {
+						return actions;
+					}
+				}
+
 				const newActions = actions.map((a) => {
 					if (a.__gridId == action.__gridId) {
 						a.selected = editable
@@ -212,6 +251,15 @@ export default function ActionGrid({
 		if (typeof action.icon == "string") action.icon = UIicon(action.icon);
 		action.icon = action.icon || fallbackIcon;
 
+		// Calculate constraints dynamically based on current selection
+		const currentSelectedCount = actions.filter(a => a.selected).length;
+		const isCurrentlyAtMax = max !== undefined && currentSelectedCount >= max;
+		const isCurrentlyAtMin = min !== undefined && currentSelectedCount <= min;
+
+		// Determine if this item should have reduced opacity
+		const isUnselectedAtMax = selectable && !action.selected && isCurrentlyAtMax;
+		const itemOpacity = isUnselectedAtMax ? "opacity-40" : "";
+
 		showDefaultBackground = showDefaultBackground ?? !typeWrap;
 		const colorClasses = showDefaultBackground
 			? []
@@ -235,10 +283,11 @@ export default function ActionGrid({
 					action={action}
 					onClick={() => handleClick(action)}
 					onHold={onHold}
-					className={`
-						w-full h-12 text-left flex items-center gap-3 pl-4 pr-2.5
-						${action.destructive ? "text-red-500" : ""}
-					`}
+					className={clsx(
+						"w-full h-12 text-left flex items-center gap-3 pl-4 pr-2.5",
+						action.destructive ? "text-red-500" : "",
+						itemOpacity
+					)}
 				>
 					{action.icon && (
 						<div
@@ -278,7 +327,10 @@ export default function ActionGrid({
 						<>
 							{editable ? (
 								<svg
-									className="ml-auto size-[18px] text-red-500"
+									className={clsx(
+										"ml-auto size-[18px] text-red-500",
+										{ "opacity-30": isCurrentlyAtMin }
+									)}
 									fill="currentColor"
 									viewBox="0 0 16 16"
 								>
@@ -287,7 +339,9 @@ export default function ActionGrid({
 							) : selectable ? (
 								<svg
 									className={clsx("ml-auto size-[18px]", {
-										"opacity-20": !action.selected,
+										"opacity-20": !action.selected && !isCurrentlyAtMax,
+										"opacity-10": !action.selected && isCurrentlyAtMax,
+										"opacity-30": action.selected && isCurrentlyAtMin,
 									})}
 									fill="currentColor"
 									viewBox="0 0 16 16"
@@ -414,6 +468,9 @@ export default function ActionGrid({
 
 	if (loading) return null;
 
+	// Calculate constraints for buttons (add/remove)
+	const isAtMax = max !== undefined && actions.length >= max;
+
 	if (!actions?.length) {
 		if (editable) {
 			return (
@@ -437,8 +494,12 @@ export default function ActionGrid({
 
 					<button
 						type="button"
-						className="w-full rounded-2xl bg-card text-content/50 border border-content/2 h-12 flex items-center justify-center gap-1"
+						className={clsx(
+							"w-full rounded-2xl bg-card text-content/50 border border-content/2 h-12 flex items-center justify-center gap-1",
+							{ "opacity-30 cursor-not-allowed": isAtMax }
+						)}
 						onClick={handleAdd}
+						disabled={isAtMax}
 					>
 						<svg
 							className="size-6"
@@ -473,8 +534,12 @@ export default function ActionGrid({
 					{editable && (
 						<button
 							type="button"
-							className="sabsolute -top-6 right-0 h-6 px-1.5 flex items-center justify-center text-sm font-medium opacity-50"
+							className={clsx(
+								"sabsolute -top-6 right-0 h-6 px-1.5 flex items-center justify-center text-sm font-medium opacity-50",
+								{ "opacity-20 cursor-not-allowed": isAtMax }
+							)}
 							onClick={handleAdd}
+							disabled={isAtMax}
 						>
 							<svg
 								className="size-5"
@@ -558,8 +623,12 @@ export default function ActionGrid({
 			{!title && editable && (
 				<button
 					type="button"
-					className="h-9 w-full px-1.5 flex items-center justify-center font-medium opacity-50"
+					className={clsx(
+						"h-9 w-full px-1.5 flex items-center justify-center font-medium opacity-50",
+						{ "opacity-20 cursor-not-allowed": isAtMax }
+					)}
 					onClick={handleAdd}
+					disabled={isAtMax}
 				>
 					<svg
 						className="size-6"

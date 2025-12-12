@@ -107,6 +107,14 @@ export default async function openUrl(path, callback) {
 
 	if (path.startsWith("crotchet://search")) {
 		const { scheme, slug, params } = processSchemeUrl(path, "search");
+
+		if (!scheme) {
+			if (!Object.keys(window.dataSources).length || onDesktop())
+				return window.showToast("No source selected");
+
+			return dispatch("global-search");
+		}
+
 		return window.openPage({
 			id: "crotchet-search",
 			type: "search",

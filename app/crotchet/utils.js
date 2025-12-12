@@ -736,8 +736,7 @@ export const withLoader = async (action, props) => {
 			});
 
 			onChange(status, payload);
-		}
-		else if(status == "loading") {
+		} else if (status == "loading") {
 			window.openChoicePicker({
 				loadingMessage,
 				choices: async () => {
@@ -745,8 +744,7 @@ export const withLoader = async (action, props) => {
 					return null;
 				},
 			});
-		} 
-		else if (isMessageStatus && (!props.quiet || !message?.length))
+		} else if (isMessageStatus && (!props.quiet || !message?.length))
 			window.showToast(message);
 	};
 

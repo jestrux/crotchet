@@ -1,5 +1,9 @@
 import { NavButton, MutliGestureButton, Input } from "@/crotchet/components";
-import { useDataLoader, useHideFloatingUI } from "@/crotchet/hooks";
+import {
+	useDataLoader,
+	useEventListener,
+	useHideFloatingUI,
+} from "@/crotchet/hooks";
 import { onActionClick } from "@/crotchet/hooks/useActionClick";
 import useKeyboard from "@/crotchet/hooks/useKeyboard";
 import { dispatch, getPreference, isValidAction } from "@/crotchet/utils";
@@ -114,6 +118,8 @@ const QuickActions = ({ menuItems, onCollapse }) => {
 			</div>
 		);
 	};
+
+	if (!menuItems) return null;
 
 	return (
 		<div className="mt-4 px-3.5 pb-0.5">
@@ -641,6 +647,11 @@ export default function MobileNav() {
 
 		_setExpanded(newValue);
 	};
+
+	useEventListener("global-search", () => {
+		handleClear();
+		handleExpand();
+	});
 
 	useEffect(() => {
 		refetch();

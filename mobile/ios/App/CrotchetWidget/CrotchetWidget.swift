@@ -405,8 +405,46 @@ struct ProviderPersonSmall: AppIntentTimelineProvider {
 
 // MARK: - Actions Widget Provider
 
+struct WidgetAction: Decodable {
+    let icon: String
+    let label: String
+    let url: String
+}
+
 struct ActionsEntry: TimelineEntry {
     let date: Date
+    let actions: [WidgetAction]
+
+    init(date: Date, actions: [WidgetAction]? = nil) {
+        self.date = date
+        self.actions = actions ?? ActionsEntry.getDefaultActions()
+    }
+
+    static func getDefaultActions() -> [WidgetAction] {
+        return [
+            WidgetAction(icon: "square.filled.on.square", label: "Clipboard", url: "crotchet://action/clipboard"),
+            WidgetAction(icon: "pin.fill", label: "Pinboard", url: "crotchet://search/pinnedItems"),
+            WidgetAction(icon: "dot.radiowaves.left.and.right", label: "Now Playing", url: "crotchet://action/currentSongOnSpotify"),
+            WidgetAction(icon: "photo.on.rectangle.angled", label: "Random Pic", url: "crotchet://action/randomUnsplashPic"),
+            WidgetAction(icon: "sparkles", label: "Random Prompt", url: "crotchet://action/randomPrompt")
+        ]
+    }
+
+    static func loadActions() -> [WidgetAction] {
+        let sharedDefaults = UserDefaults(suiteName: "group.tz.co.crotchet")
+
+        guard let jsonString = sharedDefaults?.string(forKey: "pinnedActions"),
+              let jsonData = jsonString.data(using: .utf8) else {
+            return getDefaultActions()
+        }
+
+        do {
+            let actions = try JSONDecoder().decode([WidgetAction].self, from: jsonData)
+            return actions.isEmpty ? getDefaultActions() : actions
+        } catch {
+            return getDefaultActions()
+        }
+    }
 }
 
 struct ProviderActions: AppIntentTimelineProvider {
@@ -418,11 +456,11 @@ struct ProviderActions: AppIntentTimelineProvider {
     }
 
     func snapshot(for configuration: ConfigurationActionsAppIntent, in context: Context) async -> ActionsEntry {
-        ActionsEntry(date: Date())
+        ActionsEntry(date: Date(), actions: ActionsEntry.loadActions())
     }
 
     func timeline(for configuration: ConfigurationActionsAppIntent, in context: Context) async -> Timeline<ActionsEntry> {
-        let entry = ActionsEntry(date: Date())
+        let entry = ActionsEntry(date: Date(), actions: ActionsEntry.loadActions())
         return Timeline(entries: [entry], policy: .never)
     }
 }
@@ -647,7 +685,7 @@ struct CrotchetWidgetEntryView : View {
                                             Image(uiImage: uiImage)
                                                 .resizable()
                                                 .aspectRatio(contentMode: .fill)
-                                                .frame(width: imageSize, height: imageSize)
+                                                .frame(width: imageSize, height: imageSize, alignment: .top)
                                                 .clipShape(Circle())
 
                                             if entry.video != nil {
@@ -916,7 +954,7 @@ struct CrotchetWidgetEntryView : View {
                                                     .foregroundColor(.white)
                                             }
                                         }
-                                        .frame(width: 42, height: 36)
+                                        .frame(width: 42, height: 32)
                                         .cornerRadius(4)
 
                                         VStack(alignment: .leading, spacing: 0) {
@@ -1040,24 +1078,28 @@ struct CrotchetWidgetEntryView : View {
                             }()
 
                             Link(destination: itemUrl) {
-                                VStack(spacing: 4) {
+                                VStack(spacing: 8) {
                                     if let imageUrl = item.image {
                                         let image = URL(string: imageUrl)!
                                         Group {
                                             if let imageData = try? Data(contentsOf: image),
                                                let uiImage = UIImage(data: imageData) {
-                                                ZStack {
-                                                    Image(uiImage: uiImage)
-                                                        .resizable()
-                                                        .aspectRatio(1, contentMode: .fill)
-                                                        .clipShape(Circle())
+                                                GeometryReader { geo in
+                                                    ZStack {
+                                                        Image(uiImage: uiImage)
+                                                            .resizable()
+                                                            .aspectRatio(contentMode: .fill)
+                                                            .frame(width: geo.size.width, height: geo.size.width, alignment: .top)
+                                                            .clipShape(Circle())
 
-                                                    if item.video != nil {
-                                                        Circle()
-                                                            .fill(.black.opacity(0.3))
-                                                        Image(systemName: "play.fill")
-                                                            .font(.system(size: 14))
-                                                            .foregroundColor(.white)
+                                                        if item.video != nil {
+                                                            Circle()
+                                                                .fill(.black.opacity(0.3))
+                                                                .frame(width: geo.size.width, height: geo.size.width)
+                                                            Image(systemName: "play.fill")
+                                                                .font(.system(size: 14))
+                                                                .foregroundColor(.white)
+                                                        }
                                                     }
                                                 }
                                                 .aspectRatio(1, contentMode: .fit)
@@ -1180,18 +1222,22 @@ struct CrotchetWidgetEntryView : View {
                                         Group {
                                             if let imageData = try? Data(contentsOf: image),
                                                let uiImage = UIImage(data: imageData) {
-                                                ZStack {
-                                                    Image(uiImage: uiImage)
-                                                        .resizable()
-                                                        .aspectRatio(1, contentMode: .fill)
-                                                        .clipShape(Circle())
+                                                GeometryReader { geo in
+                                                    ZStack {
+                                                        Image(uiImage: uiImage)
+                                                            .resizable()
+                                                            .aspectRatio(contentMode: .fill)
+                                                            .frame(width: geo.size.width, height: geo.size.width, alignment: .top)
+                                                            .clipShape(Circle())
 
-                                                    if item?.video != nil {
-                                                        Circle()
-                                                            .fill(.black.opacity(0.3))
-                                                        Image(systemName: "play.fill")
-                                                            .font(.system(size: 18))
-                                                            .foregroundColor(.white)
+                                                        if item?.video != nil {
+                                                            Circle()
+                                                                .fill(.black.opacity(0.3))
+                                                                .frame(width: geo.size.width, height: geo.size.width)
+                                                            Image(systemName: "play.fill")
+                                                                .font(.system(size: 18))
+                                                                .foregroundColor(.white)
+                                                        }
                                                     }
                                                 }
                                                 .aspectRatio(1, contentMode: .fit)
@@ -1210,18 +1256,18 @@ struct CrotchetWidgetEntryView : View {
                                     if let title = item?.title {
                                         Text(title)
                                             .lineLimit(1)
-                                            .font(.system(size: 11))
+                                            .font(.system(size: 13))
                                             .fontWeight(.medium)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                            .padding(.top, 6)
+                                            .frame(maxWidth: .infinity, alignment: .center)
+                                            .padding(.top, 8)
                                     }
 
                                     if let subtitle = item?.subtitle {
                                         Text(subtitle)
                                             .lineLimit(1)
-                                            .font(.system(size: 10))
+                                            .font(.system(size: 11))
                                             .foregroundColor(.secondary)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .frame(maxWidth: .infinity, alignment: .center)
                                             .padding(.top, 3)
                                     }
                                 }
@@ -1251,18 +1297,22 @@ struct CrotchetWidgetEntryView : View {
                                         Group {
                                             if let imageData = try? Data(contentsOf: image),
                                                let uiImage = UIImage(data: imageData) {
-                                                ZStack {
-                                                    Image(uiImage: uiImage)
-                                                        .resizable()
-                                                        .aspectRatio(1, contentMode: .fill)
-                                                        .clipShape(Circle())
+                                                GeometryReader { geo in
+                                                    ZStack {
+                                                        Image(uiImage: uiImage)
+                                                            .resizable()
+                                                            .aspectRatio(contentMode: .fill)
+                                                            .frame(width: geo.size.width, height: geo.size.width, alignment: .top)
+                                                            .clipShape(Circle())
 
-                                                    if item?.video != nil {
-                                                        Circle()
-                                                            .fill(.black.opacity(0.3))
-                                                        Image(systemName: "play.fill")
-                                                            .font(.system(size: 18))
-                                                            .foregroundColor(.white)
+                                                        if item?.video != nil {
+                                                            Circle()
+                                                                .fill(.black.opacity(0.3))
+                                                                .frame(width: geo.size.width, height: geo.size.width)
+                                                            Image(systemName: "play.fill")
+                                                                .font(.system(size: 18))
+                                                                .foregroundColor(.white)
+                                                        }
                                                     }
                                                 }
                                                 .aspectRatio(1, contentMode: .fit)
@@ -1281,18 +1331,18 @@ struct CrotchetWidgetEntryView : View {
                                     if let title = item?.title {
                                         Text(title)
                                             .lineLimit(1)
-                                            .font(.system(size: 11))
+                                            .font(.system(size: 13))
                                             .fontWeight(.medium)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                            .padding(.top, 6)
+                                            .frame(maxWidth: .infinity, alignment: .center)
+                                            .padding(.top, 8)
                                     }
 
                                     if let subtitle = item?.subtitle {
                                         Text(subtitle)
                                             .lineLimit(1)
-                                            .font(.system(size: 10))
+                                            .font(.system(size: 11))
                                             .foregroundColor(.secondary)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .frame(maxWidth: .infinity, alignment: .center)
                                             .padding(.top, 3)
                                     }
                                 }
@@ -1593,7 +1643,7 @@ struct CrotchetWidgetEntryView : View {
                                                     .foregroundColor(.white)
                                             }
                                         }
-                                        .frame(width: 42, height: 36)
+                                        .frame(width: 42, height: 32)
                                         .cornerRadius(4)
 
                                         VStack(alignment: .leading, spacing: 0) {
@@ -1645,7 +1695,7 @@ struct CrotchetWidgetEntryView : View {
                                                     .foregroundColor(.white)
                                             }
                                         }
-                                        .frame(width: 42, height: 36)
+                                        .frame(width: 42, height: 32)
                                         .cornerRadius(4)
 
                                         VStack(alignment: .leading, spacing: 0) {
@@ -1706,44 +1756,26 @@ struct ActionsWidgetView: View {
                 actionButton(
                     title: "Search",
                     icon: "number",
-                    action: "Search",
+                    url: "crotchet://search",
                     isSearch: true,
                     isSmallWidget: true,
                     width: geometry.size.width,
                     height: geometry.size.height - buttonSize - 8
                 )
 
-                // Bottom row - 2 actions
+                // Bottom row - 2 actions from entry.actions
                 HStack(spacing: 8) {
-                    actionButton(
-                        title: "Clipboard",
-                        icon: "square.filled.on.square",
-                        action: "Clipboard",
-                        isSearch: false,
-                        isSmallWidget: true,
-                        width: buttonSize,
-                        height: buttonSize
-                    )
-
-                    actionButton(
-                        title: "Pinboard",
-                        icon: "pin.fill",
-                        action: "Pinboard",
-                        isSearch: false,
-                        isSmallWidget: true,
-                        width: buttonSize,
-                        height: buttonSize
-                    )
-
-//                    actionButton(
-//                        title: "Now Playing",
-//                        icon: "music.quarternote.3",
-//                        action: "Now playing",
-//                        isSearch: false,
-//                        isSmallWidget: true,
-//                        width: buttonSize,
-//                        height: buttonSize
-//                    )
+                    ForEach(Array(entry.actions.prefix(2).enumerated()), id: \.offset) { _, action in
+                        actionButton(
+                            title: action.label,
+                            icon: action.icon,
+                            url: action.url,
+                            isSearch: false,
+                            isSmallWidget: true,
+                            width: buttonSize,
+                            height: buttonSize
+                        )
+                    }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
@@ -1761,7 +1793,7 @@ struct ActionsWidgetView: View {
                     actionButton(
                         title: "Search",
                         icon: "number",
-                        action: "Search",
+                        url: "crotchet://search",
                         isSearch: true,
                         isSmallWidget: false,
                         width: searchGeometry.size.width,
@@ -1772,67 +1804,19 @@ struct ActionsWidgetView: View {
                 .padding(.top, 4)
                 .padding(.bottom, 4)
 
-                // Bottom row - 5 actions
+                // Bottom row - 5 actions from entry.actions
                 HStack(spacing: 8) {
-                    actionButton(
-                        title: "Clipboard",
-                        icon: "square.filled.on.square",
-                        action: "Clipboard",
-                        isSearch: false,
-                        isSmallWidget: false,
-                        width: buttonSize,
-                        height: buttonSize
-                    )
-
-                    actionButton(
-                        title: "Pinboard",
-                        icon: "pin.fill",
-                        action: "Pinboard",
-                        isSearch: false,
-                        isSmallWidget: false,
-                        width: buttonSize,
-                        height: buttonSize
-                    )
-
-                    actionButton(
-                        title: "Now Playing",
-                        icon: "music.quarternote.3",
-                        action: "Now playing",
-                        isSearch: false,
-                        isSmallWidget: false,
-                        width: buttonSize,
-                        height: buttonSize
-                    )
-
-                    actionButton(
-                        title: "Random Pic",
-                        icon: "photo.on.rectangle.angled",
-                        action: "Random Pic",
-                        isSearch: false,
-                        isSmallWidget: false,
-                        width: buttonSize,
-                        height: buttonSize
-                    )
-
-                    actionButton(
-                        title: "Random Prompt",
-                        icon: "sparkles",
-                        action: "Random Prompt",
-                        isSearch: false,
-                        isSmallWidget: false,
-                        width: buttonSize,
-                        height: buttonSize
-                    )
-
-//                    actionButton(
-//                        title: "Text to QR",
-//                        icon: "qrcode",
-//                        action: "Text to Qr",
-//                        isSearch: false,
-//                        isSmallWidget: false,
-//                        width: buttonSize,
-//                        height: buttonSize
-//                    )
+                    ForEach(Array(entry.actions.prefix(5).enumerated()), id: \.offset) { _, action in
+                        actionButton(
+                            title: action.label,
+                            icon: action.icon,
+                            url: action.url,
+                            isSearch: false,
+                            isSmallWidget: false,
+                            width: buttonSize,
+                            height: buttonSize
+                        )
+                    }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
@@ -1893,26 +1877,31 @@ struct ActionsWidgetView: View {
         }
     }
 
-    func actionButton(title: String, icon: String, action: String, isSearch: Bool, isSmallWidget: Bool, width: CGFloat, height: CGFloat) -> some View {
-        let url = URL(string: "crotchet://search/pinnedItems")!
+    func actionButton(title: String, icon: String, url: String, isSearch: Bool, isSmallWidget: Bool, width: CGFloat, height: CGFloat) -> some View {
+        guard let destination = URL(string: url) else {
+            return AnyView(EmptyView())
+        }
+
         let isMedium = width > 200 // Detect medium widget based on width
 
-        return Link(destination: url) {
-            if isSearch {
-                SearchButtonView(title: title, icon: icon, isMedium: isMedium, width: width, height: height)
-            } else {
-                // Other actions: circle with gray background
-                ZStack {
-                    Color(.systemGray5)
+        return AnyView(
+            Link(destination: destination) {
+                if isSearch {
+                    SearchButtonView(title: title, icon: icon, isMedium: isMedium, width: width, height: height)
+                } else {
+                    // Other actions: circle with gray background
+                    ZStack {
+                        Color(.systemGray5)
 
-                    Image(systemName: icon)
-                        .font(.system(size: 20))
-                        .foregroundColor(.primary.opacity(0.6))
+                        Image(systemName: icon)
+                            .font(.system(size: 20))
+                            .foregroundColor(.primary.opacity(0.6))
+                    }
+                    .frame(width: width, height: height)
+                    .clipShape(Circle())
                 }
-                .frame(width: width, height: height)
-                .clipShape(Circle())
             }
-        }
+        )
     }
 }
 

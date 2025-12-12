@@ -26,23 +26,10 @@ const updateDataSourceWidget = async (name, key, value) => {
 
 	if (key && value) {
 		try {
-			await WidgetsBridgePlugin.setItem({
-				key: name + key,
-				value: JSON.stringify(
-					_.pick(value, [
-						"video",
-						"image",
-						"title",
-						"subtitle",
-						"url",
-					])
-				),
-				group: "group.tz.co.crotchet",
-			});
-
-			await WidgetsBridgePlugin.reloadTimelines({
-				ofKind: "CrotchetWidget",
-			});
+			await window.syncWidgetData(
+				name + key,
+				_.pick(value, ["video", "image", "title", "subtitle", "url"])
+			);
 		} catch (error) {
 			//
 		}
@@ -51,11 +38,7 @@ const updateDataSourceWidget = async (name, key, value) => {
 	}
 
 	try {
-		await WidgetsBridgePlugin.setItem({
-			key: "dataSources",
-			value: validDataSources,
-			group: "group.tz.co.crotchet",
-		});
+		await window.syncWidgetData("dataSources", validDataSources);
 	} catch (error) {
 		//
 	}
@@ -69,13 +52,9 @@ const updateDataSourceWidget = async (name, key, value) => {
 	if (!data.length) return;
 
 	try {
-		await WidgetsBridgePlugin.setItem({
-			key: name + "Stat",
-			value: JSON.stringify({
-				title: source.label,
-				subtitle: data.length + " records",
-			}),
-			group: "group.tz.co.crotchet",
+		await window.syncWidgetData(name + "Stat", {
+			title: source.label,
+			subtitle: data.length + " records",
 		});
 	} catch (error) {
 		// console.log("Update widget: error: ", error);
@@ -93,18 +72,14 @@ const updateDataSourceWidget = async (name, key, value) => {
 		};
 
 		try {
-			await WidgetsBridgePlugin.setItem({
-				key: name + "Latest",
-				value: JSON.stringify(latestData),
-				group: "group.tz.co.crotchet",
-			});
+			await window.syncWidgetData(name + "Latest", latestData);
 		} catch (error) {
 			//
 		}
 	}
 
 	// Store first 6 items for LatestList
-	const latestList = data.slice(0, 6).map(item => ({
+	const latestList = data.slice(0, 6).map((item) => ({
 		video: item.video,
 		image: item.image,
 		title: item.title,
@@ -115,11 +90,7 @@ const updateDataSourceWidget = async (name, key, value) => {
 
 	if (latestList.length > 0) {
 		try {
-			await WidgetsBridgePlugin.setItem({
-				key: name + "LatestList",
-				value: JSON.stringify(latestList),
-				group: "group.tz.co.crotchet",
-			});
+			await window.syncWidgetData(name + "LatestList", latestList);
 		} catch (error) {
 			//
 		}
@@ -138,16 +109,7 @@ const updateDataSourceWidget = async (name, key, value) => {
 		};
 
 		try {
-			await WidgetsBridgePlugin.setItem({
-				key: name + "Random",
-				value: JSON.stringify(randomData),
-				group: "group.tz.co.crotchet",
-			});
-
-			// await await WidgetsBridgePlugin.reloadAllTimelines();
-			await WidgetsBridgePlugin.reloadTimelines({
-				ofKind: "CrotchetWidget",
-			});
+			await window.syncWidgetData(name + "Random", randomData);
 		} catch (error) {
 			//
 		}
@@ -155,7 +117,7 @@ const updateDataSourceWidget = async (name, key, value) => {
 
 	// Store 6 random items for RandomList
 	const shuffledData = shuffle(shuffle(data));
-	const randomList = shuffledData.slice(0, 6).map(item => ({
+	const randomList = shuffledData.slice(0, 12).map((item) => ({
 		video: item.video,
 		image: item.image,
 		title: item.title,
@@ -166,15 +128,7 @@ const updateDataSourceWidget = async (name, key, value) => {
 
 	if (randomList.length > 0) {
 		try {
-			await WidgetsBridgePlugin.setItem({
-				key: name + "RandomList",
-				value: JSON.stringify(randomList),
-				group: "group.tz.co.crotchet",
-			});
-
-			await WidgetsBridgePlugin.reloadTimelines({
-				ofKind: "CrotchetWidget",
-			});
+			await window.syncWidgetData(name + "RandomList", randomList);
 		} catch (error) {
 			//
 		}

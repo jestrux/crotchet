@@ -4,7 +4,7 @@ import { Capacitor } from "@capacitor/core";
 import { App as CapacitorApp } from "@capacitor/app";
 import { Directory, Encoding, Filesystem } from "@capacitor/filesystem";
 import registerPlatformUtils from "@/crotchet/registerPlatformUtils";
-import { fetchImage } from "@/crotchet/utils";
+import { fetchImage, someTime } from "@/crotchet/utils";
 import { setupDeepLinking } from "@/crotchet/deep-linking";
 import { setupBackgroundActionListener } from "@/crotchet/background-actions";
 // import { Loader } from "@/crotchet/components";
@@ -138,7 +138,9 @@ registerPlatformUtils({
 		} else if (typeof titleOrDescriptionOrProps === "object") {
 			// Object: ({title, description})
 			title = titleOrDescriptionOrProps.title || "Notification";
-			body = titleOrDescriptionOrProps.description || titleOrDescriptionOrProps.body;
+			body =
+				titleOrDescriptionOrProps.description ||
+				titleOrDescriptionOrProps.body;
 		}
 
 		if (!body) return;
@@ -146,16 +148,16 @@ registerPlatformUtils({
 		try {
 			const response = await fetch(
 				`${import.meta.env.VITE_BACKEND_BASE_URL}/firebase/notify?` +
-				new URLSearchParams({
-					topic: "widget-refresh-random",
-					title,
-					body,
-					data: JSON.stringify({
-						type: "local-notification",
+					new URLSearchParams({
+						topic: "widget-refresh-random",
 						title,
-						message: body
+						body,
+						data: JSON.stringify({
+							type: "local-notification",
+							title,
+							message: body,
+						}),
 					})
-				})
 			);
 
 			return response.ok;
@@ -171,6 +173,37 @@ registerPlatformUtils({
 
 setupDeepLinking();
 setupBackgroundActionListener();
+
+window.onIos = () =>
+	Capacitor.isNativePlatform() && Capacitor.getPlatform() == "ios";
+
+window.reloadWidgetTimelines = async (ofKind = "CrotchetWidgetActions") => {
+	const { WidgetsBridgePlugin } = await import(
+		"capacitor-widgetsbridge-plugin"
+	);
+
+	return await WidgetsBridgePlugin.reloadTimelines({
+		ofKind,
+	});
+};
+
+window.syncWidgetData = async (key, value, ofKind = "CrotchetWidget") => {
+	const { WidgetsBridgePlugin } = await import(
+		"capacitor-widgetsbridge-plugin"
+	);
+
+	await WidgetsBridgePlugin.setItem({
+		key,
+		value: typeof value == "string" ? value : JSON.stringify(value),
+		group: "group.tz.co.crotchet",
+	});
+
+	await someTime();
+
+	return await WidgetsBridgePlugin.reloadTimelines({
+		ofKind,
+	});
+};
 
 export default function MobileApp() {
 	// const { initializing } = useCrotchetApp();
