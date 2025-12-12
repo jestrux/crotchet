@@ -59,10 +59,10 @@ export default function MediaItem({
 				/>
 
 				{video?.length && (
-					<div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-						<div className="relative size-11 flex items-center justify-center rounded-full overflow-hidden bg-white">
+					<div className="absolute inset-0 p-1.5 bg-black/50 flex items-center justify-center">
+						<div className="relative w-10/12 max-w-14 aspect-[1/1] p-1 flex items-center justify-center rounded-full overflow-hidden bg-white">
 							<svg
-								className="ml-px size-5 relative text-black"
+								className="mr-[-5.6%] size-full max-w-8 relative text-black"
 								viewBox="0 0 24 24"
 								fill="currentColor"
 							>

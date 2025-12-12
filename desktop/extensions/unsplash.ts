@@ -169,7 +169,7 @@ registerWidget("randomUnsplashPic", {
 	icon: appIcon,
 	label: "Random Pic",
 	listenForUpdates: "refetch-random-unsplash-widget",
-	// onSwipe: ({ refetch }) => refetch(),
+	onSwipe: ({ refetch }) => refetch(),
 	resolve: async () => {
 		const entry = await randomUnsplashPic();
 		return {
@@ -191,7 +191,7 @@ registerWidget("unsplash", {
 	title: "Daily Pics",
 	source: "unsplash",
 	content: UI.grid,
-	actions: [searchAction],
+	actions: [searchAction]
 });
 
 registerAction("searchUnsplash", {

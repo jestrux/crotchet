@@ -58,7 +58,7 @@ export default function NavButton({
 
 			<div
 				className={clsx(
-					"flex-1",
+					"flex-1 truncate",
 					inShareSheet && vertical ? "text-sm " : ""
 				)}
 			>

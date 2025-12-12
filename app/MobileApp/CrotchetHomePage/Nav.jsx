@@ -192,12 +192,14 @@ const NavActions = ({
 				)}
 
 				<div className={clsx(searching ? "px-6" : "px-6")}>
-					{actionSections.map(([section, actions], index) => {
+					{actionSections.map(([section, actions], sectionIndex) => {
 						return (
 							<div
-								key={"section" + index}
+								key={"section" + sectionIndex}
 								className={clsx({
-									"mb-4": index != actionSections.length - 1,
+									"mb-4":
+										sectionIndex !=
+										actionSections.length - 1,
 								})}
 							>
 								{section && section != "undefined" && (
@@ -207,6 +209,37 @@ const NavActions = ({
 								)}
 
 								{actions.map((action, index) => {
+									let preview;
+									if (action.isFallbackResult) {
+										action.icon =
+											action.isCustomSearchResult
+												? action.leading ??
+												  window.UI.icon("search", {
+														size: 24,
+												  })
+												: action.leading;
+
+										if (action.isCustomSearchResult) {
+											if (action.media) {
+												const { image, poster, video } =
+													action.media;
+
+												if (poster) {
+													preview = window.UI.media({
+														data: {
+															image:
+																poster || image,
+															video: video,
+														},
+													});
+												}
+											}
+
+											if (action.source && action._id)
+												action.url = `crotchet://source-entry/${action.source}/${action._id}`;
+										}
+									}
+
 									action.icon = (
 										<svg
 											className="size-[18px] opacity-80"
@@ -236,28 +269,39 @@ const NavActions = ({
 											className="relative"
 										>
 											<AnimatePresence>
-												{searching && (
-													<motion.div
-														className="absolute -mx-2 inset-0 -z-1 bg-content/5 rounded-lg"
-														style={{
-															background:
-																index == 0
-																	? ""
-																	: "transparent",
-														}}
-														initial={selectedActionTransition()}
-														animate={selectedActionTransition(
-															true
-														)}
-														exit={selectedActionTransition()}
-													/>
-												)}
+												{searching &&
+													sectionIndex == 0 && (
+														<motion.div
+															className="absolute -mx-2 inset-0 -z-1 bg-content/5 rounded-lg"
+															style={{
+																background:
+																	index == 0
+																		? ""
+																		: "transparent",
+															}}
+															initial={selectedActionTransition()}
+															animate={selectedActionTransition(
+																true
+															)}
+															exit={selectedActionTransition()}
+														/>
+													)}
 											</AnimatePresence>
 
-											<NavButton
-												className="gap-[11px]"
-												action={action}
-											/>
+											<div className="relative w-full flex">
+												<div className="flex-1">
+													<NavButton
+														className="gap-[11px]"
+														action={action}
+													/>
+												</div>
+
+												{preview && (
+													<div className="self-center h-10 aspect-[1/1] rounded-md overflow-hidden relative">
+														{preview}
+													</div>
+												)}
+											</div>
 										</div>
 									);
 								})}
@@ -541,6 +585,7 @@ export default function MobileNav() {
 		actionSections,
 		pinnedActions,
 		refetch,
+		clearAppendedResults,
 	} = useMobileActions();
 	const [dragging, setDragging] = useState(false);
 	const [expanded, _setExpanded] = useState(false);
@@ -597,6 +642,7 @@ export default function MobileNav() {
 
 	const handleClear = () => {
 		setSearchQuery("");
+		clearAppendedResults();
 
 		const input = inputRef.current;
 

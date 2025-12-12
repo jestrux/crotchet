@@ -10,6 +10,7 @@ import {
 } from "@/crotchet/utils";
 import { useAppContext } from "@/crotchet/providers/AppProvider";
 import { sourceGet } from "@/crotchet";
+import { searchActionResults } from "@/crotchet/root-search";
 
 const getFavoriteCommands = () => getPreference("favorite-commands", []);
 
@@ -137,61 +138,6 @@ const getCommands = async () => {
 		})),
 	];
 };
-
-const searchActionResults = _.throttle((searchQuery, appendResult) => {
-	const searchActions = Object.entries(window.actions ?? {}).reduce(
-		(agg, [name, action]) => {
-			if (action.context != "search") return agg;
-
-			return [
-				...agg,
-				{
-					name,
-					...action,
-				},
-			];
-		},
-		[]
-	);
-
-	searchActions.forEach((action) => {
-		if (action.source) {
-			let source = action.source;
-			if (typeof source == "string") source = window.dataSources[source];
-
-			sourceGet(source, {
-				searchQuery,
-				first: true,
-				cacheKey: `${source.name}/search`,
-				// cacheDuration: yearInSeconds(),
-				// invalidateCache: true,
-			}).then((res) => {
-				if (!res) return null;
-
-				const { image, poster, video, ...result } = res;
-
-				result.leading = action.icon;
-				result.trailing = source.label;
-				result.__searchKey = action._id;
-
-				if (!objectIsEmpty({ image: poster || image, video })) {
-					result.preview = () => {
-						return window.UI.previewWithMeta({
-							data: {
-								...result,
-								image: poster || image,
-								video,
-								layout: "portrait",
-							},
-						});
-					};
-				}
-
-				appendResult(result);
-			});
-		}
-	});
-}, 300);
 
 export default function AppContent() {
 	const { pages, popPage } = useAppContext();

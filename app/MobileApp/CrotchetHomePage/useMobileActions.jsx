@@ -8,11 +8,16 @@ import {
 	getUserPreferences,
 	savePreference,
 	sectionedChoices,
+	processShareData,
+	getShareActions,
 } from "@/crotchet/utils";
-import { useState } from "react";
+import { searchActionResults } from "@/crotchet/root-search";
+import { useState, useEffect } from "react";
 
 export const useMobileActions = () => {
 	const [searchQuery, setSearchQuery] = useState();
+	const [appendedResults, setAppendedResults] = useState([]);
+	const [fallbackResults, setFallbackResults] = useState([]);
 	const { data: actions, refetch } = useDataLoader({
 		// handler: window.globalActions,
 		handler: getRootActions,
@@ -61,6 +66,73 @@ export const useMobileActions = () => {
 		},
 		listenForUpdates: "pinned-actions-updated",
 	});
+
+	const appendResult = (result) => {
+		setAppendedResults((prev) => [...prev, result]);
+	};
+
+	const clearAppendedResults = () => {
+		setAppendedResults([]);
+		setFallbackResults([]);
+	};
+
+	// Effect to handle fallback results when search query changes
+	useEffect(() => {
+		// Clear previous results
+		setAppendedResults([]);
+
+		if (!searchQuery) {
+			setFallbackResults([]);
+			return;
+		}
+
+		let cancelled = false;
+
+		const payload = {
+			...((processShareData(searchQuery) || {}).payload || {}),
+			fromClipboard: true,
+		};
+
+		// Call searchActionResults to append async results with cancellation support
+		searchActionResults(searchQuery, appendResult, {
+			isCancelled: () => cancelled,
+		});
+
+		// Get share actions synchronously
+		const shareActionsResults = getShareActions(payload).map((item) => ({
+			...item,
+			leading: item.icon,
+			name: item.name,
+			label: item.label,
+			value: item.label,
+			trailing: "Action",
+			isFallbackResult: true,
+			action: {
+				label: "Select action",
+				handler: () => item.handler(payload),
+			},
+			actions: (...payload) => [
+				...(typeof item.actions == "function"
+					? item.actions(...payload)
+					: item.actions
+					? item.actions
+					: []),
+			],
+			preview: () =>
+				typeof item.preview == "function"
+					? item.preview(searchQuery)
+					: item.preview
+					? item.preview
+					: null,
+		}));
+
+		setFallbackResults(shareActionsResults);
+
+		// Cleanup function to cancel pending async results
+		return () => {
+			cancelled = true;
+		};
+	}, [searchQuery]);
 
 	const customizeHomePage = () => {
 		return {
@@ -456,23 +528,49 @@ export const useMobileActions = () => {
 		};
 	};
 
-	const actionSections = sectionedChoices(
-		[
-			...(searchQuery?.length ? pinnedActions || [] : []),
-			...[
-				customizeHomePage(),
-				customizeNavigation(),
-				...(window.onIos() ? [customizePinnedActions()] : []),
-				manageTokens(),
-			].filter(Boolean),
-			...(actions || []),
-		].map((a) => {
-			if (searchQuery?.length) a.section = "Results";
+	const baseActions = [
+		...(searchQuery?.length ? pinnedActions || [] : []),
+		...[
+			customizeHomePage(),
+			customizeNavigation(),
+			...(window.onIos() ? [customizePinnedActions()] : []),
+			manageTokens(),
+		].filter(Boolean),
+		...(actions || []),
+	];
 
-			return a;
-		}),
-		searchQuery
+	const mainSearchResults = sectionedChoices(
+		baseActions,
+		searchQuery,
+		{
+			valuesOnly: true,
+		}
 	);
+
+	const markedAppendedResults = appendedResults.map((r) => ({
+		...r,
+		isFallbackResult: true,
+		isCustomSearchResult: true,
+	}));
+
+	const allResults = [
+		...mainSearchResults,
+		...fallbackResults,
+		...markedAppendedResults,
+	].map((a) => {
+		if (a.isFallbackResult || a.isCustomSearchResult) {
+			a.section = a.isCustomSearchResult
+				? mainSearchResults.length
+					? "Other results"
+					: "Results"
+				: `Use "${searchQuery}" with...`;
+		} else if (searchQuery?.length) {
+			a.section = "Results";
+		}
+		return a;
+	});
+
+	const actionSections = sectionedChoices(allResults, "");
 
 	return {
 		searchQuery,
@@ -481,5 +579,6 @@ export const useMobileActions = () => {
 		pinnedActions,
 		actionSections,
 		refetch,
+		clearAppendedResults,
 	};
 };
