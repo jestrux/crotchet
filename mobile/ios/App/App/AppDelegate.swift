@@ -4,6 +4,7 @@ import Capacitor
 import Firebase
 import FirebaseMessaging
 import WebKit
+import WidgetKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate, MessagingDelegate, UNUserNotificationCenterDelegate, WKScriptMessageHandler {
@@ -195,6 +196,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate, MessagingDelegate, UNUser
     func applicationDidEnterBackground(_ application: UIApplication) {
         // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
         // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+
+        // Refresh all widget timelines when app goes to background
+        if #available(iOS 14.0, *) {
+            WidgetCenter.shared.reloadAllTimelines()
+            print("🔄 Refreshed all widget timelines")
+        }
     }
 
     func applicationWillEnterForeground(_ application: UIApplication) {

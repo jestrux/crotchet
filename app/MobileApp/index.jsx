@@ -177,17 +177,17 @@ setupBackgroundActionListener();
 window.onIos = () =>
 	Capacitor.isNativePlatform() && Capacitor.getPlatform() == "ios";
 
-window.reloadWidgetTimelines = async (ofKind = "CrotchetWidgetActions") => {
+window.reloadWidgetTimelines = async (ofKind) => {
 	const { WidgetsBridgePlugin } = await import(
 		"capacitor-widgetsbridge-plugin"
 	);
 
-	return await WidgetsBridgePlugin.reloadTimelines({
-		ofKind,
-	});
+	if (ofKind) return await WidgetsBridgePlugin.reloadTimelines({ ofKind });
+
+	return await WidgetsBridgePlugin.reloadAllTimelines();
 };
 
-window.syncWidgetData = async (key, value, ofKind = "CrotchetWidget") => {
+window.syncWidgetData = async (key, value, ofKind) => {
 	const { WidgetsBridgePlugin } = await import(
 		"capacitor-widgetsbridge-plugin"
 	);
@@ -200,9 +200,9 @@ window.syncWidgetData = async (key, value, ofKind = "CrotchetWidget") => {
 
 	await someTime();
 
-	return await WidgetsBridgePlugin.reloadTimelines({
-		ofKind,
-	});
+	if (ofKind) return await WidgetsBridgePlugin.reloadTimelines({ ofKind });
+
+	return await WidgetsBridgePlugin.reloadAllTimelines();
 };
 
 export default function MobileApp() {

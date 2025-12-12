@@ -336,7 +336,8 @@ export const useMobileActions = () => {
 
 						await window.syncWidgetData(
 							"pinnedActions",
-							actionObjects
+							actionObjects,
+							"CrotchetWidgetActions"
 						);
 
 						window.dispatch("pinned-actions-updated");
@@ -539,13 +540,9 @@ export const useMobileActions = () => {
 		...(actions || []),
 	];
 
-	const mainSearchResults = sectionedChoices(
-		baseActions,
-		searchQuery,
-		{
-			valuesOnly: true,
-		}
-	);
+	const mainSearchResults = sectionedChoices(baseActions, searchQuery, {
+		valuesOnly: true,
+	});
 
 	const markedAppendedResults = appendedResults.map((r) => ({
 		...r,
