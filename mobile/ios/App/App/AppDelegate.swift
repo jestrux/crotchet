@@ -117,11 +117,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, MessagingDelegate, UNUser
     }
 
     func subscribeToTopics() {
-        Messaging.messaging().subscribe(toTopic: "widget-refresh-random") { error in
+        Messaging.messaging().subscribe(toTopic: "crotchet-background-activity") { error in
             if let error = error {
                 print("❌ Error subscribing to topic: \(error)")
             } else {
-                print("✅ Subscribed to widget-refresh-random topic")
+                print("✅ Subscribed to crotchet-background-activity topic")
             }
         }
     }
@@ -154,7 +154,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, MessagingDelegate, UNUser
 
         // Dispatch generic background action
         if !type.isEmpty {
-            notifyWebView(eventName: "BackgroundAction", data: [
+            notifyWebView(eventName: "CrotchetBackgroundAction", data: [
                 "type": type,
                 "payload": payload
             ])
@@ -178,7 +178,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, MessagingDelegate, UNUser
 
         // Dispatch generic background action
         if !type.isEmpty {
-            notifyWebView(eventName: "BackgroundAction", data: [
+            notifyWebView(eventName: "CrotchetBackgroundAction", data: [
                 "type": type,
                 "payload": payload
             ])

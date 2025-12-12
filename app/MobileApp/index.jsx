@@ -149,7 +149,7 @@ registerPlatformUtils({
 			const response = await fetch(
 				`${import.meta.env.VITE_BACKEND_BASE_URL}/firebase/notify?` +
 					new URLSearchParams({
-						topic: "widget-refresh-random",
+						topic: "crotchet-background-activity",
 						title,
 						body,
 						data: JSON.stringify({

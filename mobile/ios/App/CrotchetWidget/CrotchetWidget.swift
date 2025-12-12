@@ -48,7 +48,7 @@ struct RefreshRandomIntent: AppIntent {
         // Build URL to trigger Firebase notification
         var components = URLComponents(string: "https://backend.wakyj07.workers.dev/firebase/notify")!
         components.queryItems = [
-            URLQueryItem(name: "topic", value: "widget-refresh-random"),
+            URLQueryItem(name: "topic", value: "crotchet-background-activity"),
             URLQueryItem(name: "title", value: "Widget Refresh"),
             URLQueryItem(name: "body", value: "Refreshing \(source) data"),
             URLQueryItem(name: "data", value: "{\"type\":\"widget-refresh\",\"source\":\"\(source)\",\"widgetSize\":\"\(widgetSize)\"}"),
