@@ -5,6 +5,7 @@ import {
 	isReactComponent,
 	camelCaseToSentenceCase,
 } from "@/crotchet/utils";
+import { getActualSource } from "./useSourceGet";
 import {
 	Modal,
 	MessageModal,
@@ -505,7 +506,7 @@ export default function useAlerts() {
 	};
 
 	if (!window.onDesktop()) {
-		window.openPage = (props) => {
+		window.openPage = async (props) => {
 			props = {
 				...(props.type == "preview" ? { id: "crotchet-preview" } : {}),
 				fullScreen: true,
@@ -519,13 +520,10 @@ export default function useAlerts() {
 			};
 
 			if (props.source) {
-				const source = props.source;
-				const actualSource = source?._id
-					? source
-					: window.dataSources[source];
+				const actualSource = await getActualSource(props.source);
 
 				if (!actualSource)
-					return window.showToast(`Invalid data source ${source}`);
+					return window.showToast(`Invalid data source ${props.source}`);
 
 				props = {
 					...props,

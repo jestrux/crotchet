@@ -1,6 +1,40 @@
 import { useRef, useState } from "react";
 import { matchSorter } from "match-sorter";
-import { cleanObject, shuffle, withCache } from "@/crotchet/utils";
+import { cleanObject, objectIsEmpty, shuffle, withCache } from "@/crotchet/utils";
+
+export const getActualSource = async (source, { timeout = 1000 } = {}) => {
+	if (source?._id && typeof source.get == "function")
+		return { handler: source.get };
+	
+	if (typeof source == "function")
+		return { handler: source };
+
+	if (typeof source !== "string") return source;
+
+	if (!objectIsEmpty(window.dataSources || {}) && window.dataSources[source])
+		return window.dataSources[source];
+
+	return await new Promise((resolve) => {
+		let timeoutId;
+		const handler = () => {
+			if (window.dataSources[source]) {
+				if (timeoutId) {
+					clearTimeout(timeoutId);
+					timeoutId = null;
+				}
+				window.removeEventListener("datasources-updated", handler);
+				resolve(window.dataSources[source]);
+			}
+		};
+
+		window.addEventListener("datasources-updated", handler);
+
+		timeoutId = setTimeout(() => {
+			window.removeEventListener("datasources-updated", handler);
+			resolve(null);
+		}, timeout);
+	});
+};
 
 export const getterFields = [
 	"_rowId",
@@ -23,8 +57,7 @@ export const getterFields = [
 import useOnInit from "./useOnInit";
 
 export const sourceGet = async (source, props = {}) => {
-	if (typeof source == "function") source = { handler: source };
-	if (typeof source == "string") source = window.dataSources[source];
+	source = await getActualSource(source);
 
 	const payload = _.omit(props, getterFields);
 	let {

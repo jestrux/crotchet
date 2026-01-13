@@ -3,6 +3,7 @@ import { getterFields, sourceGet } from "../hooks/useSourceGet";
 import {
 	camelCaseToSentenceCase,
 	cleanObject,
+	dispatch,
 	onDesktop,
 	randomId,
 } from "@/crotchet/utils";
@@ -231,6 +232,7 @@ export default function registerDataSource(provider, name, props = {}) {
 
 	setTimeout(() => {
 		updateDataSourceWidget(name);
+		dispatch("datasources-updated", name);
 	}, 10);
 
 	const pendingDataSources = window.pendingDataSources?.[name];
