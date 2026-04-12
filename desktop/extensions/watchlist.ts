@@ -47,12 +47,22 @@ const editEntry = (entry) => {
 	});
 };
 
+const watchlistAppUrl = (action, url) =>
+	`watchlist://${action}?url=${encodeURIComponent(url)}`;
+
 const getActions = (entry) => {
 	return [
-		{
+		...(!onDesktop() ? [{
 			icon: window.UI.icon("open-external"),
 			label: "Open",
-			url: entry.url,
+			handler: () => socketEmit("open-url", watchlistAppUrl("open", entry.url)),
+		}] : []),
+		{
+			label: "Open PiP",
+			shortcut: "Shift + Option + P",
+			...(onDesktop()
+				? { url: watchlistAppUrl("pip", entry.url) }
+				: { handler: () => socketEmit("open-url", watchlistAppUrl("pip", entry.url)) }),
 		},
 		{
 			icon: window.UI.icon("edit"),
@@ -120,7 +130,7 @@ registerDataSource("db", "watchlist", {
 	},
 	entryAction: (entry) => ({
 		label: "Open",
-		url: entry.url,
+		url: watchlistAppUrl("open", entry.url),
 	}),
 });
 
