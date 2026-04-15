@@ -121,61 +121,64 @@ export default defineApp([
 			: Response.json(result);
 	}),
 	route("/proxy", async function handler({ request }) {
-		// Handle preflight OPTIONS request
 		if (request.method === "OPTIONS") {
 			return corsPreflightResponse("GET, POST, OPTIONS");
 		}
 
+		const reqUrl = new URL(request.url);
 		const url =
-			request.method.toLowerCase() == "post"
-				? (
-						(await request.json()) as {
-							url: string;
-						}
-				  )?.url
-				: new URL(request.url).searchParams.get("url");
+			request.method.toLowerCase() === "post"
+				? ((await request.json()) as { url: string })?.url
+				: reqUrl.searchParams.get("url");
 
 		if (!url?.length)
 			return new Response("No url provided", { status: 400 });
 
 		try {
-			// Decode URL if needed
 			let decodedUrl = url;
-			try {
-				decodedUrl = decodeURIComponent(url);
-			} catch (e) {
-				// URL already decoded
+			try { decodedUrl = decodeURIComponent(url) } catch (_) {}
+			if (!decodedUrl.startsWith("http")) decodedUrl = `https://${decodedUrl}`;
+
+			const referer = reqUrl.searchParams.get("referer");
+			const fetchHeaders: Record<string, string> = {
+				"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+				Accept: "*/*",
+			};
+			if (referer) {
+				fetchHeaders["Referer"] = referer;
+				try { fetchHeaders["Origin"] = new URL(referer).origin } catch (_) {}
 			}
 
-			// Ensure URL has protocol
-			if (!decodedUrl.startsWith("http")) {
-				decodedUrl = `https://${decodedUrl}`;
+			const response = await fetch(decodedUrl, { headers: fetchHeaders });
+			const ct = response.headers.get("Content-Type") || "";
+			const isM3u8 = ct.includes("mpegurl") || decodedUrl.includes(".m3u8");
+
+			if (isM3u8) {
+				let manifest = await response.text();
+				// Rewrite absolute URLs to go through this proxy (preserving referer)
+				const proxyBase = reqUrl.origin + "/proxy?url=";
+				const refererSuffix = referer ? "&referer=" + encodeURIComponent(referer) : "";
+				manifest = manifest.replace(/^(https?:\/\/[^\s\r\n]+)/gm, (abs) =>
+					proxyBase + encodeURIComponent(abs) + refererSuffix
+				);
+				return new Response(manifest, {
+					headers: { "Content-Type": "application/vnd.apple.mpegurl", "Access-Control-Allow-Origin": "*" },
+				});
 			}
 
-			// Fetch the content
-			const response = await fetch(decodedUrl);
-
-			// Get the content
-			const content = await response.blob();
-
-			// Return with original content-type and explicit CORS headers
-			return new Response(content, {
-				status: response.status,
+			const body = await response.arrayBuffer();
+			return new Response(body, {
 				headers: {
-					"Content-Type":
-						response.headers.get("Content-Type") ||
-						"application/octet-stream",
+					"Content-Type": ct || "application/octet-stream",
 					"Access-Control-Allow-Origin": "*",
 					"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-					"Access-Control-Allow-Headers":
-						"Content-Type, Authorization",
+					"Access-Control-Allow-Headers": "Content-Type, Authorization",
+					"Content-Length": String(body.byteLength),
 				},
 			});
 		} catch (error) {
 			return new Response(
-				`Failed to proxy URL: ${
-					error instanceof Error ? error.message : String(error)
-				}`,
+				`Failed to proxy URL: ${error instanceof Error ? error.message : String(error)}`,
 				{ status: 500 }
 			);
 		}
