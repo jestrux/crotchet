@@ -229,7 +229,7 @@ const appIcon = UI.svg(
 const mapEntry = (entry) => ({
 	...entry,
 	video: getPoster(getYoutubeActualUrl(entry)),
-	title: entry.name,
+	title: entry.name || entry.title,
 	subtitle: `${[entry.crop?.[0], entry.crop?.[1]]
 		?.map(toHms)
 		.join(", ")} - ${toHms(entry.duration)}`,
@@ -1231,7 +1231,7 @@ registerWidget("randomYoutubeClip", {
 		return {
 			...entry,
 			video: `https://i.ytimg.com/vi/${entry._id}/hqdefault.jpg`,
-			title: entry.name,
+			title: entry.name || entry.title,
 			subtitle: `${[entry.crop?.[0], entry.crop?.[1]]
 				?.map(toHms)
 				.join(", ")} - ${toHms(entry.duration)}`,
@@ -1279,7 +1279,7 @@ registerWidget("randomYoutubeClip", {
 const formatVideo = (entry) => ({
 	...entry,
 	video: `https://i.ytimg.com/vi/${entry._id}/hqdefault.jpg`,
-	title: entry.name,
+	title: entry.name || entry.title,
 	subtitle: `${[entry.crop?.[0], entry.crop?.[1]]
 		?.map(toHms)
 		.join(", ")} - ${toHms(entry.duration)}`,
