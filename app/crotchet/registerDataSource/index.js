@@ -233,6 +233,38 @@ export default function registerDataSource(provider, name, props = {}) {
 	setTimeout(() => {
 		updateDataSourceWidget(name);
 		dispatch("datasources-updated", name);
+
+		if (props.tv && onDesktop()) {
+			const tvPayload = {
+				name,
+				label,
+				icon: props.tv.icon,
+				fields: props.tv.fields,
+				layout: props.layout,
+			};
+
+			if (props.table) {
+				dispatch("socket-emit", {
+					event: "tv-source-registered",
+					payload: { ...tvPayload, table: props.table, orderBy: props.orderBy },
+				});
+			} else if (typeof getter === 'function') {
+				getter().then(function (data) {
+					const raw = Array.isArray(data) ? data : (data?.data || []);
+					// Strip functions and React elements — ipcRenderer.send uses structured
+					// clone which throws on non-serializable values
+					const items = JSON.parse(JSON.stringify(raw, function (_, val) {
+						if (typeof val === 'function') return undefined;
+						if (val && typeof val === 'object' && val.$$typeof) return undefined;
+						return val;
+					}));
+					dispatch("socket-emit", {
+						event: "tv-source-registered",
+						payload: { ...tvPayload, items },
+					});
+				}).catch(function () {});
+			}
+		}
 	}, 10);
 
 	const pendingDataSources = window.pendingDataSources?.[name];

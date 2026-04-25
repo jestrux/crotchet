@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920">
+  <title>Crotchet</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="setup-screen">
+  <img src="icon.png" alt="Crotchet">
+  <h1>Crotchet</h1>
+  <p id="setup-msg">Enter your desktop IP to connect.</p>
+  <form id="setup-form" onsubmit="return false">
+    <input id="setup-input" type="text" placeholder="192.168.x.x" autocomplete="off" spellcheck="false">
+    <button type="submit" id="setup-btn">Connect</button>
+  </form>
+</div>
+
+<div id="app">
+
+  <!-- Side Rail -->
+  <nav id="side-rail" aria-label="Main navigation">
+    <div id="rail-logo">
+      <img src="icon.png" alt="Crotchet">
+      <span class="rail-wordmark">Crotchet</span>
+    </div>
+    <div id="rail-pages"></div>
+  </nav>
+
+  <!-- Home Screen -->
+  <div id="home-screen" class="screen">
+    <div id="search-bar">
+      <form id="search-form" onsubmit="return false">
+        <div id="search-wrap">
+          <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor" aria-hidden="true">
+            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+          </svg>
+          <input id="search-input" type="search" placeholder="Search…" autocomplete="off" spellcheck="false" tabindex="0">
+        </div>
+      </form>
+    </div>
+    <div id="home-scroll" role="main"></div>
+  </div>
+
+  <!-- Preview Screen -->
+  <div id="preview-screen" class="screen">
+    <img id="preview-img" src="" alt="">
+    <div id="preview-info">
+      <div id="preview-title"></div>
+      <div id="preview-subtitle"></div>
+    </div>
+  </div>
+
+  <!-- Player Screen -->
+  <div id="player-screen" class="screen">
+
+    <video id="player-video" playsinline></video>
+
+    <div id="player-spinner">
+      <div class="spin"></div>
+      <span id="player-step">Loading…</span>
+    </div>
+
+    <div id="player-overlay">
+      <div id="player-header">
+        <div id="player-title"></div>
+      </div>
+      <div id="player-footer">
+        <button id="player-progress-bar" role="progressbar" tabindex="0" data-focus-id="player-seek">
+          <div id="player-fill"></div>
+          <div id="player-handle"></div>
+        </button>
+        <div id="player-time-row">
+          <span id="player-time-cur">0:00</span>
+          <span id="player-time-tot">0:00</span>
+        </div>
+        <div id="player-ctrl-row">
+          <button id="player-restart-btn" class="player-ctrl-btn" tabindex="0" title="Restart">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="white"><path d="M7.11 8.53L5.7 7.11C4.8 8.27 4.24 9.61 4.07 11h2.02c.14-.87.49-1.72 1.02-2.47zM6.09 13H4.07c.17 1.39.72 2.73 1.62 3.89l1.41-1.42c-.52-.75-.87-1.59-1.01-2.47zm1.01 5.32c1.16.9 2.51 1.44 3.9 1.61V17.9c-.87-.15-1.71-.49-2.46-1.03L7.1 18.32zM13 4.07V1L8.45 5.55 13 10V6.09c2.84.48 5 2.94 5 5.91s-2.16 5.43-5 5.91v2.02c3.95-.49 7-3.85 7-7.93s-3.05-7.44-7-7.93z"/></svg>
+          </button>
+          <button id="skip-back-btn" class="player-ctrl-btn" tabindex="0" title="Skip back 10s">
+            <svg viewBox="0 0 16 16" width="40" height="40">
+              <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2z"/>
+              <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466"/>
+              <text x="4.5" y="12" font-size="4.5" fill="currentColor" stroke="none" font-family="sans-serif">10</text>
+            </svg>
+          </button>
+          <button id="play-pause-btn" class="player-ctrl-btn player-ctrl-main" tabindex="0" title="Play / Pause">
+            <svg id="play-icon" width="64" height="64" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+            <svg id="pause-icon" width="64" height="64" viewBox="0 0 24 24" fill="white" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          </button>
+          <button id="skip-fwd-btn" class="player-ctrl-btn" tabindex="0" title="Skip forward 10s">
+            <svg viewBox="0 0 16 16" width="40" height="40">
+              <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/>
+              <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/>
+              <text x="4.5" y="12" font-size="4.5" fill="currentColor" stroke="none" font-family="sans-serif">10</text>
+            </svg>
+          </button>
+          <button id="crop-btn" class="player-ctrl-btn" tabindex="0" data-crop="on" title="Toggle crop">
+            <svg viewBox="0 0 24 24" width="40" height="40">
+              <!-- Rounded rect background (filled when crop on, outlined when off) -->
+              <rect class="crop-bg" x="3" y="3" width="18" height="18" rx="3"/>
+              <!-- Crop icon: two intersecting L-shapes -->
+              <path class="crop-icon" d="M8 4 L8 16 L20 16 M4 8 L16 8 L16 20" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <div id="player-status"></div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Libraries -->
+<script src="js/socket.io.min.js"></script>
+<script src="js/spatial-navigation.js"></script>
+
+<!-- App -->
+<script src="js/store.js"></script>
+<script src="js/router.js"></script>
+<script src="js/open-url.js"></script>
+<script src="screens/home.js"></script>
+<script src="screens/player.js"></script>
+<script src="screens/youtube-player.js"></script>
+<script src="screens/preview.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>

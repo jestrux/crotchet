@@ -458,6 +458,17 @@ declare var registerDataSource: (
 		label?: string;
 		fetch?: () => {};
 		icon?: string | typeof UI.icon;
+		tv?: {
+			icon?: string;
+			fields?: {
+				title?: string;
+				videoTemplate?: string;
+				imageTemplate?: string;
+				urlTemplate?: string;
+				subtitleTemplate?: string;
+				subtitleCrop?: boolean;
+			};
+		};
 		formFields?: { [key: string]: any };
 		listenForUpdates?: typeof ListenForUpdates;
 		searchFields?: string[];

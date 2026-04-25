@@ -1,9 +1,7 @@
 import "../../@types/index";
 
-const appIcon = UI.svg(
-	"M7.5 6.75V0h9v6.75h-9zm9 3.75H24V24H0V10.5h7.5v6.75h9V10.5z",
-	{ filled: true }
-);
+const appIconPath = "M7.5 6.75V0h9v6.75h-9zm9 3.75H24V24H0V10.5h7.5v6.75h9V10.5z";
+const appIcon = UI.svg(appIconPath, { filled: true });
 
 const searchAction = {
 	label: "Search Unsplash",
@@ -129,6 +127,12 @@ const previewImage = async (image = null) => {
 
 registerDataSource("custom", "unsplash", {
 	icon: appIcon,
+	tv: {
+		icon: appIconPath,
+		fields: {
+			urlTemplate: "crotchet://preview/{image}?type=image",
+		},
+	},
 	listenForUpdates: "tokens-updated",
 	fetch: () => {
 		// TODO: Add caching logic

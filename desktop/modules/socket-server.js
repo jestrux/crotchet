@@ -1,4 +1,6 @@
-const { ipcMain, shell, clipboard, nativeImage } = require("electron");
+const { ipcMain, shell, clipboard, nativeImage, app } = require("electron");
+const fs = require("fs");
+const path = require("path");
 
 const { Server } = require("socket.io");
 const runScript = require("../utils/runScript");
@@ -15,6 +17,7 @@ const {
 const getIp = require("../utils/getIp");
 const findLocalDevices = require("local-devices");
 const crawlUrl = require("../utils/crawlUrl");
+const createTvHandlers = require("./tv");
 
 const Key = {
 	Escape: 0,
@@ -276,6 +279,8 @@ module.exports = function socketServer(server) {
 				payload._id
 			);
 		},
+
+		...createTvHandlers(io),
 
 		emit({ event, payload, showWindow } = {}) {
 			if (showWindow) crotchetApp.toggleWindow(true);
