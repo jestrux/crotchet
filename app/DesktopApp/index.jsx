@@ -11,7 +11,6 @@ import registerPlatformUtils from "@/crotchet/registerPlatformUtils";
 import ThemeBg from "@/DesktopApp/ThemeBg";
 import { useAppContext } from "@/crotchet/providers/AppProvider";
 import { onActionClick } from "@/crotchet/hooks/useActionClick";
-import FloatingWindow from "./FloatingWindows/FloatingWindow";
 import FloatingWindowManager from "./FloatingWindows/FloatingWindowManager";
 import { processSchemeUrl } from "@/crotchet/open-url";
 
@@ -184,7 +183,6 @@ export default function DesktopApp() {
 		},
 	});
 
-	const isFloatingWindow = rootPage && rootPage.isFloatingWindow;
 
 	window.desktop.showToast = (message) => {
 		if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
@@ -223,8 +221,6 @@ export default function DesktopApp() {
 	});
 
 	useEventListener("socket", (_, { event, payload = {} } = {}) => {
-		if (isFloatingWindow)
-			return console.log("Ignore socket, on floating window...");
 		// console.log("Socket event: ", event, payload);
 
 		if (event == "run-action") {
@@ -292,30 +288,23 @@ export default function DesktopApp() {
 
 	return (
 		<>
-			{isFloatingWindow == false && (
-				<>
-					<div className="h-screen w-screen text-content pointer-events-auto">
-						{/* <div className="relative bg-stone-100/95 dark:bg-card/95 backdrop-blur-sm size-full overflow-hidden"> */}
-						<ThemeStyles />
+			<div className="h-screen w-screen text-content pointer-events-auto">
+				<ThemeStyles />
 
-						<div className="relative size-full overflow-hidden">
-							<div className="border border-transparent dark:border-content/30 rounded-xl fixed inset-0 pointer-events-none z-50"></div>
-							<ThemeBg className="relative size-full overflow-hidden">
-								<AppContent />
-							</ThemeBg>
-						</div>
+				<div className="relative size-full overflow-hidden">
+					<div className="border border-transparent dark:border-content/30 rounded-xl fixed inset-0 pointer-events-none z-50"></div>
+					<ThemeBg className="relative size-full overflow-hidden">
+						<AppContent />
+					</ThemeBg>
+				</div>
 
-						{toast && (
-							<div className="fixed inline-flex items-center bottom-14 h-7 px-3 z-[999999] bg-content/85 text-on-content text-xs drop-shadow-sm rounded-full -translate-x-1/2 left-1/2">
-								{toast}
-							</div>
-						)}
+				{toast && (
+					<div className="fixed inline-flex items-center bottom-14 h-7 px-3 z-[999999] bg-content/85 text-on-content text-xs drop-shadow-sm rounded-full -translate-x-1/2 left-1/2">
+						{toast}
 					</div>
-					<FloatingWindowManager />
-				</>
-			)}
-
-			{isFloatingWindow == true && <FloatingWindow page={rootPage} />}
+				)}
+			</div>
+			<FloatingWindowManager />
 		</>
 	);
 }

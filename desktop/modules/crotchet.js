@@ -7,11 +7,12 @@ const {
 	screen,
 } = require("electron");
 const { getWriteableFile, readFile } = require("./files");
+const { contentScripts, injectContentScripts } = require("./contentScripts");
 
 module.exports = function Crotchet() {
 	this.defaultSize = { width: 750, height: 480 };
 	this.tray = null;
-	this.showWindow = isDev;
+	this.showWindow = true;
 	this.menuItems = {};
 	this.floatingWindows = {};
 	this.fullScreenTimeout = { then: (resolve) => setTimeout(resolve, 40) };
@@ -187,6 +188,10 @@ module.exports = function Crotchet() {
 				payload._id || "window-" + Math.random().toString(36).slice(2);
 
 			let window = this.floatingWindows[windowId]?.window;
+			if (window?.isDestroyed()) {
+				delete this.floatingWindows[windowId];
+				window = null;
+			}
 			if (!window) {
 				window = new BrowserWindow({
 					backgroundColor: background,
@@ -222,13 +227,28 @@ module.exports = function Crotchet() {
 					delete this.floatingWindows[windowId];
 				});
 
-				if (isDev) window.loadURL("http://localhost:5170/");
+				if (payload.url) {
+					const inject = async () => {
+						if (window.isDestroyed()) return;
+						const currentUrl = window.webContents.getURL();
+						if (!contentScripts.some(({ match }) => match(currentUrl))) return;
+						const currentData = this.floatingWindows[windowId]?.payload?.data || {};
+						await window.webContents.executeJavaScript(
+							`window.__crotchetData = ${JSON.stringify({ ...currentData, _id: windowId })};`
+						);
+						injectContentScripts(window, currentUrl);
+					};
+					window.webContents.on("did-finish-load", inject);
+				}
+
+				if (payload.url) window.loadURL(payload.url);
+				else if (isDev) window.loadURL("http://localhost:5170/");
 				else window.loadFile(buildDir("index.html"));
 
 				this.floatingWindows[windowId] = {
 					_id: windowId,
 					payload,
-					pending: true,
+					pending: !payload.url,
 					window,
 				};
 
@@ -238,7 +258,13 @@ module.exports = function Crotchet() {
 				return;
 			}
 
-			this.emitFloatingWindowAction(windowId, "init");
+			// Re-use existing window
+			if (payload.url) {
+				this.floatingWindows[windowId].payload = payload;
+				window.loadURL(payload.url);
+			} else {
+				this.emitFloatingWindowAction(windowId, "init");
+			}
 		} catch (error) {
 			console.log("Open external window error: ", error);
 		}

@@ -32,7 +32,7 @@ const createMainWindow = () => {
 		// titleBarStyle: "hidden",
 		width: 750,
 		height: 480,
-		show: isDev,
+		show: true,
 		frame: false,
 		transparent: true,
 		resizable: isDev,

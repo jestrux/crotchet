@@ -67,7 +67,7 @@ export default function useRemote() {
 	useEventListener("open-remote-page-controller", (_, pageId) => {
 		if (onScreenSize("lg")) return;
 
-		const page = (pages || []).find(({ _id }) => _id == pageId);
+		const page = (window.remotePages || []).find(({ _id }) => _id == pageId);
 		if (window.activeRemotePageController == pageId)
 			dispatch("close-remote-page-controller-" + pageId);
 

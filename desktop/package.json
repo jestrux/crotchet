@@ -7,7 +7,7 @@
 	"private": true,
 	"version": "0.0.0",
 	"scripts": {
-		"dev": "lsof -ti:3127 | xargs -r kill -9 && cross-env NODE_ENV=dev electron .",
+		"dev": "bash scripts/dev.sh",
 		"package": "npx electron-builder --dir --mac && bash scripts/package.sh",
 		"cert": "openssl req -x509 -newkey rsa:2048 -keyout cert/key.pem -out cert/cert.pem -days 365",
 		"fix-robot": "npx electron-rebuild -f -t prod,optional,dev -w robotjs"

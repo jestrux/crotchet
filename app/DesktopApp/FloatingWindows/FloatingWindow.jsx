@@ -1,6 +1,7 @@
 import { useEventListener } from "@/crotchet/hooks";
-import { loadExternalAsset } from "@/crotchet/utils";
+import { closeFloatingWindow, dispatch, loadExternalAsset } from "@/crotchet/utils";
 import { useLayoutEffect, useRef, useState } from "react";
+import { youtubePlayer } from "@/crotchet/providers/ui";
 
 export default function FloatingWindow({ page }) {
 	const [initialized, setInitialized] = useState(false);
@@ -9,11 +10,16 @@ export default function FloatingWindow({ page }) {
 	const elementRef = useRef();
 	const remoteActionHandler = useRef();
 
+	const floatingData = page.floatingComponent || null;
+
 	useLayoutEffect(() => {
+		if (floatingData) {
+			window.socketEmit("floating-window-ready", { _id: page._id });
+			return;
+		}
+
 		loadAssets().then(() => {
-			window.socketEmit("floating-window-ready", {
-				_id: page._id,
-			});
+			window.socketEmit("floating-window-ready", { _id: page._id });
 
 			elementRef.current.setAttribute(
 				"x-data",
@@ -43,6 +49,12 @@ export default function FloatingWindow({ page }) {
 	useEventListener(
 		"floating-window-event-" + page._id,
 		(_, { action, ...payload }) => {
+			if (floatingData) {
+				if (action === "remote-action")
+					dispatch("remote-action-" + page._id, payload);
+				return;
+			}
+
 			if (action == "remote-action") {
 				if (typeof remoteActionHandler.current == "function")
 					remoteActionHandler.current(payload);
@@ -59,6 +71,33 @@ export default function FloatingWindow({ page }) {
 			}
 		}
 	);
+
+	if (floatingData?.type === "youtubePlayer") {
+		const onNavigate = (action) => {
+			if (action === "restore") {
+				closeFloatingWindow(page._id);
+				window.socketEmit("run-action", {
+					showWindow: true,
+					action: "playYoutubeClip",
+					payload: floatingData.id,
+				});
+			}
+			if (action === "youtube") {
+				closeFloatingWindow(page._id);
+				window.socketEmit("open", floatingData.youtubeUrl);
+			}
+		};
+
+		return youtubePlayer(
+			{
+				_id: floatingData.id,
+				start: floatingData.start,
+				end: floatingData.end,
+				duration: floatingData.duration,
+			},
+			{ fullscreen: true, onNavigate, pageId: page._id }
+		);
+	}
 
 	return (
 		<div

@@ -40,185 +40,6 @@ const formFields = [
 	"url",
 ];
 
-const getVideoPlayer = (video, hideMeta = false) =>
-	!video
-		? null
-		: `
-		<div 
-			@youtube-clip-action.window="handleRemoteAction($event.detail)"
-		x-data="{
-			cropEnabled: true,
-			get start() {
-				return this.crop[0];
-			},
-			get end() {
-				return this.crop[1];
-			},
-			get startTime() {
-				return window.toHms(this.start);
-			},
-			get endTime() {
-				return window.toHms(this.end);
-			},
-			get src () {
-				const src = [
-					'https://www.youtube-nocookie.com/embed/',
-					this.videoId,
-					'?autoplay=1&enablejsapi=1&controls=1&start=',
-					this.start.toFixed(0),
-				].join('')
-
-				return src;
-			},
-			get youtubeUrl () {
-				return [
-					'https://youtube.com/watch?v=',
-					this.videoId,
-					'&t=',
-					this.start.toFixed(0),
-				].join('')
-			},
-			formatCropTime(time) {
-				return Number(Number(time).toFixed(3))
-			},
-			handleRemoteAction(payload) {
-				console.log('Remote action: ', payload);
-				const action = payload.action || payload.id;
-				if (action == 'restart') this.restartVideo();
-				if (action == 'skip-back') this.seekTo(this.currentTime - 5);
-				if (action == 'skip-forward') this.seekTo(this.currentTime + 5);
-				if (action == 'toggle-crop') {
-					this.cropEnabled = !this.cropEnabled;
-					this.restartVideo();
-				}
-				if (action == 'restore') {
-					window.closeFloatingWindow(this.$page._id);
-					window.socketEmit('run-action', {
-						showWindow: true,
-						action: 'playYoutubeClip',
-						payload: this.videoId,
-					});
-				}
-				if (action == 'youtube') {
-					window.closeFloatingWindow(this.$page._id);
-					window.socketEmit('open', this.youtubeUrl);
-				}
-			},
-			init() {
-				this.videoId = this.$pageData._id;
-				this.duration = this.$pageData.duration;
-				this.crop = [this.$pageData.start, this.$pageData.end].map(this.formatCropTime);
-				
-				if(typeof this.$onPageDataChanged == 'function') {
-					this.$onPageDataChanged((data) => {
-						this.crop = [data.start, data.end].map(this.formatCropTime);
-						this.restartVideo();
-					});
-				}
-
-				if(typeof this.$onRemoteAction == 'function')
-					this.$onRemoteAction((payload) => this.handleRemoteAction(payload));
-				
-				if(!window.YT?.Player) {
-					this.loadPlayer();
-					return console.log('Player not loaded!!!');
-				}
-
-				this.initPlayer();
-			},
-			loadPlayer() {
-				window.onYouTubeIframeAPIReady = () => {
-					console.log('Iframe ready...');
-					this.initPlayer();
-				};
-			},
-			initPlayer() {
-				this.player = new window.YT.Player('youtube-player', {
-					events: {
-						onReady: () => {
-							window.__player = this.player;
-							const parent = this.$el.closest('.yt-clips-editor-parent');
-							const props = {}
-							props.duration = this.player.getDuration();
-							props.title = this.player.getVideoData().title;
-							if(parent) {
-								parent.dispatchEvent(
-									new CustomEvent('video-loaded', {
-										detail: props,
-									})
-								);
-							}
-							else window.addEventListener('message', (e) => this.listenForTime(e));
-						},
-					},
-				});
-			},
-			seekTo(time, skipCheck){
-				if(!skipCheck) {
-					const [start, end] = this.crop;
-					if (time >= end || time >= this.duration || time <= start) time = 0;
-				}
-				this.currentTime = time;
-				this.player.seekTo(time);
-				this.player.playVideo();
-			},
-			restartVideo(){
-				const [start] = this.crop;
-				this.seekTo(this.cropEnabled ? start : 0, true);
-			},
-			listenForTime(event){
-				this.lastTimeUpdate = 0;
-
-				const data = JSON.parse(event.data);
-
-				if (
-					data.event === 'infoDelivery' &&
-					data.info &&
-					data.info.currentTime
-				) {
-					const time = this.formatCropTime(data.info.currentTime);
-					this.currentTime = time;
-
-					if (time == this.lastTimeUpdate) return;
-
-					this.lastTimeUpdate = time;
-
-					let [start, end] = this.crop;
-
-					if(!this.cropEnabled) {
-						start = 0;
-						end = this.duration;
-					}
-
-					if (time < end && time > start) return;
-
-					this.restartVideo();
-				}
-			}
-		}">
-			<iframe
-				id="youtube-player"
-				class="spointer-events-none w-full"
-				style="${hideMeta ? "position: absolute; height: 100%" : "aspect-ratio: 16/9"}"
-				src="${getEmbedUrl(video.url, video.start)}" 
-				x-bind:src="src"
-				allow="autoplay; encrypted-media"
-				allowfullscreen
-			>
-			</iframe>
-			<div class="mt-2 divide-y ${hideMeta && "hidden"}">
-				<div class="flex items-center justify-between gap-2 py-2 px-4">
-					<span>Start</span>
-					<span x-text="startTime"></span>
-				</div>
-				<div class="flex items-center justify-between gap-2 py-2 px-4">
-					<span>End</span>
-					<span x-text="endTime"></span>
-				</div>
-			</div>
-		</div>
-	`;
-
 const appIcon = UI.svg(
 	"M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z",
 	{
@@ -468,47 +289,15 @@ const editVideo = async ({ title, resolve, handler }) => {
 			};
 
 			if (!payload.title || !payload.duration) {
-				return new Promise((resolve) => {
-					const el = document.createElement("div");
-					el.className = "yt-clips-editor-parent";
-					el.setAttribute(
-						"x-data",
-						`
-						{
-							$page: {},
-							$pageData: {start: 0, end: 0, _id: '${payload._id}'},
-						}
-					`
-					);
-					const handleVideoLoad = (e) => {
-						payload = { ...payload, ...e.detail };
-						el.removeEventListener("video-loaded", handleVideoLoad);
-						el.remove();
-						resolve(formatPayload(payload));
-					};
-					el.addEventListener("video-loaded", handleVideoLoad);
-					// @ts-ignore
-					el.innerHTML = getVideoPlayer(payload);
-					document.body.appendChild(el);
-				});
+				const meta = await UI.youtubePlayer.loadVideo(payload._id);
+				payload = { ...payload, ...meta };
 			}
 
 			return formatPayload(payload);
 		},
-		externalAssets: [
-			{
-				type: "script",
-				name: "youtubeIframeApi",
-				url: "https://www.youtube.com/iframe_api",
-			},
-		],
 		preview({ pageData: video }) {
 			if (!video) return null;
-
-			// return getPlayClipPage(video).content();
-			return UI.component({
-				content: getVideoPlayer(video),
-			});
+			return UI.youtubePlayer(video, { showMeta: true });
 		},
 		fields: {
 			title: "text",
@@ -659,301 +448,24 @@ const addClip = async ({ url = "" } = {}) => {
 	});
 };
 
-const createInterval = (callback, interval) => {
-	let rafId;
-	let lastTime = performance.now();
-
-	const tick = (currentTime) => {
-		if (currentTime - lastTime >= interval) {
-			callback();
-			lastTime = currentTime;
-		}
-		rafId = requestAnimationFrame(tick);
-	};
-
-	rafId = requestAnimationFrame(tick);
-
-	return () => {
-		if (rafId ?? null !== null) {
-			cancelAnimationFrame(rafId);
-			rafId = undefined;
-			console.log("Clean looper...");
-		}
-	};
-};
-
 const getPlayClipPage = (clip, external = false) => {
 	clip = mapEntry(clip);
-	const formatCropTime = (time) => Number(Number(time).toFixed(3));
 	const { duration } = clip;
-	const [start, end] = (clip.crop || [0, duration]).map(formatCropTime);
-	// const src = `https://www.youtube.com/embed/${
-	const src = `https://www.youtube-nocookie.com/embed/${
-		clip._id || clip.id
-	}?&autoplay=1&enablejsapi=1&controls=0&start=${start.toFixed(0)}`;
-	const crop = [start, end];
-	let cropEnabled = true;
-	let player,
-		inited = false;
+	const [start, end] = (clip.crop || [0, duration]).map(Number);
+	const youtubeUrl = getYoutubeActualUrl(clip);
 
-	const restartVideo = () => {
-		const [start] = crop.map(formatCropTime);
-		player.seekTo(cropEnabled ? start : 0);
-		player.playVideo();
-	};
-
-	const seekTo = (time) => {
-		const [start, end] = crop.map(formatCropTime);
-		if (time >= end || time >= duration || time <= start) time = 0;
-		player.seekTo(time);
-		player.playVideo();
-	};
-
-	const listenForTime = (e) => {
-		console.log("On state change:", e.data);
-
-		if (e && (e.data != 1 || inited)) return;
-		inited = true;
-
-		stopLooper = createInterval(() => {
-			let lastTimeUpdate = 0;
-			const time = formatCropTime(player.getCurrentTime());
-
-			if (cropEnabled && time !== lastTimeUpdate) {
-				lastTimeUpdate = time;
-
-				const [start, end] = crop.map(formatCropTime);
-
-				if (time >= end || time >= duration || time <= start)
-					restartVideo();
-			} else {
-				console.log("Same time as before...");
-			}
-		}, 350);
-	};
-
-	let stopLooper;
-
-	const initPlayer = () => {
-		let script = document.querySelector("#youtube-player-iframe");
-		const connectJS = () => {
-			// @ts-ignore
-			player = new window.YT.Player("youtube-player");
-			// , {
-			// 	events: {
-			// 		onReady: () => {
-			// 			console.log("On player ready...");
-			// 			window.addEventListener("message", listenForTime);
-			// 		},
-			// 	},
-			// });
-			console.log("Player: ", player);
-			player.addEventListener("onStateChange", listenForTime);
-		};
-
-		if (!script) {
-			script = document.createElement("script");
-			script.id = "youtube-player-iframe";
-			// @ts-ignore
-			script.src = "https://www.youtube.com/iframe_api";
-			document.body.appendChild(script);
-		}
-
-		// @ts-ignore
-		if (window.YT?.Player) connectJS();
-		// @ts-ignore
-		else window.onYouTubeIframeAPIReady = () => connectJS();
-	};
-
-	const handleAction = (e) => {
-		const time = formatCropTime(player.getCurrentTime());
-		const { action } = e?.detail || {};
-		if (action == "restart") restartVideo();
-		if (action == "skip-back") seekTo(time - 5);
-		if (action == "skip-forward") seekTo(time + 5);
-		if (action == "toggle-crop") {
-			cropEnabled = !cropEnabled;
-			restartVideo();
-		}
-		if (action == "youtube") {
-			closePage();
-			openUrl(getYoutubeActualUrl(clip));
-		}
-		if (action == "pip") {
+	const onNavigate = (action) => {
+		if (action === "pip") {
 			closePage();
 			// @ts-ignore
 			openPage(getPlayClipPage(clip, true));
 		}
+		if (action === "youtube") openUrl(getYoutubeActualUrl(clip));
 	};
 
-	const componentProps = {
-		// content: () => getVideoPlayer(clip, true),
-		content: !external
-			? () => getVideoPlayer(clip, true)
-			: () => `
-			<div class="absolute inset-0 bg-black flex items-center justify-center"
-				x-data="{
-					cropEnabled: true,
-					lastTimeUpdate: 0,
-					player: null,
-					videoId: '${clip._id || clip.id}',
-					start: ${start},
-					end: ${end},
-					duration: ${duration},
-					get crop () {
-						return [this.start, this.end].map(this.formatCropTime)
-					},
-					get src () {
-						return [
-							'https://www.youtube-nocookie.com/embed/',
-							this.videoId,
-							'?autoplay=1&enablejsapi=1&controls=0&start=',
-							this.start.toFixed(0),
-						].join('')
-					},
-					get youtubeUrl () {
-						return [
-							'https://youtube.com/watch?v=',
-							this.videoId,
-							'&t=',
-							this.crop[0].toFixed(0),
-						].join('')
-					},
-					handleRemoteAction(payload) {
-						console.log('Remote action in: ', payload);
-						const action = payload.id;
-						if (action == 'restart') this.restartVideo();
-						if (action == 'skip-back') this.seekTo(this.currentTime - 5);
-						if (action == 'skip-forward') this.seekTo(this.currentTime + 5);
-						if (action == 'toggle-crop') {
-							this.cropEnabled = !this.cropEnabled;
-							this.restartVideo();
-						}
-						if (action == 'restore') {
-							window.closeFloatingWindow(this.$page._id);
-							window.socketEmit('run-action', {
-								showWindow: true,
-								action: 'playYoutubeClip',
-								payload: this.videoId,
-							});
-						}
-						if (action == 'youtube') {
-							window.closeFloatingWindow(this.$page._id);
-							window.socketEmit('open', this.youtubeUrl);
-						}
-					},
-					init() {
-						if(typeof this.$onRemoteAction == 'function')
-							this.$onRemoteAction((payload) => this.handleRemoteAction(payload));
-						if(!window.YT?.Player) {
-							this.loadPlayer();
-							return console.log('Player not loaded!!!');
-						}
-						this.initPlayer();
-					},
-					loadPlayer() {
-						window.onYouTubeIframeAPIReady = () => {
-							console.log('Iframe ready...');
-							this.initPlayer();
-						};
-					},
-					initPlayer() {
-						this.player = new window.YT.Player('youtube-player', {
-							events: {
-								onReady: () => {
-									console.log('On player ready...');
-									window.addEventListener('message', (e) => this.listenForTime(e));
-								},
-							},
-						});
-					},
-					formatCropTime(time) {
-						return Number(Number(time).toFixed(3))
-					},
-					restartVideo(){
-						const [start] = this.crop;
-						this.seekTo(this.cropEnabled ? start : 0, true);
-					},
-					seekTo(time, skipCheck){
-						if(!skipCheck) {
-							const [start, end] = this.crop;
-							if (time >= end || time >= this.duration || time <= start) time = 0;
-						}
-						this.currentTime = time;
-						this.player.seekTo(time);
-						this.player.playVideo();
-					},
-					listenForTime(event){
-						this.lastTimeUpdate = 0;
+	const content = () => UI.youtubePlayer(clip, { fullscreen: true, onNavigate });
 
-						const data = JSON.parse(event.data);
-
-						if (
-							data.event === 'infoDelivery' &&
-							data.info &&
-							data.info.currentTime
-						) {
-							const time = this.formatCropTime(data.info.currentTime);
-							this.currentTime = time;
-
-							if (time == this.lastTimeUpdate) return;
-
-							this.lastTimeUpdate = time;
-
-							let [start, end] = this.crop;
-
-							if(!this.cropEnabled) {
-								start = 0;
-								end = this.duration;
-							}
-
-							if (time < end && time > start) return;
-
-							this.restartVideo();
-						}
-					}
-				}"
-			>
-				<iframe
-					id="youtube-player"
-					class="pointer-events-none size-full"
-					src="${src}"
-					x-bind:src="src"
-					allow="autoplay; encrypted-media"
-					allowfullscreen
-				></iframe>
-			</div>
-		`,
-		onInit: ({ $el }) => {
-			// const iframe = $el.querySelector("#youtube-player");
-			// console.log("On init: ", iframe);
-			// iframe.addEventListener("load", (...args) => {
-			// 	console.log("Iframe loaded...", ...args);
-			// });
-			initPlayer();
-			// window.addEventListener("youtube-clip-action", handleAction, false);
-		},
-		onRemoteAction: (action) =>
-			dispatch("youtube-clip-action", { action: action.id }),
-		onDestroy: () => {
-			console.log("Do a clean YT clips destroy...");
-			if (typeof stopLooper == "function") stopLooper();
-			// window.removeEventListener(
-			// 	"youtube-clip-action",
-			// 	handleAction,
-			// 	false
-			// );
-			// if (window.YT?.Player)
-			// 	window.addEventListener("message", listenForTime);
-			// else console.log("No player initialized...");
-
-			// const script = document.querySelector(
-			// 	"#youtube-player-iframe"
-			// );
-			// if (script) script.remove();
-			// if (window.YT) delete window.YT;
-		},
-	};
+	const resolve = () => ({ ...clip, start, end, crop: [start, end] });
 
 	const actions = (ctx, external = false) => [
 		{
@@ -1069,13 +581,6 @@ const getPlayClipPage = (clip, external = false) => {
 		},
 	];
 
-	const resolve = () => ({
-		...clip,
-		start,
-		end,
-		crop: crop.map(formatCropTime),
-	});
-
 	if (external) {
 		return {
 			external: true,
@@ -1083,25 +588,13 @@ const getPlayClipPage = (clip, external = false) => {
 			image: clip.poster,
 			video: clip.video,
 			title: clip.title,
-			...componentProps,
-			resolve,
+			url: youtubeUrl,
+			data: { start, end },
 			actions: actions({}, true),
 			window: {
 				background: "black",
-				// frame: false,
 				width: 500,
 				height: 280,
-			},
-			externalAssets: [
-				{
-					type: "script",
-					name: "youtubeIframeApi",
-					url: "https://www.youtube.com/iframe_api",
-				},
-			],
-			onEvent: (event) => {
-				if (event == "ready")
-					openRemotePageController("floatingYoutubeClip");
 			},
 		};
 	}
@@ -1114,15 +607,7 @@ const getPlayClipPage = (clip, external = false) => {
 		title: clip.title,
 		fullScreen: true,
 		resolve,
-		content: () => UI.component(componentProps),
-		// preview: () =>
-		// 	UI.component({
-		// 		content: `
-		// 			<div class="absolute inset-0 bg-black flex items-center justify-center">
-		// 				<img class="max-w-full max-h-full" src="${clip.video}" />
-		// 			</div>
-		// 		`,
-		// 	}),
+		content,
 		action: (ctx) => ({
 			label: "Restart",
 			id: "restart",

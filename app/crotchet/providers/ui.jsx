@@ -1,9 +1,9 @@
 import RegularListItem from "@/crotchet/components/ListItem";
 import MediaItem from "../components/MediaItem";
 import { useEventListener, useLongPress } from "../hooks";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { usePageContext } from "./PageProvider";
-import { isValidAction, loadExternalAsset } from "../utils";
+import { isValidAction, loadExternalAsset, dispatch } from "../utils";
 import clsx from "clsx";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import openUrl from "../open-url";
@@ -118,6 +118,185 @@ function Component({ data }) {
 }
 
 export const component = (data) => <Component data={data} />;
+
+function YoutubePlayer({ id, start = 0, end, duration, fullscreen = false, showMeta = false, onNavigate }) {
+	const { page, isOpen } = usePageContext();
+	const playerRef = useRef(null);
+	const cropRef = useRef([start, end ?? duration]);
+	const cropEnabledRef = useRef(true);
+	const currentTimeRef = useRef(0);
+
+	const formatTime = (t) => Number(Number(t).toFixed(3));
+
+	const restartVideo = () => {
+		const [s] = cropRef.current.map(formatTime);
+		playerRef.current?.seekTo(cropEnabledRef.current ? s : 0);
+		playerRef.current?.playVideo();
+	};
+
+	const seekTo = (time, skipCheck = false) => {
+		if (!skipCheck) {
+			const [s, e] = cropRef.current.map(formatTime);
+			if (time >= e || time >= (duration ?? Infinity) || time <= s) time = 0;
+		}
+		currentTimeRef.current = time;
+		playerRef.current?.seekTo(time);
+		playerRef.current?.playVideo();
+	};
+
+	useEffect(() => {
+		const init = () => {
+			playerRef.current = new window.YT.Player("youtube-player", {
+				events: {
+					onReady: () => { window.__player = playerRef.current; },
+				},
+			});
+		};
+
+		if (window.YT?.Player) {
+			init();
+		} else {
+			window.onYouTubeIframeAPIReady = init;
+			if (!document.querySelector("#yt-iframe-api-script")) {
+				const script = document.createElement("script");
+				script.id = "yt-iframe-api-script";
+				script.src = "https://www.youtube.com/iframe_api";
+				document.body.appendChild(script);
+			}
+		}
+	}, []);
+
+	useEffect(() => {
+		const handleMessage = (event) => {
+			try {
+				const data = JSON.parse(event.data);
+				if (data.event !== "infoDelivery" || !data.info?.currentTime) return;
+				const time = formatTime(data.info.currentTime);
+				currentTimeRef.current = time;
+				const [s, e] = cropRef.current.map(formatTime);
+				const [lo, hi] = cropEnabledRef.current ? [s, e] : [0, duration ?? Infinity];
+				if (time < hi && time > lo) return;
+				restartVideo();
+			} catch {}
+		};
+		window.addEventListener("message", handleMessage);
+		return () => window.removeEventListener("message", handleMessage);
+	}, []);
+
+	// Bridge remote controller actions into the youtube-clip-action channel
+	useEventListener("remote-action-" + page?._id, (_, payload) => {
+		if (!isOpen) return;
+		dispatch("youtube-clip-action", payload);
+	});
+
+	// Handle all player and navigation actions
+	useEventListener("youtube-clip-action", (_, payload) => {
+		if (!isOpen) return;
+		const action = payload?.action || payload?.id;
+		if (action === "restart") restartVideo();
+		else if (action === "skip-back") seekTo(currentTimeRef.current - 5);
+		else if (action === "skip-forward") seekTo(currentTimeRef.current + 5);
+		else if (action === "toggle-crop") {
+			cropEnabledRef.current = !cropEnabledRef.current;
+			restartVideo();
+		} else if (onNavigate) onNavigate(action);
+	});
+
+	// Update crop when page data changes (e.g. editing a clip)
+	useEventListener("page-data-changed-" + page?._id, (_, data) => {
+		if (!isOpen || !data) return;
+		const s = formatTime(data.start ?? data.crop?.[0] ?? 0);
+		const e = formatTime(data.end ?? data.crop?.[1] ?? duration ?? 0);
+		cropRef.current = [s, e];
+		restartVideo();
+	});
+
+	const src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&enablejsapi=1&controls=1&start=${Math.round(start)}`;
+
+	if (fullscreen) {
+		return (
+			<div className="absolute inset-0 bg-black flex items-center justify-center">
+				<iframe
+					id="youtube-player"
+					className="pointer-events-none size-full"
+					src={src}
+					allow="autoplay; encrypted-media"
+					allowFullScreen
+				/>
+			</div>
+		);
+	}
+
+	return (
+		<div>
+			<iframe
+				id="youtube-player"
+				className="w-full"
+				style={{ aspectRatio: "16/9", pointerEvents: "none" }}
+				src={src}
+				allow="autoplay; encrypted-media"
+				allowFullScreen
+			/>
+			{showMeta && (
+				<div className="mt-2 divide-y">
+					<div className="flex items-center justify-between gap-2 py-2 px-4">
+						<span>Start</span>
+						<span>{window.toHms?.(cropRef.current[0])}</span>
+					</div>
+					<div className="flex items-center justify-between gap-2 py-2 px-4">
+						<span>End</span>
+						<span>{window.toHms?.(cropRef.current[1])}</span>
+					</div>
+				</div>
+			)}
+		</div>
+	);
+}
+
+const loadYoutubeVideo = (id) =>
+	new Promise((resolve) => {
+		const iframe = document.createElement("iframe");
+		iframe.src = `https://www.youtube-nocookie.com/embed/${id}?enablejsapi=1`;
+		iframe.style.cssText =
+			"position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;";
+		document.body.appendChild(iframe);
+
+		const init = () => {
+			new window.YT.Player(iframe, {
+				events: {
+					onReady: (e) => {
+						const player = e.target;
+						const duration = player.getDuration();
+						const title = player.getVideoData()?.title;
+						player.destroy();
+						iframe.remove();
+						resolve({ duration, title });
+					},
+				},
+			});
+		};
+
+		if (window.YT?.Player) {
+			init();
+		} else {
+			window.onYouTubeIframeAPIReady = init;
+			if (!document.querySelector("#yt-iframe-api-script")) {
+				const script = document.createElement("script");
+				script.id = "yt-iframe-api-script";
+				script.src = "https://www.youtube.com/iframe_api";
+				document.body.appendChild(script);
+			}
+		}
+	});
+
+export const youtubePlayer = (clip, options = {}) => {
+	const id = clip._id || clip.id;
+	const start = clip.start ?? clip.crop?.[0] ?? 0;
+	const end = clip.end ?? clip.crop?.[1] ?? clip.duration;
+	return <YoutubePlayer id={id} start={Number(start)} end={Number(end)} duration={clip.duration} {...options} />;
+};
+
+youtubePlayer.loadVideo = loadYoutubeVideo;
 
 export function list({ data, entryActions, entryAction } = {}) {
 	if (!data?.length) return null;

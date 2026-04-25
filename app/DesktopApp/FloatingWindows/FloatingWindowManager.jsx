@@ -1,18 +1,55 @@
-import { useDataLoader, useEventListener } from "@/crotchet/hooks";
+import { useEventListener } from "@/crotchet/hooks";
 import {
-	dispatch,
 	extractHtmlFromComponent,
 	hideApp,
+	openRemotePageController,
 	randomId,
 } from "@/crotchet/utils";
 
 export default function FloatingWindowManager() {
-	useDataLoader({
-		handler: async () => {
-			return window.floatingWindows;
-		},
-		listenForUpdates: "floating-windows-updated",
-	});
+	const setupRemote = (page) => {
+		const _id = page._id;
+		const pageActions =
+			typeof page.actions == "function"
+				? page.actions({}, true)
+				: page.actions || [];
+
+		const actionNames = pageActions.reduce((agg, action) => {
+			if (action.label && action.remote)
+				agg.push({
+					..._.pick(action, ["id", "label", "shortLabel", "shortcut"]),
+					pageId: _id,
+					icon: action.icon
+						? extractHtmlFromComponent(action.icon)
+						: null,
+				});
+			return agg;
+		}, []);
+
+		window.dispatch("socket-broadcast", {
+			event: !actionNames.length
+				? "remote-page-closed"
+				: "remote-page-changed",
+			payload: {
+				page: {
+					_id,
+					floating: true,
+					...(page.image || page.video
+						? {
+								preview: {
+									image: page.image || page.video,
+									video: page.video,
+								},
+						  }
+						: {}),
+					title: page.title,
+					actions: actionNames,
+				},
+			},
+		});
+
+		if (actionNames.length) setTimeout(() => openRemotePageController(_id), 10);
+	};
 
 	window.openFloatingWindow = (page) => {
 		hideApp();
@@ -20,23 +57,24 @@ export default function FloatingWindowManager() {
 		const pageId = page.id || randomId("floatingWindowPage");
 		if (!window.floatingWindows) window.floatingWindows = {};
 
-		window.floatingWindows[pageId] = {
-			...page,
-			_id: pageId,
-		};
-
-		dispatch("floating-windows-updated");
+		window.floatingWindows[pageId] = { ...page, _id: pageId };
 
 		window.socketEmit("open-floating-window", {
 			_id: pageId,
-			externalAssets: page.externalAssets,
+			url: page.url,
+			data: page.data,
 			window: page.window,
 		});
+
+		// For URL-based windows, set up remote immediately (no init signal)
+		if (page.url) setupRemote({ ...page, _id: pageId });
 	};
 
 	useEventListener("floating-window-action", (__, { _id, action }) => {
 		if (action == "init") {
-			const page = window.floatingWindows[_id];
+			const page = window.floatingWindows?.[_id];
+			if (!page) return;
+
 			const content =
 				typeof page.content == "function"
 					? page.content()
@@ -54,51 +92,7 @@ export default function FloatingWindowManager() {
 			});
 
 			setTimeout(() => {
-				const actionNames = (page.actions || []).reduce(
-					(agg, action) => {
-						if (action.label && action.remote)
-							agg.push({
-								..._.pick(action, [
-									"id",
-									"label",
-									"shortLabel",
-									"shortcut",
-								]),
-								// ...action,
-								pageId: _id,
-								icon: action.icon
-									? extractHtmlFromComponent(action.icon)
-									: null,
-							});
-						return agg;
-					},
-					[]
-				);
-
-				const payload = {
-					event: !actionNames.length
-						? "remote-page-closed"
-						: "remote-page-changed",
-					payload: {
-						page: {
-							_id,
-							floating: true,
-							...(page.image || page.video
-								? {
-										preview: {
-											image: page.image || page.video,
-											video: page.video,
-										},
-								  }
-								: {}),
-							title: page.title,
-							actions: actionNames,
-						},
-					},
-				};
-
-				window.dispatch("socket-broadcast", payload);
-
+				setupRemote(page);
 				setTimeout(() => {
 					if (typeof page.onEvent == "function")
 						page.onEvent("ready", page);
@@ -107,15 +101,22 @@ export default function FloatingWindowManager() {
 		}
 
 		if (action == "close") {
+			if (window.floatingWindows) delete window.floatingWindows[_id];
 			window.dispatch("socket-broadcast", {
 				event: "remote-page-closed",
-				payload: {
-					page: {
-						_id,
-					},
-				},
+				payload: { page: { _id } },
 			});
 		}
+	});
+
+	// Forward youtube-clip-action events to the floating YouTube window
+	useEventListener("youtube-clip-action", (__, { action }) => {
+		if (!window.floatingWindows?.floatingYoutubeClip) return;
+		window.socketEmit("floating-window-event", {
+			_id: "floatingYoutubeClip",
+			action: "crotchet-action",
+			data: { action },
+		});
 	});
 
 	return null;
