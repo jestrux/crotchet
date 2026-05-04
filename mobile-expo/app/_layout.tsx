@@ -1,40 +1,24 @@
-import "../global.css";
+import '../global.css';
 
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { ThemeProvider, NativeTheme, useTheme } from '@/components/theming';
-import { AppProvider } from '@/providers/AppProvider';
-import { getThemeColors } from '@/components/screenOptions';
-
-function ThemedRootStack() {
-  const { colorScheme } = useTheme();
-  const colors = getThemeColors(colorScheme as 'light' | 'dark');
-
-  return (
-    <AppProvider>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: {
-            backgroundColor: colors.backgroundColor,
-          },
-        }}
-      >
-        <Stack.Screen name="index" />
-      </Stack>
-      <StatusBar style="auto" />
-    </AppProvider>
-  );
-}
+import { ThemeProvider } from '@/components/theming';
 
 export default function RootLayout() {
   return (
-    <ThemeProvider defaultTheme="system">
-      <NativeTheme>
-        <ThemedRootStack />
-      </NativeTheme>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <ThemeProvider defaultTheme="system">
+          <Stack>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+          </Stack>
+          <StatusBar style="auto" />
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

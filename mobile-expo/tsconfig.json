@@ -4,9 +4,7 @@
     "strict": true,
     "jsxImportSource": "nativewind",
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     }
   },
   "include": [
