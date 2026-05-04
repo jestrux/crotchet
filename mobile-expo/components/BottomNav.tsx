@@ -28,7 +28,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from './theming';
 
 const NAV_HEIGHT = 64;
-const PILL_HEIGHT = 42;
+const PILL_HEIGHT = 48;
 const TIMING = { duration: 280, easing: Easing.out(Easing.cubic) };
 
 const hexToRgba = (hex: string, alpha: number) => {
@@ -123,7 +123,7 @@ export function BottomNav() {
   const safeBottom = insets.bottom * 0.6;
   const INSET_BOTTOM = NAV_HEIGHT + safeBottom;
   const COLLAPSED_Y = screenHeight - INSET_BOTTOM;
-  const EXPANDED_Y = screenHeight * 0.35;
+  const EXPANDED_Y = screenHeight * 0.25;
 
   const translateY = useSharedValue(COLLAPSED_Y);
   const isExpandedSV = useSharedValue(false);
@@ -158,6 +158,7 @@ export function BottomNav() {
     inputRef.current?.blur();
     setSearchQuery('');
   }, [COLLAPSED_Y, defaultContentOpacity, isExpandedOpacity, isExpandedSV, translateY]);
+
 
   const refocusInput = useCallback(() => {
     setTimeout(() => inputRef.current?.focus(), 300);
@@ -197,12 +198,19 @@ export function BottomNav() {
       }
     });
 
+  const mountExpanded = useCallback(() => setExpanded(true), []);
+
   const panGesture = Gesture.Pan()
     .simultaneousWithExternalGesture(listGestureRef)
     .onUpdate((e) => {
       // When expanded, only allow downward drag (collapsing direction).
       // Upward drag belongs to the scroll list — return so we don't consume the touch.
       if (isExpandedSV.value && e.translationY <= 0) return;
+
+      // Mount expanded content immediately on first upward drag
+      if (!isExpandedSV.value && e.translationY < 0) {
+        runOnJS(mountExpanded)();
+      }
 
       const base = isExpandedSV.value ? EXPANDED_Y : COLLAPSED_Y;
       translateY.value = Math.max(EXPANDED_Y, Math.min(COLLAPSED_Y, base + e.translationY));
@@ -231,35 +239,27 @@ export function BottomNav() {
     borderTopRightRadius: interpolate(translateY.value, [EXPANDED_Y, COLLAPSED_Y], [32, 0], Extrapolation.CLAMP),
   }));
 
+  const panelBgAnimStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(translateY.value, [COLLAPSED_Y - 10, COLLAPSED_Y], [1, 0], Extrapolation.CLAMP),
+  }));
+
   const backdropAnimStyle = useAnimatedStyle(() => ({
     opacity: interpolate(translateY.value, [EXPANDED_Y, COLLAPSED_Y], [1, 0], Extrapolation.CLAMP),
   }));
 
-  const pillAnimStyle = useAnimatedStyle(() => ({
-    opacity: 1 - isExpandedOpacity.value,
-  }));
-
   const searchAnimStyle = useAnimatedStyle(() => ({
-    opacity: isExpandedOpacity.value,
+    opacity: interpolate(translateY.value, [COLLAPSED_Y, COLLAPSED_Y - 10], [0, 1], Extrapolation.CLAMP),
   }));
 
   const defaultContentStyle = useAnimatedStyle(() => ({
     opacity: defaultContentOpacity.value,
   }));
 
-  const bg = isDark ? 'rgba(20,20,20,0.97)' : 'rgba(245,245,244,0.97)';
-  const pillBg = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-  const pillBorder = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
-  const iconColor = isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)';
-  const textColor = isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)';
-  const placeholderColor = isDark ? '#737373' : '#a3a3a3';
-  const borderColor = isDark ? 'rgba(255,255,255,0.12)' : '#e5e5e5';
-  const inputBg = isDark ? 'rgba(255,255,255,0.05)' : '#ffffff';
-  const backdropBg = isDark ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.2)';
-  const chipBg = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)';
-  const actionIconBg = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
-  const sectionLabelColor = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)';
   const pillContainerHeight = Math.round(INSET_BOTTOM);
+  const bg = isDark ? 'rgba(20,20,20,0.97)' : 'rgba(245,245,244,0.97)';
+  const backdropBg = isDark ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.2)';
+  const iconColor = isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)';
+  const placeholderColor = isDark ? '#737373' : '#a3a3a3';
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
@@ -274,41 +274,38 @@ export function BottomNav() {
       {/* Panel */}
       <Animated.View
         style={[
-          { position: 'absolute', top: 0, left: 0, right: 0, height: screenHeight, backgroundColor: bg },
+          { position: 'absolute', top: 0, left: 0, right: 0, height: screenHeight, overflow: 'hidden' },
           panelAnimStyle,
         ]}
         pointerEvents="box-none"
       >
+        <Animated.View style={[StyleSheet.absoluteFillObject, { backgroundColor: bg }, panelBgAnimStyle]} pointerEvents="none" />
         {/* Draggable header — GestureDetector only here, not over the scroll list */}
         <GestureDetector gesture={panGesture}>
           <View pointerEvents="box-none">
-            {/* Pill — absolute at top of panel, visible when collapsed */}
-            <Animated.View
-              style={[
-                styles.pillWrap,
-                { position: 'absolute', top: 0, height: pillContainerHeight, backgroundColor: 'transparent' },
-                pillAnimStyle,
-              ]}
+            {/* Pill — invisible touch target when collapsed */}
+            <View
+              style={[styles.pillWrap, { position: 'absolute', top: 0, height: pillContainerHeight, backgroundColor: 'transparent' }]}
               pointerEvents={expanded ? 'none' : 'auto'}
             >
-              <View style={{ width: '100%', maxWidth: 384, paddingHorizontal: 8, paddingTop: (NAV_HEIGHT - PILL_HEIGHT) / 2 }}>
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={expand}
-                  style={[styles.pill, { backgroundColor: pillBg, borderColor: pillBorder }]}
-                >
-                  <Ionicons name="search" size={18} color={iconColor} style={{ opacity: 0.5 }} />
-                  <Text style={[styles.pillLabel, { color: iconColor, opacity: 0.5 }]}>Search</Text>
-                </TouchableOpacity>
-              </View>
-            </Animated.View>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={expand}
+                style={{ width: '100%', padding: 12, paddingBottom: 0 }}
+              >
+                <View style={[styles.pill, { opacity: 0 }]} className="bg-white dark:bg-white/5">
+                  <Ionicons name="search" size={20} color={iconColor} />
+                  <Text style={styles.pillLabel} className="text-foreground">Search</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
 
             {/* Search input — fades in as panel expands */}
             <Animated.View
               style={[{ padding: 12, paddingBottom: 0 }, searchAnimStyle]}
               pointerEvents={expanded ? 'auto' : 'none'}
             >
-              <View style={[styles.inputRow, { borderColor, backgroundColor: inputBg }]}>
+              <View style={styles.inputRow} className="bg-white dark:bg-white/5">
                 <View style={styles.searchIconWrap}>
                   <Ionicons name="search" size={20} color={iconColor} style={{ opacity: 0.5 }} />
                 </View>
@@ -322,8 +319,10 @@ export function BottomNav() {
                   }}
                   placeholder="Search..."
                   placeholderTextColor={placeholderColor}
-                  style={[styles.input, { color: textColor }]}
+                  style={styles.input}
+                  className="text-foreground/80"
                   returnKeyType="search"
+                  onSubmitEditing={() => { if (!searchQuery.length) collapse(); }}
                 />
 
                 {searchQuery.length > 0 && (
@@ -374,12 +373,13 @@ export function BottomNav() {
                           <TouchableOpacity
                             key={action.id}
                             activeOpacity={0.7}
-                            style={[styles.quickActionChip, { backgroundColor: chipBg }]}
+                            style={styles.quickActionChip}
+                            className="bg-foreground/[0.04]"
                           >
                             <View style={[styles.quickActionIconBox, { backgroundColor: hexToRgba(action.color, 0.1), borderColor: hexToRgba(action.color, 0.08) }]}>
                               <Ionicons name={action.icon} size={16} color={color} />
                             </View>
-                            <Text style={[styles.quickActionChipLabel, { color: textColor }]}>{action.label}</Text>
+                            <Text style={styles.quickActionChipLabel} className="text-foreground/80">{action.label}</Text>
                           </TouchableOpacity>
                         );
                       })}
@@ -389,17 +389,17 @@ export function BottomNav() {
               }
               renderSectionHeader={({ section }) => (
                 <View style={styles.sectionHeader}>
-                  <Text style={[styles.sectionHeaderText, { color: sectionLabelColor }]}>
+                  <Text style={styles.sectionHeaderText} className="text-foreground/30">
                     {section.title}
                   </Text>
                 </View>
               )}
               renderItem={({ item }) => (
                 <TouchableOpacity activeOpacity={0.6} style={styles.actionRow}>
-                  <View style={[styles.actionIconWrap, { backgroundColor: actionIconBg }]}>
+                  <View style={styles.actionIconWrap} className="bg-foreground/[0.05]">
                     <Ionicons name={item.icon} size={18} color={iconColor} style={{ opacity: 0.8 }} />
                   </View>
-                  <Text style={[styles.actionLabel, { color: textColor }]}>{item.label}</Text>
+                  <Text style={styles.actionLabel} className="text-foreground/80">{item.label}</Text>
                 </TouchableOpacity>
               )}
             />
@@ -456,11 +456,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderRadius: 999,
-    paddingHorizontal: 32,
+    paddingHorizontal: 16,
   },
   pillLabel: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '600',
   },
   quickActionsWrap: {
     flexDirection: 'row',
@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
   quickActionChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 4,
     borderRadius: 12,
     paddingRight: 12,
     overflow: 'hidden',
@@ -479,6 +479,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     margin: 4,
+    marginRight: 0,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',

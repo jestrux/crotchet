@@ -1,5 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { ImageBackground, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { ImageBackground, StyleSheet, View } from 'react-native';
+import Animated, { useAnimatedStyle, SharedValue } from 'react-native-reanimated';
 import { useTheme } from './theming';
 
 const LIGHT_WALLPAPER =
@@ -7,57 +8,54 @@ const LIGHT_WALLPAPER =
 const DARK_WALLPAPER =
   'https://images.unsplash.com/photo-1622482607282-fffed5a93942?q=80&w=985&auto=format&fit=crop';
 
-export function WallpaperBackground({ wallpaper }: { wallpaper: string }) {
+const WALLPAPER_HEIGHT = 380;
+// Horizontal padding of the ScrollView content — we negate it to go full-bleed
+const H_PADDING = 16;
+
+export function WallpaperBackground({ wallpaper, scrollY }: { wallpaper: string; scrollY: SharedValue<number> }) {
   const { colorScheme } = useTheme();
-  const { height } = useWindowDimensions();
+  const isDark = colorScheme === 'dark';
+
+  const imageAnimStyle = useAnimatedStyle(() => {
+    if (scrollY.value >= 0) return {};
+    const pull = -scrollY.value;
+    const dampened = pull / (1 + pull / WALLPAPER_HEIGHT);
+    const scale = 1 + dampened / WALLPAPER_HEIGHT;
+    // translateY cancels the native bounce displacement so the image stays pinned
+    return { transform: [{ translateY: scrollY.value }, { scale }] };
+  });
 
   if (wallpaper === 'none') return null;
 
   const uri =
-    wallpaper === 'auto'
-      ? colorScheme === 'dark'
-        ? DARK_WALLPAPER
-        : LIGHT_WALLPAPER
-      : wallpaper;
+    wallpaper === 'auto' ? (isDark ? DARK_WALLPAPER : LIGHT_WALLPAPER) : wallpaper;
 
-  if (colorScheme === 'light') {
-    // Bottom half only — fade in from top edge, fade out at bottom
-    return (
-      <View
-        pointerEvents="none"
-        style={[StyleSheet.absoluteFillObject, { top: height / 2 }]}
-      >
+  return (
+    <View
+      pointerEvents="none"
+      style={{
+        height: WALLPAPER_HEIGHT,
+        marginHorizontal: -H_PADDING,
+        marginBottom: -(WALLPAPER_HEIGHT - 140),
+      }}
+    >
+      <Animated.View style={[StyleSheet.absoluteFillObject, imageAnimStyle]}>
         <ImageBackground
           source={{ uri }}
           style={StyleSheet.absoluteFillObject}
           imageStyle={{ resizeMode: 'cover' }}
-          blurRadius={30}
         >
-          <LinearGradient
-            colors={['rgba(240,240,240,1)', 'rgba(240,240,240,0)', 'rgba(240,240,240,0.6)']}
-            locations={[0, 0.3, 1]}
+          {/* <LinearGradient
+            colors={
+              isDark
+                ? ['transparent', 'transparent', 'rgba(10,10,10,0.6)']
+                : ['transparent', 'transparent', '#d6d3d1']
+            }
+            locations={[0, 0.6, 0.8]}
             style={StyleSheet.absoluteFillObject}
-          />
+          /> */}
         </ImageBackground>
-      </View>
-    );
-  }
-
-  // Dark — full screen, fade in from top, fade out at bottom
-  return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
-      <ImageBackground
-        source={{ uri }}
-        style={StyleSheet.absoluteFillObject}
-        imageStyle={{ resizeMode: 'cover' }}
-        blurRadius={12}
-      >
-        <LinearGradient
-          colors={['rgba(0,0,0,1)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.9)']}
-          locations={[0, 0.25, 1]}
-          style={StyleSheet.absoluteFillObject}
-        />
-      </ImageBackground>
+      </Animated.View>
     </View>
   );
 }
