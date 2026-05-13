@@ -1,4 +1,5 @@
 import '../global.css';
+import '../lib/firebase-sync'; // bootstraps extension sync as a side effect
 
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -15,6 +16,7 @@ export default function RootLayout() {
         <ThemeProvider defaultTheme="system">
           <Stack>
             <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="extensions" options={{ headerShown: false }} />
           </Stack>
           <StatusBar style="auto" />
         </ThemeProvider>

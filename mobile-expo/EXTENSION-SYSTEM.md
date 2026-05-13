@@ -181,7 +181,7 @@ Each phase ships something you can see and interact with. Phases are small by de
 
 ---
 
-### Phase 1 — Extensions page
+### Phase 1 — Extensions page ✅
 
 **Ship:** A dedicated Extensions screen. On first launch, extensions are fetched from Firebase and stored locally. After that, they load from local storage — Firebase is only hit when you explicitly update.
 
@@ -320,8 +320,12 @@ Each phase ships something you can see and interact with. Phases are small by de
 **Ship:** Firestore-backed data sources register and read data.
 
 **Build:**
-- `global.registerDataSource("db", name, config)` — wraps a Firestore collection
-- `global.queryDb(table, opts)` — Firestore query helper
+- `lib/db.ts` — shared Firestore path helper: all tables live at `__db/{table}/data`. Centralises this so nothing else needs to know the path structure:
+  ```ts
+  export const dbPath = (table: string) => ['__db', table, 'data'] as const;
+  ```
+- `global.registerDataSource("db", name, config)` — wraps a Firestore collection via `dbPath`
+- `global.queryDb(table, opts)` — Firestore query helper using `dbPath`
 - `global.dataSources[name].latest()` — most recent N rows
 
 **Verify:** (`youtubeClips.ts`, `watchlist.ts`, `reader.ts` — all use `registerDataSource("db", ...)`)

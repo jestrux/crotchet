@@ -25,6 +25,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector, NativeViewGestureHandler } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { useTheme } from './theming';
 
 const NAV_HEIGHT = 64;
@@ -52,10 +53,15 @@ type ActionItem = {
   icon: React.ComponentProps<typeof Ionicons>['name'];
 };
 
+const NAV_ROUTES: Record<string, string> = {
+  extensions: '/extensions',
+};
+
 const ACTION_SECTIONS: { title: string; data: ActionItem[] }[] = [
   {
     title: 'Customize',
     data: [
+      { id: 'extensions', label: 'Extensions', icon: 'puzzle-outline' },
       { id: 'home-page', label: 'Home Page', icon: 'home-outline' },
       { id: 'pinned-actions', label: 'Pinned Actions', icon: 'star-outline' },
       { id: 'navbar', label: 'Navbar', icon: 'menu-outline' },
@@ -111,6 +117,7 @@ function KeyboardPlaceholder() {
 }
 
 export function BottomNav() {
+  const router = useRouter();
   const { colorScheme } = useTheme();
   const insets = useSafeAreaInsets();
   const { height: screenHeight } = useWindowDimensions();
@@ -395,7 +402,17 @@ export function BottomNav() {
                 </View>
               )}
               renderItem={({ item }) => (
-                <TouchableOpacity activeOpacity={0.6} style={styles.actionRow}>
+                <TouchableOpacity
+                  activeOpacity={0.6}
+                  style={styles.actionRow}
+                  onPress={() => {
+                    const route = NAV_ROUTES[item.id];
+                    if (route) {
+                      collapse();
+                      router.push(route as any);
+                    }
+                  }}
+                >
                   <View style={styles.actionIconWrap} className="bg-foreground/[0.05]">
                     <Ionicons name={item.icon} size={18} color={iconColor} style={{ opacity: 0.8 }} />
                   </View>
