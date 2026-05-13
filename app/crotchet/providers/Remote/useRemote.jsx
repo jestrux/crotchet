@@ -20,7 +20,15 @@ export default function useRemote() {
 		listenForUpdates: "remote-updated",
 	});
 
-	const onAction = (action, page) =>
+	const onAction = (action, page) => {
+		if (typeof action.handler === "function") return action.handler();
+		if (page._id === "tv-remote") {
+			window.socketEmit("broadcast", {
+				event: "tv-remote-action",
+				payload: { action: action.id },
+			});
+			return;
+		}
 		window.socketEmit("emit", {
 			event: "remote-action",
 			payload: {
@@ -30,6 +38,7 @@ export default function useRemote() {
 				...action,
 			},
 		});
+	};
 
 	const openController = () => {
 		window.openActionSheet({

@@ -72,5 +72,17 @@ var YoutubePlayer = (function () {
     },
   });
 
-  return player;
+  function handleRemoteAction(action) {
+    if (action === 'skip-back')    { player.seek(-10); return; }
+    if (action === 'skip-forward') { player.seek(10);  return; }
+    if (action === 'restart')      { video.currentTime = cropOn() && cropStart ? cropStart : 0; video.play(); return; }
+    if (action === 'toggle-crop')  {
+      var turningOn = cropBtn && cropBtn.dataset.crop !== 'on';
+      if (cropBtn) cropBtn.dataset.crop = turningOn ? 'on' : 'off';
+      video.currentTime = turningOn ? cropStart : 0;
+      video.play();
+    }
+  }
+
+  return Object.assign({}, player, { handleRemoteAction: handleRemoteAction });
 })();

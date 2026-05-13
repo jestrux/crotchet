@@ -39,6 +39,9 @@
       }
     });
 
+    Store.onPlayOnTv(function (item) { Router.go('youtubePlayer', item); });
+    Store.onTvRemoteAction(function (data) { YoutubePlayer.handleRemoteAction(data.action); });
+
     Router.init();
     Nav.init();
     Home.init();

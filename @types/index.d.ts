@@ -364,6 +364,7 @@ declare var PageType: "search" | "preview" | "detail" | "form";
 declare var Page: {
 	listenForUpdates?: typeof ListenForUpdates;
 	external?: boolean | null;
+	target?: "tv" | "pip";
 	type?: typeof PageType | ((payload: typeof PageContext) => typeof PageType);
 	resolve?: Function;
 	title?: typeof PageTitle;

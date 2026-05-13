@@ -18,6 +18,16 @@ export default function RemoteController({ flat = false, onClose }) {
 		if (activePage.floating)
 			return window.closeFloatingWindow(activePage._id);
 
+		// TV remote page isn't in the desktop page stack,
+		// so broadcast directly without routing through desktop
+		if (activePage._id === "tv-remote") {
+			window.socketEmit("broadcast", {
+				event: "remote-page-closed",
+				payload: { page: { _id: activePage._id } },
+			});
+			return;
+		}
+
 		window.socketEmit("close-page", {
 			pageId: activePage._id,
 		});

@@ -2,7 +2,9 @@ import { useEventListener, useKeyDetector, useOnInit } from "@/crotchet/hooks";
 import {
 	camelCaseToSentenceCase,
 	dispatch,
+	extractHtmlFromComponent,
 	onDesktop,
+	openRemotePageController,
 	randomId,
 } from "@/crotchet/utils";
 import { useState } from "react";
@@ -60,6 +62,45 @@ export default function useAppPages() {
 
 	const pushPage = (page) => {
 		const [newPage, resolver] = getNewPage(page);
+
+		if (page.target === "pip") return pushPage({ ...page, external: true, target: null });
+
+		if (page.target === "tv") {
+			const rawActions = typeof page.actions === "function" ? page.actions() : (page.actions || []);
+			const actionNames = rawActions.reduce((agg, action) => {
+				if (action.label && action.remote) {
+					agg.push({
+						id: action.id,
+						label: action.label,
+						shortLabel: action.shortLabel,
+						pageId: "tv-remote",
+						icon: action.icon ? extractHtmlFromComponent(action.icon) : null,
+					});
+				}
+				return agg;
+			}, []);
+
+			if (page.payload) {
+				dispatch("socket-broadcast", { event: "play-on-tv", payload: page.payload });
+			}
+
+			dispatch("socket-broadcast", {
+				event: actionNames.length ? "remote-page-changed" : "remote-page-closed",
+				payload: {
+					page: {
+						_id: "tv-remote",
+						title: page.title,
+						...(page.image || page.video
+							? { preview: { image: page.image || page.video } }
+							: {}),
+						actions: actionNames,
+					},
+				},
+			});
+
+			if (actionNames.length) setTimeout(() => openRemotePageController("tv-remote"), 10);
+			return;
+		}
 
 		if (page.external) return window.openFloatingWindow(page);
 

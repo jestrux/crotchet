@@ -1,0 +1,455 @@
+# Extension System — mobile-expo
+
+How the crotchet extension system works on Expo, from runtime to developer experience.
+
+---
+
+## Overview
+
+Extensions are single `.ts` files that call global registration functions (`registerAction`, `registerWidget`, etc.) as side effects. The runtime populates these globals before any extension runs, so extensions work identically across desktop (Electron) and mobile (Expo/Hermes).
+
+- **Built-in extensions** — bundled statically, imported at app startup
+- **User-installed extensions** — fetched from public gists, stored in Firebase, loaded dynamically
+- **Dev mode** — desktop edits sync to Firebase (`__crotchetExtensions`), mobile picks up changes in real time
+- **Prod mode** — built-ins load from bundle; user-installed load from Firebase on startup with an update button per extension
+
+---
+
+## Monorepo structure
+
+Extensions live once in `desktop/extensions/` and are shared across platforms:
+
+```
+crotchet/
+  desktop/extensions/        <- source of truth for all extensions
+    spotify.ts
+    unsplash.ts
+    youtubeClips.ts
+    watchlist.ts
+    reader.ts
+    text-to-qr.ts
+    __crotchet.ts
+  mobile-expo/
+    lib/
+      runtime.ts             <- global API surface (registerAction, openPage, etc.)
+      registry.ts            <- Zustand store (actions, widgets, pages, dataSources)
+      extension-loader.ts    <- loads + executes extension source strings
+      firebase-sync.ts       <- Firebase listener for dev hot-reload + installed extensions
+    extensions/
+      index.ts               <- imports all built-ins at startup
+```
+
+---
+
+## How extensions execute
+
+**Desktop:** raw `.ts` source is injected as a `<script>` tag; globals come from `window`.
+
+**Mobile:** globals are set on `global` before execution, then extension source runs via `new Function()`:
+
+```ts
+// Before any extension runs:
+global.registerAction = runtime.registerAction;
+global.registerWidget = runtime.registerWidget;
+global.openPage = runtime.openPage;
+// ... all other globals
+
+// Execute extension:
+const fn = new Function(source);
+fn();
+```
+
+The `import "../../@types/index"` line at the top of each extension is stripped before execution (same trick the desktop uses). The rest runs unchanged.
+
+---
+
+## Developer experience
+
+The `@types/index.d.ts` file at the monorepo root is the SDK — it provides ambient TypeScript declarations for all globals. Any `.ts` file in a project that references it gets full autocomplete with no imports needed.
+
+To develop an extension:
+1. Add a `.ts` file to `desktop/extensions/`
+2. The desktop app picks it up from the filesystem immediately
+3. The desktop syncs the source to Firebase (`__crotchetExtensions`)
+4. The mobile app (in dev mode) receives the update via Firebase listener and re-executes the extension
+5. Publish by pushing to a public gist — users install via URL paste or QR scan
+
+---
+
+## API surface
+
+### Registration
+| API | Status |
+|---|---|
+| `registerAction(name, config)` | Phase 1 |
+| `registerWidget(name, config)` | Phase 1 |
+| `registerDataSource(type, name, config)` | Phase 2 |
+| `registerSection(name, config)` | Phase 3 |
+
+### Navigation
+| API | Status |
+|---|---|
+| `openPage(props)` | Phase 1 |
+| `openActionSheet(props)` | Phase 1 |
+| `openForm(props)` | Phase 2 |
+| `openAlertForm(props)` | Phase 2 |
+| `openChoicePicker(choices)` | Phase 3 |
+| `closePage()` | Phase 3 |
+
+### Data / Database
+| API | Status |
+|---|---|
+| `sourceGet(source, opts)` | Phase 1 (handler variant), Phase 2 (named sources) |
+| `queryDb(table, opts)` | Phase 2 |
+| `dataSources.x.insertRow()` | Phase 2 |
+| `dataSources.x.updateRow()` | Phase 2 |
+| `dataSources.x.deleteRow()` | Phase 2 |
+| `dataSources.x.latest()` | Phase 2 |
+
+### Auth / Tokens / Storage
+| API | Status |
+|---|---|
+| `oauth(props)` | Phase 1 — expo-auth-session |
+| `getToken(key)` / `saveToken(key, val)` | Phase 1 — expo-secure-store |
+| `getPreference(key)` / `savePreference(key, val)` | Phase 1 — AsyncStorage |
+| `withCache(name, fn)` | Phase 1 — AsyncStorage |
+
+### Network
+| API | Status |
+|---|---|
+| `crawlUrl(url, opts)` | Phase 2 — fetch + og:meta parse |
+| `readNetworkFile(url)` | Phase 4 |
+| `uploadStringAsFile(data, opts)` | Phase 4 |
+| `scanNetwork()` | Phase 4 |
+
+### Clipboard / Share
+| API | Status |
+|---|---|
+| `readClipboard()` | Phase 2 — expo-clipboard |
+| `copyToClipboard(text)` | Phase 2 — expo-clipboard |
+| `copyImage(url)` | Phase 4 — expo-media-library |
+| `shareImage(url)` | Phase 4 — expo-sharing |
+| `processShareData(val, type)` | Phase 2 |
+| `scanQRCode()` | Phase 3 — expo-camera |
+
+### Events / Remote
+| API | Status |
+|---|---|
+| `dispatch(event, payload)` | Phase 1 — local event emitter |
+| `socketEmit(event, payload)` | Phase 3 — existing socket bridge |
+
+### Media / AI
+| API | Status |
+|---|---|
+| `playMedia(media)` | Phase 1 — expo-av |
+| `promptAI(prompt, opts)` | Phase 1 — Claude API |
+| `UI.youtubePlayer` | Phase 3 — expo-av + WebView |
+
+### UI Components
+| API | Status |
+|---|---|
+| `UI.svg(path, opts)` | Phase 1 — react-native-svg |
+| `UI.icon(name)` | Phase 1 — Ionicons |
+| `UI.list` | Phase 1 — FlatList renderer |
+| `UI.media` | Phase 1 — image + gradient overlay |
+| `UI.grid` | Phase 2 — grid FlatList renderer |
+| `UI.component` | **Not ported** — no-op, extensions that call it render nothing for that slot |
+
+### Utilities
+| API | Status |
+|---|---|
+| `showToast(msg)` | Phase 1 |
+| `openUrl(url)` | Phase 1 — Linking |
+| `withLoader(action, opts)` | Phase 2 |
+| `confirmDangerousAction()` | Phase 2 — Alert |
+| `onDesktop()` | Phase 1 — always false |
+| `random(arr)`, `shuffle(arr)` | Phase 1 |
+| `someTime(ms)`, `randomId()` | Phase 1 |
+| `toHms(s)`, `formatDate(d)` | Phase 1 |
+| `objectToQueryParams(obj)` | Phase 1 |
+| `camelCaseToSentenceCase(str)` | Phase 1 |
+| `isValidUrl(str)` | Phase 1 |
+| `_` (lodash) | Phase 1 — exposed as global |
+| `moment` | Phase 3 — exposed as global |
+| `tinycolor` | Phase 4 — exposed as global |
+
+---
+
+## Phases
+
+Each phase ships something you can see and interact with. Phases are small by design — fast turnaround, real feedback.
+
+---
+
+### Phase 1 — Extensions page
+
+**Ship:** A dedicated Extensions screen. On first launch, extensions are fetched from Firebase and stored locally. After that, they load from local storage — Firebase is only hit when you explicitly update.
+
+**Build:**
+- `lib/registry.ts` — Zustand store with `extensions` map: `{ name, source, installedAt, updatedAt }`
+- `lib/firebase-sync.ts` — two modes:
+  - **Prod**: one-time fetch from `__crotchetExtensions` on first launch (no extensions in AsyncStorage yet), persists to AsyncStorage; subsequent launches load from AsyncStorage
+  - **`__DEV__` only**: real-time Firestore listener for hot-reload while actively developing
+- Extensions screen (reachable from BottomNav or settings) — flat list showing `@name`, `@description`, `@icon`, `@version` parsed from the top comment block of each extension source; each row has an **Update** button that re-fetches that extension from Firebase on demand
+
+**Verify:** (all extensions — `spotify.ts`, `unsplash.ts`, `youtubeClips.ts`, `watchlist.ts`, `reader.ts`, `text-to-qr.ts`, `__crotchet.ts`)
+- [ ] First launch: spinner appears briefly, then extensions list populates
+- [ ] Subsequent launches: list appears instantly from local storage (no network)
+- [ ] Each row shows the extension name, icon, description, and version from its comment block
+- [ ] Tapping Update on a row re-fetches that extension from Firebase
+- [ ] In `__DEV__`: editing an extension on desktop and saving it syncs to the list in real time
+
+---
+
+### Phase 2 — registerAction → BottomNav
+
+**Ship:** Extensions execute. Registered actions appear in the BottomNav even though tapping them does nothing yet.
+
+**Build:**
+- `lib/extension-loader.ts` — strips import line, executes each extension source via `new Function()` with a stubbed `global`
+- `global.registerAction` stub — pushes `{ name, label, icon }` into Zustand `actions` store
+- All other globals are no-ops at this stage
+- Wire BottomNav quick-action chips + section list to the `actions` store
+
+**Verify:** (`spotify.ts`, `unsplash.ts`, `reader.ts`, `watchlist.ts`, `youtubeClips.ts`)
+- [ ] BottomNav quick-action chips show real actions registered by extensions (Spotify, Reader, etc.)
+- [ ] BottomNav section list shows all registered actions grouped (not the hardcoded placeholders)
+- [ ] Tapping any action shows a "not yet implemented" toast
+- [ ] Search in BottomNav filters real registered actions
+
+---
+
+### Phase 3 — registerWidget → Home widgets
+
+**Ship:** Widgets from extensions render on the home screen.
+
+**Build:**
+- `global.registerWidget` stub — pushes widget config into Zustand `widgets` store
+- Home screen widget renderer — iterates registered widgets, renders based on `UI.list` or `UI.media` shape
+- `UI.list` renderer — `FlatList` with title/subtitle/icon rows
+- `UI.media` renderer — full-bleed image card with gradient overlay
+- `UI.svg`, `UI.icon` — `react-native-svg` + Ionicons wrappers
+- `UI.component` — no-op (returns null)
+
+**Verify:** (`spotify.ts` → `UI.list` widget, `unsplash.ts` → `UI.media` widget, `youtubeClips.ts` → `UI.list` widget)
+- [ ] Home screen shows widget shells registered by extensions (Spotify, Unsplash, youtubeClips)
+- [ ] Widgets render in registration order, replacing the hardcoded home screen placeholders
+- [ ] `UI.list` widget shows correct header icon + title, empty list body
+- [ ] `UI.media` widget shows correct aspect ratio card with gradient, no image yet
+
+---
+
+### Phase 4 — openPage
+
+**Ship:** Extensions can open pages. A page layer slides up with content.
+
+**Build:**
+- `components/PageLayer.tsx` — full-screen modal stack (React Navigation sheet or Reanimated bottom sheet)
+- `global.openPage({ title, handler, type })` — pushes a page onto the stack, calls `handler` to get the list/media data, renders it
+- `global.openActionSheet({ title, options })` — bottom sheet option picker (basic, no actions yet)
+- `global.closePage()` — pops the top page
+
+**Verify:** (`spotify.ts` → track list page, `unsplash.ts` → photo detail page, `reader.ts` → article list page)
+- [ ] Tapping a BottomNav action slides up a page modal
+- [ ] Page shows the title from the extension's `openPage` call
+- [ ] Empty list / error state renders gracefully when data isn't available yet
+- [ ] Back gesture or close button dismisses the page
+- [ ] Tapping an action sheet option logs to console (no-op is fine)
+
+---
+
+### Phase 5 — oauth + tokens
+
+**Ship:** OAuth flow works. Extensions can authenticate with external services.
+
+**Build:**
+- `global.oauth({ authUrl, tokenUrl, clientId, scopes, redirectUri })` — `expo-auth-session` PKCE flow
+- `global.getToken(key)` / `global.saveToken(key, val)` — `expo-secure-store`
+- `global.getPreference(key)` / `global.savePreference(key, val)` — `AsyncStorage`
+- `global.withCache(name, fn)` — `AsyncStorage` TTL cache
+
+**Verify:** (`spotify.ts` — only extension using `oauth` at this stage)
+- [ ] Tapping Spotify's "Connect" action opens a browser OAuth window
+- [ ] After authorizing, the browser closes and the app resumes
+- [ ] Tapping "Connect" again skips the browser (token already stored)
+- [ ] `getPreference` / `savePreference` round-trips correctly (can test with a debug log)
+
+---
+
+### Phase 6 — sourceGet + real data
+
+**Ship:** Extensions fetch real data. Spotify loads tracks. Unsplash loads photos.
+
+**Build:**
+- `global.sourceGet(source, opts)` — calls `source.handler(opts)`, returns data
+- `global.showToast(msg)` — toast notification
+- `global.openUrl(url)` — `Linking.openURL`
+- `global.dispatch(event, payload)` — local event emitter (`mitt`)
+- `global.onDesktop()` — always returns `false`
+- Utility globals: `random`, `shuffle`, `someTime`, `randomId`, `toHms`, `formatDate`, `objectToQueryParams`, `camelCaseToSentenceCase`, `isValidUrl`
+- `global._` — lodash
+
+**Verify:** (`spotify.ts` → tracks/playlists, `unsplash.ts` → photos via `sourceGet` handler)
+- [ ] Spotify widget populates with real tracks from your library
+- [ ] Unsplash widget shows a real photo with title + photographer name
+- [ ] Tapping a Spotify action opens a page with a real track list
+- [ ] Toast appears on `showToast` calls
+- [ ] `openUrl` opens a URL in the system browser
+
+---
+
+### Phase 7 — playMedia + keep-awake
+
+**Ship:** Audio plays. Screen stays on while Spotify is playing.
+
+**Build:**
+- `global.playMedia(media)` — `expo-av` Audio playback
+- `global.promptAI(prompt, opts)` — Claude API call (streaming optional)
+- `expo-keep-awake` — `activateKeepAwake` / `deactivateKeepAwake` based on Spotify `is_playing` state
+
+**Verify:** (`spotify.ts` — `playMedia` for preview clips, `promptAI` for AI track insights)
+- [ ] Tapping a track preview plays audio through the device speaker
+- [ ] Screen stays on while audio is playing, locks again after it stops
+- [ ] "Add AI insights" on a track returns a response from Claude
+- [ ] Killing and reopening the app resumes from the correct playback state
+
+---
+
+### Phase 8 — registerDataSource (db) + queryDb
+
+**Ship:** Firestore-backed data sources register and read data.
+
+**Build:**
+- `global.registerDataSource("db", name, config)` — wraps a Firestore collection
+- `global.queryDb(table, opts)` — Firestore query helper
+- `global.dataSources[name].latest()` — most recent N rows
+
+**Verify:** (`youtubeClips.ts`, `watchlist.ts`, `reader.ts` — all use `registerDataSource("db", ...)`)
+- [ ] Opening the youtubeClips page shows real clips from Firestore
+- [ ] Opening the watchlist page shows real titles from Firestore
+- [ ] Pulling to refresh (or tapping refresh) re-fetches from Firestore
+- [ ] Empty state renders correctly when the collection has no documents
+
+---
+
+### Phase 9 — CRUD operations
+
+**Ship:** Extensions can add, edit, and delete rows. Watchlist and reader are fully functional.
+
+**Build:**
+- `global.dataSources[name].insertRow(data)`
+- `global.dataSources[name].updateRow(id, data)`
+- `global.dataSources[name].deleteRow(id)`
+- `global.confirmDangerousAction()` — `Alert.alert` confirmation
+- `global.withLoader(action, opts)` — loading/success/error state wrapper
+
+**Verify:** (`watchlist.ts` → add/delete titles, `reader.ts` → add/delete bookmarks, `youtubeClips.ts` → add/delete clips)
+- [ ] Tapping "Add" in watchlist adds a row to Firestore and it appears in the list immediately
+- [ ] Tapping "Delete" shows a confirmation, then removes the row from Firestore and the list
+- [ ] Editing a row updates the Firestore document and the list reflects the change
+- [ ] `withLoader` shows a spinner during the async operation and a success state after
+
+---
+
+### Phase 10 — openForm + openAlertForm
+
+**Ship:** Extensions can present forms for user input.
+
+**Build:**
+- `global.openForm({ fields, onSubmit })` — modal form renderer (text, url, select field types)
+- `global.openAlertForm({ message, fields, onSubmit })` — inline alert-style form
+- `global.openChoicePicker(choices)` — bottom sheet choice list
+
+**Verify:** (`reader.ts` → `openForm` for adding URLs, `watchlist.ts` → `openAlertForm`, `youtubeClips.ts` → `openForm` for adding clips + `openChoicePicker` for quality selection)
+- [ ] "Add to watchlist" opens a form modal with the correct fields
+- [ ] Submitting the form saves the data and dismisses the modal
+- [ ] `openAlertForm` shows an inline alert with input fields
+- [ ] `openChoicePicker` shows a bottom sheet list; selecting an option returns the value to the extension
+
+---
+
+### Phase 11 — clipboard + crawlUrl
+
+**Ship:** Clipboard reads/writes work. URLs can be scraped for metadata.
+
+**Build:**
+- `global.readClipboard()` — `expo-clipboard`
+- `global.copyToClipboard(text)` — `expo-clipboard`
+- `global.processShareData(val, type)` — normalise clipboard/share payloads
+- `global.crawlUrl(url, opts)` — `fetch` + parse `og:` meta tags
+
+**Verify:** (`reader.ts` → `readClipboard`, `crawlUrl`, `processShareData`; `youtubeClips.ts` → `readClipboard` for pasting YouTube URLs)
+- [ ] "Add from clipboard" in reader reads a URL from the clipboard
+- [ ] Pasting a URL into reader's add form auto-fills the title and description via `crawlUrl`
+- [ ] `copyToClipboard` copies text and a toast confirms it
+- [ ] `processShareData` normalises a shared URL correctly
+
+---
+
+### Phase 12 — registerDataSource (custom) + sections
+
+**Ship:** Custom fetch-backed data sources work. Home page sections from extensions render.
+
+**Build:**
+- `global.registerDataSource("custom", name, config)` — arbitrary async fetch handler
+- `global.registerSection(name, config)` — home page section slots
+- Home screen section renderer — renders registered sections between fixed widgets
+
+**Verify:** (`unsplash.ts` → `registerDataSource("custom", ...)`, `youtubeClips.ts` + `reader.ts` → `registerSection`)
+- [ ] Unsplash widget loads a real photo via the custom data source handler
+- [ ] youtubeClips section appears on the home screen between other widgets
+- [ ] Sections render in registration order
+- [ ] Navigating to the Unsplash action page shows a grid/list of photos from the custom source
+
+---
+
+### Phase 13 — socketEmit + remote
+
+**Ship:** Cross-device actions work. Tapping an action on mobile triggers it on desktop.
+
+**Build:**
+- `global.socketEmit(event, payload)` — wired to existing desktop socket bridge
+- `global.scanQRCode()` — `expo-camera` barcode scanner
+
+**Verify:** (`youtubeClips.ts` → `socketEmit` for desktop playback; `watchlist.ts` → `scanQRCode` for lookup)
+- [ ] Tapping "Play on desktop" in youtubeClips triggers playback on the connected desktop
+- [ ] The desktop receives the socket event and responds (confirm in desktop logs)
+- [ ] QR scanner opens the camera and reads a code
+- [ ] Scanned QR result is passed back to the calling extension correctly
+
+---
+
+### Phase 14 — Complete coverage
+
+**Ship:** Every remaining API implemented. All extensions fully functional.
+
+**Build:**
+- `global.copyImage(url)` — `expo-media-library`
+- `global.shareImage(url)` — `expo-sharing`
+- `global.readNetworkFile(url)` — fetch from network path
+- `global.uploadStringAsFile(data, opts)` — Firebase Storage upload
+- `global.scanNetwork()` — local network scanner
+- `global.moment` — exposed as global
+- `global.tinycolor` — exposed as global
+- Extension update button — re-fetches from stored gist URL, updates Firebase doc
+- Extension install via URL paste or QR scan
+
+**Extensions working:** `text-to-qr.ts`, `__crotchet.ts`, `fun-with-ai.ts`, `prompt-fun.ts`
+
+**Verify:** (`unsplash.ts` → `copyImage`, `shareImage`; `__crotchet.ts` → `readNetworkFile`, `uploadStringAsFile`, `scanNetwork`, `moment`, `tinycolor`; `text-to-qr.ts` → extension install flow)
+- [ ] `copyImage` saves an image to the camera roll and a toast confirms
+- [ ] `shareImage` opens the native share sheet with the image
+- [ ] Extension install via pasted gist URL fetches and registers the extension
+- [ ] Extension install via QR code scan fetches and registers the extension
+- [ ] Update button on an installed extension re-fetches the latest source from its gist URL
+- [ ] `scanNetwork` returns a list of devices on the local network
+
+---
+
+## What is not ported
+
+| Feature | Reason |
+|---|---|
+| `UI.component({content: htmlString})` | HTML string rendering has no clean native equivalent. Extensions that call it get a no-op — the rest of the extension still works. |
+| Desktop-only actions (`desktopOnly: true`) | Filtered out at registration time — never appear in mobile registry. |
+| `openFloatingWindow` | Desktop-specific, no mobile equivalent. |

@@ -53,6 +53,17 @@ export default function RemotePageController({ page, onClose }) {
 								if (page.floating)
 									return window.closeFloatingWindow(page._id);
 
+								// TV remote page isn't in the desktop page stack,
+								// so broadcast directly and close immediately
+								if (page._id === "tv-remote") {
+									window.socketEmit("broadcast", {
+										event: "remote-page-closed",
+										payload: { page: { _id: page._id } },
+									});
+									onClose();
+									return;
+								}
+
 								window.socketEmit("close-page", {
 									pageId: page._id,
 								});

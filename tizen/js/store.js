@@ -5,6 +5,8 @@ var Store = (function () {
   var BASE = '';
   var _socket = null;
   var _listeners = [];
+  var _playOnTvListeners = [];
+  var _remoteActionListeners = [];
 
   function setHost(ip) {
     var host = ip.trim();
@@ -54,6 +56,14 @@ var Store = (function () {
       _listeners.forEach(function (fn) { fn(sections); });
     });
 
+    _socket.on('play-on-tv', function (item) {
+      _playOnTvListeners.forEach(function (fn) { fn(item); });
+    });
+
+    _socket.on('tv-remote-action', function (data) {
+      _remoteActionListeners.forEach(function (fn) { fn(data); });
+    });
+
     _socket.on('disconnect', function () {
       setTimeout(function () { connect(host); }, 3000);
     });
@@ -66,10 +76,18 @@ var Store = (function () {
     };
   }
 
+  function onPlayOnTv(fn) {
+    _playOnTvListeners.push(fn);
+  }
+
+  function onTvRemoteAction(fn) {
+    _remoteActionListeners.push(fn);
+  }
+
   function init() {
     var host = getHost();
     if (host) connect(host);
   }
 
-  return { setHost: setHost, getHost: getHost, ping: ping, init: init, getPages: getPages, runAction: runAction, onUpdate: onUpdate };
+  return { setHost: setHost, getHost: getHost, ping: ping, init: init, getPages: getPages, runAction: runAction, onUpdate: onUpdate, onPlayOnTv: onPlayOnTv, onTvRemoteAction: onTvRemoteAction };
 })();

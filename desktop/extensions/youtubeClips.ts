@@ -56,6 +56,72 @@ const mapEntry = (entry) => ({
 	actions: getActions(entry),
 });
 
+const tvIconPath = "M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z";
+
+const sendTvRemoteAction = (action) =>
+	socketEmit("broadcast", { event: "tv-remote-action", payload: { action } });
+
+const tvRemoteActions = [
+	{
+		id: "restart",
+		remote: true,
+		label: "Restart",
+		icon: UI.svg(
+			"M7.11 8.53L5.7 7.11C4.8 8.27 4.24 9.61 4.07 11h2.02c.14-.87.49-1.72 1.02-2.47zM6.09 13H4.07c.17 1.39.72 2.73 1.62 3.89l1.41-1.42c-.52-.75-.87-1.59-1.01-2.47zm1.01 5.32c1.16.9 2.51 1.44 3.9 1.61V17.9c-.87-.15-1.71-.49-2.46-1.03L7.1 18.32zM13 4.07V1L8.45 5.55 13 10V6.09c2.84.48 5 2.94 5 5.91s-2.16 5.43-5 5.91v2.02c3.95-.49 7-3.85 7-7.93s-3.05-7.44-7-7.93z",
+			{ size: "18px", filled: true }
+		),
+		handler: () => sendTvRemoteAction("restart"),
+	},
+	{
+		id: "skip-back",
+		remote: true,
+		section: "Skip",
+		label: "Skip Back",
+		shortLabel: "Back",
+		icon: UI.svg("M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z", { size: "18px", filled: true }),
+		handler: () => sendTvRemoteAction("skip-back"),
+	},
+	{
+		id: "skip-forward",
+		remote: true,
+		section: "Skip",
+		label: "Skip Forward",
+		shortLabel: "Forward",
+		icon: UI.svg("M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z", { size: "18px", filled: true }),
+		handler: () => sendTvRemoteAction("skip-forward"),
+	},
+	{
+		id: "toggle-crop",
+		remote: true,
+		label: "Toggle Crop",
+		shortLabel: "Crop",
+		icon: UI.svg(
+			"M17 15h2V7c0-1.1-.9-2-2-2H9v2h8v8zM7 17V1H5v4H1v2h4v10c0 1.1.9 2 2 2h10v4h2v-4h4v-2H7z",
+			{ size: "18px", filled: true }
+		),
+		handler: () => sendTvRemoteAction("toggle-crop"),
+	},
+];
+
+const playOnTV = (clip) => {
+	const payload = _.omit(clip, ["action", "actions"]);
+
+	if (!onDesktop()) {
+		return socketEmit("run-action", {
+			action: "playYoutubeClipOnTV",
+			payload,
+		});
+	}
+
+	return openPage({
+		target: "tv",
+		title: clip.title,
+		image: clip.poster || clip.image,
+		payload,
+		actions: tvRemoteActions,
+	});
+};
+
 const openOnDesktop = (clip) =>
 	socketEmit("run-action", {
 		showWindow: true,
@@ -105,11 +171,14 @@ const getActions = (payload) => {
 						),
 						pinned: true,
 						section: "Play",
-						handler: () =>
-							openOnDesktop({
-								...payload,
-								external: true,
-							}),
+						handler: () => openPage(getPlayClipPage(payload, true)),
+					},
+					playOnTV: {
+						shortcut: "Shift + Option + T",
+						label: "Play on TV",
+						icon: UI.svg(tvIconPath, { size: "18px", filled: true }),
+						section: "Play",
+						handler: () => playOnTV(payload),
 					},
 			  }
 			: {
@@ -129,6 +198,13 @@ const getActions = (payload) => {
 								...payload,
 								external: true,
 							}),
+					},
+					playOnTV: {
+						shortcut: "Shift + Option + T",
+						label: "Play on TV",
+						icon: UI.svg(tvIconPath, { size: "18px", filled: true }),
+						section: "Play",
+						handler: () => playOnTV(payload),
 					},
 			  }),
 		// shareVideo: {
@@ -555,6 +631,15 @@ const getPlayClipPage = (clip, external = false) => {
 								action: "pip",
 							}),
 					},
+					{
+						id: "playOnTV",
+						icon: UI.svg(tvIconPath, { size: "18px", filled: true }),
+						remote: true,
+						label: "Play on TV",
+						shortLabel: "TV",
+						shortcut: "Shift + Option + T",
+						handler: () => playOnTV(clip),
+					},
 			  ]),
 		{
 			id: "youtube",
@@ -829,6 +914,16 @@ registerSection("recentYoutubeClips", {
 });
 
 registerAction("playYoutubeClip", playClip);
+
+registerAction("playYoutubeClipOnTV", (clip) =>
+	openPage({
+		target: "tv",
+		title: clip.title,
+		image: clip.poster || clip.image,
+		payload: clip,
+		actions: tvRemoteActions,
+	})
+);
 
 registerAction("searchYoutubeClips", {
 	icon: appIcon,
