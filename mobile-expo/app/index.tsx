@@ -39,13 +39,13 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { height: screenHeight } = useWindowDimensions();
   const wallpaper = useWallpaper();
-  const { colorScheme } = useTheme();
+  const { colorScheme, colors } = useTheme();
   const isDark = colorScheme === 'dark';
   const scrollY = useSharedValue(0);
   const scrollHandler = useAnimatedScrollHandler((e) => { scrollY.value = e.contentOffset.y; });
 
   return (
-    <View className={`flex-1 bg-stone-300/95 dark:bg-stone-900/95 ${isDark ? 'dark' : ''}`}>
+    <View className="flex-1 bg-stone-300/95 dark:bg-stone-900/95">
       {/* Fixed ambient blur — mirrors main app's blurred wallpaper background */}
       <View pointerEvents="none" style={StyleSheet.absoluteFillObject} className="fixed inset-0 bg-background">
         {isDark ? (
@@ -89,7 +89,7 @@ export default function HomeScreen() {
             >
               {/* Neutral circle: bg-foreground/[0.06] border-foreground/10 */}
               <View className="bg-foreground/[0.06] dark:border dark:border-foreground/[0.08]" style={{ width: 32, height: 32, marginLeft: 8, marginVertical: 6, borderRadius: 999, alignItems: 'center', justifyContent: 'center' }}>
-                <Ionicons name={s.icon} size={16} color={isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)'} />
+                <Ionicons name={s.icon} size={16} color={colors.iconStrong} />
               </View>
               <Text className="text-foreground text-sm font-medium" style={{ marginRight: 20, marginLeft: 6 }}>
                 {s.label}
@@ -125,7 +125,7 @@ export default function HomeScreen() {
           {/* Widget header h-10: icon + uppercase title */}
           <View style={{ height: 40, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14 }} className="bg-foreground/[0.05]">
             <View style={{ width: 16, height: 16, alignItems: 'center', justifyContent: 'center' }}>
-              <Ionicons name="logo-youtube" size={16} color={isDark ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.6)'} />
+              <Ionicons name="logo-youtube" size={16} color={colors.iconMuted} />
             </View>
             <Text
               className="flex-1 text-foreground"
@@ -145,7 +145,7 @@ export default function HomeScreen() {
                   opacity: pressed ? 0.5 : 1,
                 })}
               >
-                <Ionicons name={icon} size={18} color={isDark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.4)'} />
+                <Ionicons name={icon} size={18} color={colors.iconFaint} />
               </Pressable>
             ))}
           </View>
@@ -158,7 +158,7 @@ export default function HomeScreen() {
                 style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 5, gap: 10 }}
               >
                 {/* h-9 aspect-[1.45/1] rounded thumbnail with play overlay */}
-                <View style={{ width: 52, height: 36, borderRadius: 4, overflow: 'hidden', backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)', borderWidth: StyleSheet.hairlineWidth, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }}>
+                <View className="bg-foreground/10 border border-foreground/10" style={{ width: 52, height: 36, borderRadius: 4, overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth }}>
                   <Image source={{ uri: `https://i.ytimg.com/vi/${clip._id}/hqdefault.jpg` }} style={{ width: 52, height: 36 }} resizeMode="cover" />
                   <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' }}>
                     <Ionicons name="play" size={16} color="rgba(255,255,255,0.9)" style={{ marginLeft: 2 }} />
@@ -166,11 +166,11 @@ export default function HomeScreen() {
                 </View>
                 {/* Title + subtitle — space-y-[7px], leading-none */}
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)', fontSize: 14, lineHeight: 14 }} numberOfLines={1}>{clip.title}</Text>
-                  <Text style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)', fontSize: 12, lineHeight: 12, marginTop: 4 }} numberOfLines={1}>{clip.time}</Text>
+                  <Text className="text-foreground/90" style={{ fontSize: 14, lineHeight: 14 }} numberOfLines={1}>{clip.title}</Text>
+                  <Text className="text-foreground/60" style={{ fontSize: 12, lineHeight: 12, marginTop: 4 }} numberOfLines={1}>{clip.time}</Text>
                 </View>
                 {/* Chevron right — opacity-30 */}
-                <Ionicons name="chevron-forward" size={16} color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'} />
+                <Ionicons name="chevron-forward" size={16} color={colors.iconGhost} />
               </TouchableOpacity>
             ))}
           </View>

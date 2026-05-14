@@ -2,6 +2,7 @@ import { collection, doc, getDocs, getDoc, onSnapshot } from 'firebase/firestore
 import { db } from './firebase';
 import { dbPath } from './db';
 import { useExtensionStore, ExtensionRecord, ExtensionMeta } from './registry';
+import { loadExtensions } from './extension-loader';
 
 function parseMetadata(source: string): ExtensionMeta {
   const extract = (tag: string) => {
@@ -42,6 +43,7 @@ async function fetchAllExtensions() {
       extensions[docSnap.id] = docToRecord(docSnap.id, docSnap.data());
     });
     useExtensionStore.getState().setExtensions(extensions);
+    loadExtensions();
   } catch (e) {
     console.error('[firebase-sync] fetch failed', e);
     useExtensionStore.getState().setStatus('ready');
@@ -62,6 +64,7 @@ function setupSync() {
     fetchAllExtensions();
   } else {
     useExtensionStore.getState().setStatus('ready');
+    loadExtensions();
   }
 
   if (__DEV__) {
@@ -71,6 +74,7 @@ function setupSync() {
           useExtensionStore
             .getState()
             .updateExtension(change.doc.id, docToRecord(change.doc.id, change.doc.data()));
+          loadExtensions();
         }
       });
     });

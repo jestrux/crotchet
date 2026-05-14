@@ -44,3 +44,28 @@ export const useExtensionStore = create<ExtensionStore>()(
     }
   )
 );
+
+// Icon descriptor produced by UI.svg / UI.icon stubs in runtime
+export type IconDescriptor =
+  | { type: 'svg'; path: string; filled?: boolean }
+  | { type: 'icon'; name: string }
+  | null;
+
+export type ActionRecord = {
+  name: string;
+  label: string;
+  icon: IconDescriptor;
+  color?: string;
+};
+
+type ActionStore = {
+  actions: ActionRecord[];
+  setActions: (actions: ActionRecord[]) => void;
+  addAction: (action: ActionRecord) => void;
+};
+
+export const useActionStore = create<ActionStore>()((set) => ({
+  actions: [],
+  setActions: (actions) => set({ actions }),
+  addAction: (action) => set((state) => ({ actions: [...state.actions, action] })),
+}));

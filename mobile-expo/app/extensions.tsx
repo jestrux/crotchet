@@ -8,10 +8,9 @@ import { updateExtension } from '@/lib/firebase-sync';
 import { useTheme } from '@/components/theming';
 
 function ExtensionRow({ item }: { item: ExtensionRecord }) {
-  const { colorScheme } = useTheme();
-  const isDark = colorScheme === 'dark';
+  const { colors } = useTheme();
   const [updating, setUpdating] = useState(false);
-  const iconColor = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)';
+  const iconColor = colors.iconSubtle;
 
   const handleUpdate = async () => {
     setUpdating(true);
@@ -86,10 +85,9 @@ function ExtensionRow({ item }: { item: ExtensionRecord }) {
 export default function ExtensionsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colorScheme } = useTheme();
-  const isDark = colorScheme === 'dark';
+  const { colors } = useTheme();
   const { extensions, status } = useExtensionStore();
-  const iconColor = isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)';
+  const iconColor = colors.icon;
 
   const extensionList = Object.values(extensions).sort((a, b) =>
     (a.meta.name || a.id).localeCompare(b.meta.name || b.id)

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import {
+  Alert,
   Keyboard,
   Pressable,
   SectionList,
@@ -11,6 +12,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import { useActionStore, ActionRecord, IconDescriptor } from '@/lib/registry';
 
 const AnimatedSectionList = Animated.createAnimatedComponent(SectionList) as typeof SectionList;
 import Animated, {
@@ -39,63 +41,27 @@ const hexToRgba = (hex: string, alpha: number) => {
   return `rgba(${r},${g},${b},${alpha})`;
 };
 
-const QUICK_ACTIONS = [
-  { id: 'clipboard', label: 'Clipboard', icon: 'clipboard-outline' as const, color: '#164e63', colorDark: '#7d959f' },
-  { id: 'pinboard', label: 'Pinboard', icon: 'pin-outline' as const, color: '#22C55E' },
-  { id: 'now-playing', label: 'Now Playing', icon: 'musical-notes-outline' as const, color: '#5b21b6', colorDark: '#a56bff' },
-  { id: 'random-pic', label: 'Random Pic', icon: 'image-outline' as const, color: '#3B82F6' },
-  { id: 'random-prompt', label: 'Random Prompt', icon: 'color-wand-outline' as const, color: '#d97706', colorDark: '#d19652' },
-];
-
-type ActionItem = {
-  id: string;
-  label: string;
-  icon: React.ComponentProps<typeof Ionicons>['name'];
-};
-
 const NAV_ROUTES: Record<string, string> = {
   extensions: '/extensions',
 };
 
-const ACTION_SECTIONS: { title: string; data: ActionItem[] }[] = [
-  {
-    title: 'Customize',
-    data: [
-      { id: 'extensions', label: 'Extensions', icon: 'puzzle-outline' },
-      { id: 'home-page', label: 'Home Page', icon: 'home-outline' },
-      { id: 'pinned-actions', label: 'Pinned Actions', icon: 'star-outline' },
-      { id: 'navbar', label: 'Navbar', icon: 'menu-outline' },
-      { id: 'manage-tokens', label: 'Manage Tokens', icon: 'key-outline' },
-    ],
-  },
-  {
-    title: 'Actions',
-    data: [
-      { id: 'open-app', label: 'Open App', icon: 'apps-outline' },
-      { id: 'search-web', label: 'Search Web', icon: 'globe-outline' },
-      { id: 'open-link', label: 'Open Link', icon: 'link-outline' },
-      { id: 'add-note', label: 'Add Note', icon: 'create-outline' },
-      { id: 'share', label: 'Share', icon: 'share-outline' },
-      { id: 'copy', label: 'Copy', icon: 'copy-outline' },
-      { id: 'open-camera', label: 'Open Camera', icon: 'camera-outline' },
-      { id: 'set-timer', label: 'Set Timer', icon: 'timer-outline' },
-      { id: 'translate', label: 'Translate', icon: 'language-outline' },
-      { id: 'text-to-qr', label: 'Text to QR', icon: 'qr-code-outline' },
-    ],
-  },
-  {
-    title: 'Data Sources',
-    data: [
-      { id: 'youtube', label: 'YouTube', icon: 'logo-youtube' },
-      { id: 'pinboard-source', label: 'Pinboard', icon: 'pin-outline' },
-      { id: 'notes', label: 'Notes', icon: 'document-text-outline' },
-      { id: 'photos', label: 'Photos', icon: 'images-outline' },
-      { id: 'podcasts', label: 'Podcasts', icon: 'mic-outline' },
-      { id: 'github', label: 'GitHub', icon: 'logo-github' },
-      { id: 'readwise', label: 'Readwise', icon: 'book-outline' },
-    ],
-  },
-];
+const CUSTOMIZE_SECTION = {
+  title: 'Customize',
+  data: [
+    { name: 'extensions', label: 'Extensions', icon: { type: 'icon' as const, name: 'puzzle-outline' } },
+    { name: 'home-page', label: 'Home Page', icon: { type: 'icon' as const, name: 'home-outline' } },
+    { name: 'pinned-actions', label: 'Pinned Actions', icon: { type: 'icon' as const, name: 'star-outline' } },
+    { name: 'navbar', label: 'Navbar', icon: { type: 'icon' as const, name: 'menu-outline' } },
+    { name: 'manage-tokens', label: 'Manage Tokens', icon: { type: 'icon' as const, name: 'key-outline' } },
+  ] as ActionRecord[],
+};
+
+function ActionIcon({ icon, size, color }: { icon: IconDescriptor; size: number; color: string }) {
+  if (!icon) return <Ionicons name="flash-outline" size={size} color={color} />;
+  if (icon.type === 'icon') return <Ionicons name={icon.name as React.ComponentProps<typeof Ionicons>['name']} size={size} color={color} />;
+  // SVG icons: render a generic fallback for now (Phase 3 will add react-native-svg)
+  return <Ionicons name="flash-outline" size={size} color={color} />;
+}
 
 function KeyboardPlaceholder() {
   const [height, setHeight] = useState(0);
@@ -118,15 +84,16 @@ function KeyboardPlaceholder() {
 
 export function BottomNav() {
   const router = useRouter();
-  const { colorScheme } = useTheme();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+
   const { height: screenHeight } = useWindowDimensions();
   const inputRef = useRef<TextInput>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [expanded, setExpanded] = useState(false);
   const [isAtTop, setIsAtTop] = useState(true);
+  const registeredActions = useActionStore((s) => s.actions);
 
-  const isDark = colorScheme === 'dark';
   const safeBottom = insets.bottom * 0.6;
   const INSET_BOTTOM = NAV_HEIGHT + safeBottom;
   const COLLAPSED_Y = screenHeight - INSET_BOTTOM;
@@ -140,13 +107,17 @@ export function BottomNav() {
   const listGestureRef = useRef(null);
 
   const sectionsData = useMemo(() => {
-    if (!searchQuery.length) return ACTION_SECTIONS;
-    const allItems = ACTION_SECTIONS.flatMap((s) => s.data);
+    const actionSection = registeredActions.length > 0
+      ? [{ title: 'Actions', data: registeredActions }]
+      : [];
+    const allSections = [CUSTOMIZE_SECTION, ...actionSection];
+    if (!searchQuery.length) return allSections;
+    const allItems = allSections.flatMap((s) => s.data);
     const filtered = allItems.filter((item) =>
       item.label.toLowerCase().includes(searchQuery.toLowerCase())
     );
     return filtered.length > 0 ? [{ title: 'Results', data: filtered }] : [];
-  }, [searchQuery]);
+  }, [searchQuery, registeredActions]);
 
   const expand = useCallback(() => {
     translateY.value = withTiming(EXPANDED_Y, TIMING);
@@ -263,10 +234,7 @@ export function BottomNav() {
   }));
 
   const pillContainerHeight = Math.round(INSET_BOTTOM);
-  const bg = isDark ? 'rgba(20,20,20,0.97)' : 'rgba(245,245,244,0.97)';
-  const backdropBg = isDark ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.2)';
-  const iconColor = isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)';
-  const placeholderColor = isDark ? '#737373' : '#a3a3a3';
+  const { panelBg: bg, backdropBg, icon: iconColor, placeholder: placeholderColor } = colors;
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
@@ -357,7 +325,7 @@ export function BottomNav() {
             <NativeViewGestureHandler ref={listGestureRef}>
             <AnimatedSectionList
               sections={sectionsData}
-              keyExtractor={(item) => item.id}
+              keyExtractor={(item) => item.name}
               onScroll={listScrollHandler}
               scrollEventThrottle={16}
               bounces={false}
@@ -374,17 +342,18 @@ export function BottomNav() {
                     pointerEvents="box-none"
                   >
                     <View style={styles.quickActionsWrap}>
-                      {QUICK_ACTIONS.map((action) => {
-                        const color = isDark && action.colorDark ? action.colorDark : action.color;
+                      {registeredActions.filter((a) => a.color).slice(0, 5).map((action) => {
+                        const color = action.color!;
                         return (
                           <TouchableOpacity
-                            key={action.id}
+                            key={action.name}
                             activeOpacity={0.7}
                             style={styles.quickActionChip}
                             className="bg-foreground/[0.04]"
+                            onPress={() => Alert.alert(action.label, 'Not yet implemented')}
                           >
-                            <View style={[styles.quickActionIconBox, { backgroundColor: hexToRgba(action.color, 0.1), borderColor: hexToRgba(action.color, 0.08) }]}>
-                              <Ionicons name={action.icon} size={16} color={color} />
+                            <View style={[styles.quickActionIconBox, { backgroundColor: hexToRgba(color, 0.1), borderColor: hexToRgba(color, 0.08) }]}>
+                              <ActionIcon icon={action.icon} size={16} color={color} />
                             </View>
                             <Text style={styles.quickActionChipLabel} className="text-foreground/80">{action.label}</Text>
                           </TouchableOpacity>
@@ -401,20 +370,22 @@ export function BottomNav() {
                   </Text>
                 </View>
               )}
-              renderItem={({ item }) => (
+              renderItem={({ item }: { item: ActionRecord }) => (
                 <TouchableOpacity
                   activeOpacity={0.6}
                   style={styles.actionRow}
                   onPress={() => {
-                    const route = NAV_ROUTES[item.id];
+                    const route = NAV_ROUTES[item.name];
                     if (route) {
                       collapse();
                       router.push(route as any);
+                    } else {
+                      Alert.alert(item.label, 'Not yet implemented');
                     }
                   }}
                 >
                   <View style={styles.actionIconWrap} className="bg-foreground/[0.05]">
-                    <Ionicons name={item.icon} size={18} color={iconColor} style={{ opacity: 0.8 }} />
+                    <ActionIcon icon={item.icon} size={18} color={iconColor} />
                   </View>
                   <Text style={styles.actionLabel} className="text-foreground/80">{item.label}</Text>
                 </TouchableOpacity>

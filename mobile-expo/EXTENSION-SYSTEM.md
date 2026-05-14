@@ -45,21 +45,36 @@ crotchet/
 
 **Desktop:** raw `.ts` source is injected as a `<script>` tag; globals come from `window`.
 
-**Mobile:** globals are set on `global` before execution, then extension source runs via `new Function()`:
+**Mobile:** globals are set on `global` before execution, then extension source is transpiled and run via `new Function()`:
 
 ```ts
-// Before any extension runs:
-global.registerAction = runtime.registerAction;
-global.registerWidget = runtime.registerWidget;
-global.openPage = runtime.openPage;
-// ... all other globals
+// Before any extension runs (lib/runtime.ts — auto-runs on import):
+global.window = global;            // desktop extensions use window.xxx — map to global
+global.registerAction = ...;       // real implementation
+global.registerWidget = noop;      // Phase 3
+global.openPage = noop;            // Phase 4
+// ... all other globals as noops until their phase
 
-// Execute extension:
-const fn = new Function(source);
-fn();
+// Execute extension (lib/extension-loader.ts):
+const cleaned = source
+  .replace(/^import\s+["'][^"']*@types[^"']*["'];?\s*/m, '') // strip type-only import
+  .replace(/\bwindow\./g, 'global.');                          // remap window → global
+
+// Hermes' new Function() can't parse async/await — transpile to ES5 first
+const result = Babel.transform(cleaned, {
+  presets: [['env', { targets: { ie: 11 }, modules: false }]],
+  plugins: ['transform-regenerator'],
+  sourceType: 'script',
+});
+
+// Pass globalThis as 'global' so global.xxx assignments work inside the function
+new Function('global', result.code)(globalThis);
 ```
 
-The `import "../../@types/index"` line at the top of each extension is stripped before execution (same trick the desktop uses). The rest runs unchanged.
+Key details:
+- **`@babel/standalone`** (~1 MB) is used for runtime transpilation — Hermes' `new Function()` rejects `async/await` syntax, so all extension source must be transformed to ES5 before execution
+- **`window.` → `global.`** — desktop extensions assign to `window.promptConnectSpotify` etc.; we remap rather than strip to avoid illegal const re-assignment in Babel's strict-mode output
+- **`globalThis` injection** — inside `new Function()`, `global` is not in scope in Hermes; we pass it explicitly as a parameter
 
 ---
 
@@ -81,97 +96,97 @@ To develop an extension:
 ### Registration
 | API | Status |
 |---|---|
-| `registerAction(name, config)` | Phase 1 |
-| `registerWidget(name, config)` | Phase 1 |
-| `registerDataSource(type, name, config)` | Phase 2 |
-| `registerSection(name, config)` | Phase 3 |
+| `registerAction(name, config)` | Phase 2 ✅ |
+| `registerWidget(name, config)` | Phase 3 |
+| `registerDataSource(type, name, config)` | Phase 8 |
+| `registerSection(name, config)` | Phase 12 |
 
 ### Navigation
 | API | Status |
 |---|---|
-| `openPage(props)` | Phase 1 |
-| `openActionSheet(props)` | Phase 1 |
-| `openForm(props)` | Phase 2 |
-| `openAlertForm(props)` | Phase 2 |
-| `openChoicePicker(choices)` | Phase 3 |
-| `closePage()` | Phase 3 |
+| `openPage(props)` | Phase 4 |
+| `openActionSheet(props)` | Phase 4 |
+| `openForm(props)` | Phase 10 |
+| `openAlertForm(props)` | Phase 10 |
+| `openChoicePicker(choices)` | Phase 10 |
+| `closePage()` | Phase 4 |
 
 ### Data / Database
 | API | Status |
 |---|---|
-| `sourceGet(source, opts)` | Phase 1 (handler variant), Phase 2 (named sources) |
-| `queryDb(table, opts)` | Phase 2 |
-| `dataSources.x.insertRow()` | Phase 2 |
-| `dataSources.x.updateRow()` | Phase 2 |
-| `dataSources.x.deleteRow()` | Phase 2 |
-| `dataSources.x.latest()` | Phase 2 |
+| `sourceGet(source, opts)` | Phase 6 |
+| `queryDb(table, opts)` | Phase 8 |
+| `dataSources.x.insertRow()` | Phase 9 |
+| `dataSources.x.updateRow()` | Phase 9 |
+| `dataSources.x.deleteRow()` | Phase 9 |
+| `dataSources.x.latest()` | Phase 8 |
 
 ### Auth / Tokens / Storage
 | API | Status |
 |---|---|
-| `oauth(props)` | Phase 1 — expo-auth-session |
-| `getToken(key)` / `saveToken(key, val)` | Phase 1 — expo-secure-store |
-| `getPreference(key)` / `savePreference(key, val)` | Phase 1 — AsyncStorage |
-| `withCache(name, fn)` | Phase 1 — AsyncStorage |
+| `oauth(props)` | Phase 5 — expo-auth-session |
+| `getToken(key)` / `saveToken(key, val)` | Phase 5 — expo-secure-store |
+| `getPreference(key)` / `savePreference(key, val)` | Phase 5 — AsyncStorage |
+| `withCache(name, fn)` | Phase 5 — AsyncStorage |
 
 ### Network
 | API | Status |
 |---|---|
-| `crawlUrl(url, opts)` | Phase 2 — fetch + og:meta parse |
-| `readNetworkFile(url)` | Phase 4 |
-| `uploadStringAsFile(data, opts)` | Phase 4 |
-| `scanNetwork()` | Phase 4 |
+| `crawlUrl(url, opts)` | Phase 11 — fetch + og:meta parse |
+| `readNetworkFile(url)` | Phase 14 |
+| `uploadStringAsFile(data, opts)` | Phase 14 |
+| `scanNetwork()` | Phase 14 |
 
 ### Clipboard / Share
 | API | Status |
 |---|---|
-| `readClipboard()` | Phase 2 — expo-clipboard |
-| `copyToClipboard(text)` | Phase 2 — expo-clipboard |
-| `copyImage(url)` | Phase 4 — expo-media-library |
-| `shareImage(url)` | Phase 4 — expo-sharing |
-| `processShareData(val, type)` | Phase 2 |
-| `scanQRCode()` | Phase 3 — expo-camera |
+| `readClipboard()` | Phase 11 — expo-clipboard |
+| `copyToClipboard(text)` | Phase 11 — expo-clipboard |
+| `copyImage(url)` | Phase 14 — expo-media-library |
+| `shareImage(url)` | Phase 14 — expo-sharing |
+| `processShareData(val, type)` | Phase 11 |
+| `scanQRCode()` | Phase 13 — expo-camera |
 
 ### Events / Remote
 | API | Status |
 |---|---|
-| `dispatch(event, payload)` | Phase 1 — local event emitter |
-| `socketEmit(event, payload)` | Phase 3 — existing socket bridge |
+| `dispatch(event, payload)` | Phase 6 — local event emitter |
+| `socketEmit(event, payload)` | Phase 13 — existing socket bridge |
 
 ### Media / AI
 | API | Status |
 |---|---|
-| `playMedia(media)` | Phase 1 — expo-av |
-| `promptAI(prompt, opts)` | Phase 1 — Claude API |
+| `playMedia(media)` | Phase 7 — expo-av |
+| `promptAI(prompt, opts)` | Phase 7 — Claude API |
 | `UI.youtubePlayer` | Phase 3 — expo-av + WebView |
 
 ### UI Components
 | API | Status |
 |---|---|
-| `UI.svg(path, opts)` | Phase 1 — react-native-svg |
-| `UI.icon(name)` | Phase 1 — Ionicons |
-| `UI.list` | Phase 1 — FlatList renderer |
-| `UI.media` | Phase 1 — image + gradient overlay |
-| `UI.grid` | Phase 2 — grid FlatList renderer |
+| `UI.svg(path, opts)` | Phase 3 — react-native-svg |
+| `UI.icon(name)` | Phase 3 — Ionicons |
+| `UI.list` | Phase 3 — FlatList renderer |
+| `UI.media` | Phase 3 — image + gradient overlay |
+| `UI.grid` | Phase 3 — grid FlatList renderer |
 | `UI.component` | **Not ported** — no-op, extensions that call it render nothing for that slot |
 
 ### Utilities
 | API | Status |
 |---|---|
-| `showToast(msg)` | Phase 1 |
-| `openUrl(url)` | Phase 1 — Linking |
-| `withLoader(action, opts)` | Phase 2 |
-| `confirmDangerousAction()` | Phase 2 — Alert |
-| `onDesktop()` | Phase 1 — always false |
-| `random(arr)`, `shuffle(arr)` | Phase 1 |
-| `someTime(ms)`, `randomId()` | Phase 1 |
-| `toHms(s)`, `formatDate(d)` | Phase 1 |
-| `objectToQueryParams(obj)` | Phase 1 |
-| `camelCaseToSentenceCase(str)` | Phase 1 |
-| `isValidUrl(str)` | Phase 1 |
-| `_` (lodash) | Phase 1 — exposed as global |
-| `moment` | Phase 3 — exposed as global |
-| `tinycolor` | Phase 4 — exposed as global |
+| `showToast(msg)` | Phase 6 |
+| `openUrl(url)` | Phase 6 — Linking |
+| `withLoader(action, opts)` | Phase 9 |
+| `confirmDangerousAction()` | Phase 9 — Alert |
+| `onDesktop()` | Phase 2 ✅ — always false |
+| `random(arr)`, `shuffle(arr)` | Phase 6 |
+| `someTime(ms)`, `randomId()` | Phase 6 |
+| `toHms(s)`, `formatDate(d)` | Phase 6 |
+| `objectToQueryParams(obj)` | Phase 6 |
+| `camelCaseToSentenceCase(str)` | Phase 6 |
+| `isValidUrl(str)` | Phase 6 |
+| `_` (lodash) | Phase 6 — exposed as global |
+| `moment` | Phase 14 — exposed as global |
+| `tinycolor` | Phase 14 — exposed as global |
 
 ---
 
@@ -201,21 +216,21 @@ Each phase ships something you can see and interact with. Phases are small by de
 
 ---
 
-### Phase 2 — registerAction → BottomNav
+### Phase 2 — registerAction → BottomNav ✅
 
 **Ship:** Extensions execute. Registered actions appear in the BottomNav even though tapping them does nothing yet.
 
 **Build:**
-- `lib/extension-loader.ts` — strips import line, executes each extension source via `new Function()` with a stubbed `global`
-- `global.registerAction` stub — pushes `{ name, label, icon }` into Zustand `actions` store
-- All other globals are no-ops at this stage
-- Wire BottomNav quick-action chips + section list to the `actions` store
+- `lib/runtime.ts` — sets all globals on `global` as a side effect on import; `global.window = global` for desktop extension compat
+- `lib/extension-loader.ts` — strips type-only import, remaps `window.` → `global.`, transpiles to ES5 via `@babel/standalone` (Hermes compat), executes via `new Function('global', code)(globalThis)`
+- `global.registerAction` — pushes `{ name, label, icon, color }` into Zustand `actions` store; all other globals are no-ops
+- BottomNav quick-action chips + section list wired to the `actions` store
 
 **Verify:** (`spotify.ts`, `unsplash.ts`, `reader.ts`, `watchlist.ts`, `youtubeClips.ts`)
-- [ ] BottomNav quick-action chips show real actions registered by extensions (Spotify, Reader, etc.)
-- [ ] BottomNav section list shows all registered actions grouped (not the hardcoded placeholders)
-- [ ] Tapping any action shows a "not yet implemented" toast
-- [ ] Search in BottomNav filters real registered actions
+- [x] BottomNav quick-action chips show real actions registered by extensions (Spotify, Reader, etc.)
+- [x] BottomNav section list shows all registered actions grouped (not the hardcoded placeholders)
+- [x] Tapping any action shows a "not yet implemented" Alert
+- [x] Search in BottomNav filters real registered actions
 
 ---
 
