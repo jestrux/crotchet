@@ -1,10 +1,12 @@
-import { useExtensionStore, useActionStore } from './registry';
+import { useExtensionStore, useActionStore, useWidgetStore } from './registry';
 import './runtime'; // auto-runs setupRuntime() as a side effect
+import { builtinActions } from './builtin-actions';
 // @ts-ignore — no types shipped with standalone build
 import * as Babel from '@babel/standalone';
 
 export function loadExtensions() {
-  useActionStore.getState().setActions([]);
+  useActionStore.getState().setActions(builtinActions);
+  useWidgetStore.getState().setWidgets([]);
 
   const { extensions } = useExtensionStore.getState();
 

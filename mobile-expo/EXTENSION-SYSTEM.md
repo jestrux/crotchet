@@ -98,7 +98,7 @@ To develop an extension:
 |---|---|
 | `registerAction(name, config)` | Phase 2 ✅ |
 | `registerWidget(name, config)` | Phase 3 |
-| `registerDataSource(type, name, config)` | Phase 8 |
+| `registerDataSource(type, name, config)` | Phase 6 ✅ |
 | `registerSection(name, config)` | Phase 12 |
 
 ### Navigation
@@ -114,7 +114,7 @@ To develop an extension:
 ### Data / Database
 | API | Status |
 |---|---|
-| `sourceGet(source, opts)` | Phase 6 |
+| `sourceGet(source, opts)` | Phase 6 ✅ |
 | `queryDb(table, opts)` | Phase 8 |
 | `dataSources.x.insertRow()` | Phase 9 |
 | `dataSources.x.updateRow()` | Phase 9 |
@@ -124,10 +124,10 @@ To develop an extension:
 ### Auth / Tokens / Storage
 | API | Status |
 |---|---|
-| `oauth(props)` | Phase 5 — expo-auth-session |
-| `getToken(key)` / `saveToken(key, val)` | Phase 5 — expo-secure-store |
-| `getPreference(key)` / `savePreference(key, val)` | Phase 5 — AsyncStorage |
-| `withCache(name, fn)` | Phase 5 — AsyncStorage |
+| `oauth(props)` | Phase 5 ✅ |
+| `getToken(key)` / `saveToken(key, val)` | Phase 5 ✅ |
+| `getPreference(key)` / `savePreference(key, val)` | Phase 5 ✅ |
+| `withCache(name, fn)` | Phase 5 ✅ |
 
 ### Network
 | API | Status |
@@ -150,14 +150,14 @@ To develop an extension:
 ### Events / Remote
 | API | Status |
 |---|---|
-| `dispatch(event, payload)` | Phase 6 — local event emitter |
+| `dispatch(event, payload)` | Phase 6 ✅ |
 | `socketEmit(event, payload)` | Phase 13 — existing socket bridge |
 
 ### Media / AI
 | API | Status |
 |---|---|
-| `playMedia(media)` | Phase 7 — expo-av |
-| `promptAI(prompt, opts)` | Phase 7 — Claude API |
+| `playMedia(media)` | Phase 7 ✅ |
+| `promptAI(prompt, opts)` | Phase 7 ✅ |
 | `UI.youtubePlayer` | Phase 3 — expo-av + WebView |
 
 ### UI Components
@@ -173,18 +173,18 @@ To develop an extension:
 ### Utilities
 | API | Status |
 |---|---|
-| `showToast(msg)` | Phase 6 |
-| `openUrl(url)` | Phase 6 — Linking |
+| `showToast(msg)` | Phase 6 ✅ |
+| `openUrl(url)` | Phase 6 ✅ |
 | `withLoader(action, opts)` | Phase 9 |
 | `confirmDangerousAction()` | Phase 9 — Alert |
 | `onDesktop()` | Phase 2 ✅ — always false |
-| `random(arr)`, `shuffle(arr)` | Phase 6 |
-| `someTime(ms)`, `randomId()` | Phase 6 |
-| `toHms(s)`, `formatDate(d)` | Phase 6 |
-| `objectToQueryParams(obj)` | Phase 6 |
-| `camelCaseToSentenceCase(str)` | Phase 6 |
-| `isValidUrl(str)` | Phase 6 |
-| `_` (lodash) | Phase 6 — exposed as global |
+| `random(arr)`, `shuffle(arr)` | Phase 6 ✅ |
+| `someTime(ms)`, `randomId()` | Phase 6 ✅ |
+| `toHms(s)`, `formatDate(d)` | Phase 6 ✅ |
+| `objectToQueryParams(obj)` | Phase 6 ✅ |
+| `camelCaseToSentenceCase(str)` | Phase 6 ✅ |
+| `isValidUrl(str)` | Phase 6 ✅ |
+| `_` (lodash) | Phase 6 ✅ |
 | `moment` | Phase 14 — exposed as global |
 | `tinycolor` | Phase 14 — exposed as global |
 
@@ -254,22 +254,25 @@ Each phase ships something you can see and interact with. Phases are small by de
 
 ---
 
-### Phase 4 — openPage
+### Phase 4 — openPage ✅
 
 **Ship:** Extensions can open pages. A page layer slides up with content.
 
 **Build:**
-- `components/PageLayer.tsx` — full-screen modal stack (React Navigation sheet or Reanimated bottom sheet)
-- `global.openPage({ title, handler, type })` — pushes a page onto the stack, calls `handler` to get the list/media data, renders it
-- `global.openActionSheet({ title, options })` — bottom sheet option picker (basic, no actions yet)
-- `global.closePage()` — pops the top page
+- `ActionRecord` now stores `handler` — registered by `registerAction`, called by BottomNav instead of Alert
+- `PageRecord` type + `usePageStore` — a push/pop stack of pages in Zustand
+- `global.openPage(config)` — pushes `{ title, type, resolve, onReady, action, actions }` onto the page stack; `title` may be a string or `({ pageData }) => string`
+- `global.openActionSheet(config)` — pushes a sheet-type page (bottom-anchored, renders action list)
+- `global.closePage()` — pops the top page; also passed as a parameter to `onReady`
+- `components/PageLayer.tsx` — renders top of stack as a slide-up modal; calls `resolve()`, shows loading → empty state; drag-down or close button dismisses
+- `app/_layout.tsx` — `AppShell` wrapper: when any page is open, the Stack scales to 0.92, gains 16px border radius, and dims to 0.85 opacity (iOS card-stack feel); background is black so the gap shows depth
 
-**Verify:** (`spotify.ts` → track list page, `unsplash.ts` → photo detail page, `reader.ts` → article list page)
-- [ ] Tapping a BottomNav action slides up a page modal
-- [ ] Page shows the title from the extension's `openPage` call
-- [ ] Empty list / error state renders gracefully when data isn't available yet
-- [ ] Back gesture or close button dismisses the page
-- [ ] Tapping an action sheet option logs to console (no-op is fine)
+**Verify:**
+- [x] Tapping a BottomNav action slides up a page modal
+- [x] Page shows the title from the extension's `openPage` call
+- [x] Empty list / error state renders gracefully when data isn't available yet
+- [x] Back gesture or close button dismisses the page
+- [x] Tapping an action sheet option logs to console (no-op is fine)
 
 ---
 

@@ -77,8 +77,13 @@ export function ThemeProvider({
   );
 }
 
+const DEFAULT_THEME_CTX: ThemeContextType = {
+  theme: 'system',
+  setTheme: () => {},
+  colorScheme: Appearance.getColorScheme() ?? 'light',
+  colors: buildColors(Appearance.getColorScheme() === 'dark'),
+};
+
 export function useTheme() {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
-  return ctx;
+  return useContext(ThemeContext) ?? DEFAULT_THEME_CTX;
 }

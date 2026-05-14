@@ -56,6 +56,7 @@ export type ActionRecord = {
   label: string;
   icon: IconDescriptor;
   color?: string;
+  handler?: () => void;
 };
 
 type ActionStore = {
@@ -68,4 +69,66 @@ export const useActionStore = create<ActionStore>()((set) => ({
   actions: [],
   setActions: (actions) => set({ actions }),
   addAction: (action) => set((state) => ({ actions: [...state.actions, action] })),
+}));
+
+export type WidgetContentType = 'list' | 'media' | 'grid';
+
+export type WidgetRecord = {
+  name: string;
+  label: string;
+  title?: string;
+  icon: IconDescriptor;
+  content: WidgetContentType | null;
+};
+
+type WidgetStore = {
+  widgets: WidgetRecord[];
+  setWidgets: (widgets: WidgetRecord[]) => void;
+  addWidget: (widget: WidgetRecord) => void;
+};
+
+export const useWidgetStore = create<WidgetStore>()((set) => ({
+  widgets: [],
+  setWidgets: (widgets) => set({ widgets }),
+  addWidget: (widget) => set((state) => ({ widgets: [...state.widgets, widget] })),
+}));
+
+export type PageRecord = {
+  id: string;
+  title?: string | ((ctx: any) => string);
+  type?: string;           // 'preview' = single-item detail; undefined = list
+  resolve?: () => Promise<any>;
+  onReady?: (ctx: any) => void;
+  action?: any;
+  actions?: any;
+  isSheet?: boolean;       // true = openActionSheet (bottom-anchored)
+};
+
+type PageStore = {
+  pages: PageRecord[];
+  pushPage: (page: Omit<PageRecord, 'id'>) => void;
+  popPage: () => void;
+  clearPages: () => void;
+};
+
+export const usePageStore = create<PageStore>()((set) => ({
+  pages: [],
+  pushPage: (page) =>
+    set((state) => ({
+      pages: [...state.pages, { ...page, id: Math.random().toString(36).slice(2) }],
+    })),
+  popPage: () => set((state) => ({ pages: state.pages.slice(0, -1) })),
+  clearPages: () => set({ pages: [] }),
+}));
+
+type ToastStore = {
+  message: string | null;
+  show: (message: string) => void;
+  hide: () => void;
+};
+
+export const useToastStore = create<ToastStore>()((set) => ({
+  message: null,
+  show: (message) => set({ message }),
+  hide: () => set({ message: null }),
 }));

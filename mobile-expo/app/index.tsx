@@ -1,9 +1,10 @@
-import { Image, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomNav } from '@/components/BottomNav';
 import { WallpaperBackground } from '@/components/WallpaperBackground';
+import { WidgetShell } from '@/components/WidgetShell';
+import { useWidgetStore } from '@/lib/registry';
 import { useTheme } from '@/components/theming';
 import { useWallpaper } from '@/hooks/useWallpaper';
 import Animated, { useSharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
@@ -23,24 +24,13 @@ const SHORTCUTS: { id: string; label: string; icon: IoniconName }[] = [
   { id: 'pinboard', label: 'Pinboard', icon: 'pin-outline' },
 ];
 
-const UNSPLASH_PLACEHOLDER = {
-  image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&auto=format&fit=crop&q=60',
-  title: 'Alpine Valley',
-  subtitle: 'Adrien Olichon',
-};
-
-const YOUTUBE_CLIPS = [
-  { id: '1', title: 'Clip One', time: '0:00, 1:30 — 2:30', _id: 'dQw4w9WgXcQ' },
-  { id: '2', title: 'Another Clip', time: '0:15, 2:00 — 3:45', _id: '9bZkp7q19f0' },
-  { id: '3', title: 'Third Clip', time: '1:00, 3:10 — 4:20', _id: 'kTJczUoc26U' },
-];
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const { height: screenHeight } = useWindowDimensions();
   const wallpaper = useWallpaper();
   const { colorScheme, colors } = useTheme();
   const isDark = colorScheme === 'dark';
+  const widgets = useWidgetStore((s) => s.widgets);
   const scrollY = useSharedValue(0);
   const scrollHandler = useAnimatedScrollHandler((e) => { scrollY.value = e.contentOffset.y; });
 
@@ -98,83 +88,10 @@ export default function HomeScreen() {
           ))}
         </View>
 
-        {/* Unsplash Random Pic widget — UI.media: full-bleed image, no header, aspectRatio 2/1.02 */}
-        <View style={{ aspectRatio: 2 / 1.02, borderRadius: 16, overflow: 'hidden' }}>
-          <Image
-            source={{ uri: UNSPLASH_PLACEHOLDER.image }}
-            style={StyleSheet.absoluteFillObject}
-            resizeMode="cover"
-          />
-          <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.65)']}
-            locations={[0.45, 1]}
-            style={StyleSheet.absoluteFillObject}
-          />
-          <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 14 }}>
-            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }} numberOfLines={1}>
-              {UNSPLASH_PLACEHOLDER.title}
-            </Text>
-            <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 2 }} numberOfLines={1}>
-              {UNSPLASH_PLACEHOLDER.subtitle}
-            </Text>
-          </View>
-        </View>
-
-        {/* YouTube Clips widget — same 2/1.02 aspect ratio as Unsplash, list fills remaining height */}
-        <View className="bg-card rounded-2xl border border-stroke overflow-hidden" style={{ aspectRatio: 2 / 1.02 }}>
-          {/* Widget header h-10: icon + uppercase title */}
-          <View style={{ height: 40, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14 }} className="bg-foreground/[0.05]">
-            <View style={{ width: 16, height: 16, alignItems: 'center', justifyContent: 'center' }}>
-              <Ionicons name="logo-youtube" size={16} color={colors.iconMuted} />
-            </View>
-            <Text
-              className="flex-1 text-foreground"
-              style={{ fontSize: 12, fontWeight: '700', letterSpacing: 0.5, textTransform: 'uppercase', opacity: 0.8 }}
-            >
-              Youtube Clips
-            </Text>
-          </View>
-          {/* Action buttons — absolute top-right, floating over header like the web */}
-          <View style={{ position: 'absolute', right: 10, top: 0, height: 40, flexDirection: 'row', alignItems: 'center', gap: 8, zIndex: 10 }}>
-            {(['search-outline', 'shuffle-outline'] as IoniconName[]).map((icon) => (
-              <Pressable
-                key={icon}
-                style={({ pressed }) => ({
-                  width: 28, height: 28, borderRadius: 999,
-                  alignItems: 'center', justifyContent: 'center',
-                  opacity: pressed ? 0.5 : 1,
-                })}
-              >
-                <Ionicons name={icon} size={18} color={colors.iconFaint} />
-              </Pressable>
-            ))}
-          </View>
-          {/* List fills remaining height. No flex:1 on rows — natural height py-[5px] + h-9 ≈ 46px each */}
-          <View style={{ flex: 1, justifyContent: 'center' }}>
-            {YOUTUBE_CLIPS.map((clip) => (
-              <TouchableOpacity
-                key={clip.id}
-                activeOpacity={0.7}
-                style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 5, gap: 10 }}
-              >
-                {/* h-9 aspect-[1.45/1] rounded thumbnail with play overlay */}
-                <View className="bg-foreground/10 border border-foreground/10" style={{ width: 52, height: 36, borderRadius: 4, overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth }}>
-                  <Image source={{ uri: `https://i.ytimg.com/vi/${clip._id}/hqdefault.jpg` }} style={{ width: 52, height: 36 }} resizeMode="cover" />
-                  <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' }}>
-                    <Ionicons name="play" size={16} color="rgba(255,255,255,0.9)" style={{ marginLeft: 2 }} />
-                  </View>
-                </View>
-                {/* Title + subtitle — space-y-[7px], leading-none */}
-                <View style={{ flex: 1 }}>
-                  <Text className="text-foreground/90" style={{ fontSize: 14, lineHeight: 14 }} numberOfLines={1}>{clip.title}</Text>
-                  <Text className="text-foreground/60" style={{ fontSize: 12, lineHeight: 12, marginTop: 4 }} numberOfLines={1}>{clip.time}</Text>
-                </View>
-                {/* Chevron right — opacity-30 */}
-                <Ionicons name="chevron-forward" size={16} color={colors.iconGhost} />
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+        {/* Extension widgets */}
+        {widgets.map((widget) => (
+          <WidgetShell key={widget.name} widget={widget} />
+        ))}
       </AnimatedScrollView>
 
       <BottomNav />

@@ -350,7 +350,10 @@ export function BottomNav() {
                             activeOpacity={0.7}
                             style={styles.quickActionChip}
                             className="bg-foreground/[0.04]"
-                            onPress={() => Alert.alert(action.label, 'Not yet implemented')}
+                            onPress={() => {
+                              if (action.handler) { collapse(); action.handler(); }
+                              else Alert.alert(action.label, 'Not yet implemented');
+                            }}
                           >
                             <View style={[styles.quickActionIconBox, { backgroundColor: hexToRgba(color, 0.1), borderColor: hexToRgba(color, 0.08) }]}>
                               <ActionIcon icon={action.icon} size={16} color={color} />
@@ -379,6 +382,9 @@ export function BottomNav() {
                     if (route) {
                       collapse();
                       router.push(route as any);
+                    } else if (item.handler) {
+                      collapse();
+                      item.handler();
                     } else {
                       Alert.alert(item.label, 'Not yet implemented');
                     }
