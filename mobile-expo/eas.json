@@ -14,13 +14,31 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "APP_VARIANT": "staging"
+        "APP_VARIANT": "staging",
+        "EXPO_PUBLIC_BACKEND_BASE_URL": "https://backend.wakyj07.workers.dev",
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyD0pKWntX64z-68dmO3nWJmwk1Sb3f1iCE",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "letterplace-c103c.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_DATABASE_URL": "https://letterplace-c103c.firebaseio.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "letterplace-c103c",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "letterplace-c103c.appspot.com",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "658174549550",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:658174549550:web:d3c99b2be934379b6209bf",
+        "EXPO_PUBLIC_UNSPLASH_CLIENT_ID": "IPA5vpUYCbI5PWvpcEyNJZPov3L-Nc2qlGj3UctYCS4"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "APP_VARIANT": "production"
+        "APP_VARIANT": "production",
+        "EXPO_PUBLIC_BACKEND_BASE_URL": "https://backend.wakyj07.workers.dev",
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyD0pKWntX64z-68dmO3nWJmwk1Sb3f1iCE",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "letterplace-c103c.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_DATABASE_URL": "https://letterplace-c103c.firebaseio.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "letterplace-c103c",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "letterplace-c103c.appspot.com",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "658174549550",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:658174549550:web:d3c99b2be934379b6209bf",
+        "EXPO_PUBLIC_UNSPLASH_CLIENT_ID": "IPA5vpUYCbI5PWvpcEyNJZPov3L-Nc2qlGj3UctYCS4"
       }
     }
   },

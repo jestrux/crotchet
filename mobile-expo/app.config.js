@@ -58,6 +58,9 @@ module.exports = {
       bundleIdentifier: getBundleId(),
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
+        NSAppTransportSecurity: {
+          NSAllowsArbitraryLoads: true,
+        },
       },
     },
     android: {
@@ -92,7 +95,7 @@ module.exports = {
     },
     extra: {
       eas: {
-        projectId: '',
+        projectId: 'bf61e754-be38-4ea0-beaa-37ad4e96fbeb',
       },
     },
   },
