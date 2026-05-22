@@ -19,7 +19,7 @@ export const builtinActions: ActionRecord[] = [
         preferenceKey: 'spotifyToken',
         params: {
           client_id: '383620f73a0d43d9a90bbce3c874a23e',
-          scope: 'user-read-currently-playing app-remote-control streaming playlist-read-private user-follow-read user-top-read user-read-recently-played user-library-read',
+          scope: 'streaming user-read-email user-read-private user-read-currently-playing playlist-read-private user-follow-read user-top-read user-read-recently-played user-library-read',
         },
       });
       if (!token) { Alert.alert('Spotify', 'Could not get token — oauth() returned null'); return; }

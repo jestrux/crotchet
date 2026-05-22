@@ -93,6 +93,26 @@ export const useWidgetStore = create<WidgetStore>()((set) => ({
   addWidget: (widget) => set((state) => ({ widgets: [...state.widgets, widget] })),
 }));
 
+const DEFAULT_HOME_SHORTCUTS = ['spotifyPlayer', 'randomUnsplashPic', 'randomYoutubeClip', 'searchReader'];
+
+type HomeShortcutsStore = {
+  shortcutNames: string[];
+  setShortcutNames: (names: string[]) => void;
+};
+
+export const useHomeShortcutsStore = create<HomeShortcutsStore>()(
+  persist(
+    (set) => ({
+      shortcutNames: DEFAULT_HOME_SHORTCUTS,
+      setShortcutNames: (shortcutNames) => set({ shortcutNames }),
+    }),
+    {
+      name: 'crotchet-home-shortcuts',
+      storage: createJSONStorage(() => AsyncStorage),
+    }
+  )
+);
+
 export type PageRecord = {
   id: string;
   title?: string | ((ctx: any) => string);

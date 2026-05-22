@@ -104,12 +104,12 @@ To develop an extension:
 ### Navigation
 | API | Status |
 |---|---|
-| `openPage(props)` | Phase 4 |
-| `openActionSheet(props)` | Phase 4 |
+| `openPage(props)` | Phase 4 ✅ |
+| `openActionSheet(props)` | Phase 4 ✅ |
 | `openForm(props)` | Phase 10 |
 | `openAlertForm(props)` | Phase 10 |
 | `openChoicePicker(choices)` | Phase 10 |
-| `closePage()` | Phase 4 |
+| `closePage()` | Phase 4 ✅ |
 
 ### Data / Database
 | API | Status |
@@ -276,7 +276,7 @@ Each phase ships something you can see and interact with. Phases are small by de
 
 ---
 
-### Phase 5 — oauth + tokens
+### Phase 5 — oauth + tokens ✅
 
 **Ship:** OAuth flow works. Extensions can authenticate with external services.
 
@@ -294,7 +294,7 @@ Each phase ships something you can see and interact with. Phases are small by de
 
 ---
 
-### Phase 6 — sourceGet + real data
+### Phase 6 — sourceGet + real data ✅
 
 **Ship:** Extensions fetch real data. Spotify loads tracks. Unsplash loads photos.
 
@@ -316,7 +316,7 @@ Each phase ships something you can see and interact with. Phases are small by de
 
 ---
 
-### Phase 7 — playMedia + keep-awake
+### Phase 7 — playMedia + keep-awake ✅
 
 **Ship:** Audio plays. Screen stays on while Spotify is playing.
 

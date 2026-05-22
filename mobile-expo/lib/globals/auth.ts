@@ -2,7 +2,7 @@ import * as SecureStore from 'expo-secure-store';
 import * as WebBrowser from 'expo-web-browser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { Linking } from 'react-native';
+import * as Linking from 'expo-linking';
 
 // ---------------------------------------------------------------------------
 // Backend base URL
@@ -130,7 +130,11 @@ async function refreshOAuthToken({
     if (!res.ok) return null;
 
     const tokenDetails = await res.json();
+    if (!tokenDetails.refresh_token) {
+      console.log('[refreshOAuthToken] no new refresh_token in response — preserving existing');
+    }
     await saveToken(preferenceKey, {
+      refresh_token: saved.refresh_token, // preserve old refresh_token as fallback
       ...tokenDetails,
       expires_at: Date.now() + Number(tokenDetails.expires_in ?? 3600) * 1000,
     });

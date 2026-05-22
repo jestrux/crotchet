@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { ImageBackground, StyleSheet, View } from 'react-native';
+import { ImageBackground, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, { useAnimatedStyle, SharedValue } from 'react-native-reanimated';
 import { useTheme } from './theming';
 
@@ -15,6 +15,9 @@ const H_PADDING = 16;
 export function WallpaperBackground({ wallpaper, scrollY }: { wallpaper: string; scrollY: SharedValue<number> }) {
   const { colorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
+  const { width: screenWidth } = useWindowDimensions();
+  // Negate both the content padding and the centering offset from maxWidth: 512
+  const marginHorizontal = -(H_PADDING + Math.max(0, screenWidth - 512) / 2);
 
   const imageAnimStyle = useAnimatedStyle(() => {
     if (scrollY.value >= 0) return {};
@@ -35,7 +38,7 @@ export function WallpaperBackground({ wallpaper, scrollY }: { wallpaper: string;
       pointerEvents="none"
       style={{
         height: WALLPAPER_HEIGHT,
-        marginHorizontal: -H_PADDING,
+        marginHorizontal,
         marginBottom: -(WALLPAPER_HEIGHT - 140),
       }}
     >
