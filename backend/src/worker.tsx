@@ -24,6 +24,7 @@ import {
 	unsubscribeFromTopic,
 	queryDb,
 	dbInsert,
+	dbBulkInsert,
 	dbUpdate,
 	dbDelete,
 	uploadRawString,
@@ -729,6 +730,42 @@ export default defineApp([
 		}
 	}),
 	// Database routes - RESTful style
+	route("/db/:table/bulk", async function handler({ request, params }) {
+		if (request.method === "OPTIONS") {
+			return corsPreflightResponse();
+		}
+
+		try {
+			const table = params.table;
+
+			if (request.method !== "POST") {
+				return new Response("Method not allowed", { status: 405 });
+			}
+
+			const body = await request.json();
+			const { data } = body as { data: any[] };
+
+			if (!Array.isArray(data) || data.length === 0) {
+				return new Response("data must be a non-empty array", {
+					status: 400,
+				});
+			}
+
+			const result = await dbBulkInsert(table, data);
+
+			return Response.json({
+				success: true,
+				count: result.count,
+			});
+		} catch (error) {
+			return new Response(
+				`Bulk import error: ${
+					error instanceof Error ? error.message : String(error)
+				}`,
+				{ status: 500 }
+			);
+		}
+	}),
 	route("/db/:table/:rowId", async function handler({ request, params }) {
 		// Handle preflight OPTIONS request
 		if (request.method === "OPTIONS") {

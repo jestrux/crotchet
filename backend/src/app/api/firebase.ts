@@ -825,6 +825,63 @@ export async function dbUpdate(
 }
 
 /**
+ * Bulk insert documents using Firestore batchWrite (up to 500 per batch)
+ */
+export async function dbBulkInsert(
+	table: string,
+	items: any[]
+): Promise<{ count: number }> {
+	const token = await getFirestoreToken();
+	const baseUrl = getFirestoreBaseUrl();
+	const collectionPath = dbTablePath(table);
+
+	// Firestore batchWrite supports up to 500 writes per call
+	const BATCH_SIZE = 500;
+	let totalCount = 0;
+
+	const serviceAccount: ServiceAccount = JSON.parse(
+		env.FIREBASE_SERVICE_ACCOUNT_JSON
+	);
+
+	for (let i = 0; i < items.length; i += BATCH_SIZE) {
+		const batch = items.slice(i, i + BATCH_SIZE);
+		const now = new Date().toISOString();
+
+		const writes = batch.map((item) => {
+			const data = { ...item, createdAt: now, updatedAt: now };
+			const firestoreDoc = convertToFirestoreDoc(data);
+			const docId = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
+
+			return {
+				update: {
+					name: `projects/${serviceAccount.project_id}/databases/(default)/documents/${collectionPath}/${docId}`,
+					...firestoreDoc,
+				},
+			};
+		});
+		const batchUrl = `https://firestore.googleapis.com/v1/projects/${serviceAccount.project_id}/databases/(default)/documents:batchWrite`;
+		const response = await fetch(batchUrl, {
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${token}`,
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ writes }),
+		});
+
+		if (!response.ok) {
+			throw new Error(
+				`Batch write failed: ${await response.text()}`
+			);
+		}
+
+		totalCount += batch.length;
+	}
+
+	return { count: totalCount };
+}
+
+/**
  * Delete document
  */
 export async function dbDelete(table: string, rowId: string): Promise<void> {
