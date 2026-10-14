@@ -10,7 +10,7 @@ import { DbDocs } from "@/app/pages/DbDocs";
 import { setCommonHeaders, corsPreflightResponse } from "@/app/headers";
 import crawlUrl from "./app/api/crawl";
 import { exchangeCodeForAuthToken, generateOauthUrl } from "./app/api/oauth";
-import aiPrompt from "./app/api/ai";
+import aiPrompt, { type AIEffort } from "./app/api/ai";
 import {
 	getSheetDetails,
 	getSheetDetailsSimple,
@@ -76,12 +76,13 @@ export default defineApp([
 		ctx;
 	},
 	route("/prompt", async function handler({ request }) {
-		const { prompt, systemPrompt } = (await request.json()) as {
+		const { prompt, systemPrompt, effort } = (await request.json()) as {
 			prompt: string;
 			systemPrompt?: string;
+			effort?: AIEffort;
 		};
 
-		return Response.json(await aiPrompt(prompt, { systemPrompt }));
+		return Response.json(await aiPrompt(prompt, { systemPrompt, effort }));
 	}),
 	route("/socket", async function handler() {
 		const url = await kv.get("__desktopBaseUrl");

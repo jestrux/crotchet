@@ -25,7 +25,7 @@
     "types": "tsc"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.60.0",
+    "@anthropic-ai/sdk": "^0.133.0",
     "node-html-parser": "^7.0.1",
     "rwsdk": "0.1.39"
   },
