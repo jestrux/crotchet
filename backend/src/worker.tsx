@@ -213,6 +213,7 @@ export default defineApp([
 		const body = url.searchParams.get("body");
 		const dataParam = url.searchParams.get("data");
 		const silent = url.searchParams.get("silent") === "true";
+		const category = url.searchParams.get("category") || undefined;
 
 		// Validate required parameters
 		if (!topic || !title || !body) {
@@ -241,6 +242,7 @@ export default defineApp([
 			body,
 			data,
 			silent,
+			category,
 		});
 
 		return Response.json(result);

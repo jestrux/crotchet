@@ -6,6 +6,8 @@ export interface NotificationOptions {
 	body: string;
 	data?: Record<string, string>;
 	silent?: boolean;
+	/** APNs category: picks the app's custom notification view (Fuchi's `fuchi.view`). */
+	category?: string;
 }
 
 export interface SubscriptionOptions {
@@ -294,6 +296,7 @@ export async function sendTopicNotification(options: NotificationOptions) {
 					aps: {
 						sound: "default",
 						badge: 1,
+						...(options.category ? { category: options.category } : {}),
 					},
 				},
 			};
